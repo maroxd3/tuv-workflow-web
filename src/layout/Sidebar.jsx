@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Shield, RefreshCw, AlertOctagon, AlertTriangle } from "lucide-react";
 import { C } from "../styles/theme";
 import { STATUS } from "../constants/status";
@@ -9,8 +9,9 @@ export function Sidebar({ view, setView, fahrzeuge, termine, resetAll }) {
   const today = isoDate();
   const todayTr = termine.filter(t => t.datum === today);
   const offenTr = todayTr.filter(t => t.status === STATUS.GEPLANT || t.status === STATUS.IN_PRUEFUNG);
-  const huWarn = fahrzeuge.filter(f => f.hu_faellig && new Date(f.hu_faellig) < new Date(Date.now() + 30 * 86400000) && new Date(f.hu_faellig) >= new Date()).length;
-  const huUeberr = fahrzeuge.filter(f => f.hu_faellig && new Date(f.hu_faellig) < new Date()).length;
+  const [now] = useState(() => Date.now());
+  const huWarn = fahrzeuge.filter(f => f.hu_faellig && new Date(f.hu_faellig) < new Date(now + 30 * 86400000) && new Date(f.hu_faellig) >= new Date(now)).length;
+  const huUeberr = fahrzeuge.filter(f => f.hu_faellig && new Date(f.hu_faellig) < new Date(now)).length;
 
   return (
     <div style={{

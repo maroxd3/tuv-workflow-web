@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import {
   Search, Plus, Pencil, Trash2, X, User, Gauge, ClipboardList,
   AlertTriangle, Car,

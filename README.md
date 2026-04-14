@@ -1,16 +1,78 @@
-# React + Vite
+# TUV Prufstelle Pro
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A vehicle inspection management system for TUV facilities, built as a Tauri desktop application with a React web frontend.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **Tagesplan (Daily Schedule)** — Timeline and table views for managing daily inspections with real-time status tracking
+- **Fahrzeuge (Vehicles)** — Full CRUD management of vehicle records with search, filtering, and inspection history
+- **Statistik (Analytics)** — Interactive dashboards with pass-rate trends, inspector performance, defect breakdowns, and KPIs
+- **Berichte (Reports)** — Generate, preview, and export official inspection reports as `.txt` files
 
-## React Compiler
+## Tech Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+| Layer       | Technology                            |
+|-------------|---------------------------------------|
+| Frontend    | React 19, Vite 8                      |
+| Desktop     | Tauri 2 (Rust)                        |
+| Styling     | Tailwind CSS 4, Framer Motion         |
+| Charts      | Recharts                              |
+| Testing     | Vitest, React Testing Library         |
+| Linting     | ESLint 9 (flat config)                |
 
-## Expanding the ESLint configuration
+## Getting Started
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### Prerequisites
+
+- [Node.js](https://nodejs.org/) (v18+)
+- [Rust](https://www.rust-lang.org/tools/install) (for Tauri desktop builds)
+
+### Run in Browser
+
+```bash
+npm install
+npm run dev
+```
+
+Open [http://localhost:5173](http://localhost:5173) in your browser.
+
+### Run as Desktop App
+
+```bash
+npm install
+npm run tauri dev
+```
+
+### Build for Production
+
+```bash
+npm run build          # web build
+npm run tauri build    # desktop installer
+```
+
+## Testing
+
+```bash
+npm test               # run all tests
+npm run test:watch     # watch mode
+npm run lint           # ESLint check
+```
+
+## Project Structure
+
+```
+src/
+  views/          Page-level components (Tagesplan, Fahrzeuge, Statistik, Berichte)
+  components/     Reusable UI components (buttons, inputs, modals, pills)
+  features/       Feature-specific forms (FahrzeugModal, TerminModal, MaengelModal)
+  hooks/          Custom hooks (useStore, useToasts)
+  constants/      Lookup tables (status, inspection types, defect catalog)
+  utils/          Helper functions (date formatting, defect logic)
+  styles/         Theme configuration
+  tests/          Unit and component tests
+src-tauri/        Tauri (Rust) desktop shell
+```
+
+## License
+
+MIT

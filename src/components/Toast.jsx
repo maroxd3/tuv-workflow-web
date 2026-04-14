@@ -1,5 +1,5 @@
 import React from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import { X, CheckCircle2, XCircle, Info, AlertTriangle } from "lucide-react";
 import { C } from "../styles/theme";
 
