@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { uid, isoDate, addDays, fmtDate, fmtDateLong, dayName, dayShort } from '../../utils/date';
 
 describe('uid', () => {

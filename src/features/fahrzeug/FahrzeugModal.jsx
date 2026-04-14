@@ -8,8 +8,8 @@ import { BtnG, BtnP } from "../../components/ui/buttons";
 
 export function FahrzeugModal({ initial = {}, onSave, onClose }) {
   const [form, setForm] = useState({
-    kennzeichen: "", fin: "", hersteller: "", modell: "", baujahr: "",
-    farbe: "", typ: "PKW", kmStand: "", besitzer: "", telefon: "", email: "",
+    kennzeichen: "", fin: "", hersteller: "", modell: "",
+    farbe: "", typ: "PKW", besitzer: "", telefon: "", email: "",
     hu_faellig: "",
     ...initial,
     baujahr: initial.baujahr ? String(initial.baujahr) : "",

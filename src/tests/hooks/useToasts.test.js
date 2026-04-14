@@ -1,53 +1,50 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
+import { describe, it, expect, vi } from 'vitest';
+import { renderHook } from '@testing-library/react';
+
+vi.mock('sonner', () => {
+  const fn = vi.fn();
+  fn.success = vi.fn();
+  fn.error = vi.fn();
+  fn.warning = vi.fn();
+  return { toast: fn };
+});
+
+import { toast as sonner } from 'sonner';
 import { useToasts } from '../../hooks/useToasts';
 
 describe('useToasts', () => {
-  beforeEach(() => { vi.useFakeTimers(); });
-  afterEach(() => { vi.useRealTimers(); });
-
   it('starts with an empty toast list', () => {
     const { result } = renderHook(() => useToasts());
     expect(result.current.toasts).toEqual([]);
   });
 
-  it('adds a toast when add() is called', () => {
+  it('calls sonner.success for success type', () => {
     const { result } = renderHook(() => useToasts());
-    act(() => { result.current.add('Gespeichert', 'success'); });
-    expect(result.current.toasts).toHaveLength(1);
-    expect(result.current.toasts[0].msg).toBe('Gespeichert');
-    expect(result.current.toasts[0].type).toBe('success');
+    result.current.add('Gespeichert', 'success');
+    expect(sonner.success).toHaveBeenCalledWith('Gespeichert');
   });
 
-  it('auto-removes toast after duration', () => {
+  it('calls sonner.error for error type', () => {
     const { result } = renderHook(() => useToasts());
-    act(() => { result.current.add('Hallo', 'info', 1000); });
-    expect(result.current.toasts).toHaveLength(1);
-    act(() => { vi.advanceTimersByTime(1100); });
-    expect(result.current.toasts).toHaveLength(0);
+    result.current.add('Fehler', 'error');
+    expect(sonner.error).toHaveBeenCalledWith('Fehler');
   });
 
-  it('removes a toast manually via rm()', () => {
+  it('calls sonner.warning for warn type', () => {
     const { result } = renderHook(() => useToasts());
-    act(() => { result.current.add('Fehler', 'error'); });
-    const id = result.current.toasts[0].id;
-    act(() => { result.current.rm(id); });
-    expect(result.current.toasts).toHaveLength(0);
+    result.current.add('Achtung', 'warn');
+    expect(sonner.warning).toHaveBeenCalledWith('Achtung');
   });
 
-  it('can stack multiple toasts', () => {
+  it('calls sonner directly for info type', () => {
     const { result } = renderHook(() => useToasts());
-    act(() => {
-      result.current.add('Eins', 'info');
-      result.current.add('Zwei', 'success');
-      result.current.add('Drei', 'error');
-    });
-    expect(result.current.toasts).toHaveLength(3);
+    result.current.add('Info');
+    expect(sonner).toHaveBeenCalledWith('Info');
   });
 
-  it('defaults to type "info" when no type given', () => {
+  it('defaults to info type when no type given', () => {
     const { result } = renderHook(() => useToasts());
-    act(() => { result.current.add('Test'); });
-    expect(result.current.toasts[0].type).toBe('info');
+    result.current.add('Test');
+    expect(sonner).toHaveBeenCalledWith('Test');
   });
 });

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import { Toaster } from "sonner";
 import { C, GLOBAL_CSS } from "./styles/theme";
 import { useStore } from "./hooks/useStore";

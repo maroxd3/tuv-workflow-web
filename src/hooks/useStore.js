@@ -38,9 +38,8 @@ function makeSeed() {
 export function useStore() {
   const VFZK = "tuvpro_fz_v3";
   const VTRK = "tuvpro_tr_v3";
-  const [fz, setFz] = useState(() => { try { const s = localStorage.getItem(VFZK); return s ? JSON.parse(s) : null; } catch { return null; } });
-  const [tr, setTr] = useState(() => { try { const s = localStorage.getItem(VTRK); return s ? JSON.parse(s) : null; } catch { return null; } });
-  useEffect(() => { if (!fz || !tr) { const s = makeSeed(); setFz(s.fahrzeuge); setTr(s.termine); } }, []);
+  const [fz, setFz] = useState(() => { try { const s = localStorage.getItem(VFZK); if (s) return JSON.parse(s); } catch { /* corrupt data */ } const seed = makeSeed(); return seed.fahrzeuge; });
+  const [tr, setTr] = useState(() => { try { const s = localStorage.getItem(VTRK); if (s) return JSON.parse(s); } catch { /* corrupt data */ } const seed = makeSeed(); return seed.termine; });
   useEffect(() => { if (fz) localStorage.setItem(VFZK, JSON.stringify(fz)); }, [fz]);
   useEffect(() => { if (tr) localStorage.setItem(VTRK, JSON.stringify(tr)); }, [tr]);
 

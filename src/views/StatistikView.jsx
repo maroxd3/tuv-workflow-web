@@ -68,7 +68,8 @@ function CardHead({ title, icon: Icon, sub }) {
 
 export function StatistikView({ termine, fahrzeuge }) {
   const [range, setRange] = useState(30);
-  const cutoff = useMemo(() => isoDate(new Date(Date.now() - range * 86400000)), [range]);
+  const [now] = useState(() => Date.now());
+  const cutoff = useMemo(() => isoDate(new Date(now - range * 86400000)), [range, now]);
 
   /* ── Core stats ── */
   const s = useMemo(() => {
@@ -91,10 +92,10 @@ export function StatistikView({ termine, fahrzeuge }) {
       const tmpl = MANGEL_KATALOG.find(e => e.code === code);
       return { code, cnt, text: tmpl?.text || code, kat: tmpl?.kat || "EM" };
     });
-    const huFaellig = fahrzeuge.filter(f => f.hu_faellig && new Date(f.hu_faellig) <= new Date(Date.now() + 30 * 86400000) && new Date(f.hu_faellig) >= new Date()).length;
-    const huUeberr = fahrzeuge.filter(f => f.hu_faellig && new Date(f.hu_faellig) < new Date()).length;
+    const huFaellig = fahrzeuge.filter(f => f.hu_faellig && new Date(f.hu_faellig) <= new Date(now + 30 * 86400000) && new Date(f.hu_faellig) >= new Date(now)).length;
+    const huUeberr = fahrzeuge.filter(f => f.hu_faellig && new Date(f.hu_faellig) < new Date(now)).length;
     return { total: inRange.length, best, fail, passR, allM: allM.length, mKat, byP, byArt, top10, huFaellig, huUeberr };
-  }, [termine, fahrzeuge, cutoff]);
+  }, [termine, fahrzeuge, cutoff, now]);
 
   /* ── Trend data (daily pass rate) ── */
   const trendData = useMemo(() => {
