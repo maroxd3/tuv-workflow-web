@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
-import { AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronLeft, ChevronRight, Clock, Plus, ArrowRight,
   ClipboardList, Pencil, Trash2, AlertOctagon, CheckCircle2, XCircle, Calendar,

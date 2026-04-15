@@ -14,6 +14,7 @@ A vehicle inspection management system for TUV facilities, built as a Tauri desk
 | Layer       | Technology                            |
 |-------------|---------------------------------------|
 | Frontend    | React 19, Vite 8                      |
+| Backend     | Firebase Firestore (Cloud NoSQL)      |
 | Desktop     | Tauri 2 (Rust)                        |
 | Styling     | Tailwind CSS 4, Framer Motion         |
 | Charts      | Recharts                              |

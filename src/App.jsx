@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Toaster } from "sonner";
 import { C, GLOBAL_CSS } from "./styles/theme";
 import { useStore } from "./hooks/useStore";
@@ -18,6 +18,23 @@ export default function App() {
   const S = useStore();
 
   const SIDEBAR_W = 240;
+
+  if (!S.ready) {
+    return (
+      <div style={{
+        minHeight: "100vh", background: C.bg, fontFamily: C.sans,
+        display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 16,
+      }}>
+        <style>{GLOBAL_CSS}</style>
+        <div style={{
+          width: 40, height: 40, border: `3px solid ${C.line}`, borderTopColor: C.cyan,
+          borderRadius: "50%", animation: "spin 0.8s linear infinite",
+        }} />
+        <div style={{ color: C.t3, fontSize: 14, fontWeight: 500 }}>Daten werden geladen...</div>
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    );
+  }
 
   return (
     <div style={{ minHeight: "100vh", background: C.bg, fontFamily: C.sans, color: C.t1, display: "flex" }}>

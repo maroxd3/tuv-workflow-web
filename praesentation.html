@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>TUV Prufstelle Pro - Praesentation</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: #0f0f1a;
+    color: #e2e8f0;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .slide {
+    width: 1280px;
+    height: 720px;
+    margin: 20px auto;
+    padding: 60px 72px;
+    background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%);
+    position: relative;
+    overflow: hidden;
+    page-break-after: always;
+    border-radius: 8px;
+  }
+
+  .slide::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #06c8d8, #0fc28a, #06c8d8);
+  }
+
+  .slide-number {
+    position: absolute;
+    bottom: 28px; right: 40px;
+    font-size: 12px;
+    color: #64748b;
+    font-weight: 500;
+  }
+
+  .footer-line {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(6,200,216,0.3), transparent);
+  }
+
+  .logo-text {
+    position: absolute;
+    bottom: 28px; left: 40px;
+    font-size: 11px;
+    color: #475569;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+  }
+
+  /* ── Title slide ── */
+  .slide-title {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+  }
+
+  .slide-title .badge {
+    display: inline-block;
+    padding: 6px 18px;
+    border-radius: 20px;
+    background: rgba(6,200,216,0.12);
+    border: 1px solid rgba(6,200,216,0.3);
+    font-size: 12px;
+    font-weight: 600;
+    color: #06c8d8;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 28px;
+  }
+
+  .slide-title h1 {
+    font-size: 52px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    background: linear-gradient(135deg, #e2e8f0, #06c8d8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 16px;
+  }
+
+  .slide-title .subtitle {
+    font-size: 20px;
+    color: #94a3b8;
+    font-weight: 400;
+    margin-bottom: 48px;
+  }
+
+  .slide-title .meta {
+    font-size: 14px;
+    color: #64748b;
+    line-height: 1.8;
+  }
+
+  .slide-title .meta strong {
+    color: #94a3b8;
+  }
+
+  /* ── Section headers ── */
+  h2 {
+    font-size: 36px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: #f1f5f9;
+    margin-bottom: 8px;
+  }
+
+  h2 .accent {
+    color: #06c8d8;
+  }
+
+  .slide-subtitle {
+    font-size: 15px;
+    color: #64748b;
+    margin-bottom: 40px;
+    font-weight: 400;
+  }
+
+  h3 {
+    font-size: 18px;
+    font-weight: 700;
+    color: #e2e8f0;
+    margin-bottom: 12px;
+  }
+
+  /* ── Content helpers ── */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    margin-top: 10px;
+  }
+
+  .three-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 24px;
+    margin-top: 10px;
+  }
+
+  .four-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 20px;
+    margin-top: 10px;
+  }
+
+  .card {
+    background: rgba(30,41,59,0.6);
+    border: 1px solid rgba(100,116,139,0.2);
+    border-radius: 14px;
+    padding: 24px;
+  }
+
+  .card-accent {
+    border-top: 3px solid #06c8d8;
+  }
+
+  .card-green { border-top: 3px solid #0fc28a; }
+  .card-amber { border-top: 3px solid #f5a620; }
+  .card-red { border-top: 3px solid #f0455a; }
+  .card-purple { border-top: 3px solid #9663f5; }
+  .card-cyan { border-top: 3px solid #06c8d8; }
+  .card-blue { border-top: 3px solid #3b82f6; }
+
+  .card h4 {
+    font-size: 13px;
+    font-weight: 700;
+    color: #06c8d8;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 10px;
+  }
+
+  .card-green h4 { color: #0fc28a; }
+  .card-amber h4 { color: #f5a620; }
+  .card-red h4 { color: #f0455a; }
+  .card-purple h4 { color: #9663f5; }
+  .card-blue h4 { color: #3b82f6; }
+
+  .card p, .card li {
+    font-size: 14px;
+    color: #94a3b8;
+    line-height: 1.7;
+  }
+
+  ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  ul li {
+    font-size: 15px;
+    color: #cbd5e1;
+    line-height: 1.7;
+    padding-left: 20px;
+    position: relative;
+    margin-bottom: 4px;
+  }
+
+  ul li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 10px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #06c8d8;
+  }
+
+  .tag {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    margin: 3px;
+  }
+
+  .tag-cyan { background: rgba(6,200,216,0.15); color: #06c8d8; border: 1px solid rgba(6,200,216,0.3); }
+  .tag-green { background: rgba(15,194,138,0.15); color: #0fc28a; border: 1px solid rgba(15,194,138,0.3); }
+  .tag-amber { background: rgba(245,166,32,0.15); color: #f5a620; border: 1px solid rgba(245,166,32,0.3); }
+  .tag-purple { background: rgba(150,99,245,0.15); color: #9663f5; border: 1px solid rgba(150,99,245,0.3); }
+  .tag-blue { background: rgba(59,130,246,0.15); color: #3b82f6; border: 1px solid rgba(59,130,246,0.3); }
+
+  .big-number {
+    font-size: 42px;
+    font-weight: 800;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: -0.02em;
+  }
+
+  .big-number.cyan { color: #06c8d8; }
+  .big-number.green { color: #0fc28a; }
+  .big-number.amber { color: #f5a620; }
+  .big-number.purple { color: #9663f5; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 12px;
+  }
+
+  th {
+    text-align: left;
+    font-size: 11px;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 10px 16px;
+    border-bottom: 1px solid rgba(100,116,139,0.2);
+  }
+
+  td {
+    font-size: 14px;
+    color: #cbd5e1;
+    padding: 10px 16px;
+    border-bottom: 1px solid rgba(100,116,139,0.1);
+  }
+
+  .flow-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin: 20px 0;
+  }
+
+  .flow-step {
+    background: rgba(30,41,59,0.8);
+    border: 1px solid rgba(100,116,139,0.25);
+    border-radius: 10px;
+    padding: 14px 20px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: #cbd5e1;
+    min-width: 140px;
+  }
+
+  .flow-step.active {
+    border-color: rgba(6,200,216,0.5);
+    background: rgba(6,200,216,0.08);
+    color: #06c8d8;
+  }
+
+  .arrow {
+    color: #475569;
+    font-size: 20px;
+  }
+
+  .highlight-box {
+    background: rgba(6,200,216,0.06);
+    border: 1px solid rgba(6,200,216,0.2);
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin-top: 16px;
+  }
+
+  .diagram-box {
+    background: rgba(15,23,42,0.6);
+    border: 1px solid rgba(100,116,139,0.2);
+    border-radius: 12px;
+    padding: 24px;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    color: #94a3b8;
+    line-height: 1.6;
+    white-space: pre;
+  }
+
+  .center { text-align: center; }
+
+  /* ── Agenda ── */
+  .agenda-list {
+    list-style: none;
+    padding: 0;
+    margin-top: 20px;
+  }
+
+  .agenda-list li {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(100,116,139,0.12);
+    font-size: 17px;
+    color: #cbd5e1;
+    font-weight: 500;
+  }
+
+  .agenda-list li::before {
+    display: none;
+  }
+
+  .agenda-num {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: rgba(6,200,216,0.12);
+    border: 1px solid rgba(6,200,216,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+    color: #06c8d8;
+    flex-shrink: 0;
+  }
+
+  /* ── Print ── */
+  @media print {
+    body { background: #0f0f1a; }
+    .slide {
+      margin: 0;
+      border-radius: 0;
+      page-break-after: always;
+      page-break-inside: avoid;
+    }
+  }
+
+  @page {
+    size: 1280px 720px;
+    margin: 0;
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════ SLIDE 1: TITEL ═══════════════ -->
+<div class="slide slide-title">
+  <div class="badge">Software-Projekt IIM-211-01</div>
+  <h1>TUV Prufstelle Pro</h1>
+  <div class="subtitle">Verwaltungssystem fur TUV-Prufstellen</div>
+  <div class="meta">
+    <strong>Marwan Saleh</strong> (1724556) &nbsp;&bull;&nbsp; <strong>Oussama Hlayhel</strong><br>
+    Sommersemester 2026 &nbsp;&bull;&nbsp; Frau Fuchs<br>
+    Hochschule &nbsp;&bull;&nbsp; IIM 6. Semester
+  </div>
+  <div class="footer-line"></div>
+</div>
+
+<!-- ═══════════════ SLIDE 2: AGENDA ═══════════════ -->
+<div class="slide">
+  <h2><span class="accent">01</span> Agenda</h2>
+  <div class="slide-subtitle">Uberblick uber die Prasentation</div>
+  <ul class="agenda-list">
+    <li><span class="agenda-num">01</span> Problemstellung & Motivation</li>
+    <li><span class="agenda-num">02</span> Anforderungsanalyse & Pflichtenheft</li>
+    <li><span class="agenda-num">03</span> Architektur & Technologie-Entscheidungen</li>
+    <li><span class="agenda-num">04</span> Entwurf & Komponentenstruktur</li>
+    <li><span class="agenda-num">05</span> Implementierung & Features</li>
+    <li><span class="agenda-num">06</span> Test & Qualitatssicherung</li>
+    <li><span class="agenda-num">07</span> Live-Demo</li>
+    <li><span class="agenda-num">08</span> Fazit & Ausblick</li>
+  </ul>
+  <div class="slide-number">2 / 13</div>
+  <div class="logo-text">TUV Prufstelle Pro</div>
+  <div class="footer-line"></div>
+</div>
+
+<!-- ═══════════════ SLIDE 3: PROBLEMSTELLUNG ═══════════════ -->
+<div class="slide">
+  <h2><span class="accent">02</span> Problemstellung & Motivation</h2>
+  <div class="slide-subtitle">Warum dieses Projekt?</div>
+  <div class="two-col">
+    <div>
+      <div class="card card-red" style="margin-bottom: 20px;">
+        <h4>Problem</h4>
+        <ul>
+          <li>TUV-Prufstellen verwalten Termine, Fahrzeuge und Mangel haufig noch mit Excel oder Papier</li>
+          <li>Keine Echtzeit-Ubersicht uber Tagesablauf und Pruferstatus</li>
+          <li>Berichte werden manuell erstellt  &mdash; fehleranfallig und zeitaufwandig</li>
+          <li>Keine zentrale Statistik uber Bestehensquoten und haufige Mangel</li>
+          <li>Kein Echtzeit-Datenaustausch zwischen Arbeitsplatzen</li>
+        </ul>
+      </div>
+    </div>
+    <div>
+      <div class="card card-green">
+        <h4>Unsere Losung</h4>
+        <ul>
+          <li>Digitale Prufstellenverwaltung mit Tagesplan, Fahrzeugdatenbank und Mangelkatalog</li>
+          <li>Cloud-Datenbank (Firebase Firestore) mit Echtzeit-Synchronisation</li>
+          <li>Interaktives Dashboard mit KPIs und Trendanalysen</li>
+          <li>Automatische Berichtsgenerierung nach gesetzlichen Vorgaben</li>
+          <li>Desktop-App (Tauri) + Web-Frontend fur flexible Nutzung</li>
+        </ul>
+      </div>
+      <div class="highlight-box" style="margin-top: 16px;">
+        <p style="font-size: 13px; color: #06c8d8; font-weight: 600;">Zielgruppe: TUV-Prufingenieure, Sachverstandige und Prufstellenleiter</p>
+      </div>
+    </div>
+  </div>
+  <div class="slide-number">3 / 13</div>
+  <div class="logo-text">TUV Prufstelle Pro</div>
+  <div class="footer-line"></div>
+</div>
+
+<!-- ═══════════════ SLIDE 4: ANFORDERUNGSANALYSE ═══════════════ -->
+<div class="slide">
+  <h2><span class="accent">03</span> Anforderungsanalyse</h2>
+  <div class="slide-subtitle">Pflichtenheft &mdash; Funktionale und nicht-funktionale Anforderungen</div>
+  <div class="two-col">
+    <div>
+      <div class="card card-cyan">
+        <h4>Funktionale Anforderungen</h4>
+        <ul>
+          <li>CRUD-Operationen fur Fahrzeuge und Termine</li>
+          <li>Tagesplan mit Timeline- und Tabellenansicht</li>
+          <li>Mangelerfassung nach offiziellem TUV-Katalog (~100 Eintr.)</li>
+          <li>Statusverwaltung: 7 Prufstatus (Geplant &rarr; Bestanden etc.)</li>
+          <li>12 Prufarten (HU, AU, SP, Gasanlagen, ...)</li>
+          <li>Berichtsgenerierung und Export als Textdatei</li>
+          <li>Statistik-Dashboard mit Diagrammen</li>
+          <li>HU-Falligkeitswarnungen</li>
+        </ul>
+      </div>
+    </div>
+    <div>
+      <div class="card card-purple">
+        <h4>Nicht-funktionale Anforderungen</h4>
+        <ul>
+          <li>Performante UI mit &lt; 100ms Reaktionszeit</li>
+          <li>Cloud-Persistenz (Firebase) mit Offline-Fallback (localStorage)</li>
+          <li>Intuitive Bedienung ohne Schulung</li>
+          <li>Cross-Platform: Web + Desktop (Windows/macOS/Linux)</li>
+          <li>Responsive Layout</li>
+          <li>Erweiterbar fur Backend-Anbindung</li>
+        </ul>
+      </div>
+      <div class="card card-amber" style="margin-top: 16px;">
+        <h4>Abgrenzung</h4>
+        <ul>
+          <li>Kein Multi-User / Authentifizierung (Prototyp)</li>
+          <li>Keine Anbindung an TUV-Schnittstellen</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="slide-number">4 / 13</div>
+  <div class="logo-text">TUV Prufstelle Pro</div>
+  <div class="footer-line"></div>
+</div>
+
+<!-- ═══════════════ SLIDE 5: TECHNOLOGIE-STACK ═══════════════ -->
+<div class="slide">
+  <h2><span class="accent">04</span> Technologie-Stack</h2>
+  <div class="slide-subtitle">Bewusste Entscheidungen fur moderne, performante Technologien</div>
+  <div class="four-col">
+    <div class="card card-cyan">
+      <h4>Frontend</h4>
+      <div style="margin-top: 8px;">
+        <span class="tag tag-cyan">React 19</span>
+        <span class="tag tag-cyan">Vite 8</span>
+        <span class="tag tag-cyan">Tailwind CSS 4</span>
+        <span class="tag tag-cyan">Framer Motion</span>
+      </div>
+      <p style="margin-top: 14px; font-size: 12px;">
+        React 19 fur deklarative UI. Vite als schneller Bundler. Tailwind fur utility-basiertes Styling.
+      </p>
+    </div>
+    <div class="card card-amber">
+      <h4>Backend / Datenbank</h4>
+      <div style="margin-top: 8px;">
+        <span class="tag tag-amber">Firebase</span>
+        <span class="tag tag-amber">Firestore</span>
+      </div>
+      <p style="margin-top: 14px; font-size: 12px;">
+        Cloud-NoSQL-Datenbank mit Echtzeit-Synchronisation. Daten werden live zwischen allen Clients synchronisiert.
+      </p>
+    </div>
+    <div class="card card-green">
+      <h4>Desktop</h4>
+      <div style="margin-top: 8px;">
+        <span class="tag tag-green">Tauri 2</span>
+        <span class="tag tag-green">Rust</span>
+      </div>
+      <p style="margin-top: 14px; font-size: 12px;">
+        Tauri statt Electron: ~10x kleinere Binary, weniger RAM, native Performance.
+      </p>
+    </div>
+    <div class="card card-purple">
+      <h4>Visualisierung</h4>
+      <div style="margin-top: 8px;">
+        <span class="tag tag-purple">Recharts</span>
+        <span class="tag tag-purple">Lucide Icons</span>
+      </div>
+      <p style="margin-top: 14px; font-size: 12px;">
+        Interaktive Diagramme (Area, Bar, Pie). Konsistente Iconografie mit 40+ Icons.
+      </p>
+    </div>
+  </div>
+  <div style="margin-top: 24px;">
+    <div class="card" style="display: flex; align-items: center; gap: 32px; padding: 18px 24px;">
+      <div>
+        <h4 style="color: #f5a620; font-size: 11px; margin-bottom: 4px;">WARUM DIESE ENTSCHEIDUNGEN?</h4>
+        <p style="font-size: 13px; color: #94a3b8;">
+          <strong style="color:#cbd5e1;">React + Vite</strong> = schnellste Entwicklung &nbsp;|&nbsp;
+          <strong style="color:#cbd5e1;">Firebase Firestore</strong> = Echtzeit-Sync ohne eigenen Server &nbsp;|&nbsp;
+          <strong style="color:#cbd5e1;">Tauri</strong> = leichtgewichtiger als Electron (6 MB vs 150 MB) &nbsp;|&nbsp;
+          <strong style="color:#cbd5e1;">localStorage</strong> = Offline-Fallback
+        </p>
+      </div>
+    </div>
+  </div>
+  <div class="slide-number">5 / 13</div>
+  <div class="logo-text">TUV Prufstelle Pro</div>
+  <div class="footer-line"></div>
+</div>
+
+<!-- ═══════════════ SLIDE 6: ARCHITEKTUR ═══════════════ -->
+<div class="slide">
+  <h2><span class="accent">05</span> Entwurf & Architektur</h2>
+  <div class="slide-subtitle">Komponentenbasierte Architektur mit klarer Trennung der Verantwortlichkeiten</div>
+  <div class="two-col">
+    <div>
+      <div class="diagram-box" style="font-size: 12px; line-height: 1.5;">
+src/
+  App.jsx                  <span style="color:#06c8d8;">Routing & Layout</span>
+  firebase.js              <span style="color:#f5a620;">Firestore-Verbindung</span>
+  views/                   <span style="color:#0fc28a;">4 Hauptansichten</span>
+    TagesplanView.jsx
+    FahrzeugeView.jsx
+    StatistikView.jsx
+    BerichteView.jsx
+  components/              <span style="color:#f5a620;">Wiederverwendbare UI</span>
+    ui/     (Buttons, Inputs, Pills, KPIs)
+    modal/  (Modal, ConfirmModal)
+  features/                <span style="color:#9663f5;">Feature-Module</span>
+    fahrzeug/  FahrzeugModal
+    termin/    TerminModal
+    mangel/    MaengelModal
+  hooks/                   <span style="color:#f0455a;">State & Logik</span>
+    useStore.js
+    useToasts.js
+  constants/               <span style="color:#3b82f6;">Konfiguration</span>
+    status, pruefung, mangel, fahrzeug
+  utils/                   <span style="color:#64748b;">Hilfsfunktionen</span>
+    date.js, mangel.js</div>
+    </div>
+    <div>
+      <div class="card card-cyan" style="margin-bottom: 16px;">
+        <h4>Entwurfsprinzipien</h4>
+        <ul>
+          <li><strong>Single Responsibility</strong> &mdash; Jede Komponente hat eine klar definierte Aufgabe</li>
+          <li><strong>Composition</strong> &mdash; Komplexe Views aus einfachen UI-Bausteinen zusammengesetzt</li>
+          <li><strong>Custom Hooks</strong> &mdash; Geschaftslogik von UI-Logik getrennt</li>
+          <li><strong>Barrel Exports</strong> &mdash; Saubere Import-Pfade uber index.js</li>
+        </ul>
+      </div>
+      <div class="card card-green">
+        <h4>Datenfluss</h4>
+        <p style="font-size: 13px; text-align: center; margin-top: 8px;">
+          <span class="tag tag-amber">Firestore</span>
+          &nbsp;&harr;&nbsp;
+          <span class="tag tag-green">useStore()</span>
+          &nbsp;&rarr;&nbsp;
+          <span class="tag tag-cyan">App.jsx</span>
+          &nbsp;&rarr;&nbsp;
+          <span class="tag tag-purple">Views</span>
+        </p>
+        <p style="font-size: 12px; color: #64748b; margin-top: 10px; text-align: center;">
+          Echtzeit-Sync via onSnapshot &mdash; localStorage als Offline-Cache
+        </p>
+      </div>
+    </div>
+  </div>
+  <div class="slide-number">6 / 13</div>
+  <div class="logo-text">TUV Prufstelle Pro</div>
+  <div class="footer-line"></div>
+</div>
+
+<!-- ═══════════════ SLIDE 7: FEATURES 1 ═══════════════ -->
+<div class="slide">
+  <h2><span class="accent">06</span> Implementierung &mdash; Hauptfeatures</h2>
+  <div class="slide-subtitle">Die vier Kernmodule der Anwendung</div>
+  <div class="four-col">
+    <div class="card card-cyan">
+      <h4>Tagesplan</h4>
+      <ul>
+        <li>Timeline-Ansicht mit Zeitslots (07:00&ndash;18:00)</li>
+        <li>Tabellen-Ansicht als Alternative</li>
+        <li>Wochennavigation mit Terminavzahlen</li>
+        <li>Status-Workflow: Geplant &rarr; In Prufung &rarr; Bestanden</li>
+        <li>KPI-Karten (Bestehensquote, offene Mangel)</li>
+      </ul>
+    </div>
+    <div class="card card-green">
+      <h4>Fahrzeuge</h4>
+      <ul>
+        <li>Fahrzeug-Kartengrid mit Detailansicht</li>
+        <li>Such- und Filterfunktion (Typ, Kennzeichen, FIN)</li>
+        <li>Prufhistorie pro Fahrzeug</li>
+        <li>HU-Falligkeits-Countdown</li>
+        <li>Hinzufugen / Bearbeiten / Loschen</li>
+      </ul>
+    </div>
+    <div class="card card-purple">
+      <h4>Statistik</h4>
+      <ul>
+        <li>Zeitraumfilter (7/30/90/365 Tage)</li>
+        <li>Area-Chart: Bestehensquote-Trend</li>
+        <li>Bar-Chart: Leistung pro Prufer</li>
+        <li>Pie-Chart: Mangel nach Kategorie</li>
+        <li>Top-10-Mangelstatistik</li>
+      </ul>
+    </div>
+    <div class="card card-amber">
+      <h4>Berichte</h4>
+      <ul>
+        <li>Alle abgeschlossenen Prufungen auflisten</li>
+        <li>Filter: Bestanden, Nicht bestanden, Nachprufung</li>
+        <li>Berichtsvorschau im TUV-Format</li>
+        <li>Export als .txt-Datei</li>
+        <li>Gesetzeskonforme Textbausteine</li>
+      </ul>
+    </div>
+  </div>
+  <div style="margin-top: 20px;">
+    <div class="flow-arrow">
+      <div class="flow-step active">Termin anlegen</div>
+      <span class="arrow">&rarr;</span>
+      <div class="flow-step">Prufung starten</div>
+      <span class="arrow">&rarr;</span>
+      <div class="flow-step">Mangel erfassen</div>
+      <span class="arrow">&rarr;</span>
+      <div class="flow-step">Status setzen</div>
+      <span class="arrow">&rarr;</span>
+      <div class="flow-step active">Bericht generieren</div>
+    </div>
+  </div>
+  <div class="slide-number">7 / 13</div>
+  <div class="logo-text">TUV Prufstelle Pro</div>
+  <div class="footer-line"></div>
+</div>
+
+<!-- ═══════════════ SLIDE 8: IMPLEMENTIERUNG DETAILS ═══════════════ -->
+<div class="slide">
+  <h2><span class="accent">06</span> Implementierung &mdash; Details</h2>
+  <div class="slide-subtitle">Technische Highlights und Datenmodell</div>
+  <div class="two-col">
+    <div>
+      <div class="card card-cyan" style="margin-bottom: 16px;">
+        <h4>Datenmodell</h4>
+        <table>
+          <tr><th>Entitat</th><th>Felder</th><th>Beziehung</th></tr>
+          <tr><td><strong>Fahrzeug</strong></td><td>14 Attribute</td><td>1 : N Termine</td></tr>
+          <tr><td><strong>Termin</strong></td><td>10 Attribute</td><td>1 : N Mangel</td></tr>
+          <tr><td><strong>Mangel</strong></td><td>5 Attribute</td><td>N : 1 Termin</td></tr>
+        </table>
+      </div>
+      <div class="card card-green">
+        <h4>State Management</h4>
+        <ul>
+          <li><strong>useStore()</strong> &mdash; Zentraler Hook fur alle CRUD-Operationen</li>
+          <li><strong>Firebase Firestore</strong> &mdash; Cloud-Persistenz mit Echtzeit-Sync (onSnapshot)</li>
+          <li><strong>localStorage</strong> &mdash; Offline-Fallback-Cache</li>
+          <li><strong>Seed-Daten</strong> &mdash; 8 Fahrzeuge + 13 Termine bei erstem Start</li>
+        </ul>
+      </div>
+    </div>
+    <div>
+      <div class="card card-purple" style="margin-bottom: 16px;">
+        <h4>Fachlichkeit</h4>
+        <ul>
+          <li><strong>12 Prufarten</strong> nach StVZO (HU, AU, SP, ...)</li>
+          <li><strong>5 Prufer</strong> mit Zertifizierungen</li>
+          <li><strong>7 Status</strong> im Pruf-Workflow</li>
+          <li><strong>~100 Mangelcodes</strong> nach TUV-Katalog</li>
+          <li><strong>5 Mangelkategorien</strong> (OM, GM, EM, HM, GF)</li>
+          <li><strong>16 Fahrzeugtypen</strong></li>
+        </ul>
+      </div>
+      <div class="card card-amber">
+        <h4>UX-Highlights</h4>
+        <ul>
+          <li>Animierte Seitennavigation (Framer Motion)</li>
+          <li>Farbkodierte Status-Pills</li>
+          <li>Toast-Benachrichtigungen (Sonner)</li>
+          <li>Bestatigungsdialoge fur destruktive Aktionen</li>
+          <li>Dark-Theme mit professionellem Design</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="slide-number">8 / 13</div>
+  <div class="logo-text">TUV Prufstelle Pro</div>
+  <div class="footer-line"></div>
+</div>
+
+<!-- ═══════════════ SLIDE 9: TESTING ═══════════════ -->
+<div class="slide">
+  <h2><span class="accent">07</span> Test & Qualitatssicherung</h2>
+  <div class="slide-subtitle">Automatisierte Tests und statische Codeanalyse</div>
+  <div class="two-col">
+    <div>
+      <div class="card card-green" style="margin-bottom: 16px;">
+        <h4>Teststrategie</h4>
+        <ul>
+          <li><strong>Unit Tests</strong> &mdash; Utility-Funktionen (date.js, mangel.js)</li>
+          <li><strong>Component Tests</strong> &mdash; UI-Bausteine (StatusPill, Buttons, Inputs)</li>
+          <li><strong>Hook Tests</strong> &mdash; useToasts-Integration mit Sonner</li>
+          <li><strong>Framework</strong> &mdash; Vitest + React Testing Library</li>
+        </ul>
+      </div>
+      <div style="display: flex; gap: 16px;">
+        <div class="card card-cyan" style="flex:1; text-align: center;">
+          <div class="big-number cyan">52</div>
+          <p style="font-size: 12px; margin-top: 4px;">Tests gesamt</p>
+        </div>
+        <div class="card card-green" style="flex:1; text-align: center;">
+          <div class="big-number green">100%</div>
+          <p style="font-size: 12px; margin-top: 4px;">Bestanden</p>
+        </div>
+        <div class="card card-amber" style="flex:1; text-align: center;">
+          <div class="big-number amber">0</div>
+          <p style="font-size: 12px; margin-top: 4px;">Lint-Fehler</p>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card card-purple" style="margin-bottom: 16px;">
+        <h4>Statische Analyse</h4>
+        <ul>
+          <li><strong>ESLint 9</strong> mit Flat Config</li>
+          <li><strong>React Hooks Linting</strong> &mdash; Dependency-Prufung, Purity-Checks</li>
+          <li><strong>React Refresh</strong> &mdash; Hot-Reload-Kompatibilitat</li>
+        </ul>
+      </div>
+      <div class="card card-blue">
+        <h4>Getestete Bereiche</h4>
+        <table>
+          <tr><th>Testdatei</th><th>Tests</th></tr>
+          <tr><td>date.test.js</td><td>13 Tests &mdash; Datumsformatierung</td></tr>
+          <tr><td>mangel.test.js</td><td>Mangel-Hilfsfunktionen</td></tr>
+          <tr><td>StatusPill.test.jsx</td><td>4+ Tests &mdash; Alle 7 Status</td></tr>
+          <tr><td>buttons.test.jsx</td><td>Varianten & Zustande</td></tr>
+          <tr><td>inputs.test.jsx</td><td>Formularfelder</td></tr>
+          <tr><td>useToasts.test.js</td><td>6 Tests &mdash; Sonner-Integration</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="slide-number">9 / 13</div>
+  <div class="logo-text">TUV Prufstelle Pro</div>
+  <div class="footer-line"></div>
+</div>
+
+<!-- ═══════════════ SLIDE 10: VERSIONSVERWALTUNG ═══════════════ -->
+<div class="slide">
+  <h2><span class="accent">08</span> Projektplanung & Versionsverwaltung</h2>
+  <div class="slide-subtitle">Entwicklungsprozess im Team</div>
+  <div class="two-col">
+    <div>
+      <div class="card card-cyan" style="margin-bottom: 16px;">
+        <h4>Versionsverwaltung</h4>
+        <ul>
+          <li><strong>Git</strong> als Versionskontrollsystem</li>
+          <li><strong>GitHub</strong> als Remote-Repository</li>
+          <li>Repository: <span style="color:#06c8d8; font-size: 13px;">github.com/maroxd3/tuv-workflow-web</span></li>
+          <li>Strukturierte Commit-Messages</li>
+          <li>.gitignore fur node_modules, dist, Configs</li>
+        </ul>
+      </div>
+      <div class="card card-green">
+        <h4>Aufgabenverteilung</h4>
+        <table>
+          <tr><th>Teammitglied</th><th>Schwerpunkt</th></tr>
+          <tr><td><strong>Marwan Saleh</strong></td><td>Frontend, State-Management, Statistik</td></tr>
+          <tr><td><strong>Oussama Hlayhel</strong></td><td>UI-Komponenten, Berichte, Testing</td></tr>
+        </table>
+      </div>
+    </div>
+    <div>
+      <div class="card card-purple" style="margin-bottom: 16px;">
+        <h4>Entwicklungsphasen</h4>
+        <div style="margin-top: 8px;">
+          <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px;">
+            <span class="tag tag-cyan" style="min-width:40px; text-align:center;">W1-2</span>
+            <span style="font-size:13px; color:#cbd5e1;">Anforderungsanalyse & Pflichtenheft</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px;">
+            <span class="tag tag-green" style="min-width:40px; text-align:center;">W3-4</span>
+            <span style="font-size:13px; color:#cbd5e1;">Entwurf & Projektaufbau</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px;">
+            <span class="tag tag-purple" style="min-width:40px; text-align:center;">W5-9</span>
+            <span style="font-size:13px; color:#cbd5e1;">Implementierung der Kernfeatures</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px;">
+            <span class="tag tag-amber" style="min-width:40px; text-align:center;">W10-11</span>
+            <span style="font-size:13px; color:#cbd5e1;">Testing & Bugfixing</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:12px;">
+            <span class="tag tag-blue" style="min-width:40px; text-align:center;">W12+</span>
+            <span style="font-size:13px; color:#cbd5e1;">Dokumentation & Prasentation</span>
+          </div>
+        </div>
+      </div>
+      <div class="card card-amber">
+        <h4>Tools</h4>
+        <div style="margin-top: 8px;">
+          <span class="tag tag-cyan">Git</span>
+          <span class="tag tag-green">GitHub</span>
+          <span class="tag tag-purple">VS Code</span>
+          <span class="tag tag-amber">npm</span>
+          <span class="tag tag-blue">Vite Dev Server</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-number">10 / 13</div>
+  <div class="logo-text">TUV Prufstelle Pro</div>
+  <div class="footer-line"></div>
+</div>
+
+<!-- ═══════════════ SLIDE 11: SOFTWAREPROZESS ═══════════════ -->
+<div class="slide">
+  <h2><span class="accent">09</span> Software-Entwicklungsprozess</h2>
+  <div class="slide-subtitle">Durchlaufene Phasen des Softwareentwicklungszyklus</div>
+  <div class="flow-arrow" style="margin-bottom: 30px;">
+    <div class="flow-step active">Anforderungs-<br>analyse</div>
+    <span class="arrow">&rarr;</span>
+    <div class="flow-step active">Entwurf</div>
+    <span class="arrow">&rarr;</span>
+    <div class="flow-step active">Implementierung</div>
+    <span class="arrow">&rarr;</span>
+    <div class="flow-step active">Test</div>
+    <span class="arrow">&rarr;</span>
+    <div class="flow-step active">Dokumentation</div>
+  </div>
+  <div class="three-col">
+    <div class="card card-cyan">
+      <h4>Anforderungen</h4>
+      <ul>
+        <li>Gesprach mit fiktivem Kunden (Prufstellenleiter)</li>
+        <li>Use Cases identifiziert</li>
+        <li>Pflichtenheft erstellt</li>
+        <li>Abgrenzung definiert</li>
+      </ul>
+    </div>
+    <div class="card card-green">
+      <h4>Entwurf</h4>
+      <ul>
+        <li>Komponentendiagramm erstellt</li>
+        <li>Datenmodell entworfen (Fahrzeug, Termin, Mangel)</li>
+        <li>UI-Wireframes skizziert</li>
+        <li>Technologie-Stack evaluiert</li>
+      </ul>
+    </div>
+    <div class="card card-purple">
+      <h4>Ergebnisse</h4>
+      <ul>
+        <li>~3.000 Zeilen Quellcode</li>
+        <li>52 automatisierte Tests</li>
+        <li>4 Hauptmodule implementiert</li>
+        <li>Desktop + Web lauffhig</li>
+      </ul>
+    </div>
+  </div>
+  <div class="highlight-box" style="margin-top: 20px;">
+    <p style="font-size: 14px; color: #94a3b8; text-align: center;">
+      <strong style="color: #06c8d8;">Iterativer Ansatz:</strong> &nbsp;
+      Features wurden inkrementell entwickelt und nach jedem Sprint getestet.
+      Regelmasige Code-Reviews im Team sicherten die Codequalitat.
+    </p>
+  </div>
+  <div class="slide-number">11 / 13</div>
+  <div class="logo-text">TUV Prufstelle Pro</div>
+  <div class="footer-line"></div>
+</div>
+
+<!-- ═══════════════ SLIDE 12: LIVE DEMO ═══════════════ -->
+<div class="slide slide-title">
+  <div class="badge">Live-Demonstration</div>
+  <h1>Demo</h1>
+  <div class="subtitle">Vorfuhrung der Anwendung im Browser</div>
+  <div style="margin-top: 32px;">
+    <div class="flow-arrow">
+      <div class="flow-step active">Tagesplan</div>
+      <span class="arrow">&rarr;</span>
+      <div class="flow-step">Fahrzeuge</div>
+      <span class="arrow">&rarr;</span>
+      <div class="flow-step">Statistik</div>
+      <span class="arrow">&rarr;</span>
+      <div class="flow-step active">Berichte</div>
+    </div>
+  </div>
+  <div style="margin-top: 28px; display: flex; justify-content: center;">
+    <div class="card card-amber" style="max-width: 500px; text-align: center;">
+      <h4>Firebase Echtzeit-Sync</h4>
+      <p style="font-size: 13px;">App in zwei Tabs offnen &mdash; Anderungen in Tab 1 erscheinen sofort in Tab 2. Daten werden live in der Firebase-Konsole sichtbar.</p>
+    </div>
+  </div>
+  <div class="slide-number">12 / 13</div>
+  <div class="logo-text">TUV Prufstelle Pro</div>
+  <div class="footer-line"></div>
+</div>
+
+<!-- ═══════════════ SLIDE 13: FAZIT ═══════════════ -->
+<div class="slide">
+  <h2><span class="accent">10</span> Fazit & Ausblick</h2>
+  <div class="slide-subtitle">Zusammenfassung und mogliche Erweiterungen</div>
+  <div class="two-col" style="gap: 28px;">
+    <div>
+      <div class="card card-green" style="margin-bottom: 12px; padding: 18px 20px;">
+        <h4>Erreichte Ziele</h4>
+        <ul style="font-size: 13px;">
+          <li>Vollstandige Prufstellenverwaltung implementiert</li>
+          <li>Alle Phasen des SW-Entwicklungsprozesses durchlaufen</li>
+          <li>Cloud-Datenbank mit Echtzeit-Sync (Firebase)</li>
+          <li>Saubere, wartbare Codebasis (~3.000 LOC)</li>
+          <li>52 Tests, 0 Lint-Fehler</li>
+          <li>Desktop + Web Cross-Platform</li>
+        </ul>
+      </div>
+      <div class="card card-cyan" style="padding: 18px 20px;">
+        <h4>Lessons Learned</h4>
+        <ul style="font-size: 13px;">
+          <li>Komponenten-basierte Architektur skaliert gut</li>
+          <li>Fruhe Planung spart spater Refactoring</li>
+          <li>Tailwind beschleunigt UI-Entwicklung enorm</li>
+          <li>Tests geben Sicherheit bei Anderungen</li>
+        </ul>
+      </div>
+    </div>
+    <div>
+      <div class="card card-amber" style="margin-bottom: 12px; padding: 18px 20px;">
+        <h4>Mogliche Erweiterungen</h4>
+        <ul style="font-size: 13px;">
+          <li>Multi-User mit Authentifizierung (Firebase Auth)</li>
+          <li>PDF-Export fur Prufberichte</li>
+          <li>Foto-Dokumentation von Mangeln</li>
+          <li>Kalenderintegration (iCal)</li>
+          <li>Schnittstelle zum KBA (Kraftfahrt-Bundesamt)</li>
+        </ul>
+      </div>
+      <div class="card card-purple" style="padding: 18px 20px;">
+        <h4>Projektumfang</h4>
+        <div style="display: flex; gap: 12px; margin-top: 6px; text-align: center;">
+          <div style="flex:1;">
+            <div class="big-number cyan" style="font-size: 26px;">~3.000</div>
+            <p style="font-size: 10px; color: #64748b;">Zeilen Code</p>
+          </div>
+          <div style="flex:1;">
+            <div class="big-number green" style="font-size: 26px;">52</div>
+            <p style="font-size: 10px; color: #64748b;">Tests</p>
+          </div>
+          <div style="flex:1;">
+            <div class="big-number amber" style="font-size: 26px;">4</div>
+            <p style="font-size: 10px; color: #64748b;">Module</p>
+          </div>
+          <div style="flex:1;">
+            <div class="big-number purple" style="font-size: 26px;">80+</div>
+            <p style="font-size: 10px; color: #64748b;">Dateien</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-number">13 / 13</div>
+  <div class="logo-text">TUV Prufstelle Pro</div>
+  <div class="footer-line"></div>
+</div>
+
+<!-- ═══════════════ SLIDE 14: FRAGEN ═══════════════ -->
+<div class="slide slide-title">
+  <div class="badge">Vielen Dank</div>
+  <h1>Fragen?</h1>
+  <div class="subtitle">Wir freuen uns auf Ihre Fragen und Ihr Feedback</div>
+  <div class="meta" style="margin-top: 32px;">
+    <strong>Repository:</strong> github.com/maroxd3/tuv-workflow-web<br>
+    <strong>Marwan Saleh</strong> (1724556) &nbsp;&bull;&nbsp; <strong>Oussama Hlayhel</strong>
+  </div>
+  <div class="footer-line"></div>
+</div>
+
+</body>
+</html>
