@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import { useState } from "react";
+import PropTypes from "prop-types";
 import { Check } from "lucide-react";
 import { C } from "../../styles/theme";
 import { STATUS } from "../../constants/status";
@@ -8,8 +9,11 @@ import { isoDate, fmtDate } from "../../utils/date";
 import { Modal } from "../../components/modal/Modal";
 import { Inp, Sel, Fld } from "../../components/ui/inputs";
 import { BtnG, BtnP } from "../../components/ui/buttons";
+import { FahrzeugShape } from "../../types/propTypes";
+import { hatHauptmangel } from "../../utils/mangel";
 
 export function TerminModal({ fahrzeuge, initial = {}, onSave, onClose }) {
+  const bestanden_gesperrt = hatHauptmangel(initial.mängel);
   const [form, setForm] = useState({
     fahrzeugId: fahrzeuge[0]?.id || "", datum: isoDate(), uhrzeit: "08:00",
     art: "HU", pruefer: PRUEFER[0].id, status: STATUS.GEPLANT, notiz: "", ...initial,
@@ -25,6 +29,9 @@ export function TerminModal({ fahrzeuge, initial = {}, onSave, onClose }) {
     const e = {};
     if (!form.fahrzeugId) e.fahrzeugId = "Bitte Fahrzeug wählen";
     if (!form.datum) e.datum = "Pflichtfeld";
+    if (form.status === STATUS.BESTANDEN && bestanden_gesperrt) {
+      e.status = "Bestanden nicht möglich — Hauptmangel vorhanden (§ 29 StVZO)";
+    }
     setErr(e);
     return Object.keys(e).length === 0;
   }
@@ -71,9 +78,12 @@ export function TerminModal({ fahrzeuge, initial = {}, onSave, onClose }) {
               {PRUEFER.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
             </Sel>
           </Fld>
-          <Fld label="Status">
+          <Fld label="Status" error={bestanden_gesperrt && form.status === STATUS.BESTANDEN ? "Bestanden nicht möglich — Hauptmangel vorhanden" : undefined}>
             <Sel value={form.status} onChange={f("status")}>
-              {Object.values(STATUS).map(s => <option key={s}>{s}</option>)}
+              {Object.values(STATUS).map(s => {
+                const disabled = s === STATUS.BESTANDEN && bestanden_gesperrt;
+                return <option key={s} disabled={disabled}>{s}{disabled ? " (gesperrt: Hauptmangel)" : ""}</option>;
+              })}
             </Sel>
           </Fld>
           <Fld label="Geplante Dauer">
@@ -105,3 +115,10 @@ export function TerminModal({ fahrzeuge, initial = {}, onSave, onClose }) {
     </Modal>
   );
 }
+
+TerminModal.propTypes = {
+  fahrzeuge: PropTypes.arrayOf(FahrzeugShape).isRequired,
+  initial: PropTypes.object,
+  onSave: PropTypes.func.isRequired,
+  onClose: PropTypes.func.isRequired,
+};

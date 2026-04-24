@@ -1,7 +1,8 @@
-import React from "react";
+import PropTypes from "prop-types";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, CheckCircle2, XCircle, Info, AlertTriangle } from "lucide-react";
 import { C } from "../styles/theme";
+import { ToastShape } from "../types/propTypes";
 
 export function Toast({ t, onRm }) {
   const cfg = {
@@ -33,3 +34,13 @@ export function ToastContainer({ toasts, onRm }) {
     </div>
   );
 }
+
+Toast.propTypes = {
+  t: ToastShape.isRequired,
+  onRm: PropTypes.func.isRequired,
+};
+
+ToastContainer.propTypes = {
+  toasts: PropTypes.arrayOf(ToastShape).isRequired,
+  onRm: PropTypes.func.isRequired,
+};

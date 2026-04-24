@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
+import PropTypes from "prop-types";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Search, Plus, Pencil, Trash2, X, User, Gauge, ClipboardList,
@@ -6,7 +7,6 @@ import {
   Calendar as CalIcon,
 } from "lucide-react";
 import { C } from "../styles/theme";
-import { STATUS } from "../constants/status";
 import { FAHRZEUG_TYPEN } from "../constants/fahrzeug";
 import { PRUEFUNG_ARTEN, PRUEFER } from "../constants/pruefung";
 import { fmtDate } from "../utils/date";
@@ -19,6 +19,7 @@ import { Inp, Sel } from "../components/ui/inputs";
 import { BtnG, BtnP } from "../components/ui/buttons";
 import { ConfirmModal } from "../components/modal/ConfirmModal";
 import { FahrzeugModal } from "../features/fahrzeug/FahrzeugModal";
+import { FahrzeugShape, TerminShape } from "../types/propTypes";
 
 export function FahrzeugeView({ fahrzeuge, termine, addFz, updFz, delFz, toast }) {
   const [q, setQ] = useState("");
@@ -204,8 +205,17 @@ export function FahrzeugeView({ fahrzeuge, termine, addFz, updFz, delFz, toast }
         {confirmDel && <ConfirmModal title="Fahrzeug löschen?" msg="Alle Termine dieses Fahrzeugs werden ebenfalls gelöscht."
           onConfirm={() => { delFz(confirmDel); setSel(null); setConfirmDel(null); toast("Fahrzeug gelöscht", "info"); }}
           onCancel={() => setConfirmDel(null)} />}
-        {showModal && <FahrzeugModal initial={editFz || {}} onSave={save} onClose={() => { setShowModal(false); setEditFz(null); }} />}
+        {showModal && <FahrzeugModal initial={editFz || {}} fahrzeuge={fahrzeuge} onSave={save} onClose={() => { setShowModal(false); setEditFz(null); }} />}
       </AnimatePresence>
     </div>
   );
 }
+
+FahrzeugeView.propTypes = {
+  fahrzeuge: PropTypes.arrayOf(FahrzeugShape).isRequired,
+  termine: PropTypes.arrayOf(TerminShape).isRequired,
+  addFz: PropTypes.func.isRequired,
+  updFz: PropTypes.func.isRequired,
+  delFz: PropTypes.func.isRequired,
+  toast: PropTypes.func.isRequired,
+};

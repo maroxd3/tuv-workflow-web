@@ -1,4 +1,4 @@
-import React from "react";
+import PropTypes from "prop-types";
 import { C } from "../../styles/theme";
 
 export function EmptyState({ icon: Icon, title, sub }) {
@@ -22,3 +22,9 @@ export function EmptyState({ icon: Icon, title, sub }) {
     </div>
   );
 }
+
+EmptyState.propTypes = {
+  icon: PropTypes.elementType,
+  title: PropTypes.string.isRequired,
+  sub: PropTypes.string,
+};

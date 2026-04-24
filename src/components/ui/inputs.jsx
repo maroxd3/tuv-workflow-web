@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import { useState } from "react";
+import PropTypes from "prop-types";
 import { ChevronDown, AlertCircle } from "lucide-react";
 import { C } from "../../styles/theme";
 
@@ -16,6 +17,16 @@ export function Inp({ value, onChange, placeholder, type = "text", error, style 
   );
 }
 
+Inp.propTypes = {
+  value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  onChange: PropTypes.func,
+  placeholder: PropTypes.string,
+  type: PropTypes.string,
+  error: PropTypes.string,
+  style: PropTypes.object,
+  mono: PropTypes.bool,
+};
+
 export function Sel({ value, onChange, children, style = {} }) {
   return (
     <div style={{ position: "relative" }}>
@@ -29,6 +40,13 @@ export function Sel({ value, onChange, children, style = {} }) {
   );
 }
 
+Sel.propTypes = {
+  value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  onChange: PropTypes.func,
+  children: PropTypes.node,
+  style: PropTypes.object,
+};
+
 export function Fld({ label, error, children, span = 1 }) {
   return (
     <div style={{ gridColumn: span === 2 ? "1/-1" : "auto", display: "flex", flexDirection: "column", gap: 5 }}>
@@ -38,3 +56,10 @@ export function Fld({ label, error, children, span = 1 }) {
     </div>
   );
 }
+
+Fld.propTypes = {
+  label: PropTypes.string.isRequired,
+  error: PropTypes.string,
+  children: PropTypes.node,
+  span: PropTypes.oneOf([1, 2]),
+};

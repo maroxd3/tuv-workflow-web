@@ -3,6 +3,7 @@ import { collection, doc, setDoc, deleteDoc, onSnapshot } from "firebase/firesto
 import { db } from "../firebase";
 import { uid, isoDate, addDays } from "../utils/date";
 import { STATUS } from "../constants/status";
+import { hatHauptmangel } from "../utils/mangel";
 
 const FZ_COL = "fahrzeuge";
 const TR_COL = "termine";
@@ -143,6 +144,14 @@ export function useStore() {
     setTr(prev => prev.map(t => {
       if (t.id !== id) return t;
       const updated = { ...t, ...patch };
+      /* Guard: "Bestanden" bei Hauptmangel/gefährlichem Mangel nicht zulassen
+         (§ 29 StVZO). Defense in depth — fängt auch programmatische Calls ab. */
+      if (
+        patch.status === STATUS.BESTANDEN &&
+        hatHauptmangel(updated.mängel)
+      ) {
+        return t;
+      }
       writeTrDoc(updated);
       return updated;
     }));
@@ -156,7 +165,13 @@ export function useStore() {
   const addMangel = useCallback((tid, m) => {
     setTr(p => p.map(t => {
       if (t.id !== tid) return t;
-      const updated = { ...t, mängel: [...(t.mängel || []), { ...m, id: uid() }] };
+      const newMaengel = [...(t.mängel || []), { ...m, id: uid() }];
+      const updated = { ...t, mängel: newMaengel };
+      /* Auto-demote: wird ein Hauptmangel zu einem BESTANDENen Termin hinzugefügt,
+         ist das Prüfergebnis nicht mehr haltbar → auf NICHT_BESTANDEN zurücksetzen. */
+      if (t.status === STATUS.BESTANDEN && hatHauptmangel(newMaengel)) {
+        updated.status = STATUS.NICHT_BESTANDEN;
+      }
       writeTrDoc(updated);
       return updated;
     }));

@@ -1,4 +1,4 @@
-import React from "react";
+import PropTypes from "prop-types";
 import { C } from "../../styles/theme";
 import { MANGEL_KATEGORIEN } from "../../constants/mangel";
 
@@ -14,3 +14,7 @@ export function MangelPill({ kat }) {
     }}>{m.kurz}</span>
   );
 }
+
+MangelPill.propTypes = {
+  kat: PropTypes.oneOf(["OM", "GM", "EM", "HM", "GF"]).isRequired,
+};

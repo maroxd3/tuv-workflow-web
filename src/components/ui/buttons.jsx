@@ -1,4 +1,4 @@
-import React from "react";
+import PropTypes from "prop-types";
 import { C } from "../../styles/theme";
 
 export function BtnP({ onClick, children, icon: Icon, disabled = false, danger = false, sm = false }) {
@@ -20,6 +20,15 @@ export function BtnP({ onClick, children, icon: Icon, disabled = false, danger =
   );
 }
 
+BtnP.propTypes = {
+  onClick: PropTypes.func,
+  children: PropTypes.node,
+  icon: PropTypes.elementType,
+  disabled: PropTypes.bool,
+  danger: PropTypes.bool,
+  sm: PropTypes.bool,
+};
+
 export function BtnG({ onClick, children, icon: Icon, danger = false, sm = false }) {
   return (
     <button onClick={onClick} className="btn-ghost" style={{
@@ -36,6 +45,14 @@ export function BtnG({ onClick, children, icon: Icon, danger = false, sm = false
   );
 }
 
+BtnG.propTypes = {
+  onClick: PropTypes.func,
+  children: PropTypes.node,
+  icon: PropTypes.elementType,
+  danger: PropTypes.bool,
+  sm: PropTypes.bool,
+};
+
 export function IconBtn({ onClick, icon, color, danger = false, sm = false, title }) {
   return (
     <button onClick={onClick} title={title} className="btn-icon" style={{
@@ -48,3 +65,12 @@ export function IconBtn({ onClick, icon, color, danger = false, sm = false, titl
     </button>
   );
 }
+
+IconBtn.propTypes = {
+  onClick: PropTypes.func,
+  icon: PropTypes.node,
+  color: PropTypes.string,
+  danger: PropTypes.bool,
+  sm: PropTypes.bool,
+  title: PropTypes.string,
+};

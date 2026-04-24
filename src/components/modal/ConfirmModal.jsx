@@ -1,4 +1,4 @@
-import React from "react";
+import PropTypes from "prop-types";
 import { Check, Trash2 } from "lucide-react";
 import { Modal } from "./Modal";
 import { BtnG, BtnP } from "../ui/buttons";
@@ -15,3 +15,11 @@ export function ConfirmModal({ title, msg, onConfirm, onCancel, danger = true })
     </Modal>
   );
 }
+
+ConfirmModal.propTypes = {
+  title: PropTypes.string.isRequired,
+  msg: PropTypes.string,
+  onConfirm: PropTypes.func.isRequired,
+  onCancel: PropTypes.func.isRequired,
+  danger: PropTypes.bool,
+};

@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
+import PropTypes from "prop-types";
 import { AnimatePresence } from "framer-motion";
 import {
   Search, ChevronDown, ChevronUp, Eye, Download,
@@ -16,6 +17,7 @@ import { EmptyState } from "../components/ui/EmptyState";
 import { Inp } from "../components/ui/inputs";
 import { BtnG, BtnP } from "../components/ui/buttons";
 import { Modal } from "../components/modal/Modal";
+import { FahrzeugShape, TerminShape } from "../types/propTypes";
 
 export function BerichteView({ termine, fahrzeuge }) {
   const fzMap = useMemo(() => Object.fromEntries(fahrzeuge.map(f => [f.id, f])), [fahrzeuge]);
@@ -198,3 +200,8 @@ RECHTLICHER HINWEIS
     </div>
   );
 }
+
+BerichteView.propTypes = {
+  termine: PropTypes.arrayOf(TerminShape).isRequired,
+  fahrzeuge: PropTypes.arrayOf(FahrzeugShape).isRequired,
+};

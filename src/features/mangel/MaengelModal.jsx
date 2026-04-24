@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
+import PropTypes from "prop-types";
 import { Search, Plus, Check, X, Info, AlertOctagon, CheckCircle2, ChevronUp, ChevronDown } from "lucide-react";
 import { C } from "../../styles/theme";
 import { STATUS, STATUS_CFG } from "../../constants/status";
@@ -10,6 +11,7 @@ import { MangelPill } from "../../components/ui/MangelPill";
 import { SectionHead } from "../../components/ui/SectionHead";
 import { Inp, Sel, Fld } from "../../components/ui/inputs";
 import { BtnP } from "../../components/ui/buttons";
+import { FahrzeugShape, TerminShape } from "../../types/propTypes";
 
 export function MaengelModal({ termin, fahrzeug, onAdd, onDel, onStatus, onClose }) {
   const [search, setSearch] = useState("");
@@ -108,12 +110,21 @@ export function MaengelModal({ termin, fahrzeug, onAdd, onDel, onStatus, onClose
             <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
               {[STATUS.BESTANDEN, STATUS.NICHT_BESTANDEN, STATUS.IN_PRUEFUNG, STATUS.NACHPRUEFUNG, STATUS.ABGEBROCHEN, STATUS.NICHT_ERSCHIENEN].map(s => {
                 const sc = STATUS_CFG[s]; const act = termin.status === s;
+                const blocked = s === STATUS.BESTANDEN && hasHM;
                 return (
-                  <button key={s} onClick={() => onStatus(termin.id, s)} style={{
-                    background: act ? sc.glow : "transparent", border: `1px solid ${act ? sc.border : C.line}`,
-                    borderRadius: 6, padding: "4px 11px", color: act ? sc.color : C.t3,
-                    cursor: "pointer", fontSize: 10, fontWeight: act ? 700 : 400, fontFamily: C.mono, transition: "all 0.15s",
-                  }}>{s}</button>
+                  <button key={s} onClick={() => { if (!blocked) onStatus(termin.id, s); }}
+                    disabled={blocked}
+                    title={blocked ? "Bestanden nicht möglich — Hauptmangel vorhanden (§ 29 StVZO)" : undefined}
+                    style={{
+                      background: act ? sc.glow : "transparent",
+                      border: `1px solid ${act ? sc.border : C.line}`,
+                      borderRadius: 6, padding: "4px 11px",
+                      color: act ? sc.color : blocked ? C.t4 : C.t3,
+                      cursor: blocked ? "not-allowed" : "pointer",
+                      opacity: blocked ? 0.35 : 1,
+                      fontSize: 10, fontWeight: act ? 700 : 400, fontFamily: C.mono, transition: "all 0.15s",
+                      textDecoration: blocked ? "line-through" : "none",
+                    }}>{s}</button>
                 );
               })}
             </div>
@@ -210,3 +221,12 @@ export function MaengelModal({ termin, fahrzeug, onAdd, onDel, onStatus, onClose
     </Modal>
   );
 }
+
+MaengelModal.propTypes = {
+  termin: TerminShape.isRequired,
+  fahrzeug: FahrzeugShape,
+  onAdd: PropTypes.func.isRequired,
+  onDel: PropTypes.func.isRequired,
+  onStatus: PropTypes.func.isRequired,
+  onClose: PropTypes.func.isRequired,
+};

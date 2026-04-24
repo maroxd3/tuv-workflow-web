@@ -1,4 +1,5 @@
-import React, { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
+import PropTypes from "prop-types";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronLeft, ChevronRight, Clock, Plus, ArrowRight,
@@ -20,6 +21,7 @@ import { IconBtn, BtnP } from "../components/ui/buttons";
 import { ConfirmModal } from "../components/modal/ConfirmModal";
 import { TerminModal } from "../features/termin/TerminModal";
 import { MaengelModal } from "../features/mangel/MaengelModal";
+import { FahrzeugShape, TerminShape } from "../types/propTypes";
 
 function ContextMenu({ menu, onClose, onNewTr, onEdit, onDelete, onMaengel, onAdvance }) {
   const ref = useRef();
@@ -126,8 +128,15 @@ export function TagesplanView({ fahrzeuge, termine, addTr, updTr, delTr, addMang
   }
 
   function advance(t) {
-    const next = { [STATUS.GEPLANT]: STATUS.IN_PRUEFUNG, [STATUS.IN_PRUEFUNG]: STATUS.BESTANDEN }[t.status];
-    if (next) { updTr(t.id, { status: next }); toast(`→ ${next}`, "success"); }
+    const hasHM = hatHauptmangel(t.mängel);
+    const next = t.status === STATUS.GEPLANT
+      ? STATUS.IN_PRUEFUNG
+      : t.status === STATUS.IN_PRUEFUNG
+        ? (hasHM ? STATUS.NICHT_BESTANDEN : STATUS.BESTANDEN)
+        : null;
+    if (!next) return;
+    updTr(t.id, { status: next });
+    toast(`→ ${next}`, hasHM && next === STATUS.NICHT_BESTANDEN ? "warn" : "success");
   }
 
   const weekDays = useMemo(() => Array.from({ length: 7 }, (_, i) => addDays(
@@ -358,3 +367,29 @@ export function TagesplanView({ fahrzeuge, termine, addTr, updTr, delTr, addMang
     </div>
   );
 }
+
+ContextMenu.propTypes = {
+  menu: PropTypes.shape({
+    x: PropTypes.number.isRequired,
+    y: PropTypes.number.isRequired,
+    slot: PropTypes.string,
+    termin: TerminShape,
+  }).isRequired,
+  onClose: PropTypes.func.isRequired,
+  onNewTr: PropTypes.func.isRequired,
+  onEdit: PropTypes.func.isRequired,
+  onDelete: PropTypes.func.isRequired,
+  onMaengel: PropTypes.func.isRequired,
+  onAdvance: PropTypes.func.isRequired,
+};
+
+TagesplanView.propTypes = {
+  fahrzeuge: PropTypes.arrayOf(FahrzeugShape).isRequired,
+  termine: PropTypes.arrayOf(TerminShape).isRequired,
+  addTr: PropTypes.func.isRequired,
+  updTr: PropTypes.func.isRequired,
+  delTr: PropTypes.func.isRequired,
+  addMangel: PropTypes.func.isRequired,
+  delMangel: PropTypes.func.isRequired,
+  toast: PropTypes.func.isRequired,
+};
