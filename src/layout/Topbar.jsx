@@ -1,5 +1,5 @@
-import React from "react";
-import { User, Bell } from "lucide-react";
+import PropTypes from "prop-types";
+import { User } from "lucide-react";
 import { C } from "../styles/theme";
 import { NAV } from "../constants/nav";
 
@@ -64,3 +64,7 @@ export function Topbar({ view }) {
     </div>
   );
 }
+
+Topbar.propTypes = {
+  view: PropTypes.string.isRequired,
+};

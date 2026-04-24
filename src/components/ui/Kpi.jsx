@@ -1,4 +1,4 @@
-import React from "react";
+import PropTypes from "prop-types";
 import { motion } from "framer-motion";
 import { C } from "../../styles/theme";
 
@@ -32,3 +32,11 @@ export function Kpi({ label, value, sub, accent, icon: Icon }) {
     </motion.div>
   );
 }
+
+Kpi.propTypes = {
+  label: PropTypes.string.isRequired,
+  value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+  sub: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  accent: PropTypes.string.isRequired,
+  icon: PropTypes.elementType,
+};

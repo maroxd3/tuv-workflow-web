@@ -1,4 +1,3 @@
-import React from "react";
 import { C } from "../../styles/theme";
 
 export function HauptmangelBadge() {

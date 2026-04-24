@@ -1,8 +1,9 @@
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
+import PropTypes from "prop-types";
 import { motion } from "framer-motion";
 import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
-  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
+  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
 import {
   Activity, TrendingUp, XCircle, AlertTriangle, Award, Zap, BarChart2, Target,
@@ -14,9 +15,10 @@ import { MANGEL_KATEGORIEN, MANGEL_KATALOG } from "../constants/mangel";
 import { isoDate } from "../utils/date";
 import { Kpi } from "../components/ui/Kpi";
 import { MangelPill } from "../components/ui/MangelPill";
+import { FahrzeugShape, TerminShape } from "../types/propTypes";
 
 /* ── Shared chart tooltip ── */
-function ChartTooltip({ active, payload, label, unit = "" }) {
+function ChartTooltip({ active = false, payload, label, unit = "" }) {
   if (!active || !payload?.length) return null;
   return (
     <div style={{
@@ -337,3 +339,26 @@ export function StatistikView({ termine, fahrzeuge }) {
     </div>
   );
 }
+
+ChartTooltip.propTypes = {
+  active: PropTypes.bool,
+  payload: PropTypes.array,
+  label: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  unit: PropTypes.string,
+};
+
+Card.propTypes = {
+  children: PropTypes.node,
+  style: PropTypes.object,
+};
+
+CardHead.propTypes = {
+  title: PropTypes.string.isRequired,
+  icon: PropTypes.elementType,
+  sub: PropTypes.string,
+};
+
+StatistikView.propTypes = {
+  termine: PropTypes.arrayOf(TerminShape).isRequired,
+  fahrzeuge: PropTypes.arrayOf(FahrzeugShape).isRequired,
+};

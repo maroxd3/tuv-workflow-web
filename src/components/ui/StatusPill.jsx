@@ -1,4 +1,4 @@
-import React from "react";
+import PropTypes from "prop-types";
 import { C } from "../../styles/theme";
 import { STATUS, STATUS_CFG } from "../../constants/status";
 
@@ -21,3 +21,8 @@ export function StatusPill({ status, size = "sm" }) {
     </span>
   );
 }
+
+StatusPill.propTypes = {
+  status: PropTypes.string.isRequired,
+  size: PropTypes.oneOf(["sm", "lg"]),
+};

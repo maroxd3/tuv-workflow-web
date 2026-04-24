@@ -1,4 +1,5 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
+import PropTypes from "prop-types";
 import { motion } from "framer-motion";
 import { X } from "lucide-react";
 import { C } from "../../styles/theme";
@@ -46,3 +47,11 @@ export function Modal({ title, sub, onClose, children, width = 640 }) {
     </div>
   );
 }
+
+Modal.propTypes = {
+  title: PropTypes.string.isRequired,
+  sub: PropTypes.string,
+  onClose: PropTypes.func.isRequired,
+  children: PropTypes.node,
+  width: PropTypes.number,
+};

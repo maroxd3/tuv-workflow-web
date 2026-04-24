@@ -1,4 +1,4 @@
-import React from "react";
+import PropTypes from "prop-types";
 import { C } from "../../styles/theme";
 
 export function SectionHead({ label, icon: Icon, right }) {
@@ -16,3 +16,9 @@ export function SectionHead({ label, icon: Icon, right }) {
     </div>
   );
 }
+
+SectionHead.propTypes = {
+  label: PropTypes.string.isRequired,
+  icon: PropTypes.elementType,
+  right: PropTypes.node,
+};

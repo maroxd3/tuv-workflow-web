@@ -1,9 +1,11 @@
-import React, { useState } from "react";
+import { useState } from "react";
+import PropTypes from "prop-types";
 import { Shield, RefreshCw, AlertOctagon, AlertTriangle } from "lucide-react";
 import { C } from "../styles/theme";
 import { STATUS } from "../constants/status";
 import { NAV } from "../constants/nav";
 import { isoDate, fmtDate } from "../utils/date";
+import { FahrzeugShape, TerminShape } from "../types/propTypes";
 
 export function Sidebar({ view, setView, fahrzeuge, termine, resetAll }) {
   const today = isoDate();
@@ -143,3 +145,11 @@ export function Sidebar({ view, setView, fahrzeuge, termine, resetAll }) {
     </div>
   );
 }
+
+Sidebar.propTypes = {
+  view: PropTypes.string.isRequired,
+  setView: PropTypes.func.isRequired,
+  fahrzeuge: PropTypes.arrayOf(FahrzeugShape).isRequired,
+  termine: PropTypes.arrayOf(TerminShape).isRequired,
+  resetAll: PropTypes.func.isRequired,
+};

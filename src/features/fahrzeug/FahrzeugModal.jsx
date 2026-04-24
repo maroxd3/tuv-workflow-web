@@ -1,12 +1,15 @@
-import React, { useState } from "react";
-import { Check, User } from "lucide-react";
+import { useState, useMemo } from "react";
+import PropTypes from "prop-types";
+import { Check, User, AlertTriangle } from "lucide-react";
 import { C } from "../../styles/theme";
 import { FAHRZEUG_TYPEN } from "../../constants/fahrzeug";
 import { Modal } from "../../components/modal/Modal";
 import { Inp, Sel, Fld } from "../../components/ui/inputs";
 import { BtnG, BtnP } from "../../components/ui/buttons";
+import { FahrzeugShape } from "../../types/propTypes";
+import { validateFahrzeug, checkHerstellerModellKonsistenz } from "../../utils/validators";
 
-export function FahrzeugModal({ initial = {}, onSave, onClose }) {
+export function FahrzeugModal({ initial = {}, fahrzeuge = [], onSave, onClose }) {
   const [form, setForm] = useState({
     kennzeichen: "", fin: "", hersteller: "", modell: "",
     farbe: "", typ: "PKW", besitzer: "", telefon: "", email: "",
@@ -19,22 +22,28 @@ export function FahrzeugModal({ initial = {}, onSave, onClose }) {
   const f = k => e => setForm(p => ({ ...p, [k]: e.target.value }));
   const isEdit = !!initial.id;
 
-  function validate() {
-    const e = {};
-    if (!form.kennzeichen.trim()) e.kennzeichen = "Pflichtfeld";
-    else if (!/^[A-ZÄÖÜ]{1,3}[-\s][A-Z]{1,2}\s?\d{1,4}[HE]?$/i.test(form.kennzeichen.trim())) e.kennzeichen = "Ungültiges Format";
-    if (!form.hersteller.trim()) e.hersteller = "Pflichtfeld";
-    if (!form.modell.trim()) e.modell = "Pflichtfeld";
-    if (!form.besitzer.trim()) e.besitzer = "Pflichtfeld";
-    if (form.baujahr && (isNaN(form.baujahr) || +form.baujahr < 1885 || +form.baujahr > new Date().getFullYear() + 1)) e.baujahr = "Ungültiges Jahr";
-    if (form.fin && form.fin.length !== 17) e.fin = "FIN muss 17 Zeichen haben";
-    setErr(e);
-    return Object.keys(e).length === 0;
-  }
+  const plausibilitaet = useMemo(
+    () => checkHerstellerModellKonsistenz(form.hersteller, form.modell, form.typ),
+    [form.hersteller, form.modell, form.typ]
+  );
 
   function save() {
-    if (!validate()) return;
-    onSave({ ...form, baujahr: form.baujahr ? +form.baujahr : null, kmStand: form.kmStand ? +form.kmStand : null });
+    const e = validateFahrzeug(form, fahrzeuge, isEdit ? initial.id : null);
+    setErr(e);
+    if (Object.keys(e).length > 0) return;
+    onSave({
+      ...form,
+      kennzeichen: form.kennzeichen.trim().toUpperCase().replace(/\s+/g, " "),
+      hersteller: form.hersteller.trim(),
+      modell: form.modell.trim(),
+      besitzer: form.besitzer.trim(),
+      telefon: form.telefon.trim(),
+      email: form.email.trim().toLowerCase(),
+      fin: form.fin.trim().toUpperCase(),
+      farbe: form.farbe.trim(),
+      baujahr: form.baujahr ? +form.baujahr : null,
+      kmStand: form.kmStand ? +form.kmStand : null,
+    });
   }
 
   return (
@@ -53,7 +62,7 @@ export function FahrzeugModal({ initial = {}, onSave, onClose }) {
         <Fld label="Modell / Variante *" error={err.modell}>
           <Inp value={form.modell} onChange={f("modell")} placeholder="320d xDrive" error={err.modell} />
         </Fld>
-        <Fld label="Fahrzeugtyp">
+        <Fld label="Fahrzeugtyp" error={err.typ}>
           <Sel value={form.typ} onChange={f("typ")}>
             {FAHRZEUG_TYPEN.map(t => <option key={t.id} value={t.id}>{t.icon} {t.label}</option>)}
           </Sel>
@@ -64,12 +73,25 @@ export function FahrzeugModal({ initial = {}, onSave, onClose }) {
         <Fld label="Farbe">
           <Inp value={form.farbe} onChange={f("farbe")} placeholder="Sophistograu Metallic" />
         </Fld>
-        <Fld label="Kilometerstand (km)">
-          <Inp value={form.kmStand} onChange={f("kmStand")} placeholder="87420" type="number" />
+        <Fld label="Kilometerstand (km)" error={err.kmStand}>
+          <Inp value={form.kmStand} onChange={f("kmStand")} placeholder="87420" type="number" error={err.kmStand} />
         </Fld>
-        <Fld label="HU fällig (Datum)">
-          <Inp value={form.hu_faellig} onChange={f("hu_faellig")} type="date" />
+        <Fld label="HU fällig (Datum)" error={err.hu_faellig}>
+          <Inp value={form.hu_faellig} onChange={f("hu_faellig")} type="date" error={err.hu_faellig} />
         </Fld>
+        {plausibilitaet && (
+          <div style={{
+            gridColumn: "1/-1",
+            background: "rgba(245,158,11,0.10)",
+            border: "1px solid rgba(245,166,32,0.32)",
+            borderRadius: 8, padding: "10px 14px",
+            display: "flex", alignItems: "flex-start", gap: 8,
+            fontSize: 12, color: C.amberL, lineHeight: 1.5,
+          }}>
+            <AlertTriangle size={14} style={{ flexShrink: 0, marginTop: 1 }} />
+            <span>Plausibilitätshinweis: {plausibilitaet.warning}</span>
+          </div>
+        )}
         <div style={{ gridColumn: "1/-1", marginTop: 4 }}>
           <div style={{ height: 1, background: C.line, marginBottom: 16 }} />
           <div style={{
@@ -80,11 +102,11 @@ export function FahrzeugModal({ initial = {}, onSave, onClose }) {
             <Fld label="Name / Firma *" error={err.besitzer}>
               <Inp value={form.besitzer} onChange={f("besitzer")} placeholder="Klaus Müller" error={err.besitzer} />
             </Fld>
-            <Fld label="Telefon">
-              <Inp value={form.telefon} onChange={f("telefon")} placeholder="0176 1234567" />
+            <Fld label="Telefon" error={err.telefon}>
+              <Inp value={form.telefon} onChange={f("telefon")} placeholder="0176 1234567" error={err.telefon} />
             </Fld>
-            <Fld label="E-Mail" span={2}>
-              <Inp value={form.email} onChange={f("email")} placeholder="name@mail.de" type="email" />
+            <Fld label="E-Mail" span={2} error={err.email}>
+              <Inp value={form.email} onChange={f("email")} placeholder="name@mail.de" type="email" error={err.email} />
             </Fld>
           </div>
         </div>
@@ -99,3 +121,10 @@ export function FahrzeugModal({ initial = {}, onSave, onClose }) {
     </Modal>
   );
 }
+
+FahrzeugModal.propTypes = {
+  initial: PropTypes.object,
+  fahrzeuge: PropTypes.arrayOf(FahrzeugShape),
+  onSave: PropTypes.func.isRequired,
+  onClose: PropTypes.func.isRequired,
+};
