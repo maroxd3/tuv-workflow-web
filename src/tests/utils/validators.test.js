@@ -11,7 +11,7 @@ import {
   validateHuDatum,
   validateFahrzeug,
   validateStatusWechsel,
-  checkHerstellerModellKonsistenz,
+  validateHerstellerModellKonsistenz,
   checkFinPruefziffer,
   KM_STAND_MAX,
   BAUJAHR_MIN,
@@ -317,32 +317,64 @@ describe("validateStatusWechsel — fängt 'Bestanden trotz Hauptmangel'", () =>
   });
 });
 
-describe("checkHerstellerModellKonsistenz — weiche Plausibilität", () => {
-  it("gibt null zurück, wenn Hersteller unbekannt ist (z. B. Oldtimer, Importe)", () => {
-    expect(checkHerstellerModellKonsistenz("Tatra", "815", "LKW")).toBeNull();
+describe("validateHerstellerModellKonsistenz — harte Konsistenzprüfung", () => {
+  it("liefert {} wenn Hersteller unbekannt ist (z. B. Tatra, Lada, Tuning) — Eintrag erlaubt", () => {
+    expect(validateHerstellerModellKonsistenz("Tatra", "815", "LKW")).toEqual({});
   });
 
-  it("gibt null zurück bei konsistenter Eingabe", () => {
-    expect(checkHerstellerModellKonsistenz("BMW", "320d", "PKW")).toBeNull();
-    expect(checkHerstellerModellKonsistenz("Volkswagen", "Golf VIII", "PKW")).toBeNull();
-    expect(checkHerstellerModellKonsistenz("BMW", "R 1250 GS", "Motorrad")).toBeNull();
+  it("liefert {} bei konsistenter Eingabe", () => {
+    expect(validateHerstellerModellKonsistenz("BMW", "320d", "PKW")).toEqual({});
+    expect(validateHerstellerModellKonsistenz("Volkswagen", "Golf VIII", "PKW")).toEqual({});
+    expect(validateHerstellerModellKonsistenz("BMW", "R 1250 GS", "Motorrad")).toEqual({});
   });
 
-  it("warnt bei Typ-Mismatch (Regression: VW Golf als Motorrad)", () => {
-    const r = checkHerstellerModellKonsistenz("Volkswagen", "Golf", "Motorrad");
-    expect(r).not.toBeNull();
-    expect(r.warning).toMatch(/Motorrad/);
+  it("blockiert bei Typ-Mismatch (Regression: VW Golf als Motorrad)", () => {
+    const r = validateHerstellerModellKonsistenz("Volkswagen", "Golf", "Motorrad");
+    expect(r.typ).toMatch(/Motorrad/);
   });
 
-  it("warnt bei Modell-Mismatch (Regression: BMW Polo)", () => {
-    const r = checkHerstellerModellKonsistenz("BMW", "Polo", "PKW");
-    expect(r).not.toBeNull();
-    expect(r.warning).toMatch(/Polo/);
+  it("blockiert bei Modell-Mismatch (Regression: BMW Polo)", () => {
+    const r = validateHerstellerModellKonsistenz("BMW", "Polo", "PKW");
+    expect(r.modell).toMatch(/Polo/);
   });
 
   it("ist gegen Groß-/Kleinschreibung robust", () => {
-    expect(checkHerstellerModellKonsistenz("bmw", "3er", "PKW")).toBeNull();
-    expect(checkHerstellerModellKonsistenz("VW", "golf", "PKW")).toBeNull();
+    expect(validateHerstellerModellKonsistenz("bmw", "3er", "PKW")).toEqual({});
+    expect(validateHerstellerModellKonsistenz("VW", "golf", "PKW")).toEqual({});
+  });
+
+  it("validateFahrzeug bündelt die Konsistenz-Fehler ins Errors-Objekt", () => {
+    /* BMW + Polo → modell-Fehler; alle anderen Pflichtfelder ok, damit nur dieser Fehler übrig bleibt */
+    const errs = validateFahrzeug({
+      kennzeichen: "B-XX 1234",
+      hersteller: "BMW",
+      modell: "Polo",
+      besitzer: "Test",
+      typ: "PKW",
+    }, []);
+    expect(errs.modell).toMatch(/Polo/);
+  });
+
+  it("validateFahrzeug blockt VW Golf als Motorrad", () => {
+    const errs = validateFahrzeug({
+      kennzeichen: "B-XX 1234",
+      hersteller: "Volkswagen",
+      modell: "Golf",
+      besitzer: "Test",
+      typ: "Motorrad",
+    }, []);
+    expect(errs.typ).toMatch(/Motorrad/);
+  });
+
+  it("validateFahrzeug überschreibt nicht den 'Pflichtfeld'-Fehler bei leerem Modell", () => {
+    const errs = validateFahrzeug({
+      kennzeichen: "B-XX 1234",
+      hersteller: "BMW",
+      modell: "",
+      besitzer: "Test",
+      typ: "PKW",
+    }, []);
+    expect(errs.modell).toBe("Pflichtfeld");
   });
 });
 

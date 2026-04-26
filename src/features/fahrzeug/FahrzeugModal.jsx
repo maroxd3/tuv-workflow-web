@@ -7,7 +7,7 @@ import { Modal } from "../../components/modal/Modal";
 import { Inp, Sel, Fld } from "../../components/ui/inputs";
 import { BtnG, BtnP } from "../../components/ui/buttons";
 import { FahrzeugShape } from "../../types/propTypes";
-import { validateFahrzeug, checkHerstellerModellKonsistenz, checkFinPruefziffer } from "../../utils/validators";
+import { validateFahrzeug, checkFinPruefziffer } from "../../utils/validators";
 
 export function FahrzeugModal({ initial = {}, fahrzeuge = [], onSave, onClose }) {
   const [form, setForm] = useState({
@@ -21,11 +21,6 @@ export function FahrzeugModal({ initial = {}, fahrzeuge = [], onSave, onClose })
   const [err, setErr] = useState({});
   const f = k => e => setForm(p => ({ ...p, [k]: e.target.value }));
   const isEdit = !!initial.id;
-
-  const plausibilitaet = useMemo(
-    () => checkHerstellerModellKonsistenz(form.hersteller, form.modell, form.typ),
-    [form.hersteller, form.modell, form.typ]
-  );
 
   const finWarnung = useMemo(() => checkFinPruefziffer(form.fin), [form.fin]);
 
@@ -81,19 +76,6 @@ export function FahrzeugModal({ initial = {}, fahrzeuge = [], onSave, onClose })
         <Fld label="HU fällig (Datum)" error={err.hu_faellig}>
           <Inp value={form.hu_faellig} onChange={f("hu_faellig")} type="date" error={err.hu_faellig} />
         </Fld>
-        {plausibilitaet && (
-          <div style={{
-            gridColumn: "1/-1",
-            background: "rgba(245,158,11,0.10)",
-            border: "1px solid rgba(245,166,32,0.32)",
-            borderRadius: 8, padding: "10px 14px",
-            display: "flex", alignItems: "flex-start", gap: 8,
-            fontSize: 12, color: C.amberL, lineHeight: 1.5,
-          }}>
-            <AlertTriangle size={14} style={{ flexShrink: 0, marginTop: 1 }} />
-            <span>Plausibilitätshinweis: {plausibilitaet.warning}</span>
-          </div>
-        )}
         {finWarnung && (
           <div style={{
             gridColumn: "1/-1",

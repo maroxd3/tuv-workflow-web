@@ -145,6 +145,14 @@ export function validateFahrzeug(form, allFahrzeuge = [], editId = null) {
   const eHu = validateHuDatum(form.hu_faellig);
   if (eHu) errors.hu_faellig = eHu;
 
+  /* Hersteller-Modell-Typ-Konsistenz: nur prüfen, wenn die Pflichtfelder
+     gesetzt sind — sonst überschreiben wir z. B. den "Pflichtfeld"-Fehler. */
+  if (!errors.modell && !errors.typ && !errors.hersteller) {
+    const konsistenz = validateHerstellerModellKonsistenz(form.hersteller, form.modell, form.typ);
+    if (konsistenz.typ) errors.typ = konsistenz.typ;
+    if (konsistenz.modell) errors.modell = konsistenz.modell;
+  }
+
   return errors;
 }
 
@@ -154,18 +162,22 @@ export function validateFahrzeug(form, allFahrzeuge = [], editId = null) {
 
 /**
  * Prüft, ob Hersteller+Modell+Typ zusammenpassen.
- *  - Hersteller unbekannt → kein Warnung (könnte Oldtimer / Import sein)
- *  - Hersteller bekannt, Typ nicht im Portfolio → Warnung
- *  - Hersteller bekannt, Modell nicht in Referenzliste → Warnung
+ *  - Hersteller unbekannt (z. B. Tatra, Lada, Tuning-Werkstatt) → keine Prüfung möglich,
+ *    leeres Errors-Objekt (User darf eintragen)
+ *  - Hersteller bekannt, Typ nicht im Portfolio → harter Fehler am Typ-Feld
+ *  - Hersteller bekannt, Modell nicht in Referenzliste → harter Fehler am Modell-Feld
+ *
+ * Rückgabe: { typ?: string, modell?: string } — Schlüssel = Feldname,
+ * Wert = Fehlertext. Leeres Objekt bedeutet: alles ok bzw. nicht prüfbar.
  */
-export function checkHerstellerModellKonsistenz(hersteller, modell, typ) {
+export function validateHerstellerModellKonsistenz(hersteller, modell, typ) {
   const ref = HERSTELLER_REFERENZ[normalizeHersteller(hersteller)];
-  if (!ref) return null;
+  if (!ref) return {};
 
-  const warnings = [];
+  const errors = {};
 
   if (typ && !ref.typen.includes(typ)) {
-    warnings.push(`${ref.display} baut üblicherweise keine Fahrzeuge vom Typ "${typ}"`);
+    errors.typ = `${ref.display} baut keine Fahrzeuge vom Typ "${typ}"`;
   }
 
   const modellTrim = (modell || "").trim();
@@ -173,11 +185,11 @@ export function checkHerstellerModellKonsistenz(hersteller, modell, typ) {
     const modellLow = modellTrim.toLowerCase();
     const passt = ref.modelle.some(m => modellLow.includes(m.toLowerCase()));
     if (!passt) {
-      warnings.push(`"${modellTrim}" ist kein bekanntes ${ref.display}-Modell — bitte prüfen`);
+      errors.modell = `"${modellTrim}" ist kein bekanntes ${ref.display}-Modell`;
     }
   }
 
-  return warnings.length ? { warning: warnings.join(". ") } : null;
+  return errors;
 }
 
 /**
