@@ -3,11 +3,14 @@ import PropTypes from "prop-types";
 import { Check, User, AlertTriangle } from "lucide-react";
 import { C } from "../../styles/theme";
 import { FAHRZEUG_TYPEN } from "../../constants/fahrzeug";
+import { HERSTELLER_REFERENZ, normalizeHersteller, getHerstellerDisplayList } from "../../constants/kfzReferenz";
 import { Modal } from "../../components/modal/Modal";
 import { Inp, Sel, Fld } from "../../components/ui/inputs";
 import { BtnG, BtnP } from "../../components/ui/buttons";
 import { FahrzeugShape } from "../../types/propTypes";
 import { validateFahrzeug, checkFinPruefziffer } from "../../utils/validators";
+
+const SONSTIGER = "__SONSTIGER__";
 
 export function FahrzeugModal({ initial = {}, fahrzeuge = [], onSave, onClose }) {
   const [form, setForm] = useState({
@@ -23,6 +26,43 @@ export function FahrzeugModal({ initial = {}, fahrzeuge = [], onSave, onClose })
   const isEdit = !!initial.id;
 
   const finWarnung = useMemo(() => checkFinPruefziffer(form.fin), [form.fin]);
+
+  /* Cascading-Dropdown-Logik:
+     - Bekannter Hersteller (in kfzReferenz) → Modell- und Typ-Dropdown gefiltert
+     - "Sonstiger" → Freitext für Hersteller + Modell, alle Typen wählbar
+     `isOther` ist eigenes State, weil der Dropdown-Wert sonst nicht von "leer"
+     unterscheidbar wäre, wenn der User SONSTIGER wählt und noch nichts tippt. */
+  const initialOther = !!initial.hersteller && !HERSTELLER_REFERENZ[normalizeHersteller(initial.hersteller)];
+  const [isOther, setIsOther] = useState(initialOther);
+  const herstellerOptions = useMemo(() => getHerstellerDisplayList(), []);
+  const herstellerRef = isOther ? null : HERSTELLER_REFERENZ[normalizeHersteller(form.hersteller)];
+  const herstellerDropdownValue = isOther ? SONSTIGER : (herstellerRef ? herstellerRef.display : "");
+
+  function onHerstellerChange(e) {
+    const v = e.target.value;
+    if (v === "") {
+      setIsOther(false);
+      setForm(p => ({ ...p, hersteller: "", modell: "" }));
+      return;
+    }
+    if (v === SONSTIGER) {
+      setIsOther(true);
+      setForm(p => ({ ...p, hersteller: "", modell: "" }));
+      return;
+    }
+    setIsOther(false);
+    const newRef = HERSTELLER_REFERENZ[normalizeHersteller(v)];
+    setForm(p => ({
+      ...p,
+      hersteller: v,
+      modell: newRef.modelle.includes(p.modell) ? p.modell : "",
+      typ: newRef.typen.includes(p.typ) ? p.typ : newRef.typen[0],
+    }));
+  }
+
+  const typOptions = herstellerRef
+    ? FAHRZEUG_TYPEN.filter(t => herstellerRef.typen.includes(t.id))
+    : FAHRZEUG_TYPEN;
 
   function save() {
     const e = validateFahrzeug(form, fahrzeuge, isEdit ? initial.id : null);
@@ -54,14 +94,31 @@ export function FahrzeugModal({ initial = {}, fahrzeuge = [], onSave, onClose })
           <Inp value={form.fin} onChange={f("fin")} placeholder="WBA3A5C50CF256985" error={err.fin} mono style={{ fontSize: 12 }} />
         </Fld>
         <Fld label="Hersteller *" error={err.hersteller}>
-          <Inp value={form.hersteller} onChange={f("hersteller")} placeholder="BMW" error={err.hersteller} />
+          <Sel value={herstellerDropdownValue} onChange={onHerstellerChange}>
+            <option value="">— bitte wählen —</option>
+            {herstellerOptions.map(d => <option key={d} value={d}>{d}</option>)}
+            <option value={SONSTIGER}>Sonstiger / Nicht aufgeführt …</option>
+          </Sel>
+          {isOther && (
+            <Inp value={form.hersteller} onChange={f("hersteller")} placeholder="z. B. Tatra, Lada, Tuning-Werkstatt"
+              error={err.hersteller} style={{ marginTop: 6 }} />
+          )}
         </Fld>
         <Fld label="Modell / Variante *" error={err.modell}>
-          <Inp value={form.modell} onChange={f("modell")} placeholder="320d xDrive" error={err.modell} />
+          {herstellerRef ? (
+            <Sel value={form.modell} onChange={f("modell")}>
+              <option value="">— bitte wählen —</option>
+              {herstellerRef.modelle.map(m => <option key={m} value={m}>{m}</option>)}
+            </Sel>
+          ) : (
+            <Inp value={form.modell} onChange={f("modell")}
+              placeholder={isOther ? "z. B. 815, Niva, RX7-FD" : "Erst Hersteller wählen"}
+              error={err.modell} disabled={!form.hersteller} />
+          )}
         </Fld>
         <Fld label="Fahrzeugtyp" error={err.typ}>
           <Sel value={form.typ} onChange={f("typ")}>
-            {FAHRZEUG_TYPEN.map(t => <option key={t.id} value={t.id}>{t.icon} {t.label}</option>)}
+            {typOptions.map(t => <option key={t.id} value={t.id}>{t.icon} {t.label}</option>)}
           </Sel>
         </Fld>
         <Fld label="Baujahr" error={err.baujahr}>

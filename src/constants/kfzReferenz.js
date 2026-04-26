@@ -210,6 +210,16 @@ export const HERSTELLER_REFERENZ = {
 };
 
 /**
+ * Liste aller Hersteller-Anzeigenamen für Dropdown-Auswahl, dedupliziert
+ * (Mercedes-Benz / Mercedes / VW / Volkswagen werden zu je einem Eintrag),
+ * alphabetisch sortiert.
+ */
+export function getHerstellerDisplayList() {
+  return [...new Set(Object.values(HERSTELLER_REFERENZ).map(r => r.display))]
+    .sort((a, b) => a.localeCompare(b, "de"));
+}
+
+/**
  * Liefert die normalisierte Form (lowercase, getrimmt) eines Herstellernamens.
  */
 export function normalizeHersteller(h) {
