@@ -12,6 +12,7 @@ import {
   validateFahrzeug,
   validateStatusWechsel,
   checkHerstellerModellKonsistenz,
+  checkFinPruefziffer,
   KM_STAND_MAX,
   BAUJAHR_MIN,
 } from "../../utils/validators";
@@ -342,5 +343,34 @@ describe("checkHerstellerModellKonsistenz — weiche Plausibilität", () => {
   it("ist gegen Groß-/Kleinschreibung robust", () => {
     expect(checkHerstellerModellKonsistenz("bmw", "3er", "PKW")).toBeNull();
     expect(checkHerstellerModellKonsistenz("VW", "golf", "PKW")).toBeNull();
+  });
+});
+
+describe("checkFinPruefziffer — ISO 3779 / FMVSS 115", () => {
+  it("akzeptiert eine FIN mit korrekter Prüfziffer (NHTSA-Beispiel)", () => {
+    /* Standard-Lehrbuch-VIN aus NHTSA-Doku, Prüfziffer X an Position 9 */
+    expect(checkFinPruefziffer("1M8GDM9AXKP042788")).toBeNull();
+  });
+
+  it("warnt bei falscher Prüfziffer (Regression: Quatsch-FIN aus Fuchs-Bericht)", () => {
+    /* "BLABLUBB123435666" hat 17 Zeichen + erlaubte Buchstaben, aber falsche Prüfziffer */
+    const r = checkFinPruefziffer("BLABLUBB123435666");
+    expect(r).not.toBeNull();
+    expect(r.warning).toMatch(/Prüfziffer/);
+  });
+
+  it("ignoriert leere/zu kurze FIN (Hard-Validator zuständig)", () => {
+    expect(checkFinPruefziffer("")).toBeNull();
+    expect(checkFinPruefziffer("   ")).toBeNull();
+    expect(checkFinPruefziffer("ABC123")).toBeNull();
+  });
+
+  it("ignoriert FIN mit verbotenen Zeichen (Hard-Validator zuständig)", () => {
+    /* Enthält 'I' an Position 1 — Format ist hartes Fehler, weicher Check skipped */
+    expect(checkFinPruefziffer("IM8GDM9AXKP042788")).toBeNull();
+  });
+
+  it("ist gegen Kleinschreibung robust", () => {
+    expect(checkFinPruefziffer("1m8gdm9axkp042788")).toBeNull();
   });
 });
