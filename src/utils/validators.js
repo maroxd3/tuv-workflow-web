@@ -180,6 +180,35 @@ export function checkHerstellerModellKonsistenz(hersteller, modell, typ) {
   return warnings.length ? { warning: warnings.join(". ") } : null;
 }
 
+/**
+ * Soft-Validator für die FIN-Prüfziffer nach ISO 3779 / FMVSS 115.
+ * Position 9 einer FIN ist eine Prüfziffer, berechnet aus den anderen 16 Stellen.
+ * Bewusst weich: Die Prüfziffer ist faktisch nur für Nordamerika-Markt-Fahrzeuge
+ * ab 1981 verpflichtend. Europäische/japanische FINs vor 2010 erfüllen sie oft
+ * nicht — Hard-Block würde Importe und Oldtimer fälschlich abweisen.
+ */
+const VIN_VALUES = {
+  A:1,B:2,C:3,D:4,E:5,F:6,G:7,H:8,
+  J:1,K:2,L:3,M:4,N:5,
+  P:7,R:9,
+  S:2,T:3,U:4,V:5,W:6,X:7,Y:8,Z:9,
+  "0":0,"1":1,"2":2,"3":3,"4":4,"5":5,"6":6,"7":7,"8":8,"9":9,
+};
+const VIN_WEIGHTS = [8,7,6,5,4,3,2,10,0,9,8,7,6,5,4,3,2];
+
+export function checkFinPruefziffer(raw) {
+  const v = (raw || "").trim().toUpperCase();
+  if (v.length !== 17 || !FIN_REGEX.test(v)) return null;
+  let sum = 0;
+  for (let i = 0; i < 17; i++) {
+    sum += VIN_VALUES[v[i]] * VIN_WEIGHTS[i];
+  }
+  const remainder = sum % 11;
+  const expected = remainder === 10 ? "X" : String(remainder);
+  if (v[8] === expected) return null;
+  return { warning: `FIN-Prüfziffer (Position 9) ist "${v[8]}", erwartet "${expected}" — möglicher Tippfehler oder Nicht-Nordamerika-Fahrzeug` };
+}
+
 /* ═══════════════════════════════════════════════════════════════════
    TERMIN / PRÜFUNG-WORKFLOW
    ═══════════════════════════════════════════════════════════════════ */
