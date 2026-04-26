@@ -7,6 +7,18 @@ import { hatHauptmangel } from "../utils/mangel";
 
 const FZ_COL = "fahrzeuge";
 const TR_COL = "termine";
+const FZ_CACHE_KEY = "tuvpro_fz_v3";
+const TR_CACHE_KEY = "tuvpro_tr_v3";
+const LOAD_FALLBACK_MS = 3000;
+
+function readLocalCache(key) {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
 
 function makeSeed() {
   const today = isoDate(), yd = addDays(today, -1), tm = addDays(today, 1), db2 = addDays(today, -2);
@@ -56,38 +68,53 @@ export function useStore() {
   /* ── Subscribe to Firestore in real-time ── */
   useEffect(() => {
     let fzLoaded = false, trLoaded = false;
-    let fzData = [], trData = [];
+    let active = true;
+
+    const markReady = () => {
+      if (active && fzLoaded && trLoaded) setReady(true);
+    };
+
+    /* If Firestore hasn't replied in time, hydrate from cache (or seed) so the UI never hangs. */
+    const fallbackTimer = window.setTimeout(() => {
+      if (!active || (fzLoaded && trLoaded)) return;
+      const cachedFz = readLocalCache(FZ_CACHE_KEY);
+      const cachedTr = readLocalCache(TR_CACHE_KEY);
+      const fallback = cachedFz.length || cachedTr.length
+        ? { fahrzeuge: cachedFz, termine: cachedTr }
+        : makeSeed();
+      if (!fzLoaded) { setFz(fallback.fahrzeuge); fzLoaded = true; }
+      if (!trLoaded) { setTr(fallback.termine); trLoaded = true; }
+      markReady();
+    }, LOAD_FALLBACK_MS);
 
     const unsubFz = onSnapshot(collection(db, FZ_COL), snap => {
-      fzData = snap.docs.map(d => d.data());
+      setFz(snap.docs.map(d => d.data()));
       fzLoaded = true;
-      setFz(fzData);
-      if (fzLoaded && trLoaded) setReady(true);
+      markReady();
     }, () => {
-      /* Firestore offline — fall back to localStorage */
-      try {
-        const s = localStorage.getItem("tuvpro_fz_v3");
-        if (s) { fzData = JSON.parse(s); setFz(fzData); }
-      } catch { /* ignore */ }
+      const cached = readLocalCache(FZ_CACHE_KEY);
+      if (cached.length) setFz(cached);
       fzLoaded = true;
-      if (fzLoaded && trLoaded) setReady(true);
+      markReady();
     });
 
     const unsubTr = onSnapshot(collection(db, TR_COL), snap => {
-      trData = snap.docs.map(d => d.data());
+      setTr(snap.docs.map(d => d.data()));
       trLoaded = true;
-      setTr(trData);
-      if (fzLoaded && trLoaded) setReady(true);
+      markReady();
     }, () => {
-      try {
-        const s = localStorage.getItem("tuvpro_tr_v3");
-        if (s) { trData = JSON.parse(s); setTr(trData); }
-      } catch { /* ignore */ }
+      const cached = readLocalCache(TR_CACHE_KEY);
+      if (cached.length) setTr(cached);
       trLoaded = true;
-      if (fzLoaded && trLoaded) setReady(true);
+      markReady();
     });
 
-    return () => { unsubFz(); unsubTr(); };
+    return () => {
+      active = false;
+      window.clearTimeout(fallbackTimer);
+      unsubFz();
+      unsubTr();
+    };
   }, []);
 
   /* ── Seed Firestore if empty (first launch) ── */
@@ -102,8 +129,8 @@ export function useStore() {
   }, [ready, fz.length, tr.length]);
 
   /* ── Keep localStorage as offline cache ── */
-  useEffect(() => { if (fz.length) localStorage.setItem("tuvpro_fz_v3", JSON.stringify(fz)); }, [fz]);
-  useEffect(() => { if (tr.length) localStorage.setItem("tuvpro_tr_v3", JSON.stringify(tr)); }, [tr]);
+  useEffect(() => { if (fz.length) localStorage.setItem(FZ_CACHE_KEY, JSON.stringify(fz)); }, [fz]);
+  useEffect(() => { if (tr.length) localStorage.setItem(TR_CACHE_KEY, JSON.stringify(tr)); }, [tr]);
 
   /* ── CRUD operations (update local state + Firestore) ── */
   const addFz = useCallback(data => {
