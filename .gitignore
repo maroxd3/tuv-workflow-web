@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# Firebase deploy cache
+.firebase/
+
 # Claude Code
 .claude
 
