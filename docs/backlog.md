@@ -89,6 +89,8 @@ Stories sind nach **MoSCoW** priorisiert (**M**ust / **S**hould / **C**ould /
 | US-52 | Als Team möchten wir ein vollständiges Pflichtenheft, UML-Doku, Datenmodell- und Test-Konzept-Dokumente im Repo, um die Anforderungen der Abgabe zu erfüllen | M | 8 | ✅ **Done (Sprint 5 — Fix-Sprint)** |
 | US-53 | Als Team möchten wir die NFA "Performance" mit messbaren Zahlen und Lastprofil begründen | M | 3 | ✅ **Done (Sprint 5 — Fix-Sprint)** |
 | US-54 | Als Team möchten wir die NoSQL-vs-RDBMS-Entscheidung kritisch dokumentieren | M | 3 | ✅ **Done (Sprint 5 — Fix-Sprint)** |
+| US-55 | Als Prüfer möchte ich den Prüfbericht als professionell aussehendes A4-PDF exportieren können (statt .txt), um ihn dem Halter aushändigen oder per Mail versenden zu können | M | 5 | ✅ **Done (Sprint 5 — Fix-Sprint)** |
+| US-56 | Als Nutzer möchte ich die App auch auf dem Smartphone und Tablet bedienen können (responsives Layout, Touch-Targets, Sidebar als Overlay), um auch unterwegs Termine zu prüfen oder Berichte einzusehen | S | 8 | ✅ **Done (Sprint 5 — Fix-Sprint)** |
 
 ### Epic 7 — Ausblick / nicht im Scope der aktuellen Abgabe
 
@@ -141,9 +143,9 @@ ist die größte Komponente geworden (339 LOC) — ggf. extrahieren.
 
 ### Sprint 5 (W10–12) — FIX-SPRINT nach Feedback Fuchs (2026-04-24)
 
-**Committed:** US-06, US-07, US-08, US-09, US-10b, US-23, US-50, US-51, US-52, US-53, US-54
-**Velocity-Plan:** 50 SP (erweitert nach interner Review 2026-04-27)
-**Fokus:** Feedback der Dozentin restlos adressieren, bevor finale Abgabe.
+**Committed:** US-06, US-07, US-08, US-09, US-10b, US-23, US-50, US-51, US-52, US-53, US-54, US-55, US-56
+**Velocity-Plan:** 63 SP (erweitert mehrfach im Verlauf des Sprints — finale Bilanz)
+**Fokus:** Feedback der Dozentin restlos adressieren plus UX-Verschärfung über das Feedback hinaus, bevor finale Abgabe.
 
 **Zwischenstand (Stand 2026-04-27):**
 
@@ -159,6 +161,8 @@ ist die größte Komponente geworden (339 LOC) — ggf. extrahieren.
 - ✅ US-53 (NFA-Begründung) — siehe `pflichtenheft.md` §3.1
 - ✅ US-54 (DB-Diskussion) — siehe `datenmodell.md` §6
 - ✅ Operativ — separate Firebase-Hosting-Site `tuv-workflow.web.app` für die TÜV-App (vorher Konflikt mit gotakt-Landing auf `tuv-prufstelle-pro.web.app`)
+- ✅ US-55 (Bericht als PDF) — `BerichteView.buildBerichtHtml` erzeugt A4-Layout mit Siegel-Logo, Berichts-Nummer im KBA-Format `TPP-NDS-2026-XXXXXXX`, römisch nummerierten Sektionen, Mängel-Tabelle, Unterschriftsfeldern, Rechtshinweis nach § 29 StVZO; Druck via `window.print()` ohne externe Library
+- ✅ US-56 (Mobile-Support) — viewport-fit=cover, useIsMobile-Hook, Sidebar als Overlay mit Backdrop, Hamburger-Menu in Topbar, .grid-resp-2/4/5 + .full-mobile + .pad-mobile + .card-mobile + .btn-icon Klassen, Cascading-Dropdowns, Klick statt Rechtsklick auf Tagesplan-Slots, alle Modals 1-Spalten-Form, Touch-Targets ≥ 36 px
 
 **Acceptance-Test vor Abgabe:**
 - Alle Beispiele aus der Mail Fuchs (24.04.2026) manuell durchgehen
@@ -189,7 +193,7 @@ Praktikum) notiert.
 | 2 | 15 | 15 | |
 | 3 | 15 | 15 | |
 | 4 | 37 | 37 | Länger (3 Wochen) |
-| 5 | 50 | 50 | Fix-Sprint nach Feedback (Stand 2026-04-27 abgeschlossen, inkl. UX-Verschärfung US-06/08/09/10b) |
+| 5 | 63 | 63 | Fix-Sprint + UX-Verschärfung über Feedback hinaus (Stand 2026-04-27 abgeschlossen — US-06/08/09/10b/55/56) |
 | 6 | ~10 | — | Feinschliff |
 
 ---
