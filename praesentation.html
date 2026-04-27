@@ -2,16 +2,34 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<title>TÜV Prüfstelle Pro – Präsentation v2</title>
+<title>TÜV Prüfstelle Pro – Projektpräsentation</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
+  :root {
+    --bg-0: #0a0e1a;
+    --bg-1: #111827;
+    --bg-2: #1f2937;
+    --line: rgba(148,163,184,0.14);
+    --line-bright: rgba(148,163,184,0.28);
+    --t1: #f1f5f9;
+    --t2: #cbd5e1;
+    --t3: #94a3b8;
+    --t4: #64748b;
+    --cyan: #22d3ee;
+    --green: #34d399;
+    --amber: #fbbf24;
+    --red: #f87171;
+    --purple: #a78bfa;
+    --blue: #60a5fa;
+  }
+
   body {
     font-family: 'Inter', -apple-system, sans-serif;
-    background: #0f0f1a;
-    color: #e2e8f0;
+    background: var(--bg-0);
+    color: var(--t1);
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
@@ -19,945 +37,993 @@
   .slide {
     width: 1280px;
     height: 720px;
-    margin: 20px auto;
-    padding: 56px 72px;
-    background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%);
+    margin: 18px auto;
+    padding: 56px 76px 64px;
+    background:
+      radial-gradient(1200px 600px at 90% -10%, rgba(34,211,238,0.06), transparent 50%),
+      radial-gradient(900px 600px at 0% 110%, rgba(167,139,250,0.05), transparent 50%),
+      linear-gradient(180deg, #0b1020 0%, #0a0e1a 100%);
     position: relative;
     overflow: hidden;
     page-break-after: always;
-    border-radius: 8px;
+    border-radius: 10px;
   }
 
   .slide::before {
     content: '';
     position: absolute;
     top: 0; left: 0; right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, #06c8d8, #0fc28a, #06c8d8);
+    height: 3px;
+    background: linear-gradient(90deg, var(--cyan), var(--green), var(--purple));
   }
 
-  .slide-number {
+  /* ── Footer (slide num + brand) ── */
+  .slide-num {
     position: absolute;
     bottom: 24px; right: 40px;
-    font-size: 12px;
-    color: #64748b;
-    font-weight: 500;
+    font-size: 11px;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--t4);
+    letter-spacing: 0.05em;
   }
-
-  .logo-text {
+  .brand {
     position: absolute;
     bottom: 24px; left: 40px;
-    font-size: 11px;
-    color: #475569;
-    font-weight: 600;
-    letter-spacing: 0.08em;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--t4);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
   }
+  .brand span.dot { color: var(--cyan); }
 
   /* ── Title slide ── */
-  .slide-title {
+  .slide-cover {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    align-items: center;
-    text-align: center;
+    align-items: flex-start;
+    padding: 80px 100px;
   }
-
-  .slide-title .badge {
-    display: inline-block;
-    padding: 6px 18px;
-    border-radius: 20px;
-    background: rgba(6,200,216,0.12);
-    border: 1px solid rgba(6,200,216,0.3);
-    font-size: 12px;
-    font-weight: 600;
-    color: #06c8d8;
-    letter-spacing: 0.1em;
+  .slide-cover .badge {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
     text-transform: uppercase;
-    margin-bottom: 28px;
+    color: var(--cyan);
+    padding: 6px 14px;
+    border: 1px solid rgba(34,211,238,0.32);
+    border-radius: 4px;
+    background: rgba(34,211,238,0.06);
+    margin-bottom: 36px;
   }
-
-  .slide-title h1 {
-    font-size: 52px;
+  .slide-cover h1 {
+    font-size: 64px;
     font-weight: 800;
-    letter-spacing: -0.03em;
-    line-height: 1.1;
-    background: linear-gradient(135deg, #e2e8f0, #06c8d8);
+    line-height: 1.0;
+    letter-spacing: -0.035em;
+    color: var(--t1);
+    margin-bottom: 14px;
+  }
+  .slide-cover h1 span.accent {
+    background: linear-gradient(135deg, var(--cyan), var(--green));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    margin-bottom: 16px;
   }
-
-  .slide-title .subtitle {
-    font-size: 20px;
-    color: #94a3b8;
-    margin-bottom: 8px;
-    font-weight: 400;
+  .slide-cover .lead {
+    font-size: 22px;
+    color: var(--t3);
+    font-weight: 300;
+    margin-bottom: 60px;
+    max-width: 720px;
+    line-height: 1.4;
   }
-
-  .slide-title .version {
+  .slide-cover .meta {
     font-size: 13px;
-    color: #0fc28a;
-    margin-bottom: 30px;
-    font-weight: 600;
-    letter-spacing: 0.05em;
+    color: var(--t3);
+    line-height: 1.9;
+    border-left: 2px solid var(--cyan);
+    padding-left: 18px;
+  }
+  .slide-cover .meta strong { color: var(--t2); font-weight: 600; }
+  .slide-cover .meta .label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--t4);
+    display: block;
+    margin-bottom: 2px;
   }
 
-  .slide-title .meta {
-    font-size: 14px;
-    color: #94a3b8;
-    line-height: 1.8;
+  /* ── Section headers (non-cover slides) ── */
+  .eyebrow {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--cyan);
+    margin-bottom: 8px;
   }
-
-  .slide-title .meta strong { color: #cbd5e1; font-weight: 600; }
-
-  /* ── Section headers ── */
   h2 {
-    font-size: 32px;
+    font-size: 34px;
     font-weight: 800;
-    letter-spacing: -0.02em;
-    color: #f1f5f9;
-    margin-bottom: 6px;
+    letter-spacing: -0.025em;
+    color: var(--t1);
+    margin-bottom: 4px;
+    line-height: 1.1;
   }
-
-  h2 .accent { color: #06c8d8; }
-
-  .slide-subtitle {
+  .lede {
     font-size: 14px;
-    color: #64748b;
+    color: var(--t3);
     margin-bottom: 28px;
     font-weight: 400;
+    max-width: 780px;
+    line-height: 1.5;
   }
 
   h3 {
-    font-size: 16px;
+    font-size: 15px;
     font-weight: 700;
-    color: #e2e8f0;
+    color: var(--t1);
     margin-bottom: 10px;
+    letter-spacing: -0.005em;
   }
-
-  /* ── Layout helpers ── */
-  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
-  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; }
-  .four-col { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
-  .col-asym { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 28px; }
-
-  .card {
-    background: rgba(30,41,59,0.55);
-    border: 1px solid rgba(100,116,139,0.2);
-    border-radius: 12px;
-    padding: 18px 20px;
-  }
-  .card.compact { padding: 14px 16px; }
-  .card-cyan { border-top: 3px solid #06c8d8; }
-  .card-green { border-top: 3px solid #0fc28a; }
-  .card-amber { border-top: 3px solid #f5a620; }
-  .card-red { border-top: 3px solid #f0455a; }
-  .card-purple { border-top: 3px solid #9663f5; }
-  .card-blue { border-top: 3px solid #3b82f6; }
-
-  .card h4 {
-    font-size: 12px;
+  h4 {
+    font-size: 11px;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.1em;
+    color: var(--cyan);
     margin-bottom: 8px;
-    color: #06c8d8;
   }
-  .card-green h4 { color: #0fc28a; }
-  .card-amber h4 { color: #f5a620; }
-  .card-red h4 { color: #f0455a; }
-  .card-purple h4 { color: #9663f5; }
-  .card-blue h4 { color: #3b82f6; }
 
-  .card p, .card li { font-size: 13px; color: #94a3b8; line-height: 1.55; }
-  .card strong { color: #cbd5e1; font-weight: 600; }
-  .card .mono { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #06c8d8; }
+  /* ── Layout ── */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .asym-l { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 28px; }
+  .asym-r { display: grid; grid-template-columns: 0.8fr 1.2fr; gap: 28px; }
 
-  ul { list-style: none; padding: 0; }
-  ul li {
+  /* ── Cards ── */
+  .card {
+    background: rgba(31,41,55,0.5);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 18px 20px;
+  }
+  .card.pad-sm { padding: 14px 16px; }
+
+  .card.tone-cyan   { border-top: 2px solid var(--cyan); }
+  .card.tone-green  { border-top: 2px solid var(--green); }
+  .card.tone-amber  { border-top: 2px solid var(--amber); }
+  .card.tone-red    { border-top: 2px solid var(--red); }
+  .card.tone-purple { border-top: 2px solid var(--purple); }
+  .card.tone-blue   { border-top: 2px solid var(--blue); }
+
+  .card.tone-green h4  { color: var(--green); }
+  .card.tone-amber h4  { color: var(--amber); }
+  .card.tone-red h4    { color: var(--red); }
+  .card.tone-purple h4 { color: var(--purple); }
+  .card.tone-blue h4   { color: var(--blue); }
+
+  .card p, .card li { font-size: 12.5px; color: var(--t2); line-height: 1.6; }
+  .card strong { color: var(--t1); font-weight: 600; }
+
+  .mono {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    color: var(--cyan);
+  }
+
+  /* ── Lists ── */
+  ul.bullets { list-style: none; padding: 0; }
+  ul.bullets li {
     font-size: 13px;
-    color: #cbd5e1;
-    line-height: 1.6;
-    padding-left: 16px;
+    color: var(--t2);
+    line-height: 1.65;
+    padding-left: 18px;
     position: relative;
-    margin-bottom: 3px;
+    margin-bottom: 4px;
   }
-  ul li::before {
+  ul.bullets li::before {
     content: '';
     position: absolute;
-    left: 0; top: 8px;
+    left: 2px; top: 9px;
     width: 5px; height: 5px;
+    background: var(--cyan);
     border-radius: 50%;
-    background: #06c8d8;
   }
-  ul.green li::before { background: #0fc28a; }
-  ul.amber li::before { background: #f5a620; }
-  ul.red li::before { background: #f0455a; }
+  ul.bullets.green li::before  { background: var(--green); }
+  ul.bullets.amber li::before  { background: var(--amber); }
+  ul.bullets.red li::before    { background: var(--red); }
+  ul.bullets.purple li::before { background: var(--purple); }
 
-  .tag {
+  /* ── Pills / Tags ── */
+  .pill {
     display: inline-block;
-    padding: 3px 10px;
-    border-radius: 6px;
-    font-size: 11px;
+    padding: 3px 9px;
+    border-radius: 4px;
+    font-size: 10px;
     font-weight: 600;
-    margin: 2px;
+    letter-spacing: 0.04em;
+    margin: 1px 2px;
   }
-  .tag-cyan { background: rgba(6,200,216,0.15); color: #06c8d8; border: 1px solid rgba(6,200,216,0.3); }
-  .tag-green { background: rgba(15,194,138,0.15); color: #0fc28a; border: 1px solid rgba(15,194,138,0.3); }
-  .tag-amber { background: rgba(245,166,32,0.15); color: #f5a620; border: 1px solid rgba(245,166,32,0.3); }
-  .tag-red { background: rgba(240,69,90,0.15); color: #f0455a; border: 1px solid rgba(240,69,90,0.3); }
-  .tag-purple { background: rgba(150,99,245,0.15); color: #9663f5; border: 1px solid rgba(150,99,245,0.3); }
+  .pill.cyan   { background: rgba(34,211,238,0.12); color: var(--cyan); border: 1px solid rgba(34,211,238,0.28); }
+  .pill.green  { background: rgba(52,211,153,0.12); color: var(--green); border: 1px solid rgba(52,211,153,0.28); }
+  .pill.amber  { background: rgba(251,191,36,0.12); color: var(--amber); border: 1px solid rgba(251,191,36,0.28); }
+  .pill.red    { background: rgba(248,113,113,0.12); color: var(--red); border: 1px solid rgba(248,113,113,0.28); }
+  .pill.purple { background: rgba(167,139,250,0.12); color: var(--purple); border: 1px solid rgba(167,139,250,0.28); }
+  .pill.blue   { background: rgba(96,165,250,0.12); color: var(--blue); border: 1px solid rgba(96,165,250,0.28); }
+  .pill.muted  { background: rgba(148,163,184,0.08); color: var(--t3); border: 1px solid var(--line); }
 
+  /* ── Tables ── */
   table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 6px;
     font-size: 12.5px;
   }
   th {
     text-align: left;
     font-size: 10px;
     font-weight: 700;
-    color: #64748b;
+    color: var(--t4);
     text-transform: uppercase;
     letter-spacing: 0.1em;
     padding: 8px 10px;
-    border-bottom: 1px solid rgba(100,116,139,0.25);
+    border-bottom: 1px solid var(--line-bright);
   }
   td {
-    color: #cbd5e1;
-    padding: 8px 10px;
-    border-bottom: 1px solid rgba(100,116,139,0.1);
+    color: var(--t2);
+    padding: 7px 10px;
+    border-bottom: 1px solid var(--line);
     line-height: 1.45;
+    vertical-align: top;
   }
-  td.mono { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #06c8d8; }
-  td.muted { color: #64748b; }
+  td.mono { color: var(--cyan); font-family: 'JetBrains Mono', monospace; font-size: 11.5px; }
+  td.muted { color: var(--t4); }
 
-  .diagram-box {
-    background: rgba(15,23,42,0.7);
-    border: 1px solid rgba(100,116,139,0.2);
-    border-radius: 10px;
-    padding: 16px 20px;
+  /* ── Diagrams (ASCII boxes) ── */
+  .ascii {
+    background: rgba(11,16,32,0.7);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 18px 22px;
     font-family: 'JetBrains Mono', monospace;
-    font-size: 11.5px;
-    color: #94a3b8;
+    font-size: 11px;
+    color: var(--t3);
     line-height: 1.55;
     white-space: pre;
     overflow: hidden;
   }
-  .diagram-box .accent-c { color: #06c8d8; }
-  .diagram-box .accent-g { color: #0fc28a; }
-  .diagram-box .accent-a { color: #f5a620; }
+  .ascii .c { color: var(--cyan); }
+  .ascii .g { color: var(--green); }
+  .ascii .a { color: var(--amber); }
+  .ascii .p { color: var(--purple); }
+  .ascii .t1 { color: var(--t1); }
 
-  .quote-box {
-    background: rgba(245,166,32,0.06);
-    border-left: 3px solid #f5a620;
-    border-radius: 6px;
-    padding: 12px 16px;
-    margin: 10px 0;
-    font-size: 13px;
-    color: #cbd5e1;
-    font-style: italic;
-    line-height: 1.55;
+  /* ── Stats ── */
+  .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-top: 8px; }
+  .stat {
+    text-align: left;
+    padding: 16px 18px;
+    background: rgba(31,41,55,0.4);
+    border: 1px solid var(--line);
+    border-radius: 8px;
   }
-
-  .highlight-box {
-    background: rgba(6,200,216,0.06);
-    border: 1px solid rgba(6,200,216,0.25);
-    border-radius: 10px;
-    padding: 14px 18px;
-    margin-top: 10px;
-    font-size: 13px;
-    color: #cbd5e1;
-  }
-
-  .big-number {
-    font-size: 36px;
+  .stat .num {
+    font-size: 32px;
     font-weight: 800;
     font-family: 'JetBrains Mono', monospace;
-    letter-spacing: -0.02em;
     line-height: 1;
+    letter-spacing: -0.02em;
+    color: var(--cyan);
+    margin-bottom: 6px;
   }
-  .big-number.cyan { color: #06c8d8; }
-  .big-number.green { color: #0fc28a; }
-  .big-number.amber { color: #f5a620; }
-  .big-number.red { color: #f0455a; }
+  .stat .num.green  { color: var(--green); }
+  .stat .num.amber  { color: var(--amber); }
+  .stat .num.purple { color: var(--purple); }
+  .stat .lbl {
+    font-size: 11px;
+    color: var(--t3);
+    line-height: 1.4;
+  }
 
-  .agenda-list { list-style: none; padding: 0; margin-top: 12px; }
-  .agenda-list li {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    padding: 7px 0;
-    border-bottom: 1px solid rgba(100,116,139,0.12);
-    font-size: 15px;
-    color: #cbd5e1;
-    font-weight: 500;
+  /* ── Quote / Highlight ── */
+  .callout {
+    background: rgba(34,211,238,0.04);
+    border-left: 2px solid var(--cyan);
+    border-radius: 4px;
+    padding: 12px 16px;
+    font-size: 13px;
+    color: var(--t2);
+    line-height: 1.55;
   }
-  .agenda-list li::before { display: none; }
+  .callout.amber { background: rgba(251,191,36,0.04); border-color: var(--amber); }
+  .callout.green { background: rgba(52,211,153,0.04); border-color: var(--green); }
+
+  /* ── Agenda ── */
+  .agenda { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 36px; margin-top: 14px; }
+  .agenda-item {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--line);
+    font-size: 14px;
+    color: var(--t2);
+  }
   .agenda-num {
-    width: 30px; height: 30px;
-    border-radius: 8px;
-    background: rgba(6,200,216,0.12);
-    border: 1px solid rgba(6,200,216,0.3);
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    border: 1px solid rgba(34,211,238,0.32);
+    background: rgba(34,211,238,0.06);
+    color: var(--cyan);
     display: flex; align-items: center; justify-content: center;
-    font-size: 13px; font-weight: 700;
-    color: #06c8d8;
+    font-size: 11px; font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
     flex-shrink: 0;
   }
 
-  /* Print */
+  /* ── Print ── */
   @media print {
-    body { background: #0f0f1a; }
-    .slide { margin: 0; border-radius: 0; page-break-after: always; page-break-inside: avoid; }
+    body { background: var(--bg-0); }
+    .slide {
+      margin: 0;
+      border-radius: 0;
+      page-break-after: always;
+      page-break-inside: avoid;
+    }
   }
   @page { size: 1280px 720px; margin: 0; }
 </style>
 </head>
 <body>
 
-<!-- ═════════════ SLIDE 1: TITEL ═════════════ -->
-<div class="slide slide-title">
-  <div class="badge">Software-Projekt IIM-211-01 · Sommersemester 2026</div>
-  <h1>TÜV Prüfstelle Pro</h1>
-  <div class="subtitle">Verwaltungssystem für TÜV-Prüfstellen</div>
-  <div class="version">v2.0 — Iteration nach Feedback Round 1</div>
+<!-- ═════════════ 01  COVER ═════════════ -->
+<div class="slide slide-cover">
+  <div class="badge">Software-Projekt · IIM-211-01 · SoSe 2026</div>
+  <h1>TÜV <span class="accent">Prüfstelle Pro</span></h1>
+  <div class="lead">Ein digitales Verwaltungssystem für die Abwicklung des kompletten Prüfprozesses einer TÜV-Prüfstelle — von der Terminplanung bis zum Bericht.</div>
   <div class="meta">
-    <strong>Marwan Saleh</strong> &nbsp;·&nbsp; <strong>Oussama Hlayhel</strong><br>
-    Hochschule Hannover, Fakultät II<br>
-    27. April 2026
+    <span class="label">Team</span>
+    <strong>Marwan Saleh</strong> &nbsp;&middot;&nbsp; <strong>Oussama Hlayhel</strong><br>
+    <span class="label" style="margin-top:8px">Hochschule Hannover · Fakultät II</span>
+    27. April 2026 &nbsp;&middot;&nbsp; <strong>github.com/maroxd3/tuv-workflow-web</strong>
   </div>
-  <div class="logo-text">TÜV PRÜFSTELLE PRO · v2</div>
+  <div class="brand"><span class="dot">●</span> TÜV PRÜFSTELLE PRO</div>
+  <div class="slide-num">01 / 15</div>
 </div>
 
-<!-- ═════════════ SLIDE 2: AGENDA ═════════════ -->
+<!-- ═════════════ 02  AGENDA ═════════════ -->
 <div class="slide">
-  <h2><span class="accent">01</span> Agenda</h2>
-  <div class="slide-subtitle">14 Slides · Fokus auf Feedback-Reaktion und vertiefte Begründungen</div>
-  <div class="two-col">
-    <ul class="agenda-list">
-      <li><span class="agenda-num">01</span> Reaktion auf Feedback (24.04.2026)</li>
-      <li><span class="agenda-num">02</span> Problem &amp; Stakeholder</li>
-      <li><span class="agenda-num">03</span> Anforderungen (Pflichtenheft)</li>
-      <li><span class="agenda-num">04</span> Lastprofil &amp; Performance-Begründung</li>
-      <li><span class="agenda-num">05</span> Datenmodell &amp; Integrität</li>
-      <li><span class="agenda-num">06</span> NoSQL vs. RDBMS — Diskussion</li>
-      <li><span class="agenda-num">07</span> Datenschutz &amp; Sicherheit</li>
-    </ul>
-    <ul class="agenda-list">
-      <li><span class="agenda-num">08</span> Architektur — Komponentendiagramm</li>
-      <li><span class="agenda-num">09</span> Klassendiagramm / Typmodell</li>
-      <li><span class="agenda-num">10</span> Validierung &amp; UX-Schutzmechanismen</li>
-      <li><span class="agenda-num">11</span> Test-Strategie &amp; Verfahren</li>
-      <li><span class="agenda-num">12</span> Sprint-Planung &amp; Backlog</li>
-      <li><span class="agenda-num">13</span> Konkrete Änderungen seit Feedback</li>
-      <li><span class="agenda-num">14</span> Ausblick &amp; Q&amp;A</li>
-    </ul>
+  <div class="eyebrow">Agenda</div>
+  <h2>Was Sie auf den nächsten 13 Slides erwartet</h2>
+  <div class="lede">Vom Problem über die Architektur bis zum Validierungs- und Test-Konzept.</div>
+  <div class="agenda">
+    <div class="agenda-item"><span class="agenda-num">01</span> Problem &amp; Motivation</div>
+    <div class="agenda-item"><span class="agenda-num">09</span> Persistenz — NoSQL vs. SQL</div>
+    <div class="agenda-item"><span class="agenda-num">02</span> Stakeholder &amp; Use Cases</div>
+    <div class="agenda-item"><span class="agenda-num">10</span> Datenschutz &amp; Sicherheit</div>
+    <div class="agenda-item"><span class="agenda-num">03</span> Anforderungen (Pflichtenheft)</div>
+    <div class="agenda-item"><span class="agenda-num">11</span> Validierung &amp; UX-Schutz</div>
+    <div class="agenda-item"><span class="agenda-num">04</span> Performance &amp; Lastprofil</div>
+    <div class="agenda-item"><span class="agenda-num">12</span> Implementierung — Hauptfeatures</div>
+    <div class="agenda-item"><span class="agenda-num">05</span> Architektur &amp; Komponenten</div>
+    <div class="agenda-item"><span class="agenda-num">13</span> Test-Strategie &amp; Verfahren</div>
+    <div class="agenda-item"><span class="agenda-num">06</span> Datenmodell &amp; Integrität</div>
+    <div class="agenda-item"><span class="agenda-num">14</span> Vorgehen &amp; Sprint-Methodik</div>
+    <div class="agenda-item"><span class="agenda-num">07</span> Klassendiagramm / Typmodell</div>
+    <div class="agenda-item"><span class="agenda-num">15</span> Ausblick &amp; Q&amp;A</div>
   </div>
-  <div class="logo-text">TÜV PRÜFSTELLE PRO · v2</div>
-  <div class="slide-number">2 / 14</div>
+  <div class="brand"><span class="dot">●</span> TÜV PRÜFSTELLE PRO</div>
+  <div class="slide-num">02 / 15</div>
 </div>
 
-<!-- ═════════════ SLIDE 3: FEEDBACK-REAKTION ═════════════ -->
+<!-- ═════════════ 03  PROBLEM & MOTIVATION ═════════════ -->
 <div class="slide">
-  <h2><span class="accent">01</span> Reaktion auf Feedback Fuchs</h2>
-  <div class="slide-subtitle">Mail vom 24.04.2026 — alle Punkte adressiert, Stand 27.04.2026</div>
-  <table>
-    <tr>
-      <th style="width:38%">Kritik aus dem Feedback</th>
-      <th style="width:50%">Unsere Antwort</th>
-      <th style="width:12%">Status</th>
-    </tr>
-    <tr>
-      <td>Doku in Präsi „zu dürftig", Dokumente fehlen auf GitHub</td>
-      <td>5 vollständige Dokumente unter <span class="mono" style="color:#06c8d8">docs/</span>: Pflichtenheft (236), Backlog (197), Datenmodell (325), Design (318), Testkonzept (193 Zeilen)</td>
-      <td><span class="tag tag-green">Erledigt</span></td>
-    </tr>
-    <tr>
-      <td>Sprint-Planung, User Stories, DoD, Akzeptanzkriterien</td>
-      <td>5 Sprints dokumentiert, ~25 Stories MoSCoW-priorisiert, 10-Punkte-DoD, Akzeptanzkriterien je Anforderung</td>
-      <td><span class="tag tag-green">Erledigt</span></td>
-    </tr>
-    <tr>
-      <td>Komponentendiagramm + Klassendiagramm + Begründungen</td>
-      <td>Beides als Mermaid-Diagramme in <span class="mono" style="color:#06c8d8">design.md</span>, jede Tech-Wahl mit Alternative + Begründungs-Tabelle</td>
-      <td><span class="tag tag-green">Erledigt</span></td>
-    </tr>
-    <tr>
-      <td>Warum NoSQL? Document-DBs sind für strukturierte Daten ungeeignet</td>
-      <td>Eigener Diskussions-Abschnitt mit Pro-RDBMS / Pro-Firestore + SQL-Gegenentwurf — Bewertung „akzeptabel, nicht optimal"</td>
-      <td><span class="tag tag-green">Erledigt</span></td>
-    </tr>
-    <tr>
-      <td>Wie kommt 100 ms zustande? Warum nicht 50/200? Wie testen?</td>
-      <td>Vergleichstabelle 50/100/200 ms mit Forschungsbezug (Nielsen, Card et al.) + Test-Methode mit Referenzgerät</td>
-      <td><span class="tag tag-green">Erledigt</span></td>
-    </tr>
-    <tr>
-      <td>Lastprofil fehlt</td>
-      <td>20–30 Prüfungen/Tag typisch, 50/Tag Spitze, 3–5 Nutzer parallel, ~8 000 Termine/Jahr</td>
-      <td><span class="tag tag-green">Erledigt</span></td>
-    </tr>
-    <tr>
-      <td>Datenschutz &amp; Sicherheit bei Cloud-DB</td>
-      <td>NF-DS-Abschnitt: DSGVO-Auftragsverarbeitung, EU-Region, Auth-Roadmap, Audit-Log-Konzept</td>
-      <td><span class="tag tag-green">Erledigt</span></td>
-    </tr>
-    <tr>
-      <td>Bug-Liste (negKM, Tel-Buchstaben, Email, Bestanden trotz HM, doppelt KFZ, BMW Polo, VW Motorrad)</td>
-      <td><strong>6/6 hart blockiert</strong> über mehrstufige Validierung + Cascading-Dropdowns; Hersteller/Modell durch UX strukturell unmöglich</td>
-      <td><span class="tag tag-green">6/6</span></td>
-    </tr>
-    <tr>
-      <td>187 ESLint-Errors mit ihrer Config (prop-types, unused imports)</td>
-      <td>Strenge Config: <span class="mono" style="color:#06c8d8">react/prop-types: error</span>, jsx-runtime, no-unused-vars: error → <strong>0 Errors</strong></td>
-      <td><span class="tag tag-green">0 Errors</span></td>
-    </tr>
-  </table>
-  <div class="logo-text">TÜV PRÜFSTELLE PRO · v2</div>
-  <div class="slide-number">3 / 14</div>
-</div>
-
-<!-- ═════════════ SLIDE 4: PROBLEM & STAKEHOLDER ═════════════ -->
-<div class="slide">
-  <h2><span class="accent">02</span> Problem &amp; Stakeholder</h2>
-  <div class="slide-subtitle">Wer arbeitet mit dem System, was sind die Schmerzpunkte heute?</div>
-  <div class="two-col">
+  <div class="eyebrow">01 · Problem</div>
+  <h2>Warum dieses Projekt?</h2>
+  <div class="lede">Die meisten kleinen und mittleren Prüfstellen verwalten ihren Tagesablauf bis heute mit Excel und Papier. Daraus entstehen konkrete operative Schmerzen.</div>
+  <div class="grid-2">
     <div>
-      <div class="card card-red">
-        <h4>Problem (Status quo)</h4>
-        <ul class="red">
-          <li>Verwaltung läuft in Excel-Tabellen + Papier-Berichten</li>
-          <li>Tippfehler bei Kennzeichen, Mängel-Codes, Kundendaten</li>
-          <li>Doppelte Termine, weil Prüfer und Empfang nicht synchron sind</li>
-          <li>Mängel-Erfassung ohne Bezug zum StVZO-Katalog</li>
-          <li>Berichts-Erstellung manuell, fehleranfällig, nicht GoBD-konform</li>
-        </ul>
-      </div>
-      <div class="card card-green" style="margin-top:14px">
-        <h4>Lösung — TÜV Prüfstelle Pro</h4>
-        <ul class="green">
-          <li>Zentrale Web-/Desktop-App (Tauri 2 + React 19)</li>
-          <li>Strukturierte Eingabe via abhängige Dropdowns (kein „BMW Polo" möglich)</li>
-          <li>Echtzeit-Synchronisation für Mehrnutzer-Szenarien</li>
-          <li>StVZO-Katalog-Integration für Mängel</li>
-          <li>Automatisierte Bericht-Generierung</li>
-        </ul>
-      </div>
+      <h3>Status quo in der Branche</h3>
+      <ul class="bullets red">
+        <li>Termine werden in Excel-Kalendern geführt — kein gemeinsamer Stand zwischen Empfang, Prüfern und Leitung</li>
+        <li>Doppelvergabe von Slots, weil Empfang nicht sofort sieht, dass ein Prüfer bereits auf einem Termin sitzt</li>
+        <li>Tippfehler bei Kennzeichen, FIN, Halter-Daten — keine strukturelle Prüfung</li>
+        <li>Mängelerfassung als Freitext-Notizen, ohne Bezug zum StVZO-Anlage-VIII-Katalog</li>
+        <li>Berichte werden in Word kopiert, manuell ausgefüllt, sind nicht GoBD-konform</li>
+      </ul>
     </div>
     <div>
-      <h3 style="margin-bottom:14px">Stakeholder &amp; ihre Anliegen</h3>
-      <table>
-        <tr><th>Rolle</th><th>Wichtigste Anliegen</th></tr>
-        <tr><td>Prüfingenieur</td><td>Schnelle Mängelerfassung, StVZO-Katalog</td></tr>
-        <tr><td>Prüfstellenleiter</td><td>Tagesplan, KPIs, Auslastungsstatistik</td></tr>
-        <tr><td>Empfang / Admin</td><td>Fahrzeug-Stammdaten, Kundendaten</td></tr>
-        <tr><td>Fahrzeughalter</td><td>Verständlicher gesetzeskonformer Bericht</td></tr>
-        <tr><td>Prüfstellen-IT</td><td>Wartbarkeit, Backup, DSGVO-Konformität</td></tr>
-      </table>
-      <div class="highlight-box">
-        <strong>Fokus-Customer:</strong> Mittlere Prüfstelle in DE/Niedersachsen mit 3–5 Prüfingenieuren und 20–30 Prüfungen/Tag. Spitzenlast im Frühjahr (HU/AU-Saison): bis 50/Tag.
+      <h3>Vision von TÜV Prüfstelle Pro</h3>
+      <div class="card tone-cyan">
+        <h4>Ein zentrales System für den ganzen Prozess</h4>
+        <p>Tagesplan, Fahrzeug-Stammdaten, Mängelkatalog, Workflow-Steuerung und Berichts-Generierung in einer Anwendung — als Web-App und als native Desktop-App (Tauri).</p>
+      </div>
+      <div class="card tone-green" style="margin-top:10px">
+        <h4>Strukturierte Eingabe statt Freitext</h4>
+        <p>Hersteller, Modell und Fahrzeugtyp als abhängige Auswahllisten. Kennzeichen gegen die KBA-Liste validiert. Mängel aus dem § 29 StVZO-Katalog. Tippfehler werden strukturell ausgeschlossen.</p>
+      </div>
+      <div class="card tone-purple" style="margin-top:10px">
+        <h4>Echtzeit-Synchronisation</h4>
+        <p>Statusänderungen eines Prüfers sind beim Empfang sofort sichtbar — keine Doppel-Vergabe mehr.</p>
       </div>
     </div>
   </div>
-  <div class="logo-text">TÜV PRÜFSTELLE PRO · v2</div>
-  <div class="slide-number">4 / 14</div>
+  <div class="brand"><span class="dot">●</span> TÜV PRÜFSTELLE PRO</div>
+  <div class="slide-num">03 / 15</div>
 </div>
 
-<!-- ═════════════ SLIDE 5: ANFORDERUNGEN ═════════════ -->
+<!-- ═════════════ 04  STAKEHOLDER ═════════════ -->
 <div class="slide">
-  <h2><span class="accent">03</span> Anforderungen — Pflichtenheft (Auszug)</h2>
-  <div class="slide-subtitle">Vollständig in <span class="mono" style="color:#06c8d8">docs/pflichtenheft.md</span> · funktional + nicht-funktional + Akzeptanzkriterien</div>
-  <div class="two-col">
+  <div class="eyebrow">02 · Stakeholder</div>
+  <h2>Wer arbeitet mit dem System?</h2>
+  <div class="lede">Vier Rollen mit unterschiedlichen Anliegen. Jede UI-Sicht ist auf eine Hauptrolle zugeschnitten.</div>
+  <div class="grid-4">
+    <div class="card tone-cyan">
+      <h4>Prüfingenieur</h4>
+      <p>Führt die HU/AU am Fahrzeug durch. <strong>Will:</strong> Mängel schnell aus dem Katalog erfassen, Status-Wechsel mit einem Klick (Starten/Fertig).</p>
+      <p style="margin-top:8px"><strong>Sicht:</strong> Tagesplan, Mängel-Modal</p>
+    </div>
+    <div class="card tone-green">
+      <h4>Prüfstellenleiter</h4>
+      <p>Plant die Auslastung, überwacht Qualität. <strong>Will:</strong> Tagesübersicht, KPIs, Bestehensquote, Leistung pro Prüfer.</p>
+      <p style="margin-top:8px"><strong>Sicht:</strong> Statistik, Tagesplan-Wochenansicht</p>
+    </div>
+    <div class="card tone-amber">
+      <h4>Empfang / Admin</h4>
+      <p>Pflegt Fahrzeug- und Halter-Daten, vergibt Termine telefonisch. <strong>Will:</strong> Schnelle Suche, Plausibilitäts-Hinweise bei der Eingabe.</p>
+      <p style="margin-top:8px"><strong>Sicht:</strong> Fahrzeuge, Tagesplan-Tabelle</p>
+    </div>
+    <div class="card tone-purple">
+      <h4>Fahrzeughalter</h4>
+      <p>Indirekter Stakeholder. <strong>Will:</strong> Verständlichen, gesetzeskonformen Bericht erhalten.</p>
+      <p style="margin-top:8px"><strong>Sicht:</strong> Berichts-PDF (in Roadmap), heute Text-Export</p>
+    </div>
+  </div>
+  <h3 style="margin-top:24px">Lastprofil — Auslegung der App</h3>
+  <div class="stat-grid">
+    <div class="stat"><div class="num">20–30</div><div class="lbl">Prüfungen pro Tag (typisch)</div></div>
+    <div class="stat"><div class="num green">50</div><div class="lbl">Prüfungen pro Tag (HU/AU-Spitze)</div></div>
+    <div class="stat"><div class="num amber">3–5</div><div class="lbl">Aktive Nutzer parallel</div></div>
+    <div class="stat"><div class="num purple">~8 000</div><div class="lbl">Termine pro Jahr / Bestand</div></div>
+  </div>
+  <div class="brand"><span class="dot">●</span> TÜV PRÜFSTELLE PRO</div>
+  <div class="slide-num">04 / 15</div>
+</div>
+
+<!-- ═════════════ 05  ANFORDERUNGEN ═════════════ -->
+<div class="slide">
+  <div class="eyebrow">03 · Pflichtenheft</div>
+  <h2>Funktionale &amp; nicht-funktionale Anforderungen</h2>
+  <div class="lede">Vollständige Fassung in <span class="mono">docs/pflichtenheft.md</span>. Hier die Struktur und ein Beispiel für jede Kategorie mit Akzeptanzkriterien.</div>
+  <div class="grid-2">
     <div>
-      <h3>Funktionale Anforderungen (24 Stories über 5 Epics)</h3>
+      <h3>6 Epics · 24 User Stories</h3>
       <table>
-        <tr><th>Epic</th><th>Beispiel-Anforderung</th></tr>
-        <tr><td><span class="tag tag-cyan">F-FZ</span></td><td>Fahrzeug anlegen mit abhängigen Dropdowns + Saison-Kennzeichen</td></tr>
-        <tr><td><span class="tag tag-cyan">F-TR</span></td><td>Tagesplan-Timeline, Termin per Rechtsklick anlegen</td></tr>
-        <tr><td><span class="tag tag-cyan">F-MG</span></td><td>Mangel aus StVZO-Anlage-VIII-Katalog erfassen</td></tr>
-        <tr><td><span class="tag tag-cyan">F-WF</span></td><td>„Bestanden" bei HM/GM verboten (§ 29 StVZO)</td></tr>
-        <tr><td><span class="tag tag-cyan">F-BR</span></td><td>Berichtsexport im amtlichen Layout</td></tr>
-        <tr><td><span class="tag tag-cyan">F-ST</span></td><td>Statistik mit Zeitraumfilter, KPIs, Charts</td></tr>
+        <tr><th>Epic</th><th>Kürzel</th><th>Stories</th></tr>
+        <tr><td>Fahrzeugverwaltung</td><td><span class="pill cyan">F-FZ</span></td><td>9</td></tr>
+        <tr><td>Terminverwaltung</td><td><span class="pill cyan">F-TR</span></td><td>6</td></tr>
+        <tr><td>Mängelerfassung</td><td><span class="pill cyan">F-MG</span></td><td>4</td></tr>
+        <tr><td>Prüfergebnis-Workflow</td><td><span class="pill cyan">F-WF</span></td><td>3</td></tr>
+        <tr><td>Berichte</td><td><span class="pill cyan">F-BR</span></td><td>3</td></tr>
+        <tr><td>Statistik</td><td><span class="pill cyan">F-ST</span></td><td>6</td></tr>
       </table>
-      <div class="card card-cyan" style="margin-top:12px">
-        <h4>Beispiel-Akzeptanzkriterium F-WF-02</h4>
-        <p>Sobald ein Mangel HM oder GM existiert, darf der Status nicht „Bestanden" lauten. <strong>Mehrstufige Absicherung:</strong> UI-Button disabled, Dropdown-Option disabled, Auto-Demotion, Store-Guard.</p>
+      <h3 style="margin-top:18px">Beispiel — Akzeptanzkriterium F-WF-02</h3>
+      <div class="card tone-amber">
+        <h4>Bestanden bei Hauptmangel verboten</h4>
+        <p>Sobald ein Mangel der Kategorie HM oder GM existiert, darf der Status <strong>nicht</strong> „Bestanden" lauten (§ 29 StVZO).</p>
+        <p style="margin-top:6px"><strong>Mehrstufige Absicherung:</strong> UI-Button disabled · Dropdown-Option disabled · Auto-Demotion bei nachträglichem HM · Store-Guard.</p>
       </div>
     </div>
     <div>
       <h3>Nicht-funktionale Anforderungen</h3>
       <table>
-        <tr><th>ID</th><th>Anforderung</th><th>Begründung</th></tr>
-        <tr><td><span class="tag tag-amber">NF-PF-02</span></td><td>Filter &lt; 100 ms (p95)</td><td>Nielsen 1993</td></tr>
-        <tr><td><span class="tag tag-amber">NF-PF-03</span></td><td>FS-Write &lt; 400 ms</td><td>FS-SLA + Netz</td></tr>
-        <tr><td><span class="tag tag-purple">NF-DI-02</span></td><td>Eingabe-Validierung</td><td>+ KBA-Liste, ~430 Codes</td></tr>
-        <tr><td><span class="tag tag-purple">NF-DI-05</span></td><td>Hersteller/Modell hart</td><td>Cascading dropdowns</td></tr>
-        <tr><td><span class="tag tag-green">NF-DS-01</span></td><td>DSGVO-Konformität</td><td>EU-Region, AVV</td></tr>
-        <tr><td><span class="tag tag-blue">NF-WB-01</span></td><td>0 ESLint-Errors</td><td>strenge Config</td></tr>
+        <tr><th>Kategorie</th><th>Beispiel</th><th>Wert</th></tr>
+        <tr><td>Performance</td><td>Filter im Tagesplan</td><td><span class="mono">&lt; 100 ms</span></td></tr>
+        <tr><td>Performance</td><td>Firestore-Write</td><td><span class="mono">&lt; 400 ms</span></td></tr>
+        <tr><td>Datenintegrität</td><td>Eingabe-Validierung</td><td><span class="pill green">hart</span></td></tr>
+        <tr><td>Datenintegrität</td><td>KBA-Kreis-Code-Liste</td><td><span class="mono">~430</span></td></tr>
+        <tr><td>Datenschutz</td><td>EU-Region</td><td><span class="mono">europe-west1</span></td></tr>
+        <tr><td>Wartbarkeit</td><td>ESLint-Config</td><td><span class="pill green">0 Errors</span></td></tr>
+        <tr><td>Usability</td><td>Tastatur-Shortcuts</td><td>Esc, Rechtsklick</td></tr>
+        <tr><td>Portabilität</td><td>Browser + Tauri</td><td>Win/Mac/Linux</td></tr>
       </table>
-      <div class="highlight-box">
-        <strong>Abgrenzung (was nicht enthalten ist):</strong> Multi-User-Auth, KBA-Schnittstelle, Foto-Dokumentation, Hardware-Integration, Abrechnung. Ausblick s. Slide 14.
-      </div>
+      <h3 style="margin-top:18px">Abgrenzung — was nicht enthalten ist</h3>
+      <p style="font-size:12.5px; color:var(--t3); line-height:1.6">Multi-User-Auth, KBA-HSN/TSN-Integration, Foto-Dokumentation, Hardware-Anbindung (OBD), Abrechnung. Roadmap auf Slide 15.</p>
     </div>
   </div>
-  <div class="logo-text">TÜV PRÜFSTELLE PRO · v2</div>
-  <div class="slide-number">5 / 14</div>
+  <div class="brand"><span class="dot">●</span> TÜV PRÜFSTELLE PRO</div>
+  <div class="slide-num">05 / 15</div>
 </div>
 
-<!-- ═════════════ SLIDE 6: LASTPROFIL & 100MS ═════════════ -->
+<!-- ═════════════ 06  PERFORMANCE-BUDGET ═════════════ -->
 <div class="slide">
-  <h2><span class="accent">04</span> Lastprofil &amp; warum 100 ms (nicht 50, nicht 200)</h2>
-  <div class="slide-subtitle">Direkte Antwort auf Frau Fuchs' Rückfrage zu NF-PF-02</div>
-  <div class="two-col">
+  <div class="eyebrow">04 · NF-PF Performance</div>
+  <h2>Wie schnell muss die App reagieren — und warum?</h2>
+  <div class="lede">Performance-Budgets sind keine Bauchgefühle. Sie folgen aus dem Lastprofil und der Forschung zur menschlichen Wahrnehmung.</div>
+  <div class="grid-2">
     <div>
-      <h3>Lastprofil — Begründung der Zahlen</h3>
-      <div class="card card-cyan compact">
-        <ul>
-          <li><strong>Typisch:</strong> 20–30 Prüfungen/Tag, 3–5 Prüfer</li>
-          <li><strong>Spitze:</strong> 50 Prüfungen/Tag (HU/AU-Saison)</li>
-          <li><strong>Parallel:</strong> 3–5 aktive Nutzer (Prüfer + Leitung + Empfang)</li>
-          <li><strong>Bestand 1 Jahr:</strong> ~8 000 Termine, ~3 000 Fahrzeuge</li>
-        </ul>
-      </div>
-      <h3 style="margin-top:18px">Test-Methodik</h3>
-      <div class="card card-green compact">
-        <ul class="green">
-          <li><strong>Synthetik:</strong> 500 Termine + 200 Fahrzeuge (10× Last)</li>
-          <li><strong>Vitest <span class="mono">bench()</span>:</strong> 100 Durchläufe der Filter-Funktion</li>
-          <li><strong>React Profiler:</strong> Render-Zeit nach <span class="mono">setFilter()</span> via <span class="mono">performance.now()</span></li>
-          <li><strong>Referenzgerät:</strong> i5-8250U / 8 GB / Chrome stable</li>
-          <li><strong>Pass-Kriterium:</strong> p95 unter Schwellwert</li>
-        </ul>
-      </div>
-    </div>
-    <div>
-      <h3>Warum 100 ms — nicht 50, nicht 200?</h3>
+      <h3>Reaktionszeit-Schwellen (nach Nielsen)</h3>
       <table>
-        <tr><th>Schwelle</th><th>Was die Forschung sagt</th></tr>
-        <tr>
-          <td><strong style="color:#94a3b8">&lt; 50 ms</strong></td>
-          <td><span class="tag tag-red">Über-Spec</span> Card et al. 1991: Mensch nimmt &lt; 50 ms nicht mehr von Null-Latenz unterscheiden — würde Eng.-Aufwand ohne UX-Gewinn erzwingen</td>
-        </tr>
-        <tr>
-          <td><strong style="color:#06c8d8">≈ 100 ms</strong></td>
-          <td><span class="tag tag-green">Sweet Spot</span> Nielsen 1993: „Grenze, ab der eine Aktion <em>direkt</em> wirkt" — wir wollen genau dieses Gefühl beim Tippen</td>
-        </tr>
-        <tr>
-          <td><strong style="color:#94a3b8">≈ 200 ms</strong></td>
-          <td><span class="tag tag-amber">Zu lasch</span> Nielsen: 0,1–1 s = „System reagiert", aber Gefühl direkter Manipulation geht verloren — bei unserer Datenmenge unnötig</td>
-        </tr>
-        <tr>
-          <td><strong style="color:#94a3b8">&gt; 1 000 ms</strong></td>
-          <td><span class="tag tag-red">Zu langsam</span> Aufmerksamkeit driftet ab — nur akzeptabel für seltene Operationen (Bericht, Statistik)</td>
-        </tr>
+        <tr><th>Schwelle</th><th>Wirkung</th><th>Bewertung</th></tr>
+        <tr><td><span class="mono">&lt; 50 ms</span></td><td>Vom Mensch nicht von Null-Latenz unterscheidbar</td><td><span class="pill red">Über-Spec</span></td></tr>
+        <tr><td><span class="mono">≈ 100 ms</span></td><td>Aktion fühlt sich „direkt" an — keine Verzögerung spürbar</td><td><span class="pill green">Sweet Spot</span></td></tr>
+        <tr><td><span class="mono">≈ 200 ms</span></td><td>System reagiert, aber Gefühl direkter Manipulation geht verloren</td><td><span class="pill amber">Zu lasch</span></td></tr>
+        <tr><td><span class="mono">&gt; 1 000 ms</span></td><td>Aufmerksamkeit driftet ab</td><td><span class="pill red">Inakzeptabel</span></td></tr>
       </table>
-      <div class="quote-box">
-        „100 ms ist die Grenze, ab der eine Aktion sich direkt anfühlt; der Nutzer spürt keine Verzögerung mehr." — Jakob Nielsen, <em>Usability Engineering</em>, 1993
+      <div class="callout" style="margin-top:14px">
+        <strong>Konsequenz:</strong> NF-PF-02 (Tagesplan-Filter) auf <strong>&lt; 100 ms p95</strong> festgelegt — das ist die ergonomische Grenze, ab der Eingabe-Reaktion direkt wirkt.
       </div>
-    </div>
-  </div>
-  <div class="logo-text">TÜV PRÜFSTELLE PRO · v2</div>
-  <div class="slide-number">6 / 14</div>
-</div>
-
-<!-- ═════════════ SLIDE 7: DATENMODELL ═════════════ -->
-<div class="slide">
-  <h2><span class="accent">05</span> Datenmodell &amp; Integritätsbedingungen</h2>
-  <div class="slide-subtitle">ER-Modell mit allen Constraints — vollständig in <span class="mono" style="color:#06c8d8">docs/datenmodell.md</span></div>
-  <div class="two-col">
-    <div>
-      <h3>ER-Diagramm</h3>
-<div class="diagram-box"><span class="accent-c">FAHRZEUG</span> ──┐ <span class="accent-g">1:N</span> ┌──&gt; <span class="accent-c">TERMIN</span> ──┐ <span class="accent-g">1:N</span> ┌──&gt; <span class="accent-a">MANGEL</span>
-            └────────┘            └────────┘
-                                 (eingebettet)
-
-<span class="accent-c">FAHRZEUG</span> {
-  id PK, kennzeichen UK, fin
-  hersteller*, modell*, baujahr
-  typ FK→FAHRZEUG_TYPEN
-  kmStand (≥0, ≤3M)
-  besitzer*, telefon, email
-  hu_faellig (Date)
-}
-
-<span class="accent-c">TERMIN</span> {
-  id PK, fahrzeugId FK
-  datum, uhrzeit (HH:MM)
-  art FK→PRUEFUNG_ARTEN
-  pruefer FK, status FK→STATUS
-  notiz, mängel: <span class="accent-a">Mangel[]</span>
-}
-
-<span class="accent-a">MANGEL</span> { code, text, kat, behoben }</div>
-      <p style="font-size:12px; color:#64748b; margin-top:8px">
-        <strong style="color:#cbd5e1">Warum Mangel eingebettet?</strong> Hat keine eigenständige Existenz — gehört immer zu genau einem Termin. In Firestore 1 Read statt N+1.
-      </p>
     </div>
     <div>
-      <h3>Integritätsbedingungen (4 Ebenen)</h3>
-      <div class="card card-cyan compact">
-        <h4>1. Entitäts-Integrität</h4>
-        <p>UID-PKs, Kennzeichen UK (case-insensitive), FIN UK</p>
+      <h3>Test-Methodik (für alle NF-PF-Werte)</h3>
+      <div class="card tone-green">
+        <h4>1. Synthetik-Lastdaten</h4>
+        <p>500 Termine + 200 Fahrzeuge — das 10-fache der typischen Praxis-Last.</p>
       </div>
-      <div class="card card-green compact" style="margin-top:8px">
-        <h4>2. Referentielle Integrität</h4>
-        <p><span class="mono">termin.fahrzeugId</span> → existierendes Fahrzeug; Cascade-Delete via <span class="mono">delFz</span></p>
+      <div class="card tone-green" style="margin-top:8px">
+        <h4>2. Vitest <span class="mono">bench()</span></h4>
+        <p>100 Durchläufe pro Filter-Funktion, p95-Auswertung.</p>
       </div>
-      <div class="card card-amber compact" style="margin-top:8px">
-        <h4>3. Workflow-Integrität (4-fach abgesichert)</h4>
-        <p>BESTANDEN nicht zulässig bei HM/GM — UI-Button + Dropdown + Store-Guard + Auto-Demote</p>
+      <div class="card tone-green" style="margin-top:8px">
+        <h4>3. React Profiler</h4>
+        <p>Render-Zeit nach <span class="mono">setFilter()</span> via <span class="mono">performance.now()</span>.</p>
       </div>
-      <div class="card card-purple compact" style="margin-top:8px">
-        <h4>4. Wertebereichs-Integrität</h4>
-        <p>Regex (Kennzeichen, Tel, Email), Range (kmStand 0–3M, Baujahr 1885–heute+1), <strong>KBA-Liste (~430 Codes)</strong>, Hersteller/Modell-Whitelist, ISO-3779 FIN-Prüfziffer (weich)</p>
+      <div class="card tone-green" style="margin-top:8px">
+        <h4>4. Definiertes Referenzgerät</h4>
+        <p>Intel i5-8250U / 8 GB RAM / Chrome stable — Mid-Tier-Hardware der Zielgruppe.</p>
       </div>
+      <h3 style="margin-top:14px">Andere NF-PF-Werte</h3>
+      <ul class="bullets">
+        <li><strong>Navigation zwischen Views:</strong> &lt; 150 ms — Framer-Motion-Transition liegt bei 180 ms, niedriger nicht wahrnehmbar</li>
+        <li><strong>Firestore-Write:</strong> &lt; 400 ms — SLA + EU-Latenz</li>
+        <li><strong>Statistik-Aufbau:</strong> &lt; 500 ms für 1 000 Termine — Recharts-Budget</li>
+      </ul>
     </div>
   </div>
-  <div class="logo-text">TÜV PRÜFSTELLE PRO · v2</div>
-  <div class="slide-number">7 / 14</div>
+  <div class="brand"><span class="dot">●</span> TÜV PRÜFSTELLE PRO</div>
+  <div class="slide-num">06 / 15</div>
 </div>
 
-<!-- ═════════════ SLIDE 8: NoSQL vs RDBMS ═════════════ -->
+<!-- ═════════════ 07  ARCHITEKTUR ═════════════ -->
 <div class="slide">
-  <h2><span class="accent">06</span> NoSQL vs. relationale DB — Diskussion</h2>
-  <div class="slide-subtitle">Direkte Antwort auf Frau Fuchs' Kritik (24.04.2026)</div>
-  <div class="quote-box">
-    „Dokumentenbasierte DB sind eher für semistrukturierte Daten geeignet. Bei dem TÜV-Verwaltungssystem hat man es dagegen mit strukturierten Daten zu tun." — Frau Fuchs
-  </div>
-  <p style="font-size:13px; color:#cbd5e1; margin:10px 0">Diese Kritik ist <strong>korrekt</strong>. Unsere ehrliche Bewertung:</p>
-  <div class="two-col">
-    <div class="card card-blue">
-      <h4>Pro RDBMS (PostgreSQL)</h4>
-      <ul>
-        <li>Schema-Enforcement &amp; FK als DB-Constraint</li>
-        <li>SQL-Aggregationen für Reporting (GROUP BY, Window)</li>
-        <li>ACID-Transaktionen ohne 500-Op-Limit</li>
-        <li>Native JOINs statt Client-side</li>
-        <li>Migrations-Tools (Flyway, Liquibase)</li>
-        <li>On-Premise hostbar (Datenschutz!)</li>
-      </ul>
-    </div>
-    <div class="card card-cyan">
-      <h4>Pro Firestore (was wir gewählt haben)</h4>
-      <ul>
-        <li>Echtzeit-Sync via <span class="mono">onSnapshot</span> out-of-the-box</li>
-        <li>Kein eigenes Backend nötig (Prototyp-Komplexität)</li>
-        <li>Eingebaute Offline-Persistence</li>
-        <li>Eingebettete Mängel passen zum Zugriffsmuster</li>
-        <li>Auto-Sharding, keine Replikations-Sorgen</li>
-        <li>Firebase-Ökosystem (Auth, Storage, Functions)</li>
-      </ul>
-    </div>
-  </div>
-  <div class="highlight-box" style="margin-top:14px">
-    <strong>Bewertung:</strong> Für den 2-Personen-Prototyp <span class="tag tag-amber">akzeptabel, nicht optimal</span>. Für Produktiv-Betrieb wäre <span class="tag tag-green">PostgreSQL + Node-Backend</span> mittelfristig sauberer (3NF-Normalisierung, Halter-Entität, Foto-Storage als separate Tabelle, audit-trails). Migrationspfad ist im Datenmodell-Doc § 6.4 beschrieben — inkl. SQL-Gegenentwurf mit Triggern für Workflow-Regel WF-01.
-  </div>
-  <div class="logo-text">TÜV PRÜFSTELLE PRO · v2</div>
-  <div class="slide-number">8 / 14</div>
-</div>
-
-<!-- ═════════════ SLIDE 9: DATENSCHUTZ & SICHERHEIT ═════════════ -->
-<div class="slide">
-  <h2><span class="accent">07</span> Datenschutz &amp; Sicherheit (NF-DS)</h2>
-  <div class="slide-subtitle">Fehlte in v1 — jetzt vollständig dokumentiert in <span class="mono" style="color:#06c8d8">pflichtenheft.md</span> § 3.6</div>
-  <div class="three-col">
-    <div class="card card-amber">
-      <h4>Verarbeitete personenbezogene Daten</h4>
-      <ul class="amber">
-        <li>Halter-Name / Firma</li>
-        <li>Telefon &amp; E-Mail</li>
-        <li>Kennzeichen (Kfz-Halter-Bezug)</li>
-        <li>FIN (eindeutige Fahrzeug-ID)</li>
-        <li>Indirekt: Mängel-Historie (potenziell sensibel)</li>
-      </ul>
-      <p style="margin-top:8px"><strong>DSGVO-Klassifikation:</strong> Allgemeine personenbezogene Daten (Art. 4 Nr. 1), keine besonderen Kategorien.</p>
-    </div>
-    <div class="card card-green">
-      <h4>Aktuelle Maßnahmen</h4>
-      <ul class="green">
-        <li>Firestore <strong>EU-Region</strong> <span class="mono">europe-west1</span> (Belgien)</li>
-        <li>Auftragsverarbeitungsvertrag mit Google nach Art. 28 DSGVO</li>
-        <li>TLS 1.3 zwischen Client und Firestore</li>
-        <li>Cascade-Delete: Halter-Daten verschwinden mit dem Fahrzeug</li>
-        <li>Keine externen Tracking-Skripte / Analytics</li>
-      </ul>
-    </div>
-    <div class="card card-red">
-      <h4>Lücken im Prototyp (mit Roadmap)</h4>
-      <ul class="red">
-        <li><strong>Auth fehlt</strong> — alle sehen alles, OK für Single-Tenant-Prototyp; produktiv: Firebase Auth + Rollen (Prüfer / Leiter / Admin)</li>
-        <li><strong>Audit-Log fehlt</strong> — produktiv: Cloud-Functions-Trigger schreibt jede Änderung in <span class="mono">audit_log</span></li>
-        <li><strong>Backup-Strategie</strong> — produktiv: Firestore-Export auf Cloud-Storage täglich</li>
-        <li><strong>Löschkonzept</strong> — produktiv: Halter-Daten nach 10 Jahren (GoBD) anonymisieren</li>
-      </ul>
-    </div>
-  </div>
-  <div class="highlight-box">
-    <strong>Alternative bei strenger Datenschutz-Anforderung:</strong> Selbst-gehostetes PostgreSQL im lokalen Netz der Prüfstelle. Datenmodell und Validierungs-Logik sind portabel — nur die Sync-Schicht (<span class="mono">onSnapshot</span>) müsste durch Polling oder eigenen WebSocket-Server ersetzt werden.
-  </div>
-  <div class="logo-text">TÜV PRÜFSTELLE PRO · v2</div>
-  <div class="slide-number">9 / 14</div>
-</div>
-
-<!-- ═════════════ SLIDE 10: KOMPONENTENDIAGRAMM ═════════════ -->
-<div class="slide">
-  <h2><span class="accent">08</span> Architektur — Komponentendiagramm</h2>
-  <div class="slide-subtitle">3-Schichten-Architektur · vollständig in <span class="mono" style="color:#06c8d8">docs/design.md</span></div>
-  <div class="col-asym">
+  <div class="eyebrow">05 · Architektur</div>
+  <h2>Komponentenstruktur &amp; Technologie-Entscheidungen</h2>
+  <div class="lede">3-Schichten-Architektur mit klarer Trennung von Präsentation, Logik und Infrastruktur. Jede Tech-Wahl ist im Design-Doc gegen Alternativen begründet.</div>
+  <div class="asym-r">
     <div>
-<div class="diagram-box"><span class="accent-c">┌─────────── PRÄSENTATION ───────────┐</span>
+      <div class="ascii"><span class="c">┌─────────── PRÄSENTATION ───────────┐</span>
 │  TagesplanView   FahrzeugeView    │
 │  StatistikView   BerichteView     │
 │       │            │              │
 │       ▼            ▼              │
-│       <span class="accent-c">App.jsx</span> · Routing + Layout    │
-<span class="accent-c">└────────────────────────────────────┘</span>
-              │  Hooks
+│       <span class="c">App.jsx</span> · Routing + Layout    │
+<span class="c">└────────────────────────────────────┘</span>
+              │  Custom Hooks
               ▼
-<span class="accent-g">┌─────────────── LOGIK ──────────────┐</span>
-│  useStore     useToasts            │
-│  validators   utils/mangel/date    │
-│  kfzReferenz  kfzKreis             │
-<span class="accent-g">└────────────────────────────────────┘</span>
+<span class="g">┌─────────────── LOGIK ──────────────┐</span>
+│   useStore        useToasts        │
+│   validators.js   utils/mangel     │
+│   kfzReferenz     kfzKreis         │
+<span class="g">└────────────────────────────────────┘</span>
               │
               ▼
-<span class="accent-a">┌──────────── INFRASTRUKTUR ─────────┐</span>
-│  Firebase Firestore                │
-│  LocalStorage (Offline-Cache)      │
-│  Tauri 2 (Desktop-Wrapper)         │
-<span class="accent-a">└────────────────────────────────────┘</span></div>
+<span class="a">┌──────────── INFRASTRUKTUR ─────────┐</span>
+│   Firebase Firestore (primär)      │
+│   LocalStorage (Offline-Cache)     │
+│   Tauri 2 (Desktop-Wrapper)        │
+<span class="a">└────────────────────────────────────┘</span></div>
     </div>
     <div>
-      <h3>Architektur-Entscheidungen mit Begründung</h3>
+      <h3>Tech-Entscheidungen mit Begründung</h3>
       <table>
         <tr><th>Wahl</th><th>Alternative</th><th>Warum</th></tr>
-        <tr><td><strong>React 19 + Vite</strong></td><td>Next.js, Remix</td><td>SPA reicht, Vite hat schnellsten DX</td></tr>
-        <tr><td><strong>Tauri 2</strong></td><td>Electron, PWA</td><td>~6 MB statt ~150 MB Bundle</td></tr>
-        <tr><td><strong>Firestore</strong></td><td>PostgreSQL</td><td>Echtzeit + serverless (s. Slide 8)</td></tr>
-        <tr><td><strong>Custom <span class="mono">useStore</span></strong></td><td>Redux, Zustand</td><td>~20 Komponenten — Redux Overkill</td></tr>
+        <tr><td><strong>React 19</strong></td><td>Next.js</td><td>SPA reicht — kein SSR/SEO nötig</td></tr>
+        <tr><td><strong>Vite</strong></td><td>Webpack, Parcel</td><td>Schnellster DX, HMR &lt; 200 ms</td></tr>
+        <tr><td><strong>Tauri 2</strong></td><td>Electron</td><td>~6 MB statt ~150 MB</td></tr>
+        <tr><td><strong>Firestore</strong></td><td>PostgreSQL</td><td>Echtzeit + serverless (Slide 09)</td></tr>
         <tr><td><strong>Recharts</strong></td><td>Chart.js, D3</td><td>React-nativ, deklarativ</td></tr>
+        <tr><td><strong>Custom Hook</strong></td><td>Redux, Zustand</td><td>~20 Komponenten — Redux Overkill</td></tr>
+        <tr><td><strong>PropTypes</strong></td><td>TypeScript</td><td>Niedrigere Einstiegshürde im 2-Personen-Projekt</td></tr>
       </table>
-      <h3 style="margin-top:14px">Kern-Entwurfsprinzipien</h3>
-      <ul>
-        <li>Single Responsibility (Kpi.jsx zeigt 1 Kennzahl)</li>
-        <li>Composition over Configuration</li>
-        <li>Custom Hooks isolieren Geschäftslogik</li>
-        <li>Shared PropTypes-Shapes in <span class="mono">propTypes.js</span></li>
-        <li>Defense-in-Depth bei Business-Regeln</li>
+      <h3 style="margin-top:14px">Entwurfsprinzipien</h3>
+      <ul class="bullets">
+        <li><strong>Single Responsibility</strong> — jede Komponente eine Aufgabe</li>
+        <li><strong>Composition over Configuration</strong></li>
+        <li><strong>Custom Hooks isolieren Logik</strong> — UI bleibt deklarativ</li>
+        <li><strong>Defense in Depth</strong> bei Business-Regeln</li>
       </ul>
     </div>
   </div>
-  <div class="logo-text">TÜV PRÜFSTELLE PRO · v2</div>
-  <div class="slide-number">10 / 14</div>
+  <div class="brand"><span class="dot">●</span> TÜV PRÜFSTELLE PRO</div>
+  <div class="slide-num">07 / 15</div>
 </div>
 
-<!-- ═════════════ SLIDE 11: KLASSENDIAGRAMM ═════════════ -->
+<!-- ═════════════ 08  DATENMODELL ═════════════ -->
 <div class="slide">
-  <h2><span class="accent">09</span> Klassendiagramm / Typmodell</h2>
-  <div class="slide-subtitle">JS hat keine klassischen Klassen — modelliert als Object-Schema mit <span class="mono" style="color:#06c8d8">PropTypes</span> + UML-Notation</div>
-  <div class="two-col">
+  <div class="eyebrow">06 · Datenmodell</div>
+  <h2>Entitäten, Beziehungen &amp; Integritätsbedingungen</h2>
+  <div class="lede">Drei Kern-Entitäten in 1:N-Beziehung. Integrität wird auf vier Ebenen durchgesetzt — nicht nur Kardinalitäten.</div>
+  <div class="asym-l">
     <div>
-<div class="diagram-box"><span class="accent-c">«entity» Fahrzeug</span>
-─────────────────────────
-+ id: string «PK»
-+ kennzeichen: string «UK»
-+ fin: string &lt;optional&gt;
-+ hersteller: string «required»
-+ modell: string «required»
-+ baujahr: int [1885..year+1]
-+ typ: FahrzeugTyp
-+ kmStand: int [0..3_000_000]
-+ besitzer: string
-+ telefon, email: string
-+ hu_faellig: Date
-+ createdAt: Date
-─────────────────────────
-+ updaten(patch): void
-+ löschen(): void  «cascade»
+      <h3>ER-Diagramm</h3>
+      <div class="ascii">  <span class="c">FAHRZEUG</span> ────┐ <span class="g">1 : N</span> ┌──&gt; <span class="c">TERMIN</span> ────┐ <span class="g">1 : N</span> ┌──&gt; <span class="a">MANGEL</span>
+              └────────────┘                └────────────┘
+                                              <span class="t1">(eingebettet)</span>
 
-<span class="accent-c">«entity» Termin</span>
-─────────────────────────
-+ id «PK»
-+ fahrzeugId «FK→Fahrzeug»
-+ datum, uhrzeit
-+ art: PruefArt
-+ pruefer: PrueferId
-+ status: Status
-+ mängel: <span class="accent-a">Mangel</span>[] «embedded»
-─────────────────────────
-+ statusWechsel(neu): void
-   <span class="accent-a">guard: kein BESTANDEN bei HM/GM</span>
-
-<span class="accent-a">«value» Mangel</span>
-─────────────────────────
-+ code: string «StVZO-Anlage-VIII»
-+ text: string
-+ kat: <span class="accent-g">{OM,LM,EM,HM,GM}</span>
-+ behoben: bool</div>
+<span class="c">FAHRZEUG</span> {                   <span class="c">TERMIN</span> {
+  id <span class="g">PK</span>                       id <span class="g">PK</span>
+  kennzeichen <span class="g">UK</span>              fahrzeugId <span class="g">FK</span>
+  fin                          datum, uhrzeit
+  hersteller* modell*          art (HU, AU, …)
+  baujahr [1885..year+1]       pruefer
+  typ <span class="g">FK→FAHRZEUG_TYPEN</span>        status <span class="g">FK→STATUS</span>
+  kmStand [0..3 000 000]       notiz
+  besitzer telefon email       <span class="a">mängel: Mangel[]</span>
+  hu_faellig                 }
+}                            <span class="a">MANGEL</span> {
+                               code text kat behoben
+                             }</div>
+      <p style="font-size:11.5px; color:var(--t4); margin-top:8px"><strong style="color:var(--t2)">Designentscheidung:</strong> Mangel hat keine eigenständige Existenz — gehört immer zu genau einem Termin. In Firestore 1 Read statt N+1. In SQL wäre eigene Tabelle sauberer (3NF).</p>
     </div>
     <div>
-      <h3>Begründung der Modellierung</h3>
-      <div class="card card-cyan compact">
-        <h4>Fahrzeug + Termin als Entitäten</h4>
-        <p>Beide haben eigenständigen Lebenszyklus — Fahrzeug existiert auch nach allen Prüfungen weiter. Klassische 1:N-Beziehung.</p>
+      <h3>Integrität auf 4 Ebenen</h3>
+      <div class="card tone-cyan pad-sm">
+        <h4>1. Entitäts-Integrität</h4>
+        <p>UID-Primärschlüssel · Kennzeichen unique (case-insensitive) · FIN unique</p>
       </div>
-      <div class="card card-amber compact" style="margin-top:8px">
-        <h4>Mangel als embedded Value-Object</h4>
-        <p>Hat keine eigenständige Existenz, gehört immer zu genau einem Termin. In Firestore 1 Read statt N+1; bei RDBMS wäre eigene Tabelle sinnvoller.</p>
+      <div class="card tone-green pad-sm" style="margin-top:8px">
+        <h4>2. Referentielle Integrität</h4>
+        <p><span class="mono">termin.fahrzeugId</span> verweist auf existierendes Fahrzeug · Cascade-Delete</p>
       </div>
-      <div class="card card-purple compact" style="margin-top:8px">
-        <h4>STATUS und MANGEL_KATEGORIE als Enums</h4>
-        <p>Endliche, nicht änderbare Mengen. <span class="mono">STATUS</span> hat 7 Werte, <span class="mono">MANGEL_KATEGORIE</span> hat 5 (OM/LM/EM/HM/GM). In <span class="mono">constants/</span> als gefrorene Objekte.</p>
+      <div class="card tone-amber pad-sm" style="margin-top:8px">
+        <h4>3. Workflow-Integrität</h4>
+        <p>BESTANDEN nicht zulässig bei HM/GM (§ 29 StVZO) · 4-fach abgesichert</p>
       </div>
-      <div class="card card-green compact" style="margin-top:8px">
-        <h4>Halter eingebettet, nicht eigene Entität</h4>
-        <p>Scope-Entscheidung: pro Fahrzeug 1 Halter, kein Bedarf an Halter-Aggregation. <strong>In Produktiv-Version 3NF: eigene Halter-Tabelle</strong> (siehe SQL-Entwurf in Datenmodell § 6.5).</p>
+      <div class="card tone-purple pad-sm" style="margin-top:8px">
+        <h4>4. Wertebereichs-Integrität</h4>
+        <p>Regex (Tel, E-Mail) · Range (kmStand 0–3M, Baujahr 1885–heute+1) · KBA-Liste · Hersteller/Modell-Whitelist · ISO-3779 FIN-Prüfziffer (weich)</p>
       </div>
     </div>
   </div>
-  <div class="logo-text">TÜV PRÜFSTELLE PRO · v2</div>
-  <div class="slide-number">11 / 14</div>
+  <div class="brand"><span class="dot">●</span> TÜV PRÜFSTELLE PRO</div>
+  <div class="slide-num">08 / 15</div>
 </div>
 
-<!-- ═════════════ SLIDE 12: VALIDIERUNG & UX ═════════════ -->
+<!-- ═════════════ 09  KLASSENDIAGRAMM ═════════════ -->
 <div class="slide">
-  <h2><span class="accent">10</span> Validierung &amp; UX-Schutzmechanismen</h2>
-  <div class="slide-subtitle">Drei Verteidigungslinien — UX-Strukturierung &gt; Hard-Validation &gt; Soft-Warning</div>
-  <div class="three-col">
-    <div class="card card-cyan">
-      <h4>Linie 1 — UX-Strukturierung</h4>
-      <p style="font-size:12.5px; line-height:1.55"><strong>Cascading Dropdowns</strong> für Hersteller → Modell → Typ. „BMW Polo" oder „VW als Motorrad" sind <strong>strukturell unmöglich</strong> einzugeben.</p>
-      <ul style="margin-top:8px">
-        <li>Hersteller-Dropdown: ~25 Marken</li>
+  <div class="eyebrow">07 · Klassendiagramm</div>
+  <h2>Typmodell &amp; Modellierungsentscheidungen</h2>
+  <div class="lede">JavaScript hat keine Klassen im klassischen Sinn — das Datenmodell ist als Object-Schema mit PropTypes-Validation umgesetzt. UML-Notation für Lesbarkeit.</div>
+  <div class="grid-2">
+    <div>
+      <div class="ascii"><span class="c">«entity» Fahrzeug</span>
+─────────────────────────
++ id : string             <span class="g">«PK»</span>
++ kennzeichen : string    <span class="g">«UK»</span>
++ fin : string            &lt;optional&gt;
++ hersteller : string     <span class="g">«required»</span>
++ modell : string         <span class="g">«required»</span>
++ baujahr : int           <span class="g">[1885..year+1]</span>
++ typ : FahrzeugTyp       <span class="g">«FK»</span>
++ kmStand : int           <span class="g">[0..3 000 000]</span>
++ besitzer : string
++ telefon : string        &lt;Regex&gt;
++ email : string          &lt;Regex&gt;
++ hu_faellig : Date
+
+<span class="c">«entity» Termin</span>
+─────────────────────────
++ id : string             <span class="g">«PK»</span>
++ fahrzeugId : string     <span class="g">«FK»</span>
++ datum, uhrzeit
++ art : PruefArt
++ status : Status
++ mängel : <span class="a">Mangel[]</span>      <span class="g">«embedded»</span>
+─────────────────────────
++ statusWechsel(neu) : void
+   <span class="a">guard: kein BESTANDEN bei HM/GM</span>
+
+<span class="a">«value» Mangel</span>
+─────────────────────────
++ code : string           <span class="g">«StVZO Anlage VIII»</span>
++ text : string
++ kat : <span class="g">{OM, LM, EM, HM, GM}</span>
++ behoben : bool</div>
+    </div>
+    <div>
+      <h3>Modellierungs-Entscheidungen</h3>
+      <div class="card tone-cyan pad-sm">
+        <h4>Fahrzeug + Termin als Entitäten</h4>
+        <p>Beide haben eigenständigen Lebenszyklus — ein Fahrzeug existiert auch nach allen Prüfungen weiter. Klassische 1:N-Beziehung.</p>
+      </div>
+      <div class="card tone-amber pad-sm" style="margin-top:8px">
+        <h4>Mangel als embedded Value-Object</h4>
+        <p>Hat keine Beziehungen zu anderen Entitäten — gehört immer zu genau einem Termin. In Firestore weniger Reads; in einer SQL-Variante als Tabelle <span class="mono">mangel(termin_id, …)</span>.</p>
+      </div>
+      <div class="card tone-purple pad-sm" style="margin-top:8px">
+        <h4>STATUS &amp; MANGEL_KATEGORIE als Enums</h4>
+        <p>Endliche, nicht änderbare Mengen — STATUS hat 7 Werte (GEPLANT, IN_PRUEFUNG, BESTANDEN, …), MANGEL_KATEGORIE 5 (OM/LM/EM/HM/GM).</p>
+      </div>
+      <div class="card tone-green pad-sm" style="margin-top:8px">
+        <h4>Halter eingebettet, nicht eigene Entität</h4>
+        <p>Im Prototyp pro Fahrzeug ein Halter — kein Bedarf an Aggregation. <strong>Im Produktivbetrieb 3NF</strong> (eigene Halter-Tabelle, ein Halter kann mehrere Fahrzeuge besitzen). SQL-Entwurf in <span class="mono">datenmodell.md § 6.5</span>.</p>
+      </div>
+    </div>
+  </div>
+  <div class="brand"><span class="dot">●</span> TÜV PRÜFSTELLE PRO</div>
+  <div class="slide-num">09 / 15</div>
+</div>
+
+<!-- ═════════════ 10  PERSISTENZ DISKUSSION ═════════════ -->
+<div class="slide">
+  <div class="eyebrow">08 · Persistenz-Entscheidung</div>
+  <h2>NoSQL (Firestore) vs. relationale DB</h2>
+  <div class="lede">Eine bewusst kontroverse Architektur-Entscheidung. Beide Optionen wurden gegeneinander abgewogen — hier die Argumente und unsere Bewertung.</div>
+  <div class="grid-2">
+    <div class="card tone-blue">
+      <h4>Pro RDBMS (PostgreSQL)</h4>
+      <ul class="bullets">
+        <li>Schema-Enforcement &amp; Foreign Keys als DB-Constraint</li>
+        <li>SQL-Aggregationen für Reporting (GROUP BY, Window-Functions)</li>
+        <li>Volle ACID-Transaktionen ohne Operationen-Limit</li>
+        <li>Native JOINs statt Client-side-Aggregation</li>
+        <li>Bewährte Migration-Tools (Flyway, Liquibase)</li>
+        <li>On-Premise hostbar — wichtig für Datenschutz</li>
+      </ul>
+    </div>
+    <div class="card tone-cyan">
+      <h4>Pro Firestore (gewählt)</h4>
+      <ul class="bullets">
+        <li>Echtzeit-Sync via <span class="mono">onSnapshot</span> ohne WebSocket-Server</li>
+        <li>Kein eigenes Backend nötig — passend für 2-Personen-Projekt</li>
+        <li>Eingebaute Offline-Persistence</li>
+        <li>Eingebettete Mängel passen zum Zugriffsmuster</li>
+        <li>Auto-Sharding, keine manuelle Replikation</li>
+        <li>Firebase-Ökosystem (Auth, Storage, Functions verfügbar)</li>
+      </ul>
+    </div>
+  </div>
+  <div class="callout amber" style="margin-top:18px">
+    <strong>Bewertung im Projekt-Kontext:</strong> Für den Prototyp eine <strong>akzeptable, nicht optimale</strong> Wahl. Unsere Daten sind hochstrukturiert — ein RDBMS wäre für den Produktivbetrieb mittelfristig sauberer (3NF, SQL-Reporting, on-premise-fähig). Firestore-Vorteile (Echtzeit, serverlos) überwiegen im Semester-Scope, sind aber kein dauerhaftes Argument bei wachsendem Reporting-Bedarf.
+  </div>
+  <div class="callout green" style="margin-top:10px">
+    <strong>Migrationspfad dokumentiert</strong> in <span class="mono">datenmodell.md § 6</span>: SQL-Schema (PostgreSQL inkl. Trigger für Workflow-Regel WF-01), Backend-Layer-Vorschlag (tRPC oder PostgREST), Sync-Ersatz via Supabase Realtime oder eigenem WebSocket.
+  </div>
+  <div class="brand"><span class="dot">●</span> TÜV PRÜFSTELLE PRO</div>
+  <div class="slide-num">10 / 15</div>
+</div>
+
+<!-- ═════════════ 11  DATENSCHUTZ ═════════════ -->
+<div class="slide">
+  <div class="eyebrow">09 · Datenschutz &amp; Sicherheit</div>
+  <h2>DSGVO bei einer Cloud-DB</h2>
+  <div class="lede">Personenbezogene Daten in Firestore erfordern aktive Maßnahmen. Was im Prototyp greift, wo Lücken sind, und wie sie produktiv geschlossen werden.</div>
+  <div class="grid-3">
+    <div class="card tone-amber">
+      <h4>Verarbeitete personenbezogene Daten</h4>
+      <ul class="bullets amber">
+        <li>Halter-Name / Firma</li>
+        <li>Telefon &amp; E-Mail</li>
+        <li>Kennzeichen (Halter-Bezug)</li>
+        <li>FIN (eindeutige Fahrzeug-ID)</li>
+        <li>Indirekt: Mängel-Historie</li>
+      </ul>
+      <p style="margin-top:8px"><strong>DSGVO-Klassifikation:</strong> Allgemeine personenbezogene Daten (Art. 4 Nr. 1) — keine besonderen Kategorien.</p>
+    </div>
+    <div class="card tone-green">
+      <h4>Aktuelle Maßnahmen</h4>
+      <ul class="bullets green">
+        <li>Firestore <strong>EU-Region</strong> <span class="mono">europe-west1</span></li>
+        <li>Auftragsverarbeitungsvertrag mit Google nach Art. 28 DSGVO</li>
+        <li>TLS 1.3 zwischen Client &amp; Firestore</li>
+        <li>Cascade-Delete: Halter-Daten verschwinden mit dem Fahrzeug</li>
+        <li>Keine externen Tracker / Analytics</li>
+      </ul>
+    </div>
+    <div class="card tone-red">
+      <h4>Lücken im Prototyp + Roadmap</h4>
+      <ul class="bullets red">
+        <li><strong>Auth fehlt</strong> — produktiv: Firebase Auth + Rollen (Prüfer / Leiter / Admin)</li>
+        <li><strong>Audit-Log</strong> — produktiv: Cloud-Functions-Trigger</li>
+        <li><strong>Backup</strong> — produktiv: Firestore-Export täglich</li>
+        <li><strong>Löschkonzept</strong> — Halter-Daten nach 10 Jahren (GoBD) anonymisieren</li>
+      </ul>
+    </div>
+  </div>
+  <div class="callout">
+    <strong>Alternative bei strenger Datenschutz-Anforderung:</strong> Selbst-gehostetes PostgreSQL im lokalen Netz der Prüfstelle. Datenmodell und Validierungs-Logik sind portabel — nur die Sync-Schicht müsste durch Polling oder eigenen WebSocket-Server ersetzt werden.
+  </div>
+  <div class="brand"><span class="dot">●</span> TÜV PRÜFSTELLE PRO</div>
+  <div class="slide-num">11 / 15</div>
+</div>
+
+<!-- ═════════════ 12  VALIDIERUNG & UX ═════════════ -->
+<div class="slide">
+  <div class="eyebrow">10 · Validierung</div>
+  <h2>Drei Verteidigungslinien gegen ungültige Daten</h2>
+  <div class="lede">Defense in Depth: UX-Strukturierung &gt; Hard-Validation &gt; Soft-Warning. Tippfehler werden strukturell ausgeschlossen, nicht erst durch Fehlermeldungen abgefangen.</div>
+  <div class="grid-3">
+    <div class="card tone-cyan">
+      <h4>Linie 1 · UX-Strukturierung</h4>
+      <p><strong>Cascading Dropdowns</strong> für Hersteller → Modell → Typ.</p>
+      <ul class="bullets" style="margin-top:8px">
+        <li>~25 Marken im Hersteller-Dropdown</li>
         <li>Modell-Dropdown filtert auf Marke</li>
         <li>Typ-Dropdown filtert auf Marke</li>
-        <li>„Sonstiger"-Modus für Oldtimer / Importe</li>
+        <li>„Sonstiger"-Modus mit Freitext</li>
       </ul>
-      <p style="margin-top:8px; color:#06c8d8; font-size:12px"><strong>Bonus:</strong> Tippfehler („VW" vs. „Vw") fallen weg</p>
+      <p style="margin-top:8px; color:var(--cyan); font-size:12px"><strong>Effekt:</strong> Tippfehler („Vw" vs. „VW") und Mismatches („BMW Polo") sind strukturell unmöglich.</p>
     </div>
-    <div class="card card-green">
-      <h4>Linie 2 — Hard-Validation (blockt Save)</h4>
-      <ul class="green">
-        <li><strong>Kennzeichen:</strong> Format-Regex + KBA-Liste (~430 Codes) + Saison-Suffix <span class="mono">MM-MM</span></li>
+    <div class="card tone-green">
+      <h4>Linie 2 · Hard-Validation</h4>
+      <ul class="bullets green">
+        <li><strong>Kennzeichen:</strong> Format + KBA-Liste (~430 Codes) + Saison-Suffix <span class="mono">MM-MM</span></li>
         <li><strong>FIN:</strong> 17 Zeichen, keine I/O/Q</li>
-        <li><strong>kmStand:</strong> 0 ≤ n ≤ 3 000 000, integer</li>
+        <li><strong>kmStand:</strong> 0 ≤ n ≤ 3 000 000</li>
         <li><strong>Telefon:</strong> Regex, keine Buchstaben</li>
-        <li><strong>Email:</strong> Standard-Regex</li>
+        <li><strong>E-Mail:</strong> Standard-Regex</li>
         <li><strong>Baujahr:</strong> 1885 ≤ n ≤ Jahr+1</li>
-        <li><strong>Hersteller/Modell/Typ:</strong> Whitelist (Sonstiger-Modus)</li>
         <li><strong>Workflow:</strong> kein BESTANDEN bei HM/GM (4-fach)</li>
       </ul>
     </div>
-    <div class="card card-amber">
-      <h4>Linie 3 — Soft-Warning (Hinweis)</h4>
-      <ul class="amber">
-        <li><strong>FIN-Prüfziffer (ISO 3779):</strong> Position 9 muss zur Berechnung passen — bewusst weich, weil Pre-1981 / Nicht-NA-Fahrzeuge keine Prüfziffer tragen</li>
+    <div class="card tone-amber">
+      <h4>Linie 3 · Soft-Warning</h4>
+      <ul class="bullets amber">
+        <li><strong>FIN-Prüfziffer ISO 3779:</strong> Position 9 muss zur Berechnung passen</li>
       </ul>
-      <p style="margin-top:8px; font-size:12.5px"><strong>Begründung:</strong> Sonderfälle (Oldtimer, Importe) sollen markiert, nicht abgewiesen werden.</p>
-      <p style="margin-top:8px; color:#f5a620; font-size:12px"><strong>Beispiel:</strong> „BLABLUBB123435666" → erkannt als 17 Zeichen + erlaubte Buchstaben, aber Prüfziffer falsch → Hinweis</p>
+      <p style="margin-top:8px; font-size:12.5px"><strong>Bewusst weich,</strong> weil Pre-1981 / Nicht-Nordamerika-Fahrzeuge keine Prüfziffer tragen — Sonderfälle (Oldtimer, Importe) sollen markiert, nicht abgewiesen werden.</p>
+      <p style="margin-top:8px; font-size:12px"><strong>Beispiel:</strong> <span class="mono">BLABLUBB12343...</span> erfüllt das Format, scheitert an der Prüfziffer → Hinweis.</p>
     </div>
   </div>
-  <div class="highlight-box">
-    <strong>Defense in Depth:</strong> Selbst wenn UX-Linie 1 umgangen wird (Sonstiger-Modus, programmatischer Aufruf, Direkt-Datenmanipulation), greift Linie 2. Linie 3 markiert grenzwertige Fälle, ohne Sonderfälle zu blockieren.
+  <div class="callout">
+    <strong>Warum drei Linien?</strong> UX schützt 95 % der Eingaben strukturell. Hard-Validation greift im Sonstiger-Modus, bei programmatischen Aufrufen oder beim Editieren von Altdaten. Soft-Warnings markieren grenzwertige Fälle, ohne Sonderfälle zu blockieren. Auch wenn eine Linie umgangen wird, greift die nächste.
   </div>
-  <div class="logo-text">TÜV PRÜFSTELLE PRO · v2</div>
-  <div class="slide-number">12 / 14</div>
+  <div class="brand"><span class="dot">●</span> TÜV PRÜFSTELLE PRO</div>
+  <div class="slide-num">12 / 15</div>
 </div>
 
-<!-- ═════════════ SLIDE 13: TEST-STRATEGIE ═════════════ -->
+<!-- ═════════════ 13  TEST-STRATEGIE ═════════════ -->
 <div class="slide">
-  <h2><span class="accent">11</span> Test-Strategie + Verfahren</h2>
-  <div class="slide-subtitle">Nicht nur Tools-Liste — explizite Verfahren mit Begründung der Testfall-Auswahl</div>
-  <div class="two-col">
+  <div class="eyebrow">11 · Tests</div>
+  <h2>Test-Strategie &amp; Auswahl der Testfälle</h2>
+  <div class="lede">Tests sind nicht zufällig — jeder Testfall folgt einem etablierten Verfahren. Coverage ist ein Nebenprodukt, nicht das Ziel.</div>
+  <div class="grid-2">
     <div>
-      <h3>Testpyramide nach Mike Cohn</h3>
-<div class="diagram-box">       ╱ <span class="accent-a">e2e</span> ╲   wenige, langsam, teuer
-      ╱────────╲   <span class="accent-a">(noch nicht)</span>
-     ╱<span class="accent-c"> Component</span>╲   mittel, RTL + jsdom
+      <h3>Testpyramide (nach Mike Cohn)</h3>
+      <div class="ascii">       ╱ <span class="a">e2e</span> ╲   wenige, langsam, teuer
+      ╱────────╲    <span class="a">(noch nicht)</span>
+     ╱<span class="c"> Component</span>╲   mittel, RTL + jsdom
     ╱────────────╲
-   ╱   <span class="accent-g">Unit Tests</span>  ╲   viele, schnell, isoliert
-  ╱────────────────╲   <span class="accent-g">114 grün</span></div>
-      <h3 style="margin-top:14px">Was wir bewusst NICHT testen</h3>
+   ╱   <span class="g">Unit Tests</span>  ╲   viele, schnell, isoliert
+  ╱────────────────╲    <span class="g">114 grün ✓</span></div>
+      <h3 style="margin-top:14px">Was wir bewusst nicht testen</h3>
       <table>
-        <tr><th>Nicht getestet</th><th>Grund</th></tr>
+        <tr><th>Bereich</th><th>Begründung</th></tr>
         <tr><td>Framer-Motion-Animationen</td><td>Visuell, nicht funktional</td></tr>
         <tr><td>Firestore-Integration</td><td>Bräuchte Emulator-Setup</td></tr>
-        <tr><td>Recharts-Rendering</td><td>Visual-Regression-Framework eigen</td></tr>
+        <tr><td>Recharts-Rendering</td><td>Visual-Regression-Setup eigen</td></tr>
       </table>
     </div>
     <div>
-      <h3>Testentwurfsverfahren (mit Beispielen)</h3>
-      <div class="card card-cyan compact">
-        <h4>1. Äquivalenzklassen — bei allen Validatoren</h4>
-        <p style="font-size:12px"><span class="mono">validateKmStand</span>: gültig-typisch / gültig-leer / negativ / nicht-int / zu-groß = 5 Klassen</p>
+      <h3>Testentwurfsverfahren</h3>
+      <div class="card tone-cyan pad-sm">
+        <h4>1. Äquivalenzklassen-Methode</h4>
+        <p>Eingaben werden in Klassen partitioniert; pro Klasse 1 Repräsentant. Beispiel <span class="mono">validateKmStand</span>: gültig-typisch / leer / negativ / nicht-int / zu-groß = 5 Klassen.</p>
       </div>
-      <div class="card card-green compact" style="margin-top:8px">
-        <h4>2. Grenzwertanalyse — bei numerischen Feldern</h4>
-        <p style="font-size:12px"><span class="mono">validateBaujahr</span>: 1884 (out), 1885 (in), 1886 (in), Jahr+1 (in), Jahr+2 (out) = 5 Randwerte</p>
+      <div class="card tone-green pad-sm" style="margin-top:8px">
+        <h4>2. Grenzwertanalyse</h4>
+        <p>An den Rändern: gerade-innen, Rand, gerade-außen. <span class="mono">validateBaujahr</span>: 1884 (out), 1885 (in), Jahr+1 (in), Jahr+2 (out).</p>
       </div>
-      <div class="card card-amber compact" style="margin-top:8px">
-        <h4>3. Entscheidungstabelle — bei Workflow-Regeln</h4>
-        <p style="font-size:12px"><span class="mono">validateStatusWechsel</span>: Ziel-Status × Mängelliste = 8 Kombinationen, vollständige Abdeckung</p>
+      <div class="card tone-amber pad-sm" style="margin-top:8px">
+        <h4>3. Entscheidungstabelle</h4>
+        <p>Bei Workflow-Regeln. <span class="mono">validateStatusWechsel</span>: 7 Status × 5 Mängel-Konstellationen → 8 nicht-redundante Kombinationen.</p>
       </div>
-      <div class="card card-purple compact" style="margin-top:8px">
-        <h4>4. Regression — Sabines Bug-Liste</h4>
-        <p style="font-size:12px">Jeder ihrer Befunde hat einen dedizierten Test (negKM, Telefon, Email, Bestanden+HM, Doppel-Kennzeichen, BMW Polo, VW Motorrad). Plus: KBA-Code, Saison-Format, FIN-Prüfziffer.</p>
+      <div class="card tone-purple pad-sm" style="margin-top:8px">
+        <h4>4. Regression aus Fehlermeldungen</h4>
+        <p>Jeder identifizierte Bug erhält einen Test, bevor er gefixt wird. Verhindert Wieder-Regression.</p>
       </div>
-      <div class="highlight-box" style="margin-top:10px">
-        <strong style="color:#06c8d8" class="big-number cyan" style="font-size:24px">114</strong> Tests grün · <strong style="color:#0fc28a" class="big-number green" style="font-size:24px">0</strong> ESLint-Errors · <strong style="color:#9663f5" class="big-number purple" style="font-size:24px">7</strong> Test-Files
+      <div class="stat-grid" style="grid-template-columns: 1fr 1fr 1fr; margin-top:14px">
+        <div class="stat"><div class="num">114</div><div class="lbl">Tests grün</div></div>
+        <div class="stat"><div class="num green">7</div><div class="lbl">Test-Files</div></div>
+        <div class="stat"><div class="num purple">0</div><div class="lbl">ESLint-Errors</div></div>
       </div>
     </div>
   </div>
-  <div class="logo-text">TÜV PRÜFSTELLE PRO · v2</div>
-  <div class="slide-number">13 / 14</div>
+  <div class="brand"><span class="dot">●</span> TÜV PRÜFSTELLE PRO</div>
+  <div class="slide-num">13 / 15</div>
 </div>
 
-<!-- ═════════════ SLIDE 14: ÄNDERUNGEN + AUSBLICK + Q&A ═════════════ -->
+<!-- ═════════════ 14  VORGEHEN ═════════════ -->
 <div class="slide">
-  <h2><span class="accent">12</span> Änderungen seit Feedback &amp; Ausblick</h2>
-  <div class="slide-subtitle">Sprint 5 Fix-Sprint · 7 Commits seit 24.04.2026 · live auf <span class="mono" style="color:#06c8d8">tuv-workflow.web.app</span></div>
-  <div class="two-col">
+  <div class="eyebrow">12 · Vorgehensmodell</div>
+  <h2>Sprint-Methodik, DoD &amp; Backlog</h2>
+  <div class="lede">Wir arbeiten in 2-Wochen-Sprints mit Product Backlog, Sprint Backlog und teamübergreifender Definition of Done. Stories nach MoSCoW priorisiert.</div>
+  <div class="grid-2">
     <div>
-      <h3>Konkrete Änderungen Sprint 5 (24.04. → 27.04.)</h3>
+      <h3>Sprint-Historie (5 Sprints)</h3>
       <table>
-        <tr><th>Bereich</th><th>Vorher</th><th>Nachher</th></tr>
-        <tr><td><strong>Doku</strong></td><td class="muted">5 Stichpunkte in Präsi</td><td>5 Markdown-Dokumente, ~1 270 Zeilen</td></tr>
-        <tr><td><strong>Hersteller/Modell</strong></td><td class="muted">Freitext, alles erlaubt</td><td>Cascading Dropdowns, Whitelist hart</td></tr>
-        <tr><td><strong>Kennzeichen</strong></td><td class="muted">Nur Format-Regex</td><td>+ KBA-Liste (~430) + Saison-Format</td></tr>
-        <tr><td><strong>FIN</strong></td><td class="muted">Nur Länge + Zeichen</td><td>+ ISO-3779-Prüfziffer (weich)</td></tr>
-        <tr><td><strong>Bestanden+HM</strong></td><td class="muted">UI-only-Block</td><td>4-fach Defense in Depth</td></tr>
-        <tr><td><strong>Eingabe-Validierung</strong></td><td class="muted">Telefon-Buchstaben OK, neg. KM OK, kaputte Email OK</td><td>Alles hart blockiert</td></tr>
-        <tr><td><strong>ESLint</strong></td><td class="muted">187 Errors mit strenger Config</td><td>0 Errors, jsx-runtime, prop-types: error</td></tr>
-        <tr><td><strong>Tests</strong></td><td class="muted">52</td><td>114 (+62 in Sprint 5)</td></tr>
-        <tr><td><strong>Loading-UX</strong></td><td class="muted">Konnte ewig hängen</td><td>3-s-Fallback auf Cache/Seed</td></tr>
+        <tr><th>Sprint</th><th>Fokus</th><th>Story Points</th><th>Status</th></tr>
+        <tr><td>1</td><td>Setup, Tooling, Theme</td><td class="muted">—</td><td><span class="pill green">Done</span></td></tr>
+        <tr><td>2</td><td>Fahrzeug-CRUD &amp; Suche</td><td>15</td><td><span class="pill green">Done</span></td></tr>
+        <tr><td>3</td><td>Tagesplan &amp; Termine</td><td>15</td><td><span class="pill green">Done</span></td></tr>
+        <tr><td>4</td><td>Mängel, Berichte, Statistik</td><td>37</td><td><span class="pill green">Done</span></td></tr>
+        <tr><td>5</td><td>Validierung, UX, Doku</td><td>50</td><td><span class="pill green">Done</span></td></tr>
+        <tr><td>6</td><td>Feinschliff &amp; Abgabe</td><td>~10</td><td><span class="pill cyan">Geplant</span></td></tr>
       </table>
+      <h3 style="margin-top:14px">Beispiel-Story (US-06, MoSCoW: M)</h3>
+      <div class="card tone-cyan pad-sm">
+        <p style="font-size:12.5px"><em>„Als Prüfer möchte ich daran gehindert werden, unplausible Hersteller-Modell-Typ-Kombinationen einzugeben (z. B. ‚BMW Polo'), damit Stammdaten konsistent bleiben."</em></p>
+        <p style="margin-top:6px; font-size:11.5px; color:var(--t4)"><strong>Prio:</strong> Must · <strong>SP:</strong> 8 · <strong>Sprint 5</strong></p>
+      </div>
     </div>
     <div>
-      <h3>Ausblick — was in Bachelor-Arbeit / Praktikum sinnvoll wäre</h3>
-      <ul>
-        <li><strong>Multi-User-Auth</strong> via Firebase Auth + Rollen-Konzept (Prüfer / Leiter / Admin)</li>
-        <li><strong>KBA-HSN/TSN-Integration</strong> via DAT- oder Schwacke-Lizenz — automatisches Auto-Fill aus Schlüssel-Nummer</li>
-        <li><strong>PDF-Berichte</strong> statt <span class="mono">.txt</span> mit digitaler Signatur (rechtssicher)</li>
-        <li><strong>Foto-Dokumentation</strong> von Mängeln (Firebase Storage + URL-Referenz)</li>
-        <li><strong>Migration zu PostgreSQL</strong> (s. SQL-Entwurf in Datenmodell § 6.5)</li>
-        <li><strong>Audit-Log</strong> via Firestore-Trigger</li>
-        <li><strong>Hardware-Integration</strong> OBD-Diagnose, Bremsenprüfstand</li>
-      </ul>
-      <h3 style="margin-top:14px">Live &amp; Repository</h3>
-      <div class="card card-cyan compact">
-        <p style="font-size:13px"><strong>Web:</strong> <span class="mono">https://tuv-workflow.web.app</span></p>
-        <p style="font-size:13px; margin-top:4px"><strong>Repo:</strong> <span class="mono">github.com/maroxd3/tuv-workflow-web</span></p>
-        <p style="font-size:13px; margin-top:4px"><strong>Doku:</strong> <span class="mono">/docs/*.md</span> (Pflichtenheft, Backlog, Datenmodell, Design, Testkonzept)</p>
+      <h3>Definition of Done (10 Punkte, teamübergreifend)</h3>
+      <div class="card pad-sm">
+        <ol style="font-size:12px; color:var(--t2); line-height:1.85; padding-left:22px">
+          <li>Alle Akzeptanzkriterien der Story erfüllt</li>
+          <li>Code in Feature-Branch, Pull Request erstellt</li>
+          <li>Mindestens ein Reviewer hat approved</li>
+          <li><span class="mono">npm run lint</span> — 0 Errors</li>
+          <li><span class="mono">npm run test</span> — alle Tests grün</li>
+          <li>Neue Business-Regel = neue Vitest-Tests (Äquivalenz + Grenzwerte)</li>
+          <li>Keine hartkodierten Strings — Konstanten-Module</li>
+          <li>PropTypes-Validation für neue Komponenten</li>
+          <li>Merge in <span class="mono">main</span> per Squash-Merge</li>
+          <li>Manueller Smoke-Test im Browser &amp; Tauri-Desktop-Build</li>
+        </ol>
+      </div>
+      <div class="callout green" style="margin-top:14px">
+        <strong>Velocity-Bilanz:</strong> 117 SP über vier produktive Sprints (Sprint 2–5), durchschnittlich 29 SP/Sprint. Sprint 5 (Validierungs- + Doku-Sprint) lag bei 50 SP — Schwerpunkt-Sprint.
       </div>
     </div>
   </div>
-  <div class="highlight-box" style="margin-top:14px; text-align:center">
-    <strong style="color:#06c8d8; font-size:18px">Vielen Dank für das ausführliche Feedback — Fragen?</strong>
+  <div class="brand"><span class="dot">●</span> TÜV PRÜFSTELLE PRO</div>
+  <div class="slide-num">14 / 15</div>
+</div>
+
+<!-- ═════════════ 15  AUSBLICK + Q&A ═════════════ -->
+<div class="slide">
+  <div class="eyebrow">15 · Ausblick &amp; Diskussion</div>
+  <h2>Was als Nächstes — und was uns wichtig war</h2>
+  <div class="lede">Was im Semester-Scope bewusst ausgeklammert wurde, und was eine sinnvolle Weiterführung wäre.</div>
+  <div class="grid-2">
+    <div>
+      <h3>Roadmap (außerhalb Semester)</h3>
+      <ul class="bullets">
+        <li><strong>Multi-User-Auth</strong> via Firebase Auth + Rollen-Konzept (Prüfer / Leiter / Admin)</li>
+        <li><strong>KBA-HSN/TSN-Integration</strong> via DAT- oder Schwacke-Lizenz — automatisches Auto-Fill</li>
+        <li><strong>PDF-Berichte</strong> statt <span class="mono">.txt</span>, mit digitaler Signatur</li>
+        <li><strong>Foto-Dokumentation</strong> von Mängeln (Firebase Storage + URL-Referenz)</li>
+        <li><strong>Migration zu PostgreSQL</strong> (SQL-Entwurf in <span class="mono">datenmodell.md § 6.5</span> bereits dokumentiert)</li>
+        <li><strong>Audit-Log</strong> via Firestore-Trigger</li>
+        <li><strong>Hardware-Anbindung</strong> OBD-II-Diagnose, Bremsenprüfstand</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Zusammenfassung — was diesen Prototyp ausmacht</h3>
+      <div class="stat-grid" style="grid-template-columns: 1fr 1fr">
+        <div class="stat"><div class="num">114</div><div class="lbl">automatisierte Tests, alle grün</div></div>
+        <div class="stat"><div class="num green">5</div><div class="lbl">Markdown-Dokumente in <span class="mono">docs/</span></div></div>
+        <div class="stat"><div class="num amber">~430</div><div class="lbl">KBA-Codes als Whitelist</div></div>
+        <div class="stat"><div class="num purple">3</div><div class="lbl">Verteidigungslinien gegen Bad Data</div></div>
+      </div>
+      <h3 style="margin-top:18px">Live &amp; Quellcode</h3>
+      <div class="card tone-cyan pad-sm">
+        <p style="font-size:13px"><strong>Web-App:</strong> <span class="mono">tuv-workflow.web.app</span></p>
+        <p style="font-size:13px; margin-top:4px"><strong>Repository:</strong> <span class="mono">github.com/maroxd3/tuv-workflow-web</span></p>
+        <p style="font-size:13px; margin-top:4px"><strong>Doku:</strong> <span class="mono">/docs/</span> · Pflichtenheft, Datenmodell, Design, Backlog, Testkonzept</p>
+      </div>
+    </div>
   </div>
-  <div class="logo-text">TÜV PRÜFSTELLE PRO · v2</div>
-  <div class="slide-number">14 / 14</div>
+  <div class="callout green" style="margin-top:24px; text-align:center; font-size:16px">
+    <strong>Vielen Dank für Ihre Aufmerksamkeit — wir freuen uns auf Ihre Fragen.</strong>
+  </div>
+  <div class="brand"><span class="dot">●</span> TÜV PRÜFSTELLE PRO</div>
+  <div class="slide-num">15 / 15</div>
 </div>
 
 </body>
