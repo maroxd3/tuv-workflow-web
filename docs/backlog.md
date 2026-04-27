@@ -37,8 +37,11 @@ Stories sind nach **MoSCoW** priorisiert (**M**ust / **S**hould / **C**ould /
 | US-03 | Als Prüfer möchte ich ein Fahrzeug löschen können (mit Bestätigungsdialog), um veraltete Einträge zu entfernen | M | 2 | ✅ Done (Sprint 2) |
 | US-04 | Als Prüfer möchte ich Fahrzeuge nach Kennzeichen/FIN/Halter/Hersteller durchsuchen und nach Typ filtern können | M | 3 | ✅ Done (Sprint 2) |
 | US-05 | Als Prüfstellenleiter möchte ich die HU-Fälligkeit farbcodiert sehen (überfällig/< 30 d/< 90 d), um rechtzeitig zu planen | S | 3 | ✅ Done (Sprint 2) |
-| US-06 | Als Prüfer möchte ich beim Anlegen gewarnt werden, wenn Hersteller + Modell + Typ unplausibel sind (z. B. "VW Polo Motorrad"), ohne dass der Save-Button blockiert wird | M | 5 | ✅ **Done (Sprint 5 — Fix-Sprint)** |
+| US-06 | Als Prüfer möchte ich beim Anlegen daran gehindert werden, unplausible Hersteller-Modell-Typ-Kombinationen einzugeben (z. B. "BMW Polo", "VW Golf als Motorrad") — Hersteller/Modell/Typ als abhängige Dropdowns, "Sonstiger"-Modus für Oldtimer/Importe | M | 8 | ✅ **Done (Sprint 5 — Fix-Sprint, 2026-04-27)** |
 | US-07 | Als Prüfer möchte ich, dass das System ungültige Eingaben (negativer KM, Buchstaben in Telefon, kaputte Email) aktiv ablehnt | M | 5 | ✅ **Done (Sprint 5 — Fix-Sprint)** |
+| US-08 | Als Prüfer möchte ich Kennzeichen mit gültigem KBA-Kreis-Code (~430 Codes) sowie Saison-Kennzeichen (`B-TK 1234 04-10`) anlegen können — Live-Großschreibung, Autocomplete der Kreis-Codes | M | 5 | ✅ **Done (Sprint 5 — Fix-Sprint, 2026-04-27)** |
+| US-09 | Als Prüfer möchte ich beim Eintippen einer FIN einen Hinweis bekommen, wenn die ISO-3779-Prüfziffer (Position 9) nicht stimmt — als weicher Warnhinweis, weil pre-1981/Nicht-NA-Fahrzeuge keine Prüfziffer tragen | S | 3 | ✅ **Done (Sprint 5 — Fix-Sprint, 2026-04-27)** |
+| US-10b | Als Prüfer möchte ich, dass die App auch bei langsamer Firestore-Antwort nicht in "Daten werden geladen…" hängenbleibt — 3-s-Fallback auf Cache/Seed | S | 2 | ✅ **Done (Sprint 5 — Fix-Sprint, 2026-04-27)** |
 
 ### Epic 2 — Terminverwaltung
 
@@ -138,20 +141,24 @@ ist die größte Komponente geworden (339 LOC) — ggf. extrahieren.
 
 ### Sprint 5 (W10–12) — FIX-SPRINT nach Feedback Fuchs (2026-04-24)
 
-**Committed:** US-06, US-07, US-23, US-50, US-51, US-52, US-53, US-54
-**Velocity-Plan:** 37 SP (~ gleich Sprint 4)
+**Committed:** US-06, US-07, US-08, US-09, US-10b, US-23, US-50, US-51, US-52, US-53, US-54
+**Velocity-Plan:** 50 SP (erweitert nach interner Review 2026-04-27)
 **Fokus:** Feedback der Dozentin restlos adressieren, bevor finale Abgabe.
 
-**Zwischenstand (Stand 2026-04-24, laufend):**
+**Zwischenstand (Stand 2026-04-27):**
 
-- ✅ US-06 (Plausibilitäts-Warnung) — `validators.checkHerstellerModellKonsistenz` + Referenzliste
+- ✅ US-06 (Hersteller/Modell-Plausibilität) — Soft-Warnung am 24.04. ausgeliefert; nach interner UX-Review 27.04. auf **harte Validierung + cascading dropdowns** umgebaut. `validators.validateHerstellerModellKonsistenz` + Sonstiger-Modus für Sonderfälle.
 - ✅ US-07 (Harte Validierung) — `validators.validateFahrzeug` mit allen Einzelprüfungen
+- ✅ US-08 (KBA-Kreis-Code + Saison) — neue `kfzKreis.js` mit ~430 Codes, Regex erweitert um `MM-MM`-Suffix, Live-Großschreibung in der UI, Autocomplete via `<datalist>`
+- ✅ US-09 (FIN-Prüfziffer ISO-3779) — `checkFinPruefziffer` (weich), Validator-Algorithmus auf 17 Zeichen, Position 9
+- ✅ US-10b (Loading-Fallback) — `useStore.js` hydratiert nach 3 s aus localStorage / Seed, falls `onSnapshot` nicht antwortet
 - ✅ US-23 (Workflow-Bug) — 4 Durchsetzungsstellen für Regel WF-01
 - ✅ US-50 (ESLint sauber) — neue Config, 3 unused imports entfernt
 - ✅ US-51 (PropTypes überall) — 22 Komponenten, 4 shared shapes
 - ✅ US-52 (Doku) — Pflichtenheft, Design, Datenmodell, Backlog (dieses Doc), Test-Konzept
 - ✅ US-53 (NFA-Begründung) — siehe `pflichtenheft.md` §3.1
 - ✅ US-54 (DB-Diskussion) — siehe `datenmodell.md` §6
+- ✅ Operativ — separate Firebase-Hosting-Site `tuv-workflow.web.app` für die TÜV-App (vorher Konflikt mit gotakt-Landing auf `tuv-prufstelle-pro.web.app`)
 
 **Acceptance-Test vor Abgabe:**
 - Alle Beispiele aus der Mail Fuchs (24.04.2026) manuell durchgehen
@@ -182,7 +189,7 @@ Praktikum) notiert.
 | 2 | 15 | 15 | |
 | 3 | 15 | 15 | |
 | 4 | 37 | 37 | Länger (3 Wochen) |
-| 5 | 37 | **laufend** | Fix-Sprint nach Feedback |
+| 5 | 50 | 50 | Fix-Sprint nach Feedback (Stand 2026-04-27 abgeschlossen, inkl. UX-Verschärfung US-06/08/09/10b) |
 | 6 | ~10 | — | Feinschliff |
 
 ---
