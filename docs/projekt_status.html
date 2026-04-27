@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>TÜV Prüfstelle Pro – Projekt-Status</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+  @page { size: A4; margin: 16mm 14mm; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    color: #1e293b;
+    background: #ffffff;
+    font-size: 10.5pt;
+    line-height: 1.5;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .top-bar {
+    height: 5px;
+    background: linear-gradient(90deg, #4f46e5, #06b6d4, #10b981);
+    margin: -16mm -14mm 18px;
+  }
+
+  .head { display: flex; justify-content: space-between; align-items: flex-end; padding-bottom: 12px; margin-bottom: 18px; border-bottom: 1.5px solid #e2e8f0; }
+  .head .title { font-size: 24pt; font-weight: 800; color: #0f172a; letter-spacing: -0.02em; line-height: 1.1; }
+  .head .sub { font-size: 9pt; color: #64748b; margin-top: 4px; letter-spacing: 0.04em; }
+  .head .meta { text-align: right; font-size: 8pt; color: #64748b; line-height: 1.6; }
+  .head .meta strong { color: #1e293b; font-weight: 600; }
+
+  section { margin-bottom: 18px; page-break-inside: avoid; }
+  section h2 {
+    font-size: 11pt;
+    font-weight: 800;
+    color: #ffffff;
+    background: #1e293b;
+    padding: 6px 12px;
+    border-radius: 4px 4px 0 0;
+    letter-spacing: 0.04em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  section h2 .badge {
+    margin-left: auto;
+    font-size: 8pt;
+    font-weight: 700;
+    padding: 2px 9px;
+    border-radius: 3px;
+    background: rgba(255,255,255,0.18);
+  }
+  section.done h2 { background: #15803d; }
+  section.todo h2 { background: #b45309; }
+
+  section .body {
+    border: 1px solid #cbd5e1;
+    border-top: none;
+    background: #ffffff;
+    padding: 14px 18px;
+    border-radius: 0 0 4px 4px;
+  }
+
+  .item {
+    display: grid;
+    grid-template-columns: 22px 1fr;
+    gap: 10px;
+    padding: 7px 0;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 10pt;
+    line-height: 1.5;
+  }
+  .item:last-child { border-bottom: none; }
+  .item .check {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #dcfce7;
+    color: #15803d;
+    font-size: 11pt;
+    font-weight: 700;
+    margin-top: 1px;
+  }
+  .item.todo .check {
+    background: #fef3c7;
+    color: #b45309;
+  }
+  .item.crit .check {
+    background: #fee2e2;
+    color: #b91c1c;
+  }
+  .item .text strong { color: #0f172a; font-weight: 600; }
+  .item .text .desc { color: #475569; font-size: 9.5pt; margin-top: 2px; }
+
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .stat {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 10px 12px;
+  }
+  .stat .num {
+    font-size: 22pt;
+    font-weight: 800;
+    color: #4f46e5;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    font-family: 'Inter', sans-serif;
+  }
+  .stat .num.green { color: #15803d; }
+  .stat .num.amber { color: #b45309; }
+  .stat .num.cyan { color: #0891b2; }
+  .stat .lbl {
+    font-size: 7.5pt;
+    color: #64748b;
+    margin-top: 4px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+
+  .priority {
+    font-size: 7pt;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 2px;
+    margin-right: 6px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    vertical-align: 2px;
+  }
+  .priority.crit { background: #fee2e2; color: #991b1b; }
+  .priority.high { background: #fef3c7; color: #92400e; }
+  .priority.med { background: #dbeafe; color: #1e40af; }
+  .priority.low { background: #f1f5f9; color: #475569; }
+
+  .footer {
+    margin-top: 18px;
+    padding-top: 10px;
+    border-top: 1px solid #e2e8f0;
+    font-size: 8pt;
+    color: #64748b;
+    display: flex;
+    justify-content: space-between;
+  }
+  .footer .links { font-family: 'Inter', monospace; }
+  .footer .links a { color: #4f46e5; text-decoration: none; }
+
+  @media screen { body { padding: 24px; max-width: 820px; margin: 0 auto; box-shadow: 0 4px 30px rgba(15,23,42,0.10); } }
+</style>
+</head>
+<body>
+  <div class="top-bar"></div>
+
+  <div class="head">
+    <div>
+      <div class="title">TÜV Prüfstelle Pro</div>
+      <div class="sub">Software-Projekt · IIM-211-01 · Hochschule Hannover · Sommersemester 2026</div>
+    </div>
+    <div class="meta">
+      <div><strong>Stand:</strong> 27. April 2026</div>
+      <div><strong>Team:</strong> Marwan Saleh · Oussama Hlayhel</div>
+      <div><strong>Live:</strong> tuv-workflow.web.app</div>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats">
+    <div class="stat"><div class="num green">114</div><div class="lbl">Tests grün</div></div>
+    <div class="stat"><div class="num">63 SP</div><div class="lbl">Sprint 5 geliefert</div></div>
+    <div class="stat"><div class="num cyan">~430</div><div class="lbl">KBA-Codes geprüft</div></div>
+    <div class="stat"><div class="num amber">3</div><div class="lbl">offene Tasks</div></div>
+  </div>
+
+  <!-- DONE -->
+  <section class="done">
+    <h2>✅ Was bisher erledigt ist <span class="badge">Sprint 5 abgeschlossen</span></h2>
+    <div class="body">
+      <div class="item">
+        <div class="check">✓</div>
+        <div class="text">
+          <strong>Doku im Repo</strong> — 5 Markdown-Dokumente in <code>docs/</code> (Pflichtenheft, Datenmodell, Design, Backlog, Testkonzept) plus Treffen-Spickzettel und Antwort-Mail-Entwurf
+          <div class="desc">~1 270 Zeilen Doku, alle versioniert mit Änderungshistorie</div>
+        </div>
+      </div>
+      <div class="item">
+        <div class="check">✓</div>
+        <div class="text">
+          <strong>Frau Fuchs' 8 Mail-Kritikpunkte vollständig adressiert</strong>
+          <div class="desc">Sprint-Planung · DoD · Komponenten- &amp; Klassendiagramm · Pflichtenheft · Datenmodell · NoSQL-Begründung · 100 ms-Begründung · Lastprofil · Datenschutz</div>
+        </div>
+      </div>
+      <div class="item">
+        <div class="check">✓</div>
+        <div class="text">
+          <strong>Bug-Liste 6 von 6 hart blockiert</strong>
+          <div class="desc">Negativer KM · Telefon mit Buchstaben · ungültige E-Mail · Bestanden trotz HM · doppelte Kennzeichen · BMW Polo / VW Golf als Motorrad — letzteres strukturell unmöglich durch Cascading-Dropdowns</div>
+        </div>
+      </div>
+      <div class="item">
+        <div class="check">✓</div>
+        <div class="text">
+          <strong>KBA-Kreis-Code-Validierung + Saison-Kennzeichen</strong>
+          <div class="desc">~430 deutsche Codes als Whitelist · Saison-Format <code>MM-MM</code> akzeptiert · Live-Großschreibung beim Tippen · Datalist-Autocomplete</div>
+        </div>
+      </div>
+      <div class="item">
+        <div class="check">✓</div>
+        <div class="text">
+          <strong>FIN-Prüfziffer ISO 3779 als Soft-Validator</strong>
+          <div class="desc">Position 9 berechnet, weiche Warnung bei Mismatch (Pre-1981 / Nicht-NA-Fahrzeuge tragen keine Prüfziffer)</div>
+        </div>
+      </div>
+      <div class="item">
+        <div class="check">✓</div>
+        <div class="text">
+          <strong>Bericht-Export von <code>.txt</code> auf amtlich aussehende A4-PDF</strong>
+          <div class="desc">Eigene Brand „TPP — Prüfstelle Pro" mit Siegel-Logo · römisch nummerierte Sektionen · Verkehrssicherheits-Box · Unterschriftsfelder · Rechtshinweis nach § 29 StVZO · keine externe Library</div>
+        </div>
+      </div>
+      <div class="item">
+        <div class="check">✓</div>
+        <div class="text">
+          <strong>Voll mobile-tauglich gemacht</strong>
+          <div class="desc">Sidebar als Overlay mit Hamburger-Menu · Touch-Targets ≥ 36 px · Cascading-Dropdowns auch auf Phone · Tagesplan-Slot per Klick statt Rechtsklick · 4 Refinement-Runden auf realem iPhone Safari getestet</div>
+        </div>
+      </div>
+      <div class="item">
+        <div class="check">✓</div>
+        <div class="text">
+          <strong>ESLint von 187 Errors → 0 Errors</strong>
+          <div class="desc">Strenge Config mit <code>react/prop-types: error</code> + <code>jsx-runtime</code> · alle 22 Komponenten haben PropTypes · 4 wiederverwendbare Shapes</div>
+        </div>
+      </div>
+      <div class="item">
+        <div class="check">✓</div>
+        <div class="text">
+          <strong>114 Vitest-Tests grün</strong>
+          <div class="desc">62 neue Tests in Sprint 5 (Validatoren, Hersteller-Modell-Konsistenz, FIN-Prüfziffer, KBA-Code, Saison) · Verfahren: Äquivalenzklassen + Grenzwertanalyse + Entscheidungstabelle + Regression</div>
+        </div>
+      </div>
+      <div class="item">
+        <div class="check">✓</div>
+        <div class="text">
+          <strong>Live deployed</strong>
+          <div class="desc">Eigene Hosting-Site <code>tuv-workflow.web.app</code> (vorher Konflikt mit gotakt-Landing) · Web-App + Tauri-Desktop-Build aus einer Codebasis</div>
+        </div>
+      </div>
+      <div class="item">
+        <div class="check">✓</div>
+        <div class="text">
+          <strong>Präsentation v2.0 + Mail-Entwurf + Treffen-Spickzettel</strong>
+          <div class="desc">15-Slides-Projektpräsi, druckbar als PDF · Mail-Entwurf für Antwort an Frau Fuchs · Spickzettel für f2f-Termin mit erwarteten Fragen + Antworten</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TODO -->
+  <section class="todo">
+    <h2>⏳ Was noch ansteht <span class="badge">Sprint 6 + Wartung</span></h2>
+    <div class="body">
+      <div class="item crit">
+        <div class="check">!</div>
+        <div class="text">
+          <span class="priority crit">Kritisch</span><strong>3 npm-Vulnerabilities fixen</strong>
+          <div class="desc"><code>protobufjs</code> (Critical: Code-Execution) · <code>vite</code> 8.0.x (High: Path-Traversal) · <code>postcss</code> (Moderate: XSS) — Behebbar mit <code>npm audit fix</code> in 5 Minuten</div>
+        </div>
+      </div>
+      <div class="item crit">
+        <div class="check">!</div>
+        <div class="text">
+          <span class="priority crit">Kritisch</span><strong>Firestore-Security-Rules prüfen + sichern</strong>
+          <div class="desc">Aktuell keine <code>firestore.rules</code> im Repo — Datenbank ist möglicherweise für jeden im Internet schreibbar. Sollte mindestens auf authentifizierte Nutzer eingeschränkt werden, oder mit Time-Limit-Regel</div>
+        </div>
+      </div>
+      <div class="item todo">
+        <div class="check">→</div>
+        <div class="text">
+          <span class="priority high">Hoch</span><strong>Antwort-Mail an Frau Fuchs rausschicken</strong>
+          <div class="desc">Entwurf liegt in <code>docs/antwort_mail_fuchs.md</code> · 3 Termin-Slots eintragen, mit Oussama abstimmen, abschicken</div>
+        </div>
+      </div>
+      <div class="item todo">
+        <div class="check">→</div>
+        <div class="text">
+          <span class="priority high">Hoch</span><strong>Termin mit Frau Fuchs durchführen</strong>
+          <div class="desc">Spickzettel <code>docs/treffen_brief.md</code> vor dem Termin einmal komplett lesen · Live-Demo der App (cascading dropdowns, BMW-Polo-Block, PDF-Export) · drei Rückfragen für sie vorbereitet</div>
+        </div>
+      </div>
+      <div class="item todo">
+        <div class="check">→</div>
+        <div class="text">
+          <span class="priority med">Mittel</span><strong>Echtzeit-vs-Polling-Argument in <code>pflichtenheft.md</code> ergänzen</strong>
+          <div class="desc">Frau Fuchs hatte gefragt warum nicht Polling alle 30 s — Doku zeigt aktuell <em>was</em>, nicht <em>warum nicht das andere</em>. Mündlich im Termin lösbar, aber für Abgabe sauberer wenn schriftlich</div>
+        </div>
+      </div>
+      <div class="item todo">
+        <div class="check">→</div>
+        <div class="text">
+          <span class="priority med">Mittel</span><strong>GitHub Dependabot + CodeQL aktivieren</strong>
+          <div class="desc">In Repo-Settings 3 Klicks · automatische Vuln-Alerts + Auto-PRs bei neuen Sicherheitslücken in Dependencies</div>
+        </div>
+      </div>
+      <div class="item todo">
+        <div class="check">→</div>
+        <div class="text">
+          <span class="priority low">Niedrig</span><strong>Bundle-Code-Splitting für Statistik / Charts</strong>
+          <div class="desc">JS-Bundle ist 1,1 MB · Recharts + Framer-Motion + Firebase-SDK lazy-load würde unter 500 kB drücken · React.lazy auf Route-Ebene</div>
+        </div>
+      </div>
+      <div class="item todo">
+        <div class="check">→</div>
+        <div class="text">
+          <span class="priority low">Niedrig</span><strong>Sprint 6 — Feinschliff &amp; finale Abgabe</strong>
+          <div class="desc">README-Politur · ggf. Screenshots in Präsentation einbauen · Video-Demo (5 min) · Abgabe-Paket schnüren</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="footer">
+    <div class="links">
+      Repo: github.com/maroxd3/tuv-workflow-web · Live: tuv-workflow.web.app · Doku: <code>docs/</code>
+    </div>
+    <div>Stand 27.04.2026</div>
+  </div>
+</body>
+</html>
