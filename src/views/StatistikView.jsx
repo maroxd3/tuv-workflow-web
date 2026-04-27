@@ -41,7 +41,7 @@ function ChartTooltip({ active = false, payload, label, unit = "" }) {
 /* ── Card wrapper ── */
 function Card({ children, style = {} }) {
   return (
-    <div style={{
+    <div className="card-mobile" style={{
       background: C.surface, border: `1px solid ${C.line}`, borderRadius: 16,
       padding: "20px 24px", boxShadow: "0 2px 8px rgba(15,23,42,0.06)", ...style,
     }}>
@@ -296,7 +296,7 @@ export function StatistikView({ termine, fahrzeuge }) {
       {/* Pass rate meter */}
       <Card>
         <CardHead title="Gesamte Bestandsquote" icon={Target} />
-        <div style={{ display: "flex", alignItems: "center", gap: 28 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 24, flexWrap: "wrap" }}>
           <div style={{ flex: 1 }}>
             <div style={{ height: 20, background: C.surfaceUp, borderRadius: 10, overflow: "hidden", border: `1px solid ${C.line}`, marginBottom: 8 }}>
               <motion.div initial={{ width: 0 }} animate={{ width: `${s.passR}%` }} transition={{ duration: 1.2, ease: "easeOut" }}
@@ -322,15 +322,15 @@ export function StatistikView({ termine, fahrzeuge }) {
             <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
               {s.top10.map((m, i) => (
                 <div key={m.code} style={{
-                  display: "flex", alignItems: "center", gap: 12,
+                  display: "flex", alignItems: "center", gap: 10,
                   background: C.surfaceUp, borderRadius: 9, padding: "9px 14px",
-                  border: `1px solid ${C.line}`,
+                  border: `1px solid ${C.line}`, flexWrap: "wrap",
                 }}>
                   <span style={{ fontSize: 11, fontFamily: C.mono, color: C.t4, minWidth: 22, textAlign: "center", fontWeight: 700 }}>#{i + 1}</span>
                   <MangelPill kat={m.kat} />
-                  <span style={{ fontSize: 10, fontFamily: C.mono, color: C.t4, minWidth: 40 }}>{m.code}</span>
-                  <span style={{ fontSize: 12, color: C.t2, flex: 1 }}>{m.text}</span>
-                  <span style={{ fontSize: 13, fontFamily: C.mono, color: C.t1, fontWeight: 700 }}>{m.cnt}×</span>
+                  <span style={{ fontSize: 10, fontFamily: C.mono, color: C.t4 }}>{m.code}</span>
+                  <span style={{ fontSize: 12, color: C.t2, flex: "1 1 200px", minWidth: 0 }}>{m.text}</span>
+                  <span style={{ fontSize: 13, fontFamily: C.mono, color: C.t1, fontWeight: 700, marginLeft: "auto" }}>{m.cnt}×</span>
                 </div>
               ))}
             </div>

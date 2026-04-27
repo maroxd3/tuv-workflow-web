@@ -136,7 +136,7 @@ export function Sidebar({ view, setView, fahrzeuge, termine, resetAll }) {
         <button onClick={resetAll} style={{
           width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
           background: "rgba(255,255,255,0.04)", border: `1px solid ${C.sbLine}`,
-          borderRadius: 8, padding: "7px 0", color: C.sbT3, cursor: "pointer",
+          borderRadius: 8, padding: "10px 0", color: C.sbT3, cursor: "pointer",
           fontSize: 11, fontFamily: C.sans, transition: "all 0.15s",
         }}>
           <RefreshCw size={10} /> Demo zurücksetzen

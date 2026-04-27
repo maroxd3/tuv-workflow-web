@@ -102,5 +102,9 @@ export const GLOBAL_CSS = `
     .full-mobile { width: 100% !important; max-width: 100% !important; }
     .pad-mobile { padding: 12px 14px !important; }
     .row-wrap-mobile { flex-wrap: wrap !important; }
+    .card-mobile { padding: 14px 16px !important; }
+    /* Touch-Targets vergrößern */
+    .btn-icon { padding: 9px !important; }
+    .nav-btn { padding: 12px !important; }
   }
 `;
