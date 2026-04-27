@@ -57,7 +57,7 @@ gemappt.
 |---|---|---|
 | F-TR-01 | Termin anlegen | Fahrzeug, Datum sind Pflicht; Uhrzeit in 30-min-Slots; 12 Prüfarten; Status-Default "Geplant" |
 | F-TR-02 | Termin bearbeiten / löschen | Status-Wechsel gemäß Workflow (s. 2.5) |
-| F-TR-03 | Tagesplan-Timeline | Zeitraster 07:00–17:30; Termine per Rechtsklick-Kontextmenü anlegbar |
+| F-TR-03 | Tagesplan-Timeline | Zeitraster 07:00–17:30; Termine per Klick auf leeren Zeitslot anlegbar (alternativ Rechtsklick-Kontextmenü auf Desktop) |
 | F-TR-04 | Tagesplan-Tabelle | Alternative Ansicht mit allen Terminen des gewählten Tages |
 | F-TR-05 | Wochenauswahl | Mini-Navigator mit Terminanzahl pro Tag |
 | F-TR-06 | Statuswechsel per Button | "Starten" (Geplant → In Prüfung), "Fertig" (In Prüfung → Bestanden/Nicht bestanden je nach Mängellage) |
@@ -158,7 +158,7 @@ Damit ist die Anforderung sowohl **begründet** (warum 100 ms ergonomisch sinnvo
 |---|---|
 | NF-US-01 | Keine Schulung notwendig: Hauptfunktionen per Self-Service auffindbar in < 1 min |
 | NF-US-02 | Deutsche UI durchgehend, StVZO-Fachterminologie korrekt verwendet |
-| NF-US-03 | Tastatur-Shortcuts: Esc schließt Modal; Rechtsklick öffnet Kontextmenü im Tagesplan |
+| NF-US-03 | Tastatur-Shortcuts: Esc schließt Modal; Rechtsklick öffnet Kontextmenü im Tagesplan (Desktop). Auf Touch-Geräten klickbarer „+ Termin anlegen"-Button im leeren Zeitslot |
 | NF-US-04 | Responsive Layout ab 1280 × 720 (Desktop-Fokus, kein Mobile-Support erforderlich) |
 | NF-US-05 | Klare Fehlermeldungen an jedem Eingabefeld (rote Unterstreichung + Text) |
 | NF-US-06 | Warnhinweise vs. Fehler getrennt (weiche Plausibilitätscheck ≠ harte Validierung) |
