@@ -164,6 +164,20 @@ Alle in 3.1–3.3 unter Spalte "Validierung" aufgeführten Format- und
 Bereichsprüfungen sind in `src/utils/validators.js` implementiert und per
 Vitest-Tests (`src/tests/utils/validators.test.js`) abgesichert.
 
+Zusätzlich werden seit Sprint 5 (2026-04-27) **Domänen-Whitelists** durchgesetzt:
+
+- **Kennzeichen-Kreis-Code**: Der Stadt-/Landkreis-Prefix muss in der KBA-Liste
+  `src/constants/kfzKreis.js` (~430 aktuelle und historische Codes) vorkommen —
+  `QWE-RT 1234` würde abgewiesen, `B-TK 1234` (Berlin) akzeptiert.
+- **Hersteller-Modell-Typ-Konsistenz**: Die Liste `src/constants/kfzReferenz.js`
+  definiert pro Hersteller die zulässigen Modelle und Fahrzeugtypen. Im UI sind
+  diese als abhängige Dropdowns realisiert; bei Freitext-Eingabe (Sonstiger-Modus)
+  greift `validateHerstellerModellKonsistenz` als Hard-Validator.
+- **Saison-Kennzeichen**: `MM-MM`-Suffix mit gültigen Monatszahlen (01–12) und
+  Wrap-Around-Erlaubnis (`11-03` für November bis März).
+- **FIN-Prüfziffer (weich)**: ISO 3779 / FMVSS 115 — als nicht-blockende Warnung,
+  weil die Prüfziffer nur für Nordamerika-Markt-Fahrzeuge ab 1981 verpflichtend ist.
+
 ## 5. Indizes
 
 Firestore-Automatik: jeder einzelne Feldname bekommt einen Index automatisch.
@@ -323,3 +337,4 @@ bulletproof lösbar. Das ist ein konkretes Argument für RDBMS in diesem Kontext
 |---|---|---|
 | 1.0 | 2026-04-15 | Rudimentäre Skizze nur in der Präsentation |
 | 1.1 | 2026-04-24 | Vollständige Attributlisten, Integritätsbedingungen explizit, Diskussion NoSQL vs. RDBMS aufgenommen (nach Feedback Fuchs), SQL-Gegenentwurf |
+| 1.2 | 2026-04-27 | Wertebereichs-Integrität §4.4 um Domänen-Whitelists erweitert (KBA-Kreis-Code-Liste, Hersteller-Modell-Typ-Konsistenz hart, Saison-Kennzeichen, FIN-Prüfziffer weich) |

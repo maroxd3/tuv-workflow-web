@@ -298,16 +298,27 @@ sequenceDiagram
 
 ## 6. Fehler- und Eingabe-Validierung
 
-Zwei Ebenen:
+Drei Ebenen (Stand nach Sprint 5 — 2026-04-27):
 
-1. **Formular-Validierung** (hart, blockt Speichern): `validators.validateFahrzeug`,
-   `validators.validateStatusWechsel` — Einzelfeldprüfungen nach Äquivalenzklassen
-2. **Plausibilitäts-Warnungen** (weich, UI-Hinweis, nicht blockierend):
-   `validators.checkHerstellerModellKonsistenz` — prüft gegen Referenzliste
+1. **UX-Strukturierung** (Eingabe von Anfang an konsistent): Hersteller/Modell/Typ
+   sind im `FahrzeugModal` als **abhängige Dropdowns** umgesetzt — wer BMW wählt,
+   sieht nur BMW-Modelle und nur BMW-Typen. Tippfehler ("Vw" vs. "VW" vs.
+   "Volkswagen") oder Mismatches ("BMW Polo") sind so strukturell ausgeschlossen.
+   Ein expliziter "Sonstiger / Nicht aufgeführt"-Fallback erlaubt Freitext für
+   Oldtimer / Importe / Tuning-Werkstätten.
+2. **Hard-Validierung** (blockt Speichern): `validators.validateFahrzeug`,
+   `validators.validateStatusWechsel`, `validators.validateHerstellerModellKonsistenz`
+   (vormals weich, seit 27.04. hart) — Einzelfeldprüfungen nach Äquivalenzklassen,
+   plus KBA-Kreis-Code-Liste für Kennzeichen (s. `kfzKreis.js`, ~430 Codes) und
+   Saison-Kennzeichen-Format (`MM-MM`-Suffix).
+3. **Soft-Warnungen** (UI-Hinweis, nicht blockierend): `validators.checkFinPruefziffer`
+   prüft die ISO-3779-Prüfziffer. Bewusst weich, weil pre-1981 / Nicht-Nordamerika-
+   Fahrzeuge keine Prüfziffer tragen.
 
-Begründung der Trennung: Formularvalidierung schützt vor falschem Datentyp/
-ungültigem Format. Plausibilität soll seltene Fälle (Oldtimer, Importe, Umbauten)
-nicht blockieren, aber typische Fehler (BMW Polo, VW Golf als Motorrad) markieren.
+Begründung der Trennung: UX-Strukturierung ist der erste Schutzwall (User kann
+gar nicht erst falsch tippen). Hard-Validierung fängt Sonstiger-Modus und
+programmatische Aufrufe (Defense in Depth). Soft-Warnungen markieren Auffälligkeiten,
+die kontextabhängig erlaubt sind.
 
 ## 7. Barrel-Exports
 

@@ -90,8 +90,11 @@ abgebildet:
 | Ungültiges E-Mail-Format | `validateEmail("notanemail")` | `describe('validateEmail')` |
 | Bestanden trotz 2 Hauptmängel | `validateStatusWechsel(BESTANDEN, [{kat:'HM'}, {kat:'HM'}])` | `describe('validateStatusWechsel')` |
 | Doppelte Kennzeichen | `validateKennzeichenUnique("B-TK 1234", [...existing])` | `describe('validateKennzeichenUnique')` |
-| VW Golf als Motorrad | `checkHerstellerModellKonsistenz("VW", "Golf", "Motorrad")` | `describe('checkHerstellerModellKonsistenz')` |
-| BMW Polo | `checkHerstellerModellKonsistenz("BMW", "Polo", "PKW")` | `describe('checkHerstellerModellKonsistenz')` |
+| VW Golf als Motorrad (hart, ab 27.04.) | `validateHerstellerModellKonsistenz("VW", "Golf", "Motorrad")` → `{typ: ...}` | `describe('validateHerstellerModellKonsistenz')` |
+| BMW Polo (hart, ab 27.04.) | `validateHerstellerModellKonsistenz("BMW", "Polo", "PKW")` → `{modell: ...}` | `describe('validateHerstellerModellKonsistenz')` |
+| Bogus-FIN aus Fuchs-Bericht | `checkFinPruefziffer("BLABLUBB123435666")` → Warnung | `describe('checkFinPruefziffer')` |
+| Unbekannter Kreis-Code (KBA) | `validateKennzeichen("QWE-RT 1234")` → Fehler | `describe('validateKennzeichen')` |
+| Saison-Kennzeichen | `validateKennzeichen("B-TK 1234 04-10")` → null | `describe('validateKennzeichen')` |
 
 ### 2.4 Entscheidungstabelle (bei Workflow-Regel WF-01)
 

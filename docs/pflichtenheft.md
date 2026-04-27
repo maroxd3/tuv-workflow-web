@@ -45,7 +45,7 @@ gemappt.
 
 | ID | Anforderung | Akzeptanzkriterien |
 |---|---|---|
-| F-FZ-01 | Fahrzeug anlegen | Kennzeichen, Hersteller, Modell, Halter sind Pflichtfelder; System speichert bei erfolgreicher Validierung (s. nf. Anf. 3.2) |
+| F-FZ-01 | Fahrzeug anlegen | Kennzeichen (mit optionalem Saison-Suffix), Hersteller, Modell, Halter sind Pflichtfelder; Hersteller / Modell / Typ werden als abhängige Dropdowns angeboten ("Sonstiger"-Fallback für Sonderfälle wie Oldtimer / Importe); System speichert bei erfolgreicher Validierung (s. nf. Anf. 3.2) |
 | F-FZ-02 | Fahrzeug bearbeiten | Alle Felder außer ID änderbar; Änderungshistorie nicht erforderlich (Prototyp) |
 | F-FZ-03 | Fahrzeug löschen | Bestätigungsdialog; zugehörige Termine werden ebenfalls gelöscht (Cascade) |
 | F-FZ-04 | Fahrzeug suchen/filtern | Volltextsuche über Kennzeichen, FIN, Halter, Hersteller, Modell; Typfilter; Sortierung nach Kennzeichen/Halter/Marke |
@@ -125,9 +125,11 @@ definiert.
 | ID | Anforderung | Begründung |
 |---|---|---|
 | NF-DI-01 | Kennzeichen-Unique | Jedes deutsche Kennzeichen darf nur einmal als aktives Fahrzeug angelegt sein (KBA-Realität) |
-| NF-DI-02 | Eingabe-Validierung am Formular | Alle Eingaben werden vor dem Speichern gegen Regex/Range-Checks geprüft (s. `utils/validators.js`) |
+| NF-DI-02 | Eingabe-Validierung am Formular | Alle Eingaben werden vor dem Speichern gegen Regex/Range-Checks geprüft (s. `utils/validators.js`); Kreis-Code wird zusätzlich gegen die KBA-Liste in `constants/kfzKreis.js` (~430 Codes) geprüft; Saison-Kennzeichen mit `MM-MM`-Suffix werden formatkonform akzeptiert |
 | NF-DI-03 | Workflow-Integrität im Store | Auch programmatische Statuswechsel werden im useStore gegen die Business-Regel "kein BESTANDEN bei HM/GM" geprüft (Defense-in-Depth) |
 | NF-DI-04 | Cascade bei Fahrzeug-Löschung | Löschen eines Fahrzeugs entfernt auch alle zugehörigen Termine, um verwaiste Einträge zu vermeiden |
+| NF-DI-05 | Hersteller-Modell-Typ-Konsistenz | Abhängige Dropdowns im Formular verhindern strukturell unmögliche Kombinationen (z. B. "BMW Polo"); im "Sonstiger"-Modus greift `validateHerstellerModellKonsistenz` als Sicherheitsnetz |
+| NF-DI-06 | FIN-Plausibilität (weich) | Falls die FIN-Prüfziffer nach ISO 3779 / FMVSS 115 nicht stimmt, wird ein Hinweis angezeigt — bewusst nicht blockend (Pre-1981 / Nicht-Nordamerika-Fahrzeuge tragen keine Prüfziffer) |
 
 ### 3.3 Usability (NF-US)
 
@@ -234,3 +236,4 @@ aber den Rahmen einer studentischen Abgabe:
 |---|---|---|
 | 1.0 | 2026-04-15 | Erste Fassung zur Präsentation (nur in Präsi, nicht im Repo) |
 | 1.1 | 2026-04-24 | Feedback Frau Fuchs eingearbeitet: Performance-Zahlen begründet, Lastprofil, Datenschutz/Sicherheit, Scope-Abgrenzung, Ausblick |
+| 1.2 | 2026-04-27 | F-FZ-01 um Cascading-Dropdowns + Saison-Kennzeichen erweitert; NF-DI-02 um KBA-Kreis-Code-Liste; NF-DI-05 (Hersteller-Modell-Typ-Konsistenz, hart) und NF-DI-06 (FIN-Prüfziffer, weich) hinzugefügt |
