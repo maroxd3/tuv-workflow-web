@@ -120,6 +120,27 @@ Diese Lasten liegen deutlich unter dem Performance-Grenzbereich von Firestore
 und client-seitigem JavaScript — die Anforderungen sind also mit Reserve
 definiert.
 
+#### Begründung der konkreten Zahlen — warum 100 ms (nicht 50 ms, nicht 200 ms)?
+
+Die Frage stammt aus dem Feedback der Dozentin (24.04.2026) und verdient eine
+explizite Antwort. Bezogen auf NF-PF-02 (Filter-Antwortzeit im Tagesplan):
+
+| Schwelle | Was Nielsen / Forschung dazu sagt | Bezug zu unserem Use-Case |
+|---|---|---|
+| **< 50 ms** | Unter ~50 ms ist der Mensch nachweislich nicht mehr in der Lage, einen Unterschied zur "Null-Latenz" wahrzunehmen (Card et al. 1991, Doherty 1979). | Würde Engineering-Aufwand erzwingen (Web-Worker, Virtualisierung, Memoization auf Render-Ebene), der ohne UX-Gewinn bleibt. **Über-Spezifikation.** |
+| **≈ 100 ms** | Nielsen 1993 — "0,1 s ist die Grenze, ab der sich eine Aktion *direkt* anfühlt; der Nutzer spürt keine Verzögerung mehr und hat den Eindruck, das System reagiere unmittelbar auf ihn." | Genau dieses Gefühl wollen wir beim Tippen in der Suche und beim Anklicken eines Tag-Filters. **Sweet Spot.** |
+| **≈ 200 ms** | Noch akzeptabel, aber Nielsen markiert 0,1–1,0 s als Bereich, in dem der Nutzer "merkt, dass das System gerade reagiert" — das Gefühl direkter Manipulation geht verloren. | Bei 50 Terminen/Tag wäre 200 ms nicht spürbar zu rechtfertigen — die Hardware-Reserve ist da. **Zu lasch für interaktive Filter.** |
+| **> 1 000 ms** | Aufmerksamkeit driftet ab, Nutzer denkt an etwas anderes. | Nur akzeptabel für seltene Operationen (Bericht-Generierung, Statistik-Aufbau, s. NF-PF-04). |
+
+**Test-Methode konkret** (zu allen NF-PF-Anforderungen):
+
+1. **Synthetische Lastdaten** — `makeSeed`-Variante mit 500 Terminen + 200 Fahrzeugen (10× typische Last)
+2. **Vitest-Benchmark** (`bench()`-API) misst die reine Filter-Funktion (`termine.filter(...)`) über 100 Durchläufe
+3. **React Profiler** misst zusätzlich die Render-Zeit nach `setFilter()`-Aufruf via `performance.now()` zwischen `onChange` und `requestAnimationFrame`-Callback
+4. **Pass-Kriterium**: p95 unter dem Schwellwert auf einem Mid-Tier-Gerät (Referenz: i5-8250U / 8 GB RAM, Chrome stable)
+
+Damit ist die Anforderung sowohl **begründet** (warum 100 ms ergonomisch sinnvoll ist) als auch **prüfbar** (welche Methode, welches Gerät, welche Metrik).
+
 ### 3.2 Datenintegrität (NF-DI)
 
 | ID | Anforderung | Begründung |
@@ -237,3 +258,4 @@ aber den Rahmen einer studentischen Abgabe:
 | 1.0 | 2026-04-15 | Erste Fassung zur Präsentation (nur in Präsi, nicht im Repo) |
 | 1.1 | 2026-04-24 | Feedback Frau Fuchs eingearbeitet: Performance-Zahlen begründet, Lastprofil, Datenschutz/Sicherheit, Scope-Abgrenzung, Ausblick |
 | 1.2 | 2026-04-27 | F-FZ-01 um Cascading-Dropdowns + Saison-Kennzeichen erweitert; NF-DI-02 um KBA-Kreis-Code-Liste; NF-DI-05 (Hersteller-Modell-Typ-Konsistenz, hart) und NF-DI-06 (FIN-Prüfziffer, weich) hinzugefügt |
+| 1.3 | 2026-04-27 | §3.1 explizite Begründung 100 ms vs. 50/200 ms (Nielsen-Tabelle) + konkrete Test-Methode mit Referenzgerät — beantwortet die Rückfrage aus Fuchs-Mail vom 24.04. zu NF-PF-02 |
