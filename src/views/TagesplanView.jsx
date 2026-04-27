@@ -152,9 +152,9 @@ export function TagesplanView({ fahrzeuge, termine, addTr, updTr, delTr, addMang
             style={{ background: C.glass, border: `1px solid ${C.line}`, borderRadius: 8, padding: "7px 10px", color: C.t2, cursor: "pointer", display: "flex" }}>
             <ChevronLeft size={15} />
           </button>
-          <div style={{ minWidth: 220, textAlign: "center" }}>
-            <div style={{ fontSize: 21, fontWeight: 700, color: C.t1, letterSpacing: "-0.02em" }}>{dayName(date)}</div>
-            <div style={{ fontSize: 12, color: C.t4, fontFamily: C.mono }}>{fmtDateLong(date)}</div>
+          <div style={{ minWidth: 140, textAlign: "center", padding: "0 8px" }}>
+            <div style={{ fontSize: 18, fontWeight: 700, color: C.t1, letterSpacing: "-0.02em", whiteSpace: "nowrap" }}>{dayName(date)}</div>
+            <div style={{ fontSize: 11, color: C.t4, fontFamily: C.mono, whiteSpace: "nowrap" }}>{fmtDateLong(date)}</div>
           </div>
           <button onClick={() => setDate(d => addDays(d, 1))}
             style={{ background: C.glass, border: `1px solid ${C.line}`, borderRadius: 8, padding: "7px 10px", color: C.t2, cursor: "pointer", display: "flex" }}>
@@ -243,7 +243,7 @@ export function TagesplanView({ fahrzeuge, termine, addTr, updTr, delTr, addMang
                         <motion.div key={t.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}
                           onContextMenu={e => { e.stopPropagation(); openCtx(e, slot, t); }}
                           className="termin-row"
-                          style={{ background: C.surface, border: `1px solid ${sc.border}`, borderLeft: `3px solid ${sc.dot}`, borderRadius: 10, padding: "11px 14px", display: "flex", alignItems: "center", gap: 16, cursor: "context-menu", boxShadow: "0 1px 4px rgba(15,23,42,0.06)" }}>
+                          style={{ background: C.surface, border: `1px solid ${sc.border}`, borderLeft: `3px solid ${sc.dot}`, borderRadius: 10, padding: "11px 14px", display: "flex", alignItems: "center", gap: 12, cursor: "context-menu", boxShadow: "0 1px 4px rgba(15,23,42,0.06)", flexWrap: "wrap" }}>
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 5 }}>
                               <span style={{ fontSize: 15, fontWeight: 700, color: C.t1, fontFamily: C.mono, letterSpacing: "0.05em" }}>{fz?.kennzeichen || "—"}</span>

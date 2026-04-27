@@ -62,18 +62,22 @@ export function FahrzeugeView({ fahrzeuge, termine, addFz, updFz, delFz, toast }
     <div>
       {/* Toolbar */}
       <div style={{ display: "flex", gap: 10, marginBottom: 20, alignItems: "center", flexWrap: "wrap" }}>
-        <div style={{ position: "relative", flex: 1, maxWidth: 400 }}>
+        <div style={{ position: "relative", flex: "1 1 240px", minWidth: 200, maxWidth: 400 }}>
           <Search size={13} style={{ position: "absolute", left: 11, top: "50%", transform: "translateY(-50%)", color: C.t4 }} />
-          <Inp value={q} onChange={e => setQ(e.target.value)} placeholder="Kennzeichen, FIN, Besitzer, Hersteller..." style={{ paddingLeft: 34 }} />
+          <Inp value={q} onChange={e => setQ(e.target.value)} placeholder="Suche..." style={{ paddingLeft: 34 }} />
         </div>
-        <Sel value={typFilter} onChange={e => setTypFilter(e.target.value)} style={{ width: 200 }}>
-          {typen.map(t => <option key={t}>{t}</option>)}
-        </Sel>
-        <Sel value={sortBy} onChange={e => setSortBy(e.target.value)} style={{ width: 160 }}>
-          <option value="kennzeichen">Sortierung: KFZ</option>
-          <option value="besitzer">Sortierung: Halter</option>
-          <option value="hersteller">Sortierung: Marke</option>
-        </Sel>
+        <div style={{ flex: "1 1 140px", minWidth: 140, maxWidth: 220 }}>
+          <Sel value={typFilter} onChange={e => setTypFilter(e.target.value)}>
+            {typen.map(t => <option key={t}>{t}</option>)}
+          </Sel>
+        </div>
+        <div style={{ flex: "1 1 140px", minWidth: 140, maxWidth: 200 }}>
+          <Sel value={sortBy} onChange={e => setSortBy(e.target.value)}>
+            <option value="kennzeichen">Sortierung: KFZ</option>
+            <option value="besitzer">Sortierung: Halter</option>
+            <option value="hersteller">Sortierung: Marke</option>
+          </Sel>
+        </div>
         <BtnP onClick={() => { setEditFz(null); setShowModal(true); }} icon={Plus}>Fahrzeug erfassen</BtnP>
       </div>
 
@@ -86,7 +90,7 @@ export function FahrzeugeView({ fahrzeuge, termine, addFz, updFz, delFz, toast }
       </div>
 
       {/* Grid */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(320px,1fr))", gap: 10 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(min(280px,100%),1fr))", gap: 10 }}>
         {filtered.map(fz => {
           const lastT = getLastTr(fz.id); const cnt = getTrCnt(fz.id); const hu = getHuStatus(fz);
           const fzTyp = FAHRZEUG_TYPEN.find(t => t.id === fz.typ);
