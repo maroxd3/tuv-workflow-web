@@ -163,7 +163,7 @@ export function StatistikView({ termine, fahrzeuge }) {
       </div>
 
       {/* KPIs */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12 }}>
+      <div className="grid-resp-4" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12 }}>
         <Kpi label="Prüfungen gesamt" value={s.total} sub={`in ${range} Tagen`} accent={C.blue} icon={Activity} />
         <Kpi label="Bestandsquote" value={`${s.passR}%`} sub={`${s.best} bestanden`} accent={C.green} icon={TrendingUp} />
         <Kpi label="Nicht bestanden" value={s.fail} sub={`${s.allM} Mängel erfasst`} accent={C.red} icon={XCircle} />
@@ -202,7 +202,7 @@ export function StatistikView({ termine, fahrzeuge }) {
       </Card>
 
       {/* Prüfer + Mängel row */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+      <div className="grid-resp-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
 
         {/* Prüfer performance */}
         <Card>

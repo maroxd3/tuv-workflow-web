@@ -91,4 +91,16 @@ export const GLOBAL_CSS = `
   .termin-row:hover{background:rgba(79,70,229,0.06)!important;}
 
   .recharts-tooltip-wrapper{pointer-events:none;}
+
+  /* ── Mobile (< 768px) responsive overrides ── */
+  @media (max-width: 768px) {
+    .grid-resp-2 { grid-template-columns: 1fr !important; }
+    .grid-resp-4 { grid-template-columns: 1fr 1fr !important; }
+    .grid-resp-5 { grid-template-columns: 1fr 1fr !important; }
+    .stack-mobile { grid-template-columns: 1fr !important; }
+    .hide-mobile { display: none !important; }
+    .full-mobile { width: 100% !important; max-width: 100% !important; }
+    .pad-mobile { padding: 12px 14px !important; }
+    .row-wrap-mobile { flex-wrap: wrap !important; }
+  }
 `;

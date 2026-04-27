@@ -202,7 +202,7 @@ export function TagesplanView({ fahrzeuge, termine, addTr, updTr, delTr, addMang
       </div>
 
       {/* KPIs */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 10 }}>
+      <div className="grid-resp-5" style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 10 }}>
         <Kpi label="Termine" value={stats.total} accent={C.blue} icon={Calendar} />
         <Kpi label="Bestanden" value={stats.bestanden} sub={passRate != null ? `${passRate}%` : ""} accent={C.green} icon={CheckCircle2} />
         <Kpi label="Nicht bestanden" value={stats.failed} accent={C.red} icon={XCircle} />
