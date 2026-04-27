@@ -118,11 +118,11 @@ export function MaengelModal({ termin, fahrzeug, onAdd, onDel, onStatus, onClose
                     style={{
                       background: act ? sc.glow : "transparent",
                       border: `1px solid ${act ? sc.border : C.line}`,
-                      borderRadius: 6, padding: "4px 11px",
+                      borderRadius: 6, padding: "7px 12px",
                       color: act ? sc.color : blocked ? C.t4 : C.t3,
                       cursor: blocked ? "not-allowed" : "pointer",
                       opacity: blocked ? 0.35 : 1,
-                      fontSize: 10, fontWeight: act ? 700 : 400, fontFamily: C.mono, transition: "all 0.15s",
+                      fontSize: 11, fontWeight: act ? 700 : 400, fontFamily: C.mono, transition: "all 0.15s",
                       textDecoration: blocked ? "line-through" : "none",
                     }}>{s}</button>
                 );
