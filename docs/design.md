@@ -267,6 +267,8 @@ sequenceDiagram
   bei HM/GM ablehnen bzw. auto-demoten)
 - **Offline-Fallback** via LocalStorage, falls Firestore-Verbindung scheitert
 - **Seed-Daten** bei erster Nutzung (wenn beide Collections leer)
+- **3-Sekunden-Loading-Fallback** seit Sprint 5: hydratiert aus Cache oder Seed,
+  falls `onSnapshot` nicht antwortet — verhindert „hängender Spinner"-UX
 
 ## 5. Datenfluss bei Mängelerfassung (Beispielszenario)
 
@@ -320,7 +322,80 @@ gar nicht erst falsch tippen). Hard-Validierung fängt Sonstiger-Modus und
 programmatische Aufrufe (Defense in Depth). Soft-Warnungen markieren Auffälligkeiten,
 die kontextabhängig erlaubt sind.
 
-## 7. Barrel-Exports
+## 7. Bericht-PDF-Generierung
+
+Berichte werden seit Sprint 5 nicht mehr als ASCII-Text-`.txt`, sondern als
+gedruckte A4-PDF im Behörden-Vordruck-Stil ausgegeben. Implementierung in
+`BerichteView.buildBerichtHtml(t)` + `exportPdf(t)`:
+
+```mermaid
+sequenceDiagram
+  actor Pruefer
+  participant UI as BerichteView
+  participant Win as window
+  participant Browser as Browser-Druck-Engine
+
+  Pruefer->>UI: Klickt "PDF" auf Bericht
+  UI->>UI: buildBerichtHtml(termin) → vollständiges HTML mit @page A4 + print CSS
+  UI->>Win: window.open("", "_blank") → neuer Tab
+  UI->>Win: document.write(html); document.close()
+  Win->>Win: Lädt Inline-CSS, Google-Font Source Serif 4
+  Win->>Win: setTimeout(window.print, 250) — Auto-Trigger
+  Browser->>Pruefer: Druckdialog mit "Als PDF speichern"
+  Pruefer->>Browser: Wählt "Als PDF speichern" → Datei
+```
+
+**Begründung:**
+- **Keine externe Bibliothek** — `jsPDF` / `html2pdf` würden ~150 KB ans Bundle
+  hängen. Browser-natives `window.print()` reicht.
+- **Vector-PDF** mit echter Schriftart (Source Serif 4 von Google Fonts), nicht
+  Pixel-Bitmap.
+- **A4-konformes Layout** via `@page { size: A4; margin: 16mm 14mm 24mm; }`.
+- **Sektionen page-break-inside: avoid** verhindern Sektion-Mitte-Umbrüche.
+- **Eigene Brand „TPP — Prüfstelle Pro"** mit fiktivem Prüfstellen-Nr.-Format
+  `TPP-NDS-2026-XXXXXXX` — keine Verletzung von TÜV/DEKRA/GTÜ-Markenrechten.
+
+**Layout-Bestandteile:** Top-Bar Navy/Amber, Siegel-Logo links, Prüfstellen-
+Adresse Mitte, Berichts-Nr.-Block rechts; zentrierter Titel mit Serif-Setzung;
+Verkehrssicherheits-Box farbcodiert (grün/rot/amber); Sektionen in römischen
+Zahlen mit Navy-Header (I. Fahrzeug, II. Halter, III. Mängel, IV. Bemerkungen);
+Form-Style-Felder (gepunktete Labels, durchgezogene Wert-Linien); Mängel-
+Tabelle mit HM-Hervorhebung; Unterschriftsfelder (Ort/Datum + Stempel); Footer
+mit Rechtshinweis nach § 29 StVZO und BGBl.-Verweis.
+
+## 8. Mobile-Responsive-Strategie
+
+Sprint 5 hat die ursprünglich Desktop-only-App vollständig responsive gemacht.
+Brechungspunkt: **768 px Viewport-Breite** (Tablet hochkant / Smartphone).
+
+**Layout-Verhalten:**
+
+| Bereich | Desktop | Mobile |
+|---|---|---|
+| Sidebar | fixed 240 px, schiebt Content nach rechts | Overlay mit Backdrop-Blur, Hamburger-Button im Topbar |
+| KPI-Grids | 4 oder 5 Spalten | 2 Spalten (oder 1 bei sehr schmalen Phones) |
+| Modal-Forms | 2 Spalten | 1 Spalte |
+| Fahrzeug-Detail-Panel | 460 px Slide-In | Vollbild |
+| Charts | nebeneinander (2-spaltig) | untereinander |
+| Touch-Targets | beliebig | ≥ 36 px |
+| Tagesplan-Slot | Rechtsklick-Kontextmenü | klickbarer „+ Termin um HH:MM" Button |
+
+**Implementierung:** `useIsMobile()`-Hook für JS-Layout-Entscheidungen
+(Sidebar-Mode), CSS-Klassen `.grid-resp-2/4/5`, `.full-mobile`, `.pad-mobile`,
+`.card-mobile`, `.btn-icon`, `.nav-btn` mit `@media (max-width: 768px)` Override
+in `theme.js` `GLOBAL_CSS`. Komponenten setzen die Klassen zusätzlich zu ihren
+Inline-Styles, sodass beide Welten (Desktop-Layout, Mobile-Override) klar
+getrennt bleiben.
+
+**iOS-/Android-Tweaks** in `index.html`:
+- `viewport-fit=cover` für iPhone-Notch
+- `theme-color="#1A1740"` für PWA / Tab-Chrome
+- `apple-mobile-web-app-capable` + Status-Bar-Style für Save-to-Home-Screen
+- `-webkit-tap-highlight-color: transparent` (kein graues Tap-Flash)
+- `overscroll-behavior-y: none` (kein Pull-to-Refresh, das den Tagesplan
+  versehentlich neu laden würde)
+
+## 9. Barrel-Exports
 
 `src/components/ui/index.js` und `src/components/modal/index.js` bündeln die
 Exporte, damit Views über `import { Inp, Sel, Fld } from "../components/ui"`

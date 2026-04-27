@@ -159,6 +159,23 @@ Das Repo enthält Tests in `src/tests/`:
 - `useStore`-Hook: Würde einen Firestore-Mock brauchen. Geplant in US-66 bei DB-Migration, wenn wir ohnehin die Persistenz-Schicht überarbeiten.
 - Views (FahrzeugeView, TagesplanView, StatistikView, BerichteView): Zu viel Aggregation, würde hauptsächlich Mock-Daten testen. Business-Logik wurde in Utilities ausgelagert, die separat getestet werden.
 - Modals (FahrzeugModal, TerminModal, MaengelModal): Form-Logik ruft Utilities auf, diese sind getestet. Rendering ist mit PropTypes dokumentiert.
+- **PDF-Bericht-Layout** (`buildBerichtHtml`): visuelle Korrektheit — wird per Manual-Test gegen Referenz-Datensatz geprüft (Demo-Fahrzeug B-TK 1234, BESTANDEN-Fall + NICHT_BESTANDEN-Fall mit 5 HM). Visual-Regression-Framework (Percy/Chromatic) wäre eigener Aufbau, im Prototyp-Scope nicht aufgesetzt.
+- **Mobile-Responsive-Layout**: Manual-Tests auf realen Geräten (iPhone Safari, Android Chrome) sowie Browser-DevTools-Geräte-Emulation. Keine automatisierten Visual-Tests für unterschiedliche Viewports.
+
+### 3.5 Manuelle Test-Szenarien (Smoke-Tests vor jeder Abgabe)
+
+Pflicht-Durchläufe, die nicht automatisiert sind, aber vor jedem Sprint-Ende manuell ausgeführt werden:
+
+| Szenario | Erwartetes Verhalten |
+|---|---|
+| Fahrzeug-Anlage „BMW Polo" | Modell-Dropdown enthält „Polo" nicht; Eingabe nur über Sonstiger-Modus möglich |
+| Kennzeichen „QWE-RT 1234" eintragen | Save liefert Fehler „QWE ist kein gültiger Kreis-Code (KBA-Liste)" |
+| Saison-Kennzeichen „B-TK 1234 04-10" | Wird akzeptiert |
+| FIN „BLABLUBB123435666" eintragen | Gelber Hinweis „FIN-Prüfziffer (Position 9) ist 'B', erwartet '0'" |
+| Bestanden-Termin: HM-Mangel hinzufügen | Status wird automatisch auf NICHT_BESTANDEN demotiert |
+| Bericht aus Demo-Termin als PDF exportieren | Neuer Tab öffnet, Druckdialog erscheint, „Als PDF speichern" liefert A4-konformes Layout |
+| App auf iPhone Safari öffnen, alle 4 Views durchklicken | Sidebar als Overlay, KPIs als 2x2-Grid, kein horizontaler Scroll, Touch-Targets gut tappable |
+| Tagesplan-Slot tippen | Termin-Modal öffnet mit Uhrzeit vorausgefüllt (Touch-Pfad statt Rechtsklick) |
 
 ## 4. Abdeckungs-Ziele
 
