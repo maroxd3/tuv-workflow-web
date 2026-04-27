@@ -144,12 +144,14 @@ export function FahrzeugeView({ fahrzeuge, termine, addFz, updFz, delFz, toast }
                   </div>
                   <div style={{ display: "flex", gap: 6 }}>
                     <button onClick={e => { e.stopPropagation(); setEditFz(sel); setShowModal(true); }}
-                      style={{ background: C.glass, border: `1px solid ${C.line}`, borderRadius: 6, padding: 6, cursor: "pointer", color: C.t3, display: "flex" }}>
-                      <Pencil size={13} />
+                      className="btn-icon" aria-label="Bearbeiten"
+                      style={{ background: C.glass, border: `1px solid ${C.line}`, borderRadius: 7, padding: 7, cursor: "pointer", color: C.t3, display: "flex" }}>
+                      <Pencil size={14} />
                     </button>
                     <button onClick={() => setSel(null)}
-                      style={{ background: C.glass, border: `1px solid ${C.line}`, borderRadius: 6, padding: 6, cursor: "pointer", color: C.t3, display: "flex" }}>
-                      <X size={13} />
+                      className="btn-icon" aria-label="Schließen"
+                      style={{ background: C.glass, border: `1px solid ${C.line}`, borderRadius: 7, padding: 7, cursor: "pointer", color: C.t3, display: "flex" }}>
+                      <X size={14} />
                     </button>
                   </div>
                 </div>
