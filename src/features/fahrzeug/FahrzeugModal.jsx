@@ -4,6 +4,7 @@ import { Check, User, AlertTriangle } from "lucide-react";
 import { C } from "../../styles/theme";
 import { FAHRZEUG_TYPEN } from "../../constants/fahrzeug";
 import { HERSTELLER_REFERENZ, normalizeHersteller, getHerstellerDisplayList } from "../../constants/kfzReferenz";
+import { KFZ_KREIS_CODES } from "../../constants/kfzKreis";
 import { Modal } from "../../components/modal/Modal";
 import { Inp, Sel, Fld } from "../../components/ui/inputs";
 import { BtnG, BtnP } from "../../components/ui/buttons";
@@ -87,8 +88,16 @@ export function FahrzeugModal({ initial = {}, fahrzeuge = [], onSave, onClose })
     <Modal title={isEdit ? "Fahrzeug bearbeiten" : "Fahrzeug neu erfassen"} sub="Pflichtfelder sind mit * markiert" onClose={onClose} width={720}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
         <Fld label="Kennzeichen *" error={err.kennzeichen}>
-          <Inp value={form.kennzeichen} onChange={f("kennzeichen")} placeholder="B-TK 1234"
-            error={err.kennzeichen} mono style={{ fontWeight: 700, fontSize: 15, letterSpacing: "0.06em" }} />
+          <Inp value={form.kennzeichen}
+            onChange={e => setForm(p => ({ ...p, kennzeichen: e.target.value.toUpperCase() }))}
+            placeholder="B-TK 1234 (Saison: B-TK 1234 04-10)"
+            error={err.kennzeichen} mono list="kfz-kreise"
+            style={{ fontWeight: 700, fontSize: 15, letterSpacing: "0.06em" }} />
+          <datalist id="kfz-kreise">
+            {KFZ_KREIS_CODES.map(({ code, region }) => (
+              <option key={code} value={code}>{region}</option>
+            ))}
+          </datalist>
         </Fld>
         <Fld label="FIN (17 Zeichen)" error={err.fin}>
           <Inp value={form.fin} onChange={f("fin")} placeholder="WBA3A5C50CF256985" error={err.fin} mono style={{ fontSize: 12 }} />

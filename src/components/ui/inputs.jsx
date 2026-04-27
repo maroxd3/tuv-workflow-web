@@ -3,15 +3,16 @@ import PropTypes from "prop-types";
 import { ChevronDown, AlertCircle } from "lucide-react";
 import { C } from "../../styles/theme";
 
-export function Inp({ value, onChange, placeholder, type = "text", error, style = {}, mono = false }) {
+export function Inp({ value, onChange, placeholder, type = "text", error, style = {}, mono = false, list, disabled = false }) {
   const [f, setF] = useState(false);
   return (
-    <input value={value} onChange={onChange} placeholder={placeholder} type={type}
+    <input value={value} onChange={onChange} placeholder={placeholder} type={type} list={list} disabled={disabled}
       onFocus={() => setF(true)} onBlur={() => setF(false)}
       style={{
         background: C.surface, border: `1px solid ${error ? "rgba(220,38,38,0.5)" : f ? C.blue : C.line}`,
         borderRadius: 8, padding: "9px 12px", color: C.t1, fontSize: 13, outline: "none",
-        width: "100%", fontFamily: mono ? C.mono : C.sans, transition: "border-color 0.15s", ...style,
+        width: "100%", fontFamily: mono ? C.mono : C.sans, transition: "border-color 0.15s",
+        opacity: disabled ? 0.6 : 1, cursor: disabled ? "not-allowed" : "text", ...style,
       }}
     />
   );
@@ -25,6 +26,8 @@ Inp.propTypes = {
   error: PropTypes.string,
   style: PropTypes.object,
   mono: PropTypes.bool,
+  list: PropTypes.string,
+  disabled: PropTypes.bool,
 };
 
 export function Sel({ value, onChange, children, style = {} }) {

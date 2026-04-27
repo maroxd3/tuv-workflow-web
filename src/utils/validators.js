@@ -13,9 +13,12 @@
 
 import { FAHRZEUG_TYPEN } from "../constants/fahrzeug";
 import { HERSTELLER_REFERENZ, normalizeHersteller } from "../constants/kfzReferenz";
+import { isValidKreisCode } from "../constants/kfzKreis";
 import { STATUS } from "../constants/status";
 
-const KENNZEICHEN_REGEX = /^[A-ZÄÖÜ]{1,3}[-\s][A-Z]{1,2}\s?\d{1,4}[HE]?$/i;
+/* Normales Kennzeichen: B-TK 1234 (mit optionalem H/E-Suffix für Historisch/Elektro)
+   Saison-Kennzeichen: B-TK 1234 04-10 (Saison von April bis Oktober) */
+const KENNZEICHEN_REGEX = /^([A-ZÄÖÜ]{1,3})[-\s][A-Z]{1,2}\s?\d{1,4}[HE]?(\s(0[1-9]|1[0-2])-(0[1-9]|1[0-2]))?$/i;
 const FIN_REGEX = /^[A-HJ-NPR-Z0-9]{17}$/i;
 const TELEFON_REGEX = /^[+()\d\s\-/]{5,30}$/;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -30,7 +33,12 @@ export const BAUJAHR_MIN = 1885;
 export function validateKennzeichen(raw) {
   const v = (raw || "").trim();
   if (!v) return "Pflichtfeld";
-  if (!KENNZEICHEN_REGEX.test(v)) return "Ungültiges Format (z. B. B-TK 1234)";
+  const m = v.match(KENNZEICHEN_REGEX);
+  if (!m) return "Ungültiges Format (z. B. B-TK 1234, M-AB 999E, B-TK 1234 04-10 für Saison)";
+  const kreis = m[1].toUpperCase();
+  if (!isValidKreisCode(kreis)) {
+    return `"${kreis}" ist kein gültiger Kreis-Code (KBA-Liste)`;
+  }
   return null;
 }
 

@@ -40,6 +40,17 @@ describe("validateKennzeichen", () => {
     expect(validateKennzeichen("M XY 1E")).toBeNull();  // E-Kennzeichen
   });
 
+  it("akzeptiert Saison-Kennzeichen mit MM-MM-Suffix", () => {
+    expect(validateKennzeichen("B-TK 1234 04-10")).toBeNull();
+    expect(validateKennzeichen("MZG-AB 12 11-03")).toBeNull(); // wrap-around (Nov–März)
+    expect(validateKennzeichen("H-XY 99 06-09")).toBeNull();
+  });
+
+  it("lehnt ungültige Saison-Monate ab", () => {
+    expect(validateKennzeichen("B-TK 1234 13-04")).toMatch(/Format/);
+    expect(validateKennzeichen("B-TK 1234 00-04")).toMatch(/Format/);
+  });
+
   it("lehnt leere Eingaben als Pflichtfeld ab", () => {
     expect(validateKennzeichen("")).toBe("Pflichtfeld");
     expect(validateKennzeichen(null)).toBe("Pflichtfeld");
@@ -51,6 +62,11 @@ describe("validateKennzeichen", () => {
     expect(validateKennzeichen("ABC123")).toMatch(/Format/);
     expect(validateKennzeichen("BTK1234")).toMatch(/Format/);
     expect(validateKennzeichen("12345")).toMatch(/Format/);
+  });
+
+  it("lehnt unbekannten Kreis-Code (nicht in KBA-Liste) ab", () => {
+    expect(validateKennzeichen("QWE-RT 1234")).toMatch(/Kreis-Code/);
+    expect(validateKennzeichen("XYZ-AB 99")).toMatch(/Kreis-Code/);
   });
 });
 
