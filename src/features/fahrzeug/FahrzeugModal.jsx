@@ -86,7 +86,7 @@ export function FahrzeugModal({ initial = {}, fahrzeuge = [], onSave, onClose })
 
   return (
     <Modal title={isEdit ? "Fahrzeug bearbeiten" : "Fahrzeug neu erfassen"} sub="Pflichtfelder sind mit * markiert" onClose={onClose} width={720}>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+      <div className="grid-resp-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
         <Fld label="Kennzeichen *" error={err.kennzeichen}>
           <Inp value={form.kennzeichen}
             onChange={e => setForm(p => ({ ...p, kennzeichen: e.target.value.toUpperCase() }))}
@@ -161,7 +161,7 @@ export function FahrzeugModal({ initial = {}, fahrzeuge = [], onSave, onClose })
             fontSize: 11, fontWeight: 700, color: C.t3, letterSpacing: "0.1em", textTransform: "uppercase",
             marginBottom: 14, display: "flex", alignItems: "center", gap: 6,
           }}><User size={11} />Fahrzeughalter</div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+          <div className="grid-resp-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
             <Fld label="Name / Firma *" error={err.besitzer}>
               <Inp value={form.besitzer} onChange={f("besitzer")} placeholder="Klaus Müller" error={err.besitzer} />
             </Fld>

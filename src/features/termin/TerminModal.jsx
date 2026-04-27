@@ -59,7 +59,7 @@ export function TerminModal({ fahrzeuge, initial = {}, onSave, onClose }) {
             {selFz.hu_faellig && <span style={{ color: new Date(selFz.hu_faellig) < new Date() ? C.redL : C.t3, fontSize: 12 }}>HU: {fmtDate(selFz.hu_faellig)}</span>}
           </div>
         )}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+        <div className="grid-resp-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
           <Fld label="Datum *" error={err.datum}>
             <Inp value={form.datum} onChange={f("datum")} type="date" error={err.datum} />
           </Fld>

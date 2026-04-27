@@ -48,7 +48,7 @@ export function MaengelModal({ termin, fahrzeug, onAdd, onDel, onStatus, onClose
 
   return (
     <Modal title="Mängelerfassung" sub={`${fahrzeug?.kennzeichen || ""} · ${fahrzeug?.hersteller || ""} ${fahrzeug?.modell || ""} · ${art?.label || ""}`} onClose={onClose} width={860}>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+      <div className="grid-resp-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
         {/* LEFT: Recorded */}
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>

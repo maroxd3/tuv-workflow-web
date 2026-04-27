@@ -4,6 +4,7 @@ import { Toaster } from "sonner";
 import { C, GLOBAL_CSS } from "./styles/theme";
 import { useStore } from "./hooks/useStore";
 import { useToasts } from "./hooks/useToasts";
+import { useIsMobile } from "./hooks/useIsMobile";
 import { Sidebar } from "./layout/Sidebar";
 import { Topbar } from "./layout/Topbar";
 import { TagesplanView } from "./views/TagesplanView";
@@ -12,10 +13,18 @@ import { StatistikView } from "./views/StatistikView";
 import { BerichteView } from "./views/BerichteView";
 
 export default function App() {
+  const isMobile = useIsMobile();
   const [view, setView] = useState("tagesplan");
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(!isMobile);
   const { add: toast } = useToasts();
   const S = useStore();
+
+  /* Auf Mobil-Geräten Sidebar nach einem View-Wechsel automatisch schließen,
+     damit der Content sofort sichtbar ist. */
+  const handleSetView = v => {
+    setView(v);
+    if (isMobile) setSidebarOpen(false);
+  };
 
   const SIDEBAR_W = 240;
 
@@ -41,6 +50,25 @@ export default function App() {
       <style>{GLOBAL_CSS}</style>
       <Toaster richColors position="bottom-right" toastOptions={{ style: { fontFamily: C.sans } }} />
 
+      {/* Mobile-Backdrop hinter geöffneter Sidebar */}
+      <AnimatePresence>
+        {sidebarOpen && isMobile && (
+          <motion.div
+            key="sidebar-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            onClick={() => setSidebarOpen(false)}
+            style={{
+              position: "fixed", inset: 0, zIndex: 55,
+              background: "rgba(15,15,26,0.55)",
+              backdropFilter: "blur(4px)",
+            }}
+          />
+        )}
+      </AnimatePresence>
+
       {/* Sidebar */}
       <AnimatePresence initial={false}>
         {sidebarOpen && (
@@ -53,7 +81,7 @@ export default function App() {
             style={{ position: "fixed", left: 0, top: 0, bottom: 0, zIndex: 60, width: SIDEBAR_W }}
           >
             <Sidebar
-              view={view} setView={setView}
+              view={view} setView={handleSetView}
               fahrzeuge={S.fahrzeuge} termine={S.termine}
               resetAll={S.resetAll}
               onClose={() => setSidebarOpen(false)}
@@ -62,15 +90,16 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      {/* Main content */}
+      {/* Main content — auf Mobil immer ohne Margin (Sidebar overlayet),
+         auf Desktop schiebt die Sidebar den Content. */}
       <motion.div
-        animate={{ marginLeft: sidebarOpen ? SIDEBAR_W : 0 }}
+        animate={{ marginLeft: sidebarOpen && !isMobile ? SIDEBAR_W : 0 }}
         transition={{ duration: 0.22, ease: "easeInOut" }}
-        style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: "100vh" }}
+        style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: "100vh", minWidth: 0 }}
       >
         <Topbar view={view} sidebarOpen={sidebarOpen} onToggleSidebar={() => setSidebarOpen(o => !o)} />
 
-        <div style={{ padding: "24px 32px", flex: 1 }}>
+        <div className="pad-mobile" style={{ padding: "24px 32px", flex: 1 }}>
           <AnimatePresence mode="wait">
             <motion.div key={view}
               initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}

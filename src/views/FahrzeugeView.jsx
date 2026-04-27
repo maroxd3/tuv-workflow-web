@@ -78,7 +78,7 @@ export function FahrzeugeView({ fahrzeuge, termine, addFz, updFz, delFz, toast }
       </div>
 
       {/* Summary row */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10, marginBottom: 20 }}>
+      <div className="grid-resp-4" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10, marginBottom: 20 }}>
         <Kpi label="Fahrzeuge gesamt" value={fahrzeuge.length} accent={C.blue} icon={Car} />
         <Kpi label="PKW" value={fahrzeuge.filter(f => f.typ === "PKW").length} accent={C.cyan} icon={Car} />
         <Kpi label="Nutzfahrzeuge" value={fahrzeuge.filter(f => ["LKW", "Transporter", "Sattel", "Bus"].includes(f.typ)).length} accent={C.amber} icon={Car} />
@@ -129,6 +129,7 @@ export function FahrzeugeView({ fahrzeuge, termine, addFz, updFz, delFz, toast }
             <motion.div initial={{ x: 480, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: 480, opacity: 0 }}
               transition={{ type: "spring", damping: 30, stiffness: 320 }}
               onClick={e => e.stopPropagation()}
+              className="full-mobile"
               style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: 460, background: C.bg, borderLeft: `1px solid ${C.line}`, display: "flex", flexDirection: "column", overflowY: "auto" }}>
               {/* Sidebar header */}
               <div style={{ padding: "20px 24px", borderBottom: `1px solid ${C.line}`, background: C.surface, position: "sticky", top: 0, zIndex: 1 }}>
