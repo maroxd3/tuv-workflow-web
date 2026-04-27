@@ -229,9 +229,19 @@ export function TagesplanView({ fahrzeuge, termine, addTr, updTr, delTr, addMang
                   </div>
                   <div style={{ flex: 1, padding: slotTr.length ? "8px 16px" : "0 16px", display: "flex", flexDirection: "column", gap: 6 }}>
                     {slotTr.length === 0 ? (
-                      <div style={{ height: 40, display: "flex", alignItems: "center" }}>
-                        <span style={{ fontSize: 11, color: C.t4, fontStyle: "italic" }}>Keine Termine — Rechtsklick zum Hinzufügen</span>
-                      </div>
+                      <button onClick={() => newTrAtSlot(slot)}
+                        style={{
+                          height: 40, display: "flex", alignItems: "center", gap: 6,
+                          width: "100%", textAlign: "left",
+                          background: "transparent", border: "none",
+                          color: C.t4, fontSize: 11, fontStyle: "italic",
+                          cursor: "pointer", padding: 0,
+                        }}
+                        onMouseEnter={e => { e.currentTarget.style.color = C.blueL; }}
+                        onMouseLeave={e => { e.currentTarget.style.color = C.t4; }}>
+                        <Plus size={12} />
+                        Termin um {slot} anlegen
+                      </button>
                     ) : slotTr.map(t => {
                       const fz = fzMap[t.fahrzeugId];
                       const sc = STATUS_CFG[t.status] || STATUS_CFG[STATUS.GEPLANT];
@@ -301,7 +311,7 @@ export function TagesplanView({ fahrzeuge, termine, addTr, updTr, delTr, addMang
               </thead>
               <tbody>
                 {dayTr.length === 0 && (
-                  <tr><td colSpan={8}><EmptyState icon={Calendar} title="Keine Termine" sub="Rechtsklick auf einen Zeitslot zum Anlegen." /></td></tr>
+                  <tr><td colSpan={8}><EmptyState icon={Calendar} title="Keine Termine" sub="Über die Zeitplan-Ansicht oder den Button „Termin anlegen" oben rechts neuen Termin erfassen." /></td></tr>
                 )}
                 {dayTr.map((t, i) => {
                   const fz = fzMap[t.fahrzeugId];
