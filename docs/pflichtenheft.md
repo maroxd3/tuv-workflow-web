@@ -159,7 +159,7 @@ Damit ist die Anforderung sowohl **begründet** (warum 100 ms ergonomisch sinnvo
 | NF-US-01 | Keine Schulung notwendig: Hauptfunktionen per Self-Service auffindbar in < 1 min |
 | NF-US-02 | Deutsche UI durchgehend, StVZO-Fachterminologie korrekt verwendet |
 | NF-US-03 | Tastatur-Shortcuts: Esc schließt Modal; Rechtsklick öffnet Kontextmenü im Tagesplan (Desktop). Auf Touch-Geräten klickbarer „+ Termin anlegen"-Button im leeren Zeitslot |
-| NF-US-04 | Responsive Layout ab 1280 × 720 (Desktop-Fokus, kein Mobile-Support erforderlich) |
+| NF-US-04 | Responsive Layout: Desktop-First (Hauptzielgerät 1280 × 720) plus voll bedienbar auf Tablet und Smartphone ab 360 px Viewport. Sidebar wird auf Touch-Geräten zum Overlay mit Hamburger-Menu, Grids stacken auf 1–2 Spalten, Touch-Targets ≥ 36 px |
 | NF-US-05 | Klare Fehlermeldungen an jedem Eingabefeld (rote Unterstreichung + Text) |
 | NF-US-06 | Warnhinweise vs. Fehler getrennt (weiche Plausibilitätscheck ≠ harte Validierung) |
 
@@ -259,3 +259,4 @@ aber den Rahmen einer studentischen Abgabe:
 | 1.1 | 2026-04-24 | Feedback Frau Fuchs eingearbeitet: Performance-Zahlen begründet, Lastprofil, Datenschutz/Sicherheit, Scope-Abgrenzung, Ausblick |
 | 1.2 | 2026-04-27 | F-FZ-01 um Cascading-Dropdowns + Saison-Kennzeichen erweitert; NF-DI-02 um KBA-Kreis-Code-Liste; NF-DI-05 (Hersteller-Modell-Typ-Konsistenz, hart) und NF-DI-06 (FIN-Prüfziffer, weich) hinzugefügt |
 | 1.3 | 2026-04-27 | §3.1 explizite Begründung 100 ms vs. 50/200 ms (Nielsen-Tabelle) + konkrete Test-Methode mit Referenzgerät — beantwortet die Rückfrage aus Fuchs-Mail vom 24.04. zu NF-PF-02 |
+| 1.4 | 2026-04-27 | NF-US-04 erweitert: Mobile-Support hinzugefügt (Sidebar-Overlay, responsive Grids, Touch-Targets); Bericht-Export von .txt auf gedrucktes A4-PDF im offiziellen Layout (BerichteView buildBerichtHtml); F-TR-03 / NF-US-03 um Touch-Klick-Pfad ergänzt (kein Rechtsklick auf Phones) |
