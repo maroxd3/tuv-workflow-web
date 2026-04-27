@@ -147,7 +147,7 @@ export function StatistikView({ termine, fahrzeuge }) {
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
 
       {/* Range selector */}
-      <div style={{ display: "flex", gap: 6 }}>
+      <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
         {[7, 30, 90, 365].map(d => (
           <button key={d} onClick={() => setRange(d)} className="btn-ghost" style={{
             background: range === d ? C.blue : C.surface,
