@@ -643,9 +643,9 @@ RECHTLICHER HINWEIS
     <div>
       {/* Toolbar */}
       <div style={{ display: "flex", gap: 10, marginBottom: 20, flexWrap: "wrap", alignItems: "center" }}>
-        <div style={{ position: "relative", flex: 1, maxWidth: 360 }}>
+        <div style={{ position: "relative", flex: "1 1 240px", minWidth: 200, maxWidth: 360 }}>
           <Search size={13} style={{ position: "absolute", left: 11, top: "50%", transform: "translateY(-50%)", color: C.t4 }} />
-          <Inp value={q} onChange={e => setQ(e.target.value)} placeholder="Kennzeichen, Besitzer, Prüfart..." style={{ paddingLeft: 34 }} />
+          <Inp value={q} onChange={e => setQ(e.target.value)} placeholder="Suche..." style={{ paddingLeft: 34 }} />
         </div>
         <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
           {[["all", "Alle"], ["bestanden", "Bestanden"], ["failed", "Nicht bestanden"], ["nachp", "Nachprüfung"], ["maengel", "Mit Mängeln"], ["hm", "Hauptmängel"]].map(([k, l]) => (
@@ -674,7 +674,7 @@ RECHTLICHER HINWEIS
           const art = PRUEFUNG_ARTEN.find(a => a.id === t.art);
           const pr = PRUEFER.find(p => p.id === t.pruefer);
           return (
-            <div key={t.id} className="fz-card" style={{ background: C.surface, border: `1px solid ${C.line}`, borderRadius: 12, padding: "14px 18px", display: "flex", alignItems: "center", gap: 14, boxShadow: "0 2px 6px rgba(15,23,42,0.05)" }}>
+            <div key={t.id} className="fz-card" style={{ background: C.surface, border: `1px solid ${C.line}`, borderRadius: 12, padding: "14px 18px", display: "flex", alignItems: "center", gap: 14, boxShadow: "0 2px 6px rgba(15,23,42,0.05)", flexWrap: "wrap" }}>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 4 }}>
                   <span style={{ fontSize: 14, fontWeight: 700, color: C.t1, fontFamily: C.mono, letterSpacing: "0.05em" }}>{fz?.kennzeichen || "—"}</span>

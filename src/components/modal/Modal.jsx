@@ -14,35 +14,35 @@ export function Modal({ title, sub, onClose, children, width = 640 }) {
   return (
     <div style={{
       position: "fixed", inset: 0, zIndex: 400, background: "rgba(15,15,26,0.55)", backdropFilter: "blur(8px)",
-      display: "flex", alignItems: "center", justifyContent: "center", padding: 16,
+      display: "flex", alignItems: "center", justifyContent: "center", padding: 8,
     }}
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
       <motion.div initial={{ opacity: 0, scale: 0.96, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.96, y: 20 }} transition={{ duration: 0.2, ease: "easeOut" }}
         style={{
-          background: C.surface, border: `1px solid ${C.lineMed}`, borderRadius: 18,
-          width: "100%", maxWidth: width, maxHeight: "93vh", overflow: "auto",
+          background: C.surface, border: `1px solid ${C.lineMed}`, borderRadius: 14,
+          width: "100%", maxWidth: width, maxHeight: "94vh", overflow: "auto",
           boxShadow: "0 24px 80px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.08)",
         }}>
-        <div style={{
+        <div className="pad-mobile" style={{
           display: "flex", alignItems: "flex-start", justifyContent: "space-between",
-          padding: "22px 28px 20px", borderBottom: `1px solid ${C.line}`,
-          position: "sticky", top: 0, background: C.surface, zIndex: 1,
+          padding: "20px 24px 18px", borderBottom: `1px solid ${C.line}`,
+          position: "sticky", top: 0, background: C.surface, zIndex: 1, gap: 12,
         }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <div>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0, flex: 1 }}>
+            <div style={{ minWidth: 0 }}>
               <div style={{ fontSize: 16, fontWeight: 700, color: C.t1, letterSpacing: "-0.02em" }}>{title}</div>
-              {sub && <div style={{ fontSize: 11, color: C.t4, marginTop: 2 }}>{sub}</div>}
+              {sub && <div style={{ fontSize: 11, color: C.t4, marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{sub}</div>}
             </div>
           </div>
-          <button onClick={onClose} className="btn-icon" style={{
+          <button onClick={onClose} className="btn-icon" aria-label="Schließen" style={{
             background: C.glass, border: `1px solid ${C.line}`, borderRadius: 8,
-            padding: "7px", cursor: "pointer", color: C.t3, display: "flex",
+            padding: "7px", cursor: "pointer", color: C.t3, display: "flex", flexShrink: 0,
           }}>
             <X size={14} />
           </button>
         </div>
-        <div style={{ padding: "24px 28px" }}>{children}</div>
+        <div className="pad-mobile" style={{ padding: "22px 24px" }}>{children}</div>
       </motion.div>
     </div>
   );
