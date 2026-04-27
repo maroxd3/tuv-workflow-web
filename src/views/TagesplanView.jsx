@@ -311,7 +311,7 @@ export function TagesplanView({ fahrzeuge, termine, addTr, updTr, delTr, addMang
               </thead>
               <tbody>
                 {dayTr.length === 0 && (
-                  <tr><td colSpan={8}><EmptyState icon={Calendar} title="Keine Termine" sub="Über die Zeitplan-Ansicht oder den Button „Termin anlegen" oben rechts neuen Termin erfassen." /></td></tr>
+                  <tr><td colSpan={8}><EmptyState icon={Calendar} title="Keine Termine" sub="Auf einen leeren Zeitslot oder oben rechts auf 'Termin anlegen' tippen." /></td></tr>
                 )}
                 {dayTr.map((t, i) => {
                   const fz = fzMap[t.fahrzeugId];
