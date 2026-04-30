@@ -191,7 +191,7 @@ Module. Begründungen je Tech-Wahl in `docs/design.md` § 1.2.
 | 3 | Tagesplan & Termine | 15 | ✅ |
 | 4 | Mängel, Berichte, Statistik | 37 | ✅ |
 | 5 | Validierung, UX, Doku, PDF, Mobile | 63 | ✅ |
-| 6 | Feinschliff & Abgabe | ~10 | ⏳ |
+| 6 | Feinschliff, Security, Code-Splitting, Abgabe-Doku | ~10 | ✅ |
 
 ## Lizenz
 
