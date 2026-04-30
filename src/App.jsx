@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Toaster } from "sonner";
 import { C, GLOBAL_CSS } from "./styles/theme";
@@ -7,10 +7,26 @@ import { useToasts } from "./hooks/useToasts";
 import { useIsMobile } from "./hooks/useIsMobile";
 import { Sidebar } from "./layout/Sidebar";
 import { Topbar } from "./layout/Topbar";
-import { TagesplanView } from "./views/TagesplanView";
-import { FahrzeugeView } from "./views/FahrzeugeView";
-import { StatistikView } from "./views/StatistikView";
-import { BerichteView } from "./views/BerichteView";
+const TagesplanView = lazy(() => import("./views/TagesplanView").then(m => ({ default: m.TagesplanView })));
+const FahrzeugeView = lazy(() => import("./views/FahrzeugeView").then(m => ({ default: m.FahrzeugeView })));
+const StatistikView = lazy(() => import("./views/StatistikView").then(m => ({ default: m.StatistikView })));
+const BerichteView = lazy(() => import("./views/BerichteView").then(m => ({ default: m.BerichteView })));
+
+function ViewFallback() {
+  return (
+    <div style={{
+      minHeight: 220,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      color: C.t3,
+      fontSize: 13,
+      fontWeight: 600,
+    }}>
+      Ansicht wird geladen...
+    </div>
+  );
+}
 
 export default function App() {
   const isMobile = useIsMobile();
@@ -104,23 +120,25 @@ export default function App() {
             <motion.div key={view}
               initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.18, ease: "easeOut" }}>
-              {view === "tagesplan" && (
-                <TagesplanView
-                  fahrzeuge={S.fahrzeuge} termine={S.termine}
-                  addTr={S.addTr} updTr={S.updTr} delTr={S.delTr}
-                  addMangel={S.addMangel} delMangel={S.delMangel}
-                  toast={toast}
-                />
-              )}
-              {view === "fahrzeuge" && (
-                <FahrzeugeView
-                  fahrzeuge={S.fahrzeuge} termine={S.termine}
-                  addFz={S.addFz} updFz={S.updFz} delFz={S.delFz}
-                  toast={toast}
-                />
-              )}
-              {view === "statistik" && <StatistikView termine={S.termine} fahrzeuge={S.fahrzeuge} />}
-              {view === "berichte" && <BerichteView termine={S.termine} fahrzeuge={S.fahrzeuge} />}
+              <Suspense fallback={<ViewFallback />}>
+                {view === "tagesplan" && (
+                  <TagesplanView
+                    fahrzeuge={S.fahrzeuge} termine={S.termine}
+                    addTr={S.addTr} updTr={S.updTr} delTr={S.delTr}
+                    addMangel={S.addMangel} delMangel={S.delMangel}
+                    toast={toast}
+                  />
+                )}
+                {view === "fahrzeuge" && (
+                  <FahrzeugeView
+                    fahrzeuge={S.fahrzeuge} termine={S.termine}
+                    addFz={S.addFz} updFz={S.updFz} delFz={S.delFz}
+                    toast={toast}
+                  />
+                )}
+                {view === "statistik" && <StatistikView termine={S.termine} fahrzeuge={S.fahrzeuge} />}
+                {view === "berichte" && <BerichteView termine={S.termine} fahrzeuge={S.fahrzeuge} />}
+              </Suspense>
             </motion.div>
           </AnimatePresence>
         </div>

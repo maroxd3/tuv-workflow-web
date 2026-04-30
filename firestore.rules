@@ -1,0 +1,53 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isDemoWindow() {
+      return request.time < timestamp.date(2026, 8, 1);
+    }
+
+    function validFahrzeug() {
+      return request.resource.data.keys().hasOnly([
+        "id", "kennzeichen", "fin", "hersteller", "modell", "baujahr",
+        "farbe", "typ", "kmStand", "besitzer", "telefon", "email",
+        "createdAt", "hu_faellig"
+      ])
+      && request.resource.data.id == resourceId
+      && request.resource.data.kennzeichen is string
+      && request.resource.data.hersteller is string
+      && request.resource.data.modell is string
+      && request.resource.data.besitzer is string;
+    }
+
+    function validTermin() {
+      return request.resource.data.keys().hasOnly([
+        "id", "fahrzeugId", "datum", "uhrzeit", "art", "pruefer",
+        "status", "notiz", "mängel", "createdAt"
+      ])
+      && request.resource.data.id == resourceId
+      && request.resource.data.fahrzeugId is string
+      && request.resource.data.datum is string
+      && request.resource.data.uhrzeit is string
+      && request.resource.data.status in [
+        "GEPLANT", "IN_PRUEFUNG", "BESTANDEN", "NICHT_BESTANDEN",
+        "NACHPRUEFUNG", "NICHT_ERSCHIENEN", "ABGEBROCHEN"
+      ];
+    }
+
+    match /fahrzeuge/{resourceId} {
+      allow read: if isDemoWindow();
+      allow create, update: if isDemoWindow() && validFahrzeug();
+      allow delete: if isDemoWindow();
+    }
+
+    match /termine/{resourceId} {
+      allow read: if isDemoWindow();
+      allow create, update: if isDemoWindow() && validTermin();
+      allow delete: if isDemoWindow();
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

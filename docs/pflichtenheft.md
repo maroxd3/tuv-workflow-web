@@ -85,7 +85,7 @@ gemappt.
 |---|---|---|
 | F-BR-01 | Berichts-Liste | Alle abgeschlossenen Prüfungen, filterbar nach Status/Hauptmangel/Mit Mängeln |
 | F-BR-02 | Berichtsvorschau | Textausgabe im amtlichen Layout mit Referenz-Nummer, Prüfinfos, Fahrzeugdaten, Halter, Mängel, Notiz, Rechtlicher Hinweis |
-| F-BR-03 | Berichtsexport | Download als `.txt` mit sprechendem Dateinamen (`Pruefbericht_{Kennzeichen}_{Datum}.txt`) |
+| F-BR-03 | Berichtsexport | Druck-/Speicher-Export als A4-PDF über den Browser-Print-Dialog mit sprechendem Berichtstitel (`Pruefbericht_{Kennzeichen}_{Datum}`) |
 
 ### 2.6 Statistik (F-ST)
 
@@ -208,6 +208,24 @@ Details: siehe `docs/design.md`.
 - **Datenvisualisierung**: Recharts (Area/Bar/Pie), Lucide Icons
 - **Tests**: Vitest + React Testing Library, jsdom, `@testing-library/jest-dom`
 
+### 4.1 Echtzeit-Sync statt Polling
+
+Die Tagesplan-Ansicht verwendet Firestore-Listener (`onSnapshot`) statt
+zeitgesteuertem Polling, weil der kritische Arbeitsablauf aus kurzen
+Statuswechseln besteht: Empfang, Prüfer und Prüfstellenleitung sehen denselben
+Tagesplan parallel. Bei Polling alle 30 Sekunden kann ein bereits gestarteter
+oder verschobener Termin für andere Nutzer bis zum nächsten Abruf noch als frei
+oder unverändert erscheinen. Das erhöht das Risiko von Doppelvergaben und
+telefonischen Rückfragen.
+
+Polling mit kürzerem Intervall (z. B. 5 Sekunden) würde dieses Risiko reduzieren,
+erzeugt aber dauerhaft Abfragen, auch wenn sich nichts ändert. Firestore liefert
+die Änderung ereignisbasiert nur dann an die Clients aus, wenn sich Dokumente in
+`fahrzeuge` oder `termine` ändern. Für den Prototyp ist das die einfachere und
+robustere Lösung: weniger eigener Synchronisationscode, weniger künstliche
+Wartezeit nach Statusänderungen und weiterhin ein LocalStorage-Fallback, falls
+Firestore beim Start nicht rechtzeitig antwortet.
+
 ## 5. Datenmodell (Kurzfassung)
 
 Details: siehe `docs/datenmodell.md`.
@@ -260,3 +278,4 @@ aber den Rahmen einer studentischen Abgabe:
 | 1.2 | 2026-04-27 | F-FZ-01 um Cascading-Dropdowns + Saison-Kennzeichen erweitert; NF-DI-02 um KBA-Kreis-Code-Liste; NF-DI-05 (Hersteller-Modell-Typ-Konsistenz, hart) und NF-DI-06 (FIN-Prüfziffer, weich) hinzugefügt |
 | 1.3 | 2026-04-27 | §3.1 explizite Begründung 100 ms vs. 50/200 ms (Nielsen-Tabelle) + konkrete Test-Methode mit Referenzgerät — beantwortet die Rückfrage aus Fuchs-Mail vom 24.04. zu NF-PF-02 |
 | 1.4 | 2026-04-27 | NF-US-04 erweitert: Mobile-Support hinzugefügt (Sidebar-Overlay, responsive Grids, Touch-Targets); Bericht-Export von .txt auf gedrucktes A4-PDF im offiziellen Layout (BerichteView buildBerichtHtml); F-TR-03 / NF-US-03 um Touch-Klick-Pfad ergänzt (kein Rechtsklick auf Phones) |
+| 1.5 | 2026-04-30 | Echtzeit-vs-Polling-Argument ergänzt; F-BR-03 auf aktuellen PDF-Export korrigiert |

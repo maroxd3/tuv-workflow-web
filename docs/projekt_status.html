@@ -167,7 +167,7 @@
       <div class="sub">Software-Projekt · IIM-211-01 · Hochschule Hannover · Sommersemester 2026</div>
     </div>
     <div class="meta">
-      <div><strong>Stand:</strong> 27. April 2026</div>
+      <div><strong>Stand:</strong> 30. April 2026</div>
       <div><strong>Team:</strong> Marwan Saleh · Oussama Hlayhel</div>
       <div><strong>Live:</strong> tuv-workflow.web.app</div>
     </div>
@@ -262,6 +262,13 @@
           <div class="desc">15-Slides-Projektpräsi, druckbar als PDF · Mail-Entwurf für Antwort an Frau Fuchs · Spickzettel für f2f-Termin mit erwarteten Fragen + Antworten</div>
         </div>
       </div>
+      <div class="item">
+        <div class="check">✓</div>
+        <div class="text">
+          <strong>Sprint-6-Wartung erledigt</strong>
+          <div class="desc">npm audit auf 0 Vulnerabilities · Firestore-Regeln mit Demo-Zeitfenster und Schema-Checks · Dependabot + CodeQL im Repo · Route-Level-Code-Splitting für Views/Statistik · Echtzeit-vs-Polling im Pflichtenheft ergänzt</div>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -269,20 +276,6 @@
   <section class="todo">
     <h2>⏳ Was noch ansteht <span class="badge">Sprint 6 + Wartung</span></h2>
     <div class="body">
-      <div class="item crit">
-        <div class="check">!</div>
-        <div class="text">
-          <span class="priority crit">Kritisch</span><strong>3 npm-Vulnerabilities fixen</strong>
-          <div class="desc"><code>protobufjs</code> (Critical: Code-Execution) · <code>vite</code> 8.0.x (High: Path-Traversal) · <code>postcss</code> (Moderate: XSS) — Behebbar mit <code>npm audit fix</code> in 5 Minuten</div>
-        </div>
-      </div>
-      <div class="item crit">
-        <div class="check">!</div>
-        <div class="text">
-          <span class="priority crit">Kritisch</span><strong>Firestore-Security-Rules prüfen + sichern</strong>
-          <div class="desc">Aktuell keine <code>firestore.rules</code> im Repo — Datenbank ist möglicherweise für jeden im Internet schreibbar. Sollte mindestens auf authentifizierte Nutzer eingeschränkt werden, oder mit Time-Limit-Regel</div>
-        </div>
-      </div>
       <div class="item todo">
         <div class="check">→</div>
         <div class="text">
@@ -300,27 +293,6 @@
       <div class="item todo">
         <div class="check">→</div>
         <div class="text">
-          <span class="priority med">Mittel</span><strong>Echtzeit-vs-Polling-Argument in <code>pflichtenheft.md</code> ergänzen</strong>
-          <div class="desc">Frau Fuchs hatte gefragt warum nicht Polling alle 30 s — Doku zeigt aktuell <em>was</em>, nicht <em>warum nicht das andere</em>. Mündlich im Termin lösbar, aber für Abgabe sauberer wenn schriftlich</div>
-        </div>
-      </div>
-      <div class="item todo">
-        <div class="check">→</div>
-        <div class="text">
-          <span class="priority med">Mittel</span><strong>GitHub Dependabot + CodeQL aktivieren</strong>
-          <div class="desc">In Repo-Settings 3 Klicks · automatische Vuln-Alerts + Auto-PRs bei neuen Sicherheitslücken in Dependencies</div>
-        </div>
-      </div>
-      <div class="item todo">
-        <div class="check">→</div>
-        <div class="text">
-          <span class="priority low">Niedrig</span><strong>Bundle-Code-Splitting für Statistik / Charts</strong>
-          <div class="desc">JS-Bundle ist 1,1 MB · Recharts + Framer-Motion + Firebase-SDK lazy-load würde unter 500 kB drücken · React.lazy auf Route-Ebene</div>
-        </div>
-      </div>
-      <div class="item todo">
-        <div class="check">→</div>
-        <div class="text">
           <span class="priority low">Niedrig</span><strong>Sprint 6 — Feinschliff &amp; finale Abgabe</strong>
           <div class="desc">README-Politur · ggf. Screenshots in Präsentation einbauen · Video-Demo (5 min) · Abgabe-Paket schnüren</div>
         </div>
@@ -332,7 +304,7 @@
     <div class="links">
       Repo: github.com/maroxd3/tuv-workflow-web · Live: tuv-workflow.web.app · Doku: <code>docs/</code>
     </div>
-    <div>Stand 27.04.2026</div>
+    <div>Stand 30.04.2026</div>
   </div>
 </body>
 </html>
