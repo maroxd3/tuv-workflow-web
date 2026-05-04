@@ -152,7 +152,9 @@ Abgabe (Hochschule Hannover, IIM-211-01):
 | [`design.md`](docs/design.md) | Komponentendiagramm, Klassendiagramm, useStore-Hook, Validierungs-Pipeline, Bericht-PDF-Generierung, Mobile-Strategie | ~400 Zeilen |
 | [`backlog.md`](docs/backlog.md) | Product Backlog (~25 User Stories, MoSCoW + Story Points), Definition of Done, 5 Sprint-Historie | ~210 Zeilen |
 | [`testkonzept.md`](docs/testkonzept.md) | Testpyramide, 4 Testentwurfsverfahren mit Beispielen, manuelle Smoke-Test-Tabelle | ~210 Zeilen |
-| [`antwort_mail_fuchs.md`](docs/antwort_mail_fuchs.md) | Mail-Entwurf für Dozentin nach Feedback-Runde 1 | ~95 Zeilen |
+| [`nacharbeit_fuchs.html`](docs/nacharbeit_fuchs.html) | **Übersichtsdokument der Nacharbeit nach Feedback vom 24.04.** — Stand vorher, Kritikpunkte, zeitlicher Ablauf, Vorher/Nachher-Tabelle, druckbar als A4-PDF | A4 |
+| [`projekt_status.html`](docs/projekt_status.html) | Status-Sheet (Done / TODO), druckbar als A4-PDF | A4 |
+| [`antwort_mail_fuchs.md`](docs/antwort_mail_fuchs.md) | Mail-Entwurf für Dozentin | — |
 | [`treffen_brief.md`](docs/treffen_brief.md) | Spickzettel für f2f-Termin mit Dozentin | ~160 Zeilen |
 
 Plus `praesentation.html` — 15-Slides-Projekt-Präsentation, druckbar als PDF

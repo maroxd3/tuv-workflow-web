@@ -4,91 +4,44 @@
 
 ---
 
-**Betreff:** Re: TÜV Prüfstelle Pro — Nachbesserungen und Terminvorschlag
+**Betreff:** TÜV Prüfstelle Pro — Stand der Nacharbeit & Bitte um Durchsicht
 
 Sehr geehrte Frau Fuchs,
 
-vielen Dank für Ihr ausführliches und detailliertes Feedback — insbesondere die
-konkreten Beispiele aus Ihren manuellen Tests haben uns sehr geholfen, die
-Schwachstellen präzise zu adressieren. Wir haben noch vor unserem Treffen
-begonnen, die Punkte systematisch umzusetzen, um Ihnen beim Termin einen
-bearbeitbaren Stand zeigen zu können.
+seit Ihrem Feedback vom 24. April haben wir das Projekt grundlegend nachgearbeitet — alle Punkte sind im Repository auf GitHub adressiert und versioniert nachvollziehbar.
 
-## Stand der Umarbeitung
+Damit Sie sich den Ablauf nicht aus der Commit-Historie zusammensuchen müssen, haben wir ein eigenes Übersichtsdokument angelegt:
 
-**Dokumentation im Repository** (neu unter `docs/` im Projekt):
+**Nacharbeit-Übersicht:**
+[github.com/maroxd3/tuv-workflow-web/blob/master/docs/nacharbeit_fuchs.html](https://github.com/maroxd3/tuv-workflow-web/blob/master/docs/nacharbeit_fuchs.html)
 
-- `docs/pflichtenheft.md` — vollständige Fassung mit funktionalen und
-  nicht-funktionalen Anforderungen, begründetem Lastprofil, messbaren
-  Performance-Zielen, Datenschutz-/Sicherheitskonzept und Abgrenzung
-- `docs/design.md` — Komponenten- und Klassendiagramm (Mermaid), Sequenz-
-  diagramme zu Datenfluss und Mängelerfassung, Begründungen der
-  Architektur-Entscheidungen
-- `docs/datenmodell.md` — vollständige Attribut-Listen, Integritätsbedingungen
-  (Entity-, Referenz-, Workflow-Integrität), Diskussion "NoSQL vs. RDBMS"
-  mit SQL-Gegenentwurf inkl. Trigger für die Workflow-Regel
-- `docs/backlog.md` — Product Backlog mit User Stories, Akzeptanzkriterien,
-  Definition of Done, Sprint-Historie und aktuellem Fix-Sprint
-- `docs/testkonzept.md` — Teststrategie, Herleitung der Testfälle über
-  Äquivalenzklassen, Grenzwertanalyse und Entscheidungstabelle, explizite
-  Regression-Tests zu jedem Ihrer Fundstücke
+Das Dokument ist als A4-PDF druckbar und enthält:
 
-**Code-Fixes**:
+- Stand des Projekts vor Ihrem Feedback (was funktionierte / was fehlte)
+- Ihre Kritikpunkte einzeln aufgelistet
+- Zeitlicher Ablauf der Nacharbeit (24.–30. April)
+- Vorher/Nachher-Vergleich pro Kritikpunkt
+- Aktuelle Kennzahlen und Wegweiser zu den Detail-Dokumenten
 
-1. **Eingabe-Validierung** — neues Modul `src/utils/validators.js`:
-   - negativer Kilometerstand wird abgelehnt
-   - Telefonnummer mit Buchstaben wird abgelehnt
-   - ungültiges E-Mail-Format wird abgelehnt
-   - doppelte Kennzeichen werden beim Anlegen abgefangen
-   - Plausibilitäts-Hinweis bei Hersteller-Modell-Typ-Mismatch (z. B.
-     "BMW Polo", "VW Golf als Motorrad") — als weiche Warnung, damit
-     Oldtimer und Sonderfälle nicht blockiert werden
-2. **Prüfergebnis-Workflow** — Regel "Bestanden nicht bei Hauptmangel / gefährlichem
-   Mangel" (§ 29 StVZO) wird jetzt an **vier** Stellen konsequent durchgesetzt:
-   - Button in der Mängelerfassung disabled
-   - Dropdown im Terminformular gefiltert
-   - Auto-Fortschritt schaltet bei vorhandenem Hauptmangel auf "Nicht bestanden"
-   - Store-Guard lehnt auch programmatische Statuswechsel ab
-3. **ESLint** — strengere Konfiguration:
-   - `eslint-plugin-react` mit `recommended` + `jsx-runtime`
-   - `react/prop-types` auf `error`
-   - unused-vars-Exception für Großbuchstaben entfernt
-   - Die drei von Ihnen gemeldeten unused imports (`Bell`, `STATUS`, `Legend`)
-     sowie die `React`-Imports sind bereinigt
-4. **PropTypes-Validierung** — wurden in allen Komponenten ergänzt (inkl.
-   wiederverwendbaren Shapes in `src/types/propTypes.js`)
-5. **Tests** — rund 50 neue Unit-Tests in `src/tests/utils/validators.test.js`;
-   jeder Ihrer Fund-Fehler hat einen dedizierten Regression-Test
+**Repository:** https://github.com/maroxd3/tuv-workflow-web
+**Live-Demo:** https://tuv-workflow.web.app
 
-## Worauf wir im Termin gerne gezielt eingehen würden
+Die Detail-Dokumentation finden Sie unter `docs/` im Repository — Pflichtenheft, Datenmodell, Design, Backlog und Testkonzept.
 
-- Ob die Begründung für Firestore im `datenmodell.md` § 6 für Sie nachvollziehbar
-  ist, oder ob wir die Migration auf PostgreSQL noch im Semester starten sollten
-- Ob die gewählten Performance-Zielwerte (100 ms Interaktion, 400 ms Firestore-Write)
-  Ihren Vorstellungen entsprechen
-- Ob Sie weitere Regressions-Fälle haben, die wir in die Validierung aufnehmen
-  sollten
+Wir würden uns freuen, wenn Sie sich den aktuellen Stand ansehen könnten. Falls Sie noch konkrete Punkte sehen, die wir vor der Abgabe angehen sollten, melden wir uns gerne per Mail oder in einem kurzen Termin (auch per Zoom).
 
-## Terminvorschlag
-
-Wir haben am **[TAG 1], **[TAG 2]** und **[TAG 3]** zwischen **[UHRZEIT]** und
-**[UHRZEIT]** Zeit — welcher Slot passt Ihnen am besten? Gerne auch in Ihrem
-Büro oder per Zoom, ganz wie es Ihnen lieber ist.
+Vielen Dank für Ihre Zeit und Ihr ausführliches Feedback — es hat das Projekt deutlich vorangebracht.
 
 Mit freundlichen Grüßen
 
 Marwan Saleh & Oussama Hlayhel
-Repository: github.com/maroxd3/tuv-workflow-web
+*Hochschule Hannover · Software-Projekt IIM-211-01*
 
---
+---
 
-## Tipps zum Ausfüllen der Platzhalter
+## Tipps zum Verschicken
 
-- **TAG/UHRZEIT**: Schreib hier konkret rein, welche Tage und Zeitfenster bei dir *und* Oussama funktionieren. Drei Optionen lassen ihr beiden die Wahl, ohne dass es sich wie Ping-Pong anfühlt.
-- Vor dem Absenden: Kurz mit Oussama abstimmen, welche Punkte er ergänzen würde — die Mail spricht im Namen von beiden.
-- Gern die Dokumente-Links als tatsächliche GitHub-URLs einbauen, sobald die Änderungen gepusht sind:
-  - `https://github.com/maroxd3/tuv-workflow-web/blob/main/docs/pflichtenheft.md`
-  - `.../docs/design.md`
-  - `.../docs/datenmodell.md`
-  - `.../docs/backlog.md`
-  - `.../docs/testkonzept.md`
+- **Ergänzungspunkte für Marwan/Oussama vor dem Absenden:** kurz zusammen durchlesen, ob beide hinter der Formulierung stehen.
+- **Anhang nicht nötig** — die Mail verweist auf GitHub, alle Dokumente sind dort versioniert.
+- **Empfänger:** Frau Fuchs' Hochschul-E-Mail-Adresse einsetzen.
+- **Falls Antwortzeit lang:** in 5–7 Tagen nachfassen — höflich, mit Hinweis auf den nahenden Abgabe-Termin.
