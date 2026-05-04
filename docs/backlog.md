@@ -69,7 +69,7 @@ Stories sind nach **MoSCoW** priorisiert (**M**ust / **S**hould / **C**ould /
 | US-30 | Als Prüfstellenleiter möchte ich eine Liste aller Berichte mit Filtern (Status, Hauptmängel, Datum) sehen | M | 3 | ✅ Done (Sprint 4) |
 | US-31 | Als Prüfer möchte ich den Prüfbericht in einer Vorschau sehen, bevor ich ihn herunterlade | M | 3 | ✅ Done (Sprint 4) |
 | US-32 | Als Prüfer möchte ich den Prüfbericht als Textdatei exportieren können | M | 3 | ✅ Done (Sprint 4) |
-| US-33 | Als Prüfstellenleiter möchte ich Berichte als PDF statt `.txt` exportieren, um ein rechtsverbindliches Dokument zu haben | S | 8 | ⏳ Im Backlog (Sprint 7+) |
+| US-33 | Als Prüfstellenleiter möchte ich Berichte als PDF statt `.txt` exportieren, um ein rechtsverbindliches Dokument zu haben | S | 8 | ✅ **Done (Sprint 5 — als US-55 umgesetzt, A4-Behörden-Vordruck-Layout, `BerichteView.exportPdf`)** |
 
 ### Epic 5 — Statistik
 
