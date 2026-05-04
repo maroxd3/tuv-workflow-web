@@ -12,6 +12,11 @@ dist
 dist-ssr
 *.local
 
+# Local env files (secrets, project config) — never commit
+.env
+.env.*
+!.env.example
+
 # Firebase deploy cache
 .firebase/
 
