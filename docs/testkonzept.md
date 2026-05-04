@@ -77,11 +77,12 @@ Eingabe-Wert** getestet.
 
 Analog bei `validateKmStand` mit `0`, `1`, `KM_STAND_MAX`, `KM_STAND_MAX + 1`.
 
-### 2.3 Spezielle Regressions-Tests (aus Mail Fuchs 2026-04-24)
+### 2.3 Spezielle Regressions-Tests aus der Feedback-Runde 1 (24.04.2026)
 
-Zusätzlich zu Äquivalenzklassen und Grenzwerten sind **alle konkret von der
-Dozentin gemeldeten Fehleingaben** als dedizierte Regressions-Testfälle
-abgebildet:
+Zusätzlich zu Äquivalenzklassen und Grenzwerten haben wir **alle konkreten
+Fehleingaben aus dem Dozentinnen-Feedback** als dedizierte Regressions-Testfälle
+in die Suite aufgenommen, damit ein Wiederauftreten dieser Bugs durch jeden
+zukünftigen Test-Lauf erkannt wird:
 
 | Regression | Testfall | Wo im Test-File |
 |---|---|---|
