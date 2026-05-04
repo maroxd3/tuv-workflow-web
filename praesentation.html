@@ -406,23 +406,23 @@
   <div class="lede">Vom Problem über die Architektur bis zur Implementierung — mit explizitem Vorher/Nachher zur Wirkung Ihres Feedbacks.</div>
   <div class="agenda">
     <div class="agenda-item"><span class="agenda-num">01</span> Problem &amp; Motivation</div>
-    <div class="agenda-item"><span class="agenda-num">10</span> Persistenz — NoSQL vs. SQL</div>
+    <div class="agenda-item"><span class="agenda-num">10</span> Datenschutz &amp; Sicherheit (DSGVO)</div>
     <div class="agenda-item"><span class="agenda-num">02</span> Stakeholder</div>
-    <div class="agenda-item"><span class="agenda-num">11</span> Datenschutz &amp; Sicherheit</div>
+    <div class="agenda-item"><span class="agenda-num">11</span> Validierung &amp; UX-Schutz</div>
     <div class="agenda-item"><span class="agenda-num">03</span> Use-Case-Diagramm</div>
-    <div class="agenda-item"><span class="agenda-num">12</span> Validierung &amp; UX-Schutz</div>
+    <div class="agenda-item"><span class="agenda-num">12</span> Aktivitätsdiagramm — Hauptworkflow</div>
     <div class="agenda-item"><span class="agenda-num">04</span> Anforderungen (Pflichtenheft)</div>
-    <div class="agenda-item"><span class="agenda-num">13</span> Aktivitätsdiagramm — Workflow</div>
+    <div class="agenda-item"><span class="agenda-num">13</span> Test-Strategie &amp; Verfahren</div>
     <div class="agenda-item"><span class="agenda-num">05</span> Performance &amp; Lastprofil</div>
-    <div class="agenda-item"><span class="agenda-num">14</span> Test-Strategie &amp; Verfahren</div>
+    <div class="agenda-item"><span class="agenda-num">14</span> Sprint-Methodik &amp; Backlog</div>
     <div class="agenda-item"><span class="agenda-num">06</span> Architektur &amp; Komponenten</div>
-    <div class="agenda-item"><span class="agenda-num">15</span> Vorgehen &amp; Sprint-Methodik</div>
+    <div class="agenda-item"><span class="agenda-num">15</span> Feedback-Wirkung — Vorher/Nachher</div>
     <div class="agenda-item"><span class="agenda-num">07</span> Datenmodell &amp; Integrität</div>
-    <div class="agenda-item"><span class="agenda-num">16</span> Feedback-Wirkung — Vorher/Nachher</div>
+    <div class="agenda-item"><span class="agenda-num">16</span> Implementation — App-Screenshots</div>
     <div class="agenda-item"><span class="agenda-num">08</span> Klassendiagramm / Typmodell</div>
-    <div class="agenda-item"><span class="agenda-num">17</span> Implementation — App-Screenshots</div>
-    <div class="agenda-item"><span class="agenda-num">09</span> NoSQL vs. relationale DB</div>
-    <div class="agenda-item"><span class="agenda-num">18</span> Ausblick &amp; Q&amp;A</div>
+    <div class="agenda-item"><span class="agenda-num">17</span> Ausblick &amp; Q&amp;A</div>
+    <div class="agenda-item"><span class="agenda-num">09</span> Persistenz: NoSQL vs. relationale DB</div>
+    <div class="agenda-item" style="visibility:hidden">&nbsp;</div>
   </div>
   <div class="brand"><span class="dot">●</span> TÜV PRÜFSTELLE PRO</div>
   <div class="slide-num">02 / 19</div>
@@ -553,7 +553,7 @@
   <div class="slide-num">05 / 19</div>
 </div>
 
-<!-- ═════════════ 05  ANFORDERUNGEN ═════════════ -->
+<!-- ═════════════ 06  ANFORDERUNGEN ═════════════ -->
 <div class="slide">
   <div class="eyebrow">04 · Pflichtenheft</div>
   <h2>Funktionale &amp; nicht-funktionale Anforderungen</h2>
@@ -598,7 +598,7 @@
   <div class="slide-num">06 / 19</div>
 </div>
 
-<!-- ═════════════ 06  PERFORMANCE-BUDGET ═════════════ -->
+<!-- ═════════════ 07  PERFORMANCE-BUDGET ═════════════ -->
 <div class="slide">
   <div class="eyebrow">05 · NF-PF Performance</div>
   <h2>Wie schnell muss die App reagieren — und warum?</h2>
@@ -647,7 +647,7 @@
   <div class="slide-num">07 / 19</div>
 </div>
 
-<!-- ═════════════ 07  ARCHITEKTUR ═════════════ -->
+<!-- ═════════════ 08  ARCHITEKTUR ═════════════ -->
 <div class="slide">
   <div class="eyebrow">06 · Architektur</div>
   <h2>Komponentenstruktur &amp; Technologie-Entscheidungen</h2>
@@ -701,7 +701,7 @@
   <div class="slide-num">08 / 19</div>
 </div>
 
-<!-- ═════════════ 08  DATENMODELL ═════════════ -->
+<!-- ═════════════ 09  DATENMODELL ═════════════ -->
 <div class="slide">
   <div class="eyebrow">07 · Datenmodell</div>
   <h2>Entitäten, Beziehungen &amp; Integritätsbedingungen</h2>
@@ -752,7 +752,7 @@
   <div class="slide-num">09 / 19</div>
 </div>
 
-<!-- ═════════════ 09  KLASSENDIAGRAMM ═════════════ -->
+<!-- ═════════════ 10  KLASSENDIAGRAMM ═════════════ -->
 <div class="slide">
   <div class="eyebrow">08 · Klassendiagramm</div>
   <h2>Typmodell &amp; Modellierungsentscheidungen</h2>
@@ -813,7 +813,7 @@
   <div class="slide-num">10 / 19</div>
 </div>
 
-<!-- ═════════════ 10  PERSISTENZ DISKUSSION ═════════════ -->
+<!-- ═════════════ 11  PERSISTENZ DISKUSSION ═════════════ -->
 <div class="slide">
   <div class="eyebrow">09 · Persistenz-Entscheidung</div>
   <h2>NoSQL (Firestore) vs. relationale DB</h2>
@@ -852,7 +852,7 @@
   <div class="slide-num">11 / 19</div>
 </div>
 
-<!-- ═════════════ 11  DATENSCHUTZ ═════════════ -->
+<!-- ═════════════ 12  DATENSCHUTZ ═════════════ -->
 <div class="slide">
   <div class="eyebrow">10 · Datenschutz &amp; Sicherheit</div>
   <h2>DSGVO bei einer Cloud-DB</h2>
@@ -896,7 +896,7 @@
   <div class="slide-num">12 / 19</div>
 </div>
 
-<!-- ═════════════ 12  VALIDIERUNG & UX ═════════════ -->
+<!-- ═════════════ 13  VALIDIERUNG & UX ═════════════ -->
 <div class="slide">
   <div class="eyebrow">11 · Validierung</div>
   <h2>Drei Verteidigungslinien gegen ungültige Daten</h2>
@@ -997,7 +997,7 @@
   <div class="slide-num">14 / 19</div>
 </div>
 
-<!-- ═════════════ 13  TEST-STRATEGIE ═════════════ -->
+<!-- ═════════════ 15  TEST-STRATEGIE ═════════════ -->
 <div class="slide">
   <div class="eyebrow">13 · Tests</div>
   <h2>Test-Strategie &amp; Auswahl der Testfälle</h2>
@@ -1048,7 +1048,7 @@
   <div class="slide-num">15 / 19</div>
 </div>
 
-<!-- ═════════════ 14  VORGEHEN ═════════════ -->
+<!-- ═════════════ 16  VORGEHEN ═════════════ -->
 <div class="slide">
   <div class="eyebrow">14 · Vorgehensmodell</div>
   <h2>Sprint-Methodik, DoD &amp; Backlog</h2>
@@ -1181,7 +1181,7 @@
   <div class="slide-num">18 / 19</div>
 </div>
 
-<!-- ═════════════ 15  AUSBLICK + Q&A ═════════════ -->
+<!-- ═════════════ 19  AUSBLICK + Q&A ═════════════ -->
 <div class="slide">
   <div class="eyebrow">17 · Ausblick &amp; Diskussion</div>
   <h2>Was als Nächstes — und was uns wichtig war</h2>
