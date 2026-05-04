@@ -381,18 +381,24 @@
 <body>
 
 <!-- ═════════════ 01  COVER ═════════════ -->
-<div class="slide slide-cover">
-  <div class="badge">Software-Projekt · IIM-211-01 · SoSe 2026</div>
-  <h1>TÜV <span class="accent">Prüfstelle Pro</span></h1>
-  <div class="lead">Ein digitales Verwaltungssystem für die Abwicklung des kompletten Prüfprozesses einer TÜV-Prüfstelle — von der Terminplanung bis zum Bericht.</div>
-  <div class="meta">
-    <span class="label">Team</span>
-    <strong>Marwan Saleh</strong> &nbsp;&middot;&nbsp; <strong>Oussama Hlayhel</strong><br>
-    <span class="label" style="margin-top:8px">Hochschule Hannover · Fakultät II</span>
-    30. April 2026 &nbsp;&middot;&nbsp; <strong>github.com/maroxd3/tuv-workflow-web</strong>
+<div class="slide slide-cover" style="padding:0; flex-direction:row; align-items:stretch; overflow:hidden">
+  <div style="flex:0 0 56%; padding:80px 60px 80px 100px; display:flex; flex-direction:column; justify-content:center; position:relative; z-index:2">
+    <div class="badge">Software-Projekt · IIM-211-01 · SoSe 2026</div>
+    <h1>TÜV <span class="accent">Prüfstelle Pro</span></h1>
+    <div class="lead">Ein digitales Verwaltungssystem für die Abwicklung des kompletten Prüfprozesses einer TÜV-Prüfstelle — von der Terminplanung bis zum Bericht.</div>
+    <div class="meta">
+      <span class="label">Team</span>
+      <strong>Marwan Saleh</strong> &nbsp;&middot;&nbsp; <strong>Oussama Hlayhel</strong><br>
+      <span class="label" style="margin-top:8px">Hochschule Hannover · Fakultät II</span>
+      30. April 2026 &nbsp;&middot;&nbsp; <strong>github.com/maroxd3/tuv-workflow-web</strong>
+    </div>
   </div>
-  <div class="brand"><span class="dot">●</span> TÜV PRÜFSTELLE PRO</div>
-  <div class="slide-num">01 / 19</div>
+  <div style="flex:1; position:relative; overflow:hidden">
+    <img src="public/images/werkstatt-hero.png" alt="Prüfstelle Symbolbild — Werkstatt mit KFZ auf Hebebühne und digitaler Prüfung" style="width:100%; height:100%; object-fit:cover; object-position:center"/>
+    <div style="position:absolute; top:0; bottom:0; left:0; width:200px; background:linear-gradient(to right, rgba(10,14,26,1), rgba(10,14,26,0)); pointer-events:none"></div>
+  </div>
+  <div class="brand" style="z-index:3"><span class="dot">●</span> TÜV PRÜFSTELLE PRO</div>
+  <div class="slide-num" style="z-index:3">01 / 19</div>
 </div>
 
 <!-- ═════════════ 02  AGENDA ═════════════ -->
@@ -551,7 +557,7 @@
 
 <!-- ═════════════ 05  ANFORDERUNGEN ═════════════ -->
 <div class="slide">
-  <div class="eyebrow">03 · Pflichtenheft</div>
+  <div class="eyebrow">04 · Pflichtenheft</div>
   <h2>Funktionale &amp; nicht-funktionale Anforderungen</h2>
   <div class="lede">Vollständige Fassung in <span class="mono">docs/pflichtenheft.md</span>. Hier die Struktur und ein Beispiel für jede Kategorie mit Akzeptanzkriterien.</div>
   <div class="grid-2">
@@ -850,7 +856,7 @@
 
 <!-- ═════════════ 11  DATENSCHUTZ ═════════════ -->
 <div class="slide">
-  <div class="eyebrow">09 · Datenschutz &amp; Sicherheit</div>
+  <div class="eyebrow">10 · Datenschutz &amp; Sicherheit</div>
   <h2>DSGVO bei einer Cloud-DB</h2>
   <div class="lede">Personenbezogene Daten in Firestore erfordern aktive Maßnahmen. Was im Prototyp greift, wo Lücken sind, und wie sie produktiv geschlossen werden.</div>
   <div class="grid-3">
@@ -1021,7 +1027,7 @@
 
 <!-- ═════════════ 13  TEST-STRATEGIE ═════════════ -->
 <div class="slide">
-  <div class="eyebrow">11 · Tests</div>
+  <div class="eyebrow">13 · Tests</div>
   <h2>Test-Strategie &amp; Auswahl der Testfälle</h2>
   <div class="lede">Tests sind nicht zufällig — jeder Testfall folgt einem etablierten Verfahren. Coverage ist ein Nebenprodukt, nicht das Ziel.</div>
   <div class="grid-2">
@@ -1205,40 +1211,38 @@
 
 <!-- ═════════════ 15  AUSBLICK + Q&A ═════════════ -->
 <div class="slide">
-  <div class="eyebrow">15 · Ausblick &amp; Diskussion</div>
+  <div class="eyebrow">17 · Ausblick &amp; Diskussion</div>
   <h2>Was als Nächstes — und was uns wichtig war</h2>
   <div class="lede">Was im Semester-Scope bewusst ausgeklammert wurde, und was eine sinnvolle Weiterführung wäre.</div>
   <div class="grid-2">
     <div>
-      <h3>Roadmap (außerhalb Semester)</h3>
-      <ul class="bullets">
-        <li><strong>Multi-User-Auth</strong> via Firebase Auth + Rollen-Konzept (Prüfer / Leiter / Admin)</li>
-        <li><strong>KBA-HSN/TSN-Integration</strong> via DAT- oder Schwacke-Lizenz — automatisches Auto-Fill</li>
-        <li><strong>Digitale Signatur</strong> auf der bereits implementierten PDF-Bericht-Ausgabe</li>
-        <li><strong>Foto-Dokumentation</strong> von Mängeln (Firebase Storage + URL-Referenz)</li>
-        <li><strong>Migration zu PostgreSQL</strong> (SQL-Entwurf in <span class="mono">datenmodell.md § 6.5</span> bereits dokumentiert)</li>
-        <li><strong>Audit-Log</strong> via Firestore-Trigger</li>
-        <li><strong>Hardware-Anbindung</strong> OBD-II-Diagnose, Bremsenprüfstand</li>
-      </ul>
+      <h3 style="margin-bottom:6px">Vision für Sprint 7+ <span style="font-weight:400; color:var(--t4); font-size:11px">— außerhalb Semester-Scope</span></h3>
+      <div style="border:1px solid var(--line); border-radius:8px; overflow:hidden; position:relative; margin-bottom:8px">
+        <img src="public/images/vision-dashboard.png" alt="Mockup einer erweiterten Dashboard-Variante mit Analytics, Mängelkatalog und Berichts-Vorschau — Konzept für eine zukünftige Iteration" style="width:100%; display:block"/>
+        <div style="position:absolute; top:8px; left:8px; background:rgba(11,16,32,0.88); border:1px solid var(--amber); padding:4px 9px; border-radius:4px; font-size:9px; font-family:'JetBrains Mono', monospace; color:var(--amber); letter-spacing:0.08em; text-transform:uppercase; font-weight:700">Vision-Mockup · nicht aktueller Stand</div>
+      </div>
+      <p style="font-size:11px; color:var(--t3); line-height:1.5">
+        Multi-User-Auth (Firebase Auth + Rollen) · KBA-HSN/TSN-Integration via DAT/Schwacke · digitale Signatur auf PDF · Foto-Dokumentation · OBD-II-Hardware · PostgreSQL-Migration (SQL-Entwurf liegt bereits in <span class="mono">datenmodell.md § 6.5</span>).
+      </p>
     </div>
     <div>
-      <h3>Zusammenfassung — was diesen Prototyp ausmacht</h3>
-      <div class="stat-grid" style="grid-template-columns: 1fr 1fr">
-        <div class="stat"><div class="num">114</div><div class="lbl">automatisierte Tests, alle grün</div></div>
-        <div class="stat"><div class="num green">0</div><div class="lbl">Lint-Errors · 0 npm-Vulnerabilities</div></div>
-        <div class="stat"><div class="num amber">~430</div><div class="lbl">KBA-Codes als Whitelist</div></div>
-        <div class="stat"><div class="num purple">3</div><div class="lbl">Verteidigungslinien gegen Bad Data</div></div>
+      <h3 style="margin-bottom:6px">Was diesen Prototyp ausmacht</h3>
+      <div class="stat-grid" style="grid-template-columns: 1fr 1fr; gap:10px">
+        <div class="stat"><div class="num">114</div><div class="lbl">Tests grün</div></div>
+        <div class="stat"><div class="num green">0</div><div class="lbl">Lint · 0 Vulns · 0 Alerts</div></div>
+        <div class="stat"><div class="num amber">~430</div><div class="lbl">KBA-Codes Whitelist</div></div>
+        <div class="stat"><div class="num purple">3</div><div class="lbl">Verteidigungslinien</div></div>
       </div>
-      <h3 style="margin-top:18px">Live &amp; Quellcode</h3>
-      <div class="card tone-cyan pad-sm">
-        <p style="font-size:13px"><strong>Web-App:</strong> <span class="mono">tuv-workflow.web.app</span></p>
-        <p style="font-size:13px; margin-top:4px"><strong>Repository:</strong> <span class="mono">github.com/maroxd3/tuv-workflow-web</span></p>
-        <p style="font-size:13px; margin-top:4px"><strong>Doku:</strong> <span class="mono">/docs/</span> · Pflichtenheft, Datenmodell, Design, Backlog, Testkonzept</p>
+      <h3 style="margin-top:14px; margin-bottom:6px">Live, Repository &amp; Doku</h3>
+      <div class="card tone-cyan pad-sm" style="padding:10px 14px">
+        <p style="font-size:12px"><strong>Web-App:</strong> <span class="mono">tuv-workflow.web.app</span></p>
+        <p style="font-size:12px; margin-top:3px"><strong>Repository:</strong> <span class="mono">github.com/maroxd3/tuv-workflow-web</span></p>
+        <p style="font-size:12px; margin-top:3px"><strong>Doku:</strong> 7&nbsp;Markdown + 2&nbsp;HTML, 5 UML-Diagramme · 95&nbsp;% Test-Coverage</p>
+      </div>
+      <div class="callout green" style="margin-top:10px; text-align:center; font-size:13px; padding:10px 14px">
+        <strong>Vielen Dank für Ihre Aufmerksamkeit — wir freuen uns auf Ihre Fragen.</strong>
       </div>
     </div>
-  </div>
-  <div class="callout green" style="margin-top:24px; text-align:center; font-size:16px">
-    <strong>Vielen Dank für Ihre Aufmerksamkeit — wir freuen uns auf Ihre Fragen.</strong>
   </div>
   <div class="brand"><span class="dot">●</span> TÜV PRÜFSTELLE PRO</div>
   <div class="slide-num">19 / 19</div>
