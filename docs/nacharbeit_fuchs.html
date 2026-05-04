@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>TÜV Prüfstelle Pro – Nacharbeit nach Feedback vom 24. April</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+  @page { size: A4; margin: 16mm 14mm; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    color: #1e293b;
+    background: #ffffff;
+    font-size: 10.5pt;
+    line-height: 1.5;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .top-bar {
+    height: 5px;
+    background: linear-gradient(90deg, #4f46e5, #06b6d4, #10b981);
+    margin: -16mm -14mm 18px;
+  }
+
+  .head { display: flex; justify-content: space-between; align-items: flex-end; padding-bottom: 12px; margin-bottom: 18px; border-bottom: 1.5px solid #e2e8f0; }
+  .head .title { font-size: 22pt; font-weight: 800; color: #0f172a; letter-spacing: -0.02em; line-height: 1.15; }
+  .head .sub { font-size: 9pt; color: #64748b; margin-top: 4px; letter-spacing: 0.04em; }
+  .head .meta { text-align: right; font-size: 8pt; color: #64748b; line-height: 1.6; }
+  .head .meta strong { color: #1e293b; font-weight: 600; }
+
+  section { margin-bottom: 18px; page-break-inside: avoid; }
+  section h2 {
+    font-size: 11pt;
+    font-weight: 800;
+    color: #ffffff;
+    background: #1e293b;
+    padding: 6px 12px;
+    border-radius: 4px 4px 0 0;
+    letter-spacing: 0.03em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  section h2 .num {
+    font-size: 8pt;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 3px;
+    background: rgba(255,255,255,0.18);
+    letter-spacing: 0.06em;
+  }
+  section.before h2 { background: #b45309; }
+  section.feedback h2 { background: #b91c1c; }
+  section.timeline h2 { background: #4f46e5; }
+  section.compare h2 { background: #0891b2; }
+  section.now h2 { background: #15803d; }
+
+  section .body {
+    border: 1px solid #cbd5e1;
+    border-top: none;
+    background: #ffffff;
+    padding: 14px 18px;
+    border-radius: 0 0 4px 4px;
+  }
+
+  .lede { font-size: 10pt; color: #475569; margin-bottom: 10px; line-height: 1.6; }
+  .lede strong { color: #1e293b; }
+
+  /* List items in BEFORE / FEEDBACK */
+  .item {
+    display: grid;
+    grid-template-columns: 22px 1fr;
+    gap: 10px;
+    padding: 6px 0;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 10pt;
+    line-height: 1.5;
+  }
+  .item:last-child { border-bottom: none; }
+  .item .marker {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    font-size: 11pt;
+    font-weight: 700;
+    margin-top: 1px;
+  }
+  .item.have .marker { background: #dcfce7; color: #15803d; }
+  .item.gap .marker { background: #fee2e2; color: #b91c1c; }
+  .item.crit .marker { background: #fee2e2; color: #b91c1c; }
+  .item .text strong { color: #0f172a; font-weight: 600; }
+  .item .text .desc { color: #475569; font-size: 9.5pt; margin-top: 2px; }
+
+  /* Timeline */
+  .tl { position: relative; padding-left: 20px; }
+  .tl::before {
+    content: '';
+    position: absolute;
+    left: 6px; top: 4px; bottom: 4px;
+    width: 2px;
+    background: #cbd5e1;
+  }
+  .tl-item { position: relative; padding-bottom: 14px; padding-left: 4px; }
+  .tl-item:last-child { padding-bottom: 0; }
+  .tl-item::before {
+    content: '';
+    position: absolute;
+    left: -20px; top: 5px;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: #4f46e5;
+    border: 3px solid #ffffff;
+    box-shadow: 0 0 0 2px #4f46e5;
+  }
+  .tl-item.done::before { background: #15803d; box-shadow: 0 0 0 2px #15803d; }
+  .tl-item .date { font-size: 8.5pt; font-weight: 700; color: #4f46e5; letter-spacing: 0.05em; text-transform: uppercase; }
+  .tl-item.done .date { color: #15803d; }
+  .tl-item .what { font-size: 10pt; font-weight: 600; color: #0f172a; margin: 1px 0 3px; }
+  .tl-item .detail { font-size: 9.5pt; color: #475569; line-height: 1.5; }
+  .tl-item .commits { font-family: 'JetBrains Mono', 'Courier New', monospace; font-size: 8.5pt; color: #64748b; margin-top: 3px; }
+
+  /* Compare table */
+  table.cmp {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 9.5pt;
+  }
+  table.cmp th {
+    background: #f1f5f9;
+    color: #1e293b;
+    font-weight: 700;
+    text-align: left;
+    padding: 7px 10px;
+    border-bottom: 2px solid #cbd5e1;
+    font-size: 9pt;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+  }
+  table.cmp td {
+    padding: 8px 10px;
+    border-bottom: 1px solid #e2e8f0;
+    vertical-align: top;
+    line-height: 1.45;
+  }
+  table.cmp td.before { background: #fef9f3; color: #78350f; width: 36%; }
+  table.cmp td.after { background: #f0fdf4; color: #14532d; width: 44%; }
+  table.cmp td.label { font-weight: 600; color: #0f172a; width: 20%; }
+
+  /* Stats */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 6px;
+  }
+  .stat {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 10px 12px;
+  }
+  .stat .num { font-size: 22pt; font-weight: 800; color: #4f46e5; line-height: 1; letter-spacing: -0.02em; }
+  .stat .num.green { color: #15803d; }
+  .stat .num.amber { color: #b45309; }
+  .stat .num.cyan { color: #0891b2; }
+  .stat .lbl { font-size: 7.5pt; color: #64748b; margin-top: 4px; letter-spacing: 0.04em; text-transform: uppercase; font-weight: 600; }
+
+  .footer {
+    margin-top: 18px;
+    padding-top: 10px;
+    border-top: 1px solid #e2e8f0;
+    font-size: 8pt;
+    color: #64748b;
+    display: flex;
+    justify-content: space-between;
+  }
+  .footer code { font-family: 'JetBrains Mono', 'Courier New', monospace; color: #4f46e5; }
+
+  @media screen { body { padding: 24px; max-width: 900px; margin: 0 auto; box-shadow: 0 4px 30px rgba(15,23,42,0.10); } }
+</style>
+</head>
+<body>
+  <div class="top-bar"></div>
+
+  <div class="head">
+    <div>
+      <div class="title">Nacharbeit nach Feedback vom 24. April</div>
+      <div class="sub">TÜV Prüfstelle Pro · Software-Projekt IIM-211-01 · Hochschule Hannover · Sommersemester 2026</div>
+    </div>
+    <div class="meta">
+      <div><strong>Stand:</strong> 30. April 2026</div>
+      <div><strong>Team:</strong> Marwan Saleh · Oussama Hlayhel</div>
+      <div><strong>Repository:</strong> github.com/maroxd3/tuv-workflow-web</div>
+    </div>
+  </div>
+
+  <!-- ───────── 1. STAND VORHER ───────── -->
+  <section class="before">
+    <h2><span class="num">1</span> Stand vor Ihrem Feedback (bis 24. April)</h2>
+    <div class="body">
+      <div class="lede">Vor Ihrem Feedback war das Projekt funktional, aber an mehreren Stellen unausgereift — sowohl im Code als auch in der Dokumentation. Eine ehrliche Bestandsaufnahme:</div>
+
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:18px; margin-top:8px">
+        <div>
+          <div style="font-size:9pt; font-weight:700; color:#15803d; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:6px">Was funktionierte</div>
+          <div class="item have"><div class="marker">✓</div><div class="text"><strong>Web-App live deployed</strong><div class="desc">Fahrzeug-CRUD, Tagesplan, Mängelerfassung, Statistik</div></div></div>
+          <div class="item have"><div class="marker">✓</div><div class="text"><strong>Firebase Firestore mit Echtzeit-Sync</strong><div class="desc">onSnapshot, LocalStorage als Offline-Cache</div></div></div>
+          <div class="item have"><div class="marker">✓</div><div class="text"><strong>Tauri-Desktop-Build</strong><div class="desc">~6 MB Binary aus derselben React-Codebasis</div></div></div>
+          <div class="item have"><div class="marker">✓</div><div class="text"><strong>Erste Test-Suite</strong><div class="desc">~52 Vitest-Tests, hauptsächlich Store-Logik</div></div></div>
+        </div>
+        <div>
+          <div style="font-size:9pt; font-weight:700; color:#b91c1c; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:6px">Was fehlte / unausgereift war</div>
+          <div class="item gap"><div class="marker">✕</div><div class="text"><strong>Lückenhafte Validierung</strong><div class="desc">Negativer KM, „BMW Polo", doppelte Kennzeichen passierten unbemerkt</div></div></div>
+          <div class="item gap"><div class="marker">✕</div><div class="text"><strong>Keine formale Doku</strong><div class="desc">Kein Pflichtenheft, kein Datenmodell, keine Architektur-Begründungen</div></div></div>
+          <div class="item gap"><div class="marker">✕</div><div class="text"><strong>187 ESLint-Errors</strong><div class="desc">Unused Imports, fehlende PropTypes, lockere Config</div></div></div>
+          <div class="item gap"><div class="marker">✕</div><div class="text"><strong>Bericht als ASCII-.txt</strong><div class="desc">Keine PDF-Ausgabe, keine professionelle Optik</div></div></div>
+          <div class="item gap"><div class="marker">✕</div><div class="text"><strong>Nicht mobile-tauglich</strong><div class="desc">Hardcoded Desktop-Layout, kein Hamburger-Menu, Touch-Targets zu klein</div></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───────── 2. KRITIKPUNKTE ───────── -->
+  <section class="feedback">
+    <h2><span class="num">2</span> Ihre Kritikpunkte aus der Mail vom 24. April</h2>
+    <div class="body">
+      <div class="lede">Ihre Mail enthielt acht inhaltliche Bereiche und eine Liste konkreter Bug-Beispiele aus Ihren manuellen Tests. Wir haben jeden Punkt einzeln aufgenommen:</div>
+
+      <div class="item crit"><div class="marker">!</div><div class="text"><strong>Bug-Liste aus den manuellen Tests</strong><div class="desc">Negativer Kilometerstand · Telefon mit Buchstaben · ungültige E-Mail · doppeltes Kennzeichen · „Bestanden" trotz Hauptmangel · „BMW Polo" / „VW Golf als Motorrad"</div></div></div>
+      <div class="item crit"><div class="marker">!</div><div class="text"><strong>Keine Sprint-Methodik / Definition of Done dokumentiert</strong></div></div>
+      <div class="item crit"><div class="marker">!</div><div class="text"><strong>Pflichtenheft fehlt</strong> — funktionale &amp; nicht-funktionale Anforderungen, Lastprofil, Datenschutz</div></div>
+      <div class="item crit"><div class="marker">!</div><div class="text"><strong>Komponenten- &amp; Klassendiagramm + Begründungen</strong> fehlen oder zu dünn</div></div>
+      <div class="item crit"><div class="marker">!</div><div class="text"><strong>Datenmodell unzureichend</strong> — Integritätsbedingungen, NoSQL-vs-SQL-Diskussion fehlt</div></div>
+      <div class="item crit"><div class="marker">!</div><div class="text"><strong>Begründung der Performance-Werte</strong> — „warum 100 ms? warum nicht 50 oder 200? wie testen?"</div></div>
+      <div class="item crit"><div class="marker">!</div><div class="text"><strong>Datenschutz bei Cloud-DB</strong> — DSGVO, Auftragsverarbeitung</div></div>
+      <div class="item crit"><div class="marker">!</div><div class="text"><strong>ESLint-Report</strong> — 187 Errors mit Ihrer strengeren Config</div></div>
+      <div class="item crit"><div class="marker">!</div><div class="text"><strong>Echtzeit-Sync vs. Polling</strong> — Begründung warum onSnapshot statt einfachem Polling</div></div>
+    </div>
+  </section>
+
+  <!-- ───────── 3. ABLAUF ───────── -->
+  <section class="timeline">
+    <h2><span class="num">3</span> Zeitlicher Ablauf der Nacharbeit</h2>
+    <div class="body">
+      <div class="lede">Wir haben Ihr Feedback unmittelbar als Sprint-Fokus übernommen und in zwei klar abgegrenzten Sprints abgearbeitet — Sprint 5 für die fachliche Nacharbeit, Sprint 6 für die Abgabe-Finalisierung.</div>
+
+      <div class="tl">
+        <div class="tl-item done">
+          <div class="date">24. April 2026 · Donnerstag</div>
+          <div class="what">Feedback erhalten · Sprint 5 geplant</div>
+          <div class="detail">Mail von Frau Fuchs gelesen, jeden Punkt als User Story oder Bug aufgenommen, Sprint 5 als „Validierungs- und Doku-Sprint" gestartet. Erste Code-Fixes noch am selben Tag committed (Bug-Liste hart blockiert, Doku-Skelette unter <code>docs/</code> angelegt).</div>
+          <div class="commits">commit 13dbb9f · „Address feedback round 1 from Frau Fuchs"</div>
+        </div>
+
+        <div class="tl-item done">
+          <div class="date">24.–26. April · Doku-Phase</div>
+          <div class="what">Fünf Markdown-Dokumente unter <code>docs/</code></div>
+          <div class="detail">Pflichtenheft (mit Lastprofil, Performance-Zielen, Datenschutz-Konzept), Datenmodell (mit SQL-Gegenentwurf inkl. Trigger für die Workflow-Regel), Design (Komponenten- &amp; Klassendiagramm + Tech-Begründungen), Backlog (User Stories nach MoSCoW, Definition of Done), Testkonzept (Äquivalenzklassen, Grenzwertanalyse, Entscheidungstabelle).</div>
+        </div>
+
+        <div class="tl-item done">
+          <div class="date">26.–27. April · Sprint 5 Hauptphase</div>
+          <div class="what">UX-Verschärfung &amp; PDF-Upgrade · 63 Story Points in 13 User Stories · 15 Commits in ~28 Stunden</div>
+          <div class="detail">
+            <strong>Validierung verschärft:</strong> „BMW Polo" von Soft-Warning auf Hart-Validator umgebaut · Cascading-Dropdowns (Hersteller → Modell → Typ) machen falsche Kombinationen strukturell unmöglich · KBA-Kreis-Code-Liste mit ~430 Codes als Whitelist · Saison-Kennzeichen-Format · FIN-Prüfziffer nach ISO 3779.<br>
+            <strong>Bericht-Upgrade:</strong> ASCII-<code>.txt</code> ersetzt durch amtlich aussehende A4-PDF (eigene Brand „Prüfstelle Pro", §-29-StVZO-Terminologie, ohne TÜV-/DEKRA-Markenrechtsverletzung).<br>
+            <strong>Mobile:</strong> 4 Polish-Runden auf realem iPhone Safari getestet — Sidebar als Overlay, Hamburger-Menu, Touch-Targets ≥ 36 px, Cascading-Dropdowns auch auf dem Phone.<br>
+            <strong>Präsentation:</strong> Zweimal komplett umgeschrieben — finale Version als 15-Slides-Projektpitch.
+          </div>
+          <div class="commits">commits 138b26a · 4b91c7e · 4433ece · 17b9118 · 28960f9 · u. v. m.</div>
+        </div>
+
+        <div class="tl-item done">
+          <div class="date">28.–30. April · Sprint 6 Abgabe-Polish</div>
+          <div class="what">Security, CI &amp; Performance · 12 Story Points</div>
+          <div class="detail">
+            <strong>Security:</strong> Firestore-Rules mit Schema-Validierung und Demo-Zeitfenster-Cutoff (1. August 2026) · Firebase-Web-Config in <code>.env</code>-Variablen ausgelagert · 0 npm-Vulnerabilities.<br>
+            <strong>CI:</strong> Dependabot für npm- und GitHub-Actions-Updates · CodeQL-Workflow für statische Code-Analyse.<br>
+            <strong>Performance:</strong> Route-Level-Code-Splitting — Statistik-, Berichte- und Fahrzeuge-Views werden lazy geladen, Hauptbundle unter 500 KB minified / 154 KB gzipped.<br>
+            <strong>Doku:</strong> Echtzeit-Sync-vs-Polling-Begründung im Pflichtenheft ergänzt · README auf aktuellen Stand gebracht.
+          </div>
+          <div class="commits">commits 1a151fd · bdec5f8 · 71440ff · 764104f</div>
+        </div>
+
+        <div class="tl-item done">
+          <div class="date">30. April · Stand jetzt</div>
+          <div class="what">Abgabe-fertig</div>
+          <div class="detail">114 von 114 Vitest-Tests grün · 0 ESLint-Errors · 0 npm-Vulnerabilities · 0 offene Security-Alerts · alle 6 Bugs aus Ihrer Test-Liste hart blockiert · alle 9 Kritikpunkte adressiert und im Repository dokumentiert.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───────── 4. VORHER / NACHHER ───────── -->
+  <section class="compare">
+    <h2><span class="num">4</span> Vorher / Nachher pro Kritikpunkt</h2>
+    <div class="body">
+      <table class="cmp">
+        <tr>
+          <th style="width:20%">Kritikpunkt</th>
+          <th style="width:36%">Vorher (vor 24.04.)</th>
+          <th style="width:44%">Nachher (Stand 30.04.)</th>
+        </tr>
+        <tr>
+          <td class="label">Bug „BMW Polo"</td>
+          <td class="before">Soft-Warning, Save war trotzdem möglich</td>
+          <td class="after">Strukturell unmöglich durch Cascading-Dropdowns; Modell-Dropdown zeigt nur Modelle des gewählten Herstellers</td>
+        </tr>
+        <tr>
+          <td class="label">Negativer KM</td>
+          <td class="before">Wurde gespeichert, keine Validierung</td>
+          <td class="after">Hart abgelehnt (<code>0 ≤ km ≤ 3 000 000</code>), 5 Tests in <code>validators.test.js</code></td>
+        </tr>
+        <tr>
+          <td class="label">Telefon / E-Mail / Doppel-Kennzeichen</td>
+          <td class="before">Keine Format- oder Eindeutigkeits-Prüfung</td>
+          <td class="after">Eigenes Validator-Modul mit Format-Regex und Doppel-Detection beim Anlegen</td>
+        </tr>
+        <tr>
+          <td class="label">„Bestanden" trotz Hauptmangel</td>
+          <td class="before">War möglich, kein Workflow-Schutz</td>
+          <td class="after">An vier Stellen blockiert: Button, Dropdown, Auto-Fortschritt, Store-Guard</td>
+        </tr>
+        <tr>
+          <td class="label">Pflichtenheft</td>
+          <td class="before">Existierte nicht</td>
+          <td class="after"><code>docs/pflichtenheft.md</code> mit F-/NF-Anforderungen, Lastprofil (20–30 Prüfungen/Tag, 50 in HU/AU-Spitze), Performance-Zielen, Datenschutz-Konzept</td>
+        </tr>
+        <tr>
+          <td class="label">Datenmodell &amp; NoSQL-vs-SQL</td>
+          <td class="before">ER-Skizze ohne Begründungen</td>
+          <td class="after"><code>docs/datenmodell.md</code> mit Integritätsbedingungen (Entity, Referenz, Workflow, Wertebereich), Pro-/Kontra-Tabelle Firestore vs. Postgres, vollständigem SQL-Gegenentwurf inkl. Trigger</td>
+        </tr>
+        <tr>
+          <td class="label">Performance „warum 100 ms?"</td>
+          <td class="before">Pauschal Nielsen zitiert, ohne Vergleich</td>
+          <td class="after">Vergleichstabelle 50 / 100 / 200 / 1000 ms mit Nielsen + Card et al., konkrete Test-Methode (Vitest-Bench, p95 auf Referenzgerät)</td>
+        </tr>
+        <tr>
+          <td class="label">DSGVO bei Cloud-DB</td>
+          <td class="before">Nicht thematisiert</td>
+          <td class="after">Eigener Abschnitt im Pflichtenheft: EU-Region <code>europe-west1</code>, Auftragsverarbeitungsvertrag, offene Lücken (Auth, Audit-Log, Backup) mit Roadmap</td>
+        </tr>
+        <tr>
+          <td class="label">ESLint-Report (187 Errors)</td>
+          <td class="before">Lockere Config, viele Unused Imports, keine PropTypes</td>
+          <td class="after">Strenge Config mit <code>jsx-runtime</code> + <code>prop-types: error</code>, PropTypes für alle 22 Komponenten — <strong>0 Errors</strong></td>
+        </tr>
+        <tr>
+          <td class="label">Echtzeit vs. Polling</td>
+          <td class="before">Nicht begründet</td>
+          <td class="after">Im Pflichtenheft begründet: bei 3–5 parallelen Nutzern am Tagesplan müssen Statuswechsel sofort sichtbar sein, Polling würde Doppelvergaben provozieren</td>
+        </tr>
+        <tr>
+          <td class="label">Test-Abdeckung</td>
+          <td class="before">~52 Tests, hauptsächlich Store-Logik</td>
+          <td class="after"><strong>114 Tests</strong> (62 neue), explizite Regressions-Tests für jeden Ihrer Funde, Verfahren in <code>docs/testkonzept.md</code> begründet</td>
+        </tr>
+        <tr>
+          <td class="label">Bericht-Ausgabe</td>
+          <td class="before">ASCII-Art in <code>.txt</code>-Datei</td>
+          <td class="after">A4-PDF im amtlichen Layout (eigene Brand „Prüfstelle Pro", §-29-StVZO-Terminologie, römisch nummerierte Sektionen, Unterschriftsfelder)</td>
+        </tr>
+        <tr>
+          <td class="label">Mobile-Support</td>
+          <td class="before">Hardcoded Desktop, unbenutzbar &lt; 768 px</td>
+          <td class="after">Voll bedienbar ab 360 px Viewport, Touch-Targets ≥ 36 px, 4 Polish-Runden auf iPhone Safari</td>
+        </tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- ───────── 5. STAND JETZT ───────── -->
+  <section class="now">
+    <h2><span class="num">5</span> Stand jetzt — die Zahlen</h2>
+    <div class="body">
+      <div class="stats">
+        <div class="stat"><div class="num green">114</div><div class="lbl">Vitest-Tests grün</div></div>
+        <div class="stat"><div class="num">75</div><div class="lbl">Story Points (Sprint 5+6)</div></div>
+        <div class="stat"><div class="num cyan">~430</div><div class="lbl">KBA-Codes geprüft</div></div>
+        <div class="stat"><div class="num green">0</div><div class="lbl">Lint-Errors / Vulns / Alerts</div></div>
+      </div>
+      <div style="margin-top:14px; font-size:9.5pt; color:#475569; line-height:1.6">
+        <strong style="color:#0f172a">Wo Sie was finden:</strong>
+        <ul style="margin-top:6px; padding-left:22px">
+          <li><strong>Repository:</strong> <code>github.com/maroxd3/tuv-workflow-web</code> — Commit-Historie, jeder Commit mit ausführlicher Beschreibung</li>
+          <li><strong>Live-Demo:</strong> <code>tuv-workflow.web.app</code> — die Bug-Tests aus Ihrer Mail können Sie dort live nachvollziehen</li>
+          <li><strong>Doku:</strong> <code>docs/pflichtenheft.md</code> · <code>datenmodell.md</code> · <code>design.md</code> · <code>backlog.md</code> · <code>testkonzept.md</code></li>
+          <li><strong>Präsentation:</strong> <code>praesentation.html</code> im Repo-Root — 15 Slides, druckbar als PDF</li>
+          <li><strong>Status-Sheet:</strong> <code>docs/projekt_status.html</code> — A4-Übersicht mit erledigten und externen Tasks</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <div class="footer">
+    <div>Repository: <code>github.com/maroxd3/tuv-workflow-web</code> · Live: <code>tuv-workflow.web.app</code></div>
+    <div>Stand 30.04.2026</div>
+  </div>
+</body>
+</html>
