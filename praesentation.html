@@ -389,7 +389,7 @@
     <span class="label">Team</span>
     <strong>Marwan Saleh</strong> &nbsp;&middot;&nbsp; <strong>Oussama Hlayhel</strong><br>
     <span class="label" style="margin-top:8px">Hochschule Hannover · Fakultät II</span>
-    27. April 2026 &nbsp;&middot;&nbsp; <strong>github.com/maroxd3/tuv-workflow-web</strong>
+    30. April 2026 &nbsp;&middot;&nbsp; <strong>github.com/maroxd3/tuv-workflow-web</strong>
   </div>
   <div class="brand"><span class="dot">●</span> TÜV PRÜFSTELLE PRO</div>
   <div class="slide-num">01 / 15</div>
@@ -944,15 +944,15 @@
   <div class="lede">Wir arbeiten in 2-Wochen-Sprints mit Product Backlog, Sprint Backlog und teamübergreifender Definition of Done. Stories nach MoSCoW priorisiert.</div>
   <div class="grid-2">
     <div>
-      <h3>Sprint-Historie (5 Sprints)</h3>
+      <h3>Sprint-Historie (6 Sprints)</h3>
       <table>
         <tr><th>Sprint</th><th>Fokus</th><th>Story Points</th><th>Status</th></tr>
         <tr><td>1</td><td>Setup, Tooling, Theme</td><td class="muted">—</td><td><span class="pill green">Done</span></td></tr>
         <tr><td>2</td><td>Fahrzeug-CRUD &amp; Suche</td><td>15</td><td><span class="pill green">Done</span></td></tr>
         <tr><td>3</td><td>Tagesplan &amp; Termine</td><td>15</td><td><span class="pill green">Done</span></td></tr>
         <tr><td>4</td><td>Mängel, Berichte, Statistik</td><td>37</td><td><span class="pill green">Done</span></td></tr>
-        <tr><td>5</td><td>Validierung, UX, Doku</td><td>50</td><td><span class="pill green">Done</span></td></tr>
-        <tr><td>6</td><td>Feinschliff &amp; Abgabe</td><td>~10</td><td><span class="pill cyan">Geplant</span></td></tr>
+        <tr><td>5</td><td>Validierung, UX, Doku, PDF, Mobile</td><td>63</td><td><span class="pill green">Done</span></td></tr>
+        <tr><td>6</td><td>Security, Code-Splitting, CI</td><td>12</td><td><span class="pill green">Done</span></td></tr>
       </table>
       <h3 style="margin-top:14px">Beispiel-Story (US-06, MoSCoW: M)</h3>
       <div class="card tone-cyan pad-sm">
@@ -977,7 +977,7 @@
         </ol>
       </div>
       <div class="callout green" style="margin-top:14px">
-        <strong>Velocity-Bilanz:</strong> 117 SP über vier produktive Sprints (Sprint 2–5), durchschnittlich 29 SP/Sprint. Sprint 5 (Validierungs- + Doku-Sprint) lag bei 50 SP — Schwerpunkt-Sprint.
+        <strong>Velocity-Bilanz:</strong> 142 SP über fünf produktive Sprints (Sprint 2–6), Sprint 5 (UX- + Doku-Sprint nach Frau Fuchs' Feedback) war mit 63 SP der Schwerpunkt-Sprint, Sprint 6 (Security, Code-Splitting, CI) hat den Abgabestand finalisiert.
       </div>
     </div>
   </div>
@@ -996,7 +996,7 @@
       <ul class="bullets">
         <li><strong>Multi-User-Auth</strong> via Firebase Auth + Rollen-Konzept (Prüfer / Leiter / Admin)</li>
         <li><strong>KBA-HSN/TSN-Integration</strong> via DAT- oder Schwacke-Lizenz — automatisches Auto-Fill</li>
-        <li><strong>PDF-Berichte</strong> statt <span class="mono">.txt</span>, mit digitaler Signatur</li>
+        <li><strong>Digitale Signatur</strong> auf der bereits implementierten PDF-Bericht-Ausgabe</li>
         <li><strong>Foto-Dokumentation</strong> von Mängeln (Firebase Storage + URL-Referenz)</li>
         <li><strong>Migration zu PostgreSQL</strong> (SQL-Entwurf in <span class="mono">datenmodell.md § 6.5</span> bereits dokumentiert)</li>
         <li><strong>Audit-Log</strong> via Firestore-Trigger</li>
@@ -1007,7 +1007,7 @@
       <h3>Zusammenfassung — was diesen Prototyp ausmacht</h3>
       <div class="stat-grid" style="grid-template-columns: 1fr 1fr">
         <div class="stat"><div class="num">114</div><div class="lbl">automatisierte Tests, alle grün</div></div>
-        <div class="stat"><div class="num green">5</div><div class="lbl">Markdown-Dokumente in <span class="mono">docs/</span></div></div>
+        <div class="stat"><div class="num green">0</div><div class="lbl">Lint-Errors · 0 npm-Vulnerabilities</div></div>
         <div class="stat"><div class="num amber">~430</div><div class="lbl">KBA-Codes als Whitelist</div></div>
         <div class="stat"><div class="num purple">3</div><div class="lbl">Verteidigungslinien gegen Bad Data</div></div>
       </div>
