@@ -21,7 +21,11 @@
   .top-bar {
     height: 5px;
     background: linear-gradient(90deg, #4f46e5, #06b6d4, #10b981);
-    margin: -16mm -14mm 18px;
+    margin: 0 0 18px;
+    border-radius: 3px 3px 0 0;
+  }
+  @media print {
+    .top-bar { margin: -16mm -14mm 18px; border-radius: 0; }
   }
 
   .head { display: flex; justify-content: space-between; align-items: flex-end; padding-bottom: 12px; margin-bottom: 18px; border-bottom: 1.5px solid #e2e8f0; }
