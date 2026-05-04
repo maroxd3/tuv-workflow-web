@@ -170,13 +170,18 @@ ist die größte Komponente geworden (339 LOC) — ggf. extrahieren.
 - Demo-Lauf: ein kompletter "Termin anlegen → Prüfung starten → Mängel
   erfassen → Bericht generieren" Pfad
 
-### Sprint 6 (W13+) — Doku-Polish & Abgabe
+### Sprint 6 (W13) — Security, Code-Splitting & Abgabe-Polish (2026-04-28 bis 30)
 
-**Geplant:**
-- Letzten Feinschliff Doku (Grammatik, Screenshots)
-- README mit Quickstart ergänzen
-- Video-Demo erstellen (5 min)
-- Abgabe
+**Velocity:** 12 SP geliefert
+
+**Geliefert:**
+- **Security-Härtung** der Firestore-Rules: Schema-Validierung, Demo-Zeitfenster-Cutoff (1. August 2026), Catch-all `if false` für unbekannte Collections
+- **Firebase-Web-Config in Env-Variablen** (`.env`) ausgelagert, GitHub-Secret-Scanning-Alert geschlossen mit Begründung "public by design"
+- **Route-Level-Code-Splitting**: Statistik-, Berichte- und Fahrzeuge-Views werden lazy geladen — Hauptbundle unter 500 KB minified / 154 KB gzipped
+- **CI-Setup**: Dependabot für npm + GitHub Actions, CodeQL-Workflow für statische Analyse
+- **Doku-Erweiterung**: Use-Case-Diagramm + Aktivitätsdiagramm in `design.md`, Test-Coverage-Bericht (95.65 % Statements, 98.21 % Lines), Eigenständigkeitserklärung, KI-Nutzungserklärung, Nacharbeit-Übersicht für Frau Fuchs
+- **Echtzeit-Sync-vs-Polling-Begründung** im Pflichtenheft ergänzt
+- **README**: Quickstart, Tech-Stack-Tabelle, Doku-Übersicht aktualisiert
 
 ### Sprint 7+ (Ausblick) — siehe Epic 7
 
@@ -194,7 +199,8 @@ Praktikum) notiert.
 | 3 | 15 | 15 | |
 | 4 | 37 | 37 | Länger (3 Wochen) |
 | 5 | 63 | 63 | Fix-Sprint + UX-Verschärfung über Feedback hinaus (Stand 2026-04-27 abgeschlossen — US-06/08/09/10b/55/56) |
-| 6 | ~10 | — | Feinschliff |
+| 6 | 12 | 12 | Security, Code-Splitting, CI, UML-Diagramme, Coverage-Bericht (Stand 2026-04-30 abgeschlossen) |
+| **Σ** | **142** | **142** | über fünf produktive Sprints (Sprint 2–6) |
 
 ---
 

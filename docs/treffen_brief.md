@@ -30,7 +30,7 @@ Wenn sie nach Begründungen fragt: alle Tech-Wahlen sind in `docs/design.md` mit
 
 Falls sie nach dem Vorgehen fragt:
 
-> *„Wir arbeiten in 2-Wochen-Sprints, fünf Sprints durch — Setup, Fahrzeug-CRUD, Tagesplan, Mängel/Berichte/Statistik, und der jetzige Sprint 5 war der Fix-Sprint nach Ihrem Feedback. Insgesamt 117 Story Points. Definition of Done hat 10 Punkte: Lint sauber, Tests grün, PropTypes, Reviewer-Approve, manueller Smoke-Test im Browser und im Tauri-Build."*
+> *„Wir arbeiten in 2-Wochen-Sprints, sechs Sprints durch — Setup, Fahrzeug-CRUD, Tagesplan, Mängel/Berichte/Statistik, Sprint 5 war der Fix-Sprint nach Ihrem Feedback (63 SP) und Sprint 6 hat den Abgabe-Polish gemacht (Security, Code-Splitting, CI). Insgesamt 142 Story Points. Definition of Done hat 10 Punkte: Lint sauber, Tests grün, PropTypes, Reviewer-Approve, manueller Smoke-Test im Browser und im Tauri-Build."*
 
 Verweis auf `docs/backlog.md` — da steht alles: User Stories, MoSCoW-Priorität, Story Points, Sprint-Historie.
 
@@ -41,7 +41,7 @@ Verweis auf `docs/backlog.md` — da steht alles: User Stories, MoSCoW-Prioritä
 Das ist der zentrale Teil. Geht ihre Liste der Reihe nach durch — kurz und ohne Defensive:
 
 ### a) Doku auf GitHub
-> *„Wir haben fünf Markdown-Dokumente in `docs/` angelegt — Pflichtenheft (236 Zeilen), Backlog (197), Datenmodell (325), Design (318), Testkonzept (193). Alle im Repo, alle versioniert mit Änderungshistorie."*
+> *„Wir haben mittlerweile sieben Markdown-Dokumente und zwei A4-druckbare HTML-Übersichten in `docs/` — Pflichtenheft, Backlog, Datenmodell, Design, Testkonzept, Test-Coverage-Bericht, Eigenständigkeitserklärung, KI-Nutzungserklärung sowie Nacharbeit-Übersicht und Status-Sheet. Plus die Präsentation und der Treffen-Spickzettel. Alle im Repo, alle versioniert mit Änderungshistorie."*
 
 ### b) Sprint-Doku, User Stories, DoD, Akzeptanzkriterien
 > *„Im Backlog stehen ~25 User Stories als ‚Als X möchte ich … damit Y' formuliert. Akzeptanzkriterien sind im Pflichtenheft je Anforderung als Checkliste. Definition of Done als gemeinsame Liste, die für jede Story gilt."*
