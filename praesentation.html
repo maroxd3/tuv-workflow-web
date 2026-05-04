@@ -700,7 +700,7 @@
   <div class="lede">JavaScript hat keine Klassen im klassischen Sinn — das Datenmodell ist als Object-Schema mit PropTypes-Validation umgesetzt. UML-Notation für Lesbarkeit.</div>
   <div class="grid-2">
     <div>
-      <div class="ascii"><span class="c">«entity» Fahrzeug</span>
+      <div class="ascii" style="font-size:9.5px; line-height:1.42; padding:14px 18px"><span class="c">«entity» Fahrzeug</span>
 ─────────────────────────
 + id : string             <span class="g">«PK»</span>
 + kennzeichen : string    <span class="g">«UK»</span>
@@ -710,17 +710,13 @@
 + baujahr : int           <span class="g">[1885..year+1]</span>
 + typ : FahrzeugTyp       <span class="g">«FK»</span>
 + kmStand : int           <span class="g">[0..3 000 000]</span>
-+ besitzer : string
-+ telefon : string        &lt;Regex&gt;
-+ email : string          &lt;Regex&gt;
-+ hu_faellig : Date
++ besitzer, telefon, email, hu_faellig
 
 <span class="c">«entity» Termin</span>
 ─────────────────────────
 + id : string             <span class="g">«PK»</span>
 + fahrzeugId : string     <span class="g">«FK»</span>
-+ datum, uhrzeit
-+ art : PruefArt
++ datum, uhrzeit, art : PruefArt
 + status : Status
 + mängel : <span class="a">Mangel[]</span>      <span class="g">«embedded»</span>
 ─────────────────────────
@@ -735,22 +731,22 @@
 + behoben : bool</div>
     </div>
     <div>
-      <h3>Modellierungs-Entscheidungen</h3>
-      <div class="card tone-cyan pad-sm">
-        <h4>Fahrzeug + Termin als Entitäten</h4>
-        <p>Beide haben eigenständigen Lebenszyklus — ein Fahrzeug existiert auch nach allen Prüfungen weiter. Klassische 1:N-Beziehung.</p>
+      <h3 style="margin-bottom:6px">Modellierungs-Entscheidungen</h3>
+      <div class="card tone-cyan pad-sm" style="padding:10px 14px">
+        <h4 style="margin-bottom:2px">Fahrzeug + Termin als Entitäten</h4>
+        <p style="font-size:11.5px; line-height:1.45">Beide haben eigenständigen Lebenszyklus — ein Fahrzeug existiert auch nach allen Prüfungen weiter. Klassische 1:N-Beziehung.</p>
       </div>
-      <div class="card tone-amber pad-sm" style="margin-top:8px">
-        <h4>Mangel als embedded Value-Object</h4>
-        <p>Hat keine Beziehungen zu anderen Entitäten — gehört immer zu genau einem Termin. In Firestore weniger Reads; in einer SQL-Variante als Tabelle <span class="mono">mangel(termin_id, …)</span>.</p>
+      <div class="card tone-amber pad-sm" style="margin-top:6px; padding:10px 14px">
+        <h4 style="margin-bottom:2px">Mangel als embedded Value-Object</h4>
+        <p style="font-size:11.5px; line-height:1.45">Hat keine Beziehungen zu anderen Entitäten — gehört immer zu genau einem Termin. In Firestore weniger Reads; in SQL als Tabelle <span class="mono">mangel(termin_id, …)</span>.</p>
       </div>
-      <div class="card tone-purple pad-sm" style="margin-top:8px">
-        <h4>STATUS &amp; MANGEL_KATEGORIE als Enums</h4>
-        <p>Endliche, nicht änderbare Mengen — STATUS hat 7 Werte (GEPLANT, IN_PRUEFUNG, BESTANDEN, …), MANGEL_KATEGORIE 5 (OM/LM/EM/HM/GM).</p>
+      <div class="card tone-purple pad-sm" style="margin-top:6px; padding:10px 14px">
+        <h4 style="margin-bottom:2px">STATUS &amp; MANGEL_KATEGORIE als Enums</h4>
+        <p style="font-size:11.5px; line-height:1.45">Endliche, nicht änderbare Mengen — STATUS hat 7 Werte, MANGEL_KATEGORIE 5 (OM/LM/EM/HM/GM).</p>
       </div>
-      <div class="card tone-green pad-sm" style="margin-top:8px">
-        <h4>Halter eingebettet, nicht eigene Entität</h4>
-        <p>Im Prototyp pro Fahrzeug ein Halter — kein Bedarf an Aggregation. <strong>Im Produktivbetrieb 3NF</strong> (eigene Halter-Tabelle, ein Halter kann mehrere Fahrzeuge besitzen). SQL-Entwurf in <span class="mono">datenmodell.md § 6.5</span>.</p>
+      <div class="card tone-green pad-sm" style="margin-top:6px; padding:10px 14px">
+        <h4 style="margin-bottom:2px">Halter eingebettet, nicht eigene Entität</h4>
+        <p style="font-size:11.5px; line-height:1.45">Im Prototyp pro Fahrzeug ein Halter — kein Bedarf an Aggregation. <strong>Im Produktivbetrieb 3NF</strong> (eigene Halter-Tabelle). SQL-Entwurf in <span class="mono">datenmodell.md § 6.5</span>.</p>
       </div>
     </div>
   </div>
