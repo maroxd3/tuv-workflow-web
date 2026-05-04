@@ -13,6 +13,9 @@ dist-ssr
 coverage
 *.local
 
+# Build-Zwischendatei fuer praesentation.pdf — nicht ins Repo
+praesentation_standalone.html
+
 # Local env files (secrets, project config) — never commit
 .env
 .env.*
