@@ -67,10 +67,14 @@ ist eine Cleanup-Funktion, die nur beim Component-Unmount läuft und in
 der Test-Umgebung nicht getriggert wird.
 
 `useStore` (das State-Management-Herzstück) wird **nicht** in dieser
-Coverage-Tabelle gezeigt, weil es Firestore-abhängig ist und in den
-Tests direkt gegen einen In-Memory-Mock läuft (siehe
-`src/tests/useStore.test.js`, 20 Tests). Sein Verhalten ist über
-Verhaltens-Tests gegen die Mock-DB abgedeckt, nicht über Line-Coverage.
+Coverage-Tabelle gezeigt, weil es das Firebase-SDK direkt importiert
+und in den Tests nicht stub-getestet wird. Sein Verhalten ist
+**indirekt** abgesichert: die von ihm aufgerufenen Geschäftsregeln in
+`validators.js` und `utils/mangel.js` (insbesondere
+`validateStatusWechsel`, `addMangel`, Auto-Demote auf Hauptmangel)
+sind zu 100 % unit-getestet — der Hook bleibt ein dünner Sync-Adapter
+auf Firestore. Eine Mock-Firestore-Test-Suite direkt auf `useStore`
+ist auf der Roadmap (Sprint 7+).
 
 ### Konstanten (`src/constants/`) — Coverage 76 %
 
@@ -91,16 +95,22 @@ in unit-getrennten Tests gedeckt sind.
 
 ---
 
-## Test-Verfahren — woraus die 114 Tests bestehen
+## Test-Verteilung über die 7 Test-Dateien
 
-Die Tests folgen den vier Verfahren aus `docs/testkonzept.md`:
+| Test-Datei | Tests | Schwerpunkt-Verfahren |
+|---|---:|---|
+| `src/tests/utils/validators.test.js` | **62** | Äquivalenzklassen + Grenzwertanalyse + Regression (jeder Fuchs-Bug hat einen dedizierten Test) |
+| `src/tests/utils/date.test.js` | **18** | Grenzwertanalyse (Schaltjahre, Monatsenden, Jahres-Wechsel) |
+| `src/tests/components/buttons.test.jsx` | **9** | Snapshot + Render-Pfade (disabled, loading, icon-only) |
+| `src/tests/components/inputs.test.jsx` | **8** | Snapshot + Render-Pfade (Inp / Sel / Fld) |
+| `src/tests/utils/mangel.test.js` | **7** | Entscheidungstabelle (HM/EM/GM/GfM × Status) |
+| `src/tests/hooks/useToasts.test.js` | **6** | State-Lifecycle (push / dismiss / auto-clear) |
+| `src/tests/components/StatusPill.test.jsx` | **4** | Snapshot pro Status-Wert |
+| **Summe** | **114** | |
 
-| Verfahren | Anzahl Tests | Module |
-|---|---|---|
-| Äquivalenzklassen | ~32 | validators (KM-Bereiche, Status-Klassen, Mangel-Schweregrade) |
-| Grenzwertanalyse | ~18 | validators (KM 0 / -1, Saison-Monat 1 / 0 / 12 / 13, FIN-Länge 16/17/18) |
-| Entscheidungstabelle | ~14 | mangel + validateStatusWechsel (HM × Status-Kombinationen) |
-| Regression | ~50 | jeder von Frau Fuchs gemeldete Bug hat einen dedizierten Test |
+Die methodische Herleitung der Testfälle nach Äquivalenzklassen,
+Grenzwertanalyse und Entscheidungstabelle ist in
+`docs/testkonzept.md` § 2 dokumentiert.
 
 ---
 
