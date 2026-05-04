@@ -602,7 +602,7 @@
 
 <!-- ═════════════ 06  PERFORMANCE-BUDGET ═════════════ -->
 <div class="slide">
-  <div class="eyebrow">04 · NF-PF Performance</div>
+  <div class="eyebrow">05 · NF-PF Performance</div>
   <h2>Wie schnell muss die App reagieren — und warum?</h2>
   <div class="lede">Performance-Budgets sind keine Bauchgefühle. Sie folgen aus dem Lastprofil und der Forschung zur menschlichen Wahrnehmung.</div>
   <div class="grid-2">
@@ -950,57 +950,31 @@
   <div class="lede">Fachlicher Ablauf einer Hauptuntersuchung — von der Halter-Anmeldung bis zum ausgehändigten PDF-Bericht. Verzweigungen am Mängel-Status nach § 29 StVZO. Vollständig in <span class="mono">design.md § 5.1</span>.</div>
   <div class="grid-2">
     <div>
-      <div class="ascii" style="font-size:10px; line-height:1.45; padding:14px 16px"><span class="c">┌──────────────────────────┐</span>
-<span class="c">│ Halter erscheint Termin  │</span>
-<span class="c">└────────────┬─────────────┘</span>
-             ▼
-<span class="c">┌──────────────────────────┐</span>
-<span class="c">│ Empfang ruft Termin auf  │</span>
-<span class="c">└────────────┬─────────────┘</span>
-             ▼
-       Daten aktuell?
-       ┌───────┴───────┐
-      ja              nein
-       │               ▼
-       │       <span class="a">Daten ergänzen</span>
-       │               │
-       └───────┬───────┘
-               ▼
-<span class="c">┌──────────────────────────┐</span>
-<span class="c">│ Prüfung starten          │</span>
-<span class="c">│ Status → IN_PRUEFUNG     │</span>
-<span class="c">└────────────┬─────────────┘</span>
-             ▼
-   <span class="g">StVZO Anlage VIII</span>
-             │
-        Mängel?
-       ┌───┴────┐
-      nein     ja
-       │       ▼
-       │   <span class="a">Erfassen:</span>
-       │   Code + Kat OM/LM/EM/HM/GM
-       │       │
-       │   ≥1 HM/GM?
-       │   ┌───┴────┐
-       │  ja       nein
-       │   │        │
-       │   ▼     ≥1 EM?
-       │ <span style="color:var(--red)">NICHT_BEST.</span> ┌─┴─┐
-       │   │     ja  nein
-       │   │     │    │
-       │   │     ▼    ▼
-       │   │ <span class="a">NACHPRÜF.</span> │
-       ▼   │     │    │
-   <span class="g">BESTANDEN</span> │     │    └→ <span class="g">BESTANDEN</span>
-       │   │     │           │
-       └───┴─────┴───────────┘
-                ▼
-<span class="c">┌──────────────────────────┐</span>
-<span class="c">│ PDF-Bericht erzeugen     │</span>
-<span class="c">│ Ref TPP-NDS-2026-XXXXXXX │</span>
-<span class="c">└────────────┬─────────────┘</span>
-             ▼
-       <span class="g">Bericht ausgehändigt</span></div>
+      <div class="ascii" style="font-size:11px; line-height:1.35; padding:14px 16px"><span class="c">[1]</span> Halter erscheint zum Termin
+   ↓
+<span class="c">[2]</span> Empfang ruft Termin auf · Daten ergänzen
+   ↓
+<span class="c">[3]</span> Prüfung starten · Status → <span class="a">IN_PRUEFUNG</span>
+   ↓
+<span class="c">[4]</span> Prüfung nach <span class="g">StVZO Anlage VIII</span>
+   ↓
+<span class="c">[5]</span> Mängel?  ──nein──→ <span class="g">BESTANDEN</span>  ────────┐
+   │ ja                                          │
+   ▼                                             │
+<span class="c">[6]</span> Erfassen:  Code + Kat <span class="a">OM/LM/EM/HM/GM</span>      │
+   ↓                                             │
+<span class="c">[7]</span> ≥1 HM/GM?  ──ja──→ <span style="color:var(--red)">NICHT_BESTANDEN</span> ──┐  │
+   │ nein                                     │  │
+   ▼                                          │  │
+<span class="c">[8]</span> ≥1 EM?  ──ja──→ <span class="a">NACHPRÜFUNG</span> ─────────┐ │  │
+   │ nein                                    │ │  │
+   ▼                                         │ │  │
+<span class="c">[9]</span> <span class="g">BESTANDEN</span> ─────────────────────────────┘ │  │
+                                              ↓ ↓  ↓
+                            <span class="c">[10] PDF-Bericht erzeugen</span>
+                                Ref <span class="g">TPP-NDS-2026-XXXXXXX</span>
+                                              ↓
+                            <span class="c">[11] Bericht an Halter ausgehändigt</span></div>
     </div>
     <div>
       <h3 style="margin-bottom:6px">Drei Schlüssel-Entscheidungspunkte</h3>
