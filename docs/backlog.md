@@ -165,10 +165,13 @@ ist die größte Komponente geworden (339 LOC) — ggf. extrahieren.
 - ✅ US-56 (Mobile-Support) — viewport-fit=cover, useIsMobile-Hook, Sidebar als Overlay mit Backdrop, Hamburger-Menu in Topbar, .grid-resp-2/4/5 + .full-mobile + .pad-mobile + .card-mobile + .btn-icon Klassen, Cascading-Dropdowns, Klick statt Rechtsklick auf Tagesplan-Slots, alle Modals 1-Spalten-Form, Touch-Targets ≥ 36 px
 
 **Acceptance-Test vor Abgabe:**
-- Alle Beispiele aus der Mail Fuchs (24.04.2026) manuell durchgehen
-- ESLint-Lauf mit den Regeln der Dozentin muss 0 Errors melden
+- Jeder gemeldete Bug aus der Feedback-Runde 1 (24.04.2026) hat einen
+  dedizierten Regressions-Test in `validators.test.js` und ist live
+  manuell nachprüfbar
+- ESLint mit der vorgeschlagenen strengeren Config (`recommended` +
+  `jsx-runtime` + `prop-types: error`) muss 0 Errors und 0 Warnings melden
 - Demo-Lauf: ein kompletter "Termin anlegen → Prüfung starten → Mängel
-  erfassen → Bericht generieren" Pfad
+  erfassen → Bericht generieren" Pfad funktioniert ohne Fehler
 
 ### Sprint 6 (W13) — Security, Code-Splitting & Abgabe-Polish (2026-04-28 bis 30)
 
