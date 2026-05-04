@@ -71,6 +71,66 @@ Datenfluss und Begründungen der gemachten Design-Entscheidungen.
    Dropdown-Option (disabled), auto-advance-Funktion, Store-Guard. Beim Ausfall
    einer Ebene greifen die anderen.
 
+### 1.4 Use-Case-Diagramm — Akteure und Anwendungsfälle
+
+Das System unterscheidet drei interne Akteure mit unterschiedlichen
+Berechtigungen und einen externen Akteur (Fahrzeughalter) ohne Systemzugriff.
+
+```mermaid
+flowchart LR
+  classDef actor fill:#fef9f3,stroke:#b45309,stroke-width:2px,color:#78350f
+  classDef uc fill:#f0fdf4,stroke:#15803d,stroke-width:1.5px,color:#14532d
+
+  Pruefer(("👤 Prüfer"))
+  Empfang(("👤 Empfang /<br/>Verwaltung"))
+  Admin(("👤 Administrator"))
+  Halter(("👤 Fahrzeug-<br/>halter (extern)"))
+
+  uc1["Termin anlegen"]
+  uc2["Termin verschieben<br/>oder löschen"]
+  uc3["Prüfung starten"]
+  uc4["Mängel erfassen<br/>(StVZO-Katalog)"]
+  uc5["Prüfergebnis setzen"]
+  uc6["Bericht-PDF erzeugen"]
+  uc7["Fahrzeug anlegen"]
+  uc8["Fahrzeug suchen<br/>und filtern"]
+  uc9["Statistik &amp;<br/>Bestandsquote einsehen"]
+  uc10["Bericht-Historie<br/>durchsehen"]
+
+  class Pruefer,Empfang,Admin,Halter actor
+  class uc1,uc2,uc3,uc4,uc5,uc6,uc7,uc8,uc9,uc10 uc
+
+  Empfang --> uc1
+  Empfang --> uc2
+  Empfang --> uc7
+  Empfang --> uc8
+  Empfang --> uc10
+
+  Pruefer --> uc3
+  Pruefer --> uc4
+  Pruefer --> uc5
+  Pruefer --> uc6
+  Pruefer --> uc8
+
+  Admin --> uc9
+  Admin --> uc10
+  Admin --> uc8
+
+  Halter -. erscheint zum Termin .-> uc3
+```
+
+**Hinweise zum Diagramm:**
+
+- *Prüfer* ist der TÜV-Sachverständige, der die Hauptuntersuchung durchführt
+  und auswertet. Er hat keinen Zugriff auf die Stammdaten-Verwaltung der
+  Prüfstelle, kann aber Fahrzeugdaten lesen, um sie zu kontrollieren.
+- *Empfang/Verwaltung* erfasst neue Fahrzeuge bei Anmeldung und plant Termine.
+- *Administrator* sieht aggregierte Kennzahlen für Geschäftsführung und
+  Qualitätssicherung.
+- *Fahrzeughalter* hat **keinen** Systemzugriff (im aktuellen Scope) — er
+  erscheint physisch zum Termin. Eine Self-Service-Anmeldung über ein Halter-
+  Portal ist auf der Roadmap, aber nicht im Prototyp.
+
 ## 2. Komponentendiagramm
 
 ```mermaid
@@ -270,7 +330,52 @@ sequenceDiagram
 - **3-Sekunden-Loading-Fallback** seit Sprint 5: hydratiert aus Cache oder Seed,
   falls `onSnapshot` nicht antwortet — verhindert „hängender Spinner"-UX
 
-## 5. Datenfluss bei Mängelerfassung (Beispielszenario)
+## 5. Workflow- und Datenfluss-Diagramme
+
+### 5.1 Aktivitätsdiagramm: Hauptworkflow Termin → Bericht
+
+Zeigt den fachlichen Ablauf einer Hauptuntersuchung von der Anmeldung
+des Halters bis zum ausgehändigten Prüfbericht. Verzweigungen entstehen
+am Mängel-Status.
+
+```mermaid
+flowchart TD
+  Start([Halter erscheint zum Termin])
+  Empfang[Empfang ruft Termin auf]
+  Start --> Empfang
+  Empfang --> CheckDaten{Fahrzeug-<br/>daten aktuell?}
+  CheckDaten -->|Nein| UpdateDaten[Daten ergänzen<br/>FahrzeugModal]
+  UpdateDaten --> StartPruef
+  CheckDaten -->|Ja| StartPruef[Prüfung starten<br/>Status → IN_PRUEFUNG]
+  StartPruef --> Pruefen[Sachverständiger prüft<br/>nach StVZO Anlage VIII]
+  Pruefen --> MaengelGef{Mängel<br/>gefunden?}
+  MaengelGef -->|Nein| Bestanden[Status → BESTANDEN]
+  MaengelGef -->|Ja| ErfasseM[Mängel im Katalog erfassen<br/>Schweregrad GM/EM/HM/GfM]
+  ErfasseM --> CheckHM{Mindestens 1<br/>Hauptmangel<br/>oder Gef. Mangel?}
+  CheckHM -->|Ja| NichtBest[Status → NICHT_BESTANDEN<br/>BESTANDEN-Button gesperrt]
+  CheckHM -->|Nein| CheckEM{Mindestens 1<br/>Erheblicher<br/>Mangel?}
+  CheckEM -->|Ja| Nachpruef[Status → NACHPRUEFUNG<br/>Frist 1 Monat]
+  CheckEM -->|Nein| Bestanden
+  Bestanden --> Plakette[Plakette /<br/>Prüfbescheinigung]
+  Nachpruef --> Bericht
+  NichtBest --> Bericht
+  Plakette --> Bericht[PDF-Bericht erzeugen<br/>Ref-Nr. TPP-NDS-2026-...]
+  Bericht --> Aushaendigen([Bericht ausgehändigt<br/>+ Daten persistiert])
+```
+
+**Lese-Hilfe:**
+
+- Rauten = Entscheidungspunkte (zwingend bewertet vor Status-Wechsel)
+- Die *Mehrebenen-Sperre* zwischen `CheckHM` und `Bestanden` ist im Code an
+  vier Stellen abgesichert (Defense in Depth, siehe § 1.3 Punkt 5)
+- Status-Codes entsprechen 1:1 dem `STATUS`-Enum in `src/utils/mangel.js`:
+  `GEPLANT → IN_PRUEFUNG → BESTANDEN | NICHT_BESTANDEN | NACHPRUEFUNG`
+
+### 5.2 Sequenzdiagramm: Mängelerfassung (Detail-Szenario)
+
+Detail-Sicht auf den Schritt *"Mängel erfassen"* aus dem Aktivitätsdiagramm.
+Zeigt, wie sich das Setzen eines Hauptmangels auf einen bereits gesetzten
+Bestanden-Status auswirkt (Auto-Demote-Mechanik).
 
 ```mermaid
 sequenceDiagram
