@@ -441,13 +441,14 @@ sequenceDiagram
   participant Browser as Browser-Druck-Engine
 
   Pruefer->>UI: Klickt "PDF" auf Bericht
-  UI->>UI: buildBerichtHtml(termin) → vollständiges HTML mit @page A4 + print CSS
-  UI->>Win: window.open("", "_blank") → neuer Tab
-  UI->>Win: document.write(html); document.close()
-  Win->>Win: Lädt Inline-CSS, Google-Font Source Serif 4
-  Win->>Win: setTimeout(window.print, 250) — Auto-Trigger
+  UI->>UI: buildBerichtHtml(termin) - vollständiges HTML mit @page A4 und Print-CSS
+  UI->>Win: window.open neuer Tab
+  UI->>Win: document.write(html)
+  UI->>Win: document.close()
+  Win->>Win: Lädt Inline-CSS und Google-Font Source Serif 4
+  Win->>Win: setTimeout window.print 250ms - Auto-Trigger
   Browser->>Pruefer: Druckdialog mit "Als PDF speichern"
-  Pruefer->>Browser: Wählt "Als PDF speichern" → Datei
+  Pruefer->>Browser: Wählt "Als PDF speichern" - Datei wird erzeugt
 ```
 
 **Begründung:**
