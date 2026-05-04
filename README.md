@@ -157,8 +157,6 @@ Abgabe (Hochschule Hannover, IIM-211-01):
 | [`projekt_status.html`](docs/projekt_status.html) | Status-Sheet (Done / TODO), druckbar als A4-PDF | A4 |
 | [`eigenstaendigkeitserklaerung.md`](docs/eigenstaendigkeitserklaerung.md) | Formelle Eigenständigkeitserklärung mit Aufgabenverteilung | — |
 | [`ki_nutzung.md`](docs/ki_nutzung.md) | Transparente Erklärung zur Nutzung KI-basierter Werkzeuge | — |
-| [`antwort_mail_fuchs.md`](docs/antwort_mail_fuchs.md) | Mail-Entwurf für Dozentin | — |
-| [`treffen_brief.md`](docs/treffen_brief.md) | Spickzettel für f2f-Termin mit Dozentin | ~160 Zeilen |
 
 Plus `praesentation.html` — 15-Slides-Projekt-Präsentation, druckbar als PDF
 über Browser-Druck.
