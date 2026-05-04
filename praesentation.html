@@ -392,32 +392,36 @@
     30. April 2026 &nbsp;&middot;&nbsp; <strong>github.com/maroxd3/tuv-workflow-web</strong>
   </div>
   <div class="brand"><span class="dot">●</span> TÜV PRÜFSTELLE PRO</div>
-  <div class="slide-num">01 / 15</div>
+  <div class="slide-num">01 / 19</div>
 </div>
 
 <!-- ═════════════ 02  AGENDA ═════════════ -->
 <div class="slide">
   <div class="eyebrow">Agenda</div>
-  <h2>Was Sie auf den nächsten 13 Slides erwartet</h2>
-  <div class="lede">Vom Problem über die Architektur bis zum Validierungs- und Test-Konzept.</div>
+  <h2>Was Sie auf den nächsten 17 Slides erwartet</h2>
+  <div class="lede">Vom Problem über die Architektur bis zur Implementierung — mit explizitem Vorher/Nachher zur Wirkung Ihres Feedbacks.</div>
   <div class="agenda">
     <div class="agenda-item"><span class="agenda-num">01</span> Problem &amp; Motivation</div>
-    <div class="agenda-item"><span class="agenda-num">09</span> Persistenz — NoSQL vs. SQL</div>
-    <div class="agenda-item"><span class="agenda-num">02</span> Stakeholder &amp; Use Cases</div>
-    <div class="agenda-item"><span class="agenda-num">10</span> Datenschutz &amp; Sicherheit</div>
-    <div class="agenda-item"><span class="agenda-num">03</span> Anforderungen (Pflichtenheft)</div>
-    <div class="agenda-item"><span class="agenda-num">11</span> Validierung &amp; UX-Schutz</div>
-    <div class="agenda-item"><span class="agenda-num">04</span> Performance &amp; Lastprofil</div>
-    <div class="agenda-item"><span class="agenda-num">12</span> Implementierung — Hauptfeatures</div>
-    <div class="agenda-item"><span class="agenda-num">05</span> Architektur &amp; Komponenten</div>
-    <div class="agenda-item"><span class="agenda-num">13</span> Test-Strategie &amp; Verfahren</div>
-    <div class="agenda-item"><span class="agenda-num">06</span> Datenmodell &amp; Integrität</div>
-    <div class="agenda-item"><span class="agenda-num">14</span> Vorgehen &amp; Sprint-Methodik</div>
-    <div class="agenda-item"><span class="agenda-num">07</span> Klassendiagramm / Typmodell</div>
-    <div class="agenda-item"><span class="agenda-num">15</span> Ausblick &amp; Q&amp;A</div>
+    <div class="agenda-item"><span class="agenda-num">10</span> Persistenz — NoSQL vs. SQL</div>
+    <div class="agenda-item"><span class="agenda-num">02</span> Stakeholder</div>
+    <div class="agenda-item"><span class="agenda-num">11</span> Datenschutz &amp; Sicherheit</div>
+    <div class="agenda-item"><span class="agenda-num">03</span> Use-Case-Diagramm</div>
+    <div class="agenda-item"><span class="agenda-num">12</span> Validierung &amp; UX-Schutz</div>
+    <div class="agenda-item"><span class="agenda-num">04</span> Anforderungen (Pflichtenheft)</div>
+    <div class="agenda-item"><span class="agenda-num">13</span> Aktivitätsdiagramm — Workflow</div>
+    <div class="agenda-item"><span class="agenda-num">05</span> Performance &amp; Lastprofil</div>
+    <div class="agenda-item"><span class="agenda-num">14</span> Test-Strategie &amp; Verfahren</div>
+    <div class="agenda-item"><span class="agenda-num">06</span> Architektur &amp; Komponenten</div>
+    <div class="agenda-item"><span class="agenda-num">15</span> Vorgehen &amp; Sprint-Methodik</div>
+    <div class="agenda-item"><span class="agenda-num">07</span> Datenmodell &amp; Integrität</div>
+    <div class="agenda-item"><span class="agenda-num">16</span> Feedback-Wirkung — Vorher/Nachher</div>
+    <div class="agenda-item"><span class="agenda-num">08</span> Klassendiagramm / Typmodell</div>
+    <div class="agenda-item"><span class="agenda-num">17</span> Implementation — App-Screenshots</div>
+    <div class="agenda-item"><span class="agenda-num">09</span> NoSQL vs. relationale DB</div>
+    <div class="agenda-item"><span class="agenda-num">18</span> Ausblick &amp; Q&amp;A</div>
   </div>
   <div class="brand"><span class="dot">●</span> TÜV PRÜFSTELLE PRO</div>
-  <div class="slide-num">02 / 15</div>
+  <div class="slide-num">02 / 19</div>
 </div>
 
 <!-- ═════════════ 03  PROBLEM & MOTIVATION ═════════════ -->
@@ -453,7 +457,7 @@
     </div>
   </div>
   <div class="brand"><span class="dot">●</span> TÜV PRÜFSTELLE PRO</div>
-  <div class="slide-num">03 / 15</div>
+  <div class="slide-num">03 / 19</div>
 </div>
 
 <!-- ═════════════ 04  STAKEHOLDER ═════════════ -->
@@ -491,7 +495,58 @@
     <div class="stat"><div class="num purple">~8 000</div><div class="lbl">Termine pro Jahr / Bestand</div></div>
   </div>
   <div class="brand"><span class="dot">●</span> TÜV PRÜFSTELLE PRO</div>
-  <div class="slide-num">04 / 15</div>
+  <div class="slide-num">04 / 19</div>
+</div>
+
+<!-- ═════════════ 05  USE-CASE-DIAGRAMM ═════════════ -->
+<div class="slide">
+  <div class="eyebrow">03 · Use-Case-Diagramm</div>
+  <h2>Akteure und ihre Anwendungsfälle</h2>
+  <div class="lede">Drei interne Akteure mit unterschiedlichen Berechtigungen und ein externer Akteur ohne Systemzugriff. UML-Use-Case-Diagramm vollständig in <span class="mono">docs/design.md § 1.4</span>.</div>
+  <div class="grid-2">
+    <div>
+      <div class="card tone-cyan pad-sm">
+        <h4>Empfang / Verwaltung</h4>
+        <ul class="bullets" style="margin-top:6px">
+          <li>Termin anlegen, verschieben, löschen</li>
+          <li>Fahrzeug anlegen, suchen, filtern</li>
+          <li>Bericht-Historie durchsehen</li>
+        </ul>
+      </div>
+      <div class="card tone-green pad-sm" style="margin-top:10px">
+        <h4>Prüfer (TÜV-Sachverständiger)</h4>
+        <ul class="bullets" style="margin-top:6px">
+          <li>Prüfung starten — Status auf <span class="mono">IN_PRUEFUNG</span></li>
+          <li>Mängel nach StVZO Anlage VIII erfassen</li>
+          <li>Prüfergebnis setzen (BESTANDEN / NACHPRÜFUNG / NICHT&nbsp;BESTANDEN)</li>
+          <li>Bericht-PDF erzeugen + an Halter aushändigen</li>
+        </ul>
+      </div>
+    </div>
+    <div>
+      <div class="card tone-purple pad-sm">
+        <h4>Administrator</h4>
+        <ul class="bullets" style="margin-top:6px">
+          <li>Statistik &amp; KPIs einsehen</li>
+          <li>Bestandsquoten je Prüfer</li>
+          <li>Top-10-Mängel pro Zeitraum (7&nbsp;/&nbsp;30&nbsp;/&nbsp;90&nbsp;/&nbsp;365&nbsp;d)</li>
+        </ul>
+      </div>
+      <div class="card tone-amber pad-sm" style="margin-top:10px">
+        <h4>Fahrzeughalter <span style="font-weight:400; color:var(--t3); font-size:11px">— extern, kein Systemzugriff</span></h4>
+        <ul class="bullets" style="margin-top:6px">
+          <li>Erscheint physisch zum Termin</li>
+          <li>Empfängt PDF-Bericht</li>
+          <li>Self-Service-Portal auf Roadmap (außerhalb Semester-Scope)</li>
+        </ul>
+      </div>
+      <div class="callout" style="margin-top:14px; font-size:12px; padding:10px 14px; border-left:2px solid var(--cyan); background:rgba(34,211,238,0.05)">
+        <strong>Designentscheidung:</strong> Der Halter ist <em>keine</em> eigene Entität im Prototyp — siehe Klassendiagramm und <span class="mono">datenmodell.md § 6.5</span> für die 3NF-Variante im Produktivbetrieb.
+      </div>
+    </div>
+  </div>
+  <div class="brand"><span class="dot">●</span> TÜV PRÜFSTELLE PRO</div>
+  <div class="slide-num">05 / 19</div>
 </div>
 
 <!-- ═════════════ 05  ANFORDERUNGEN ═════════════ -->
@@ -536,7 +591,7 @@
     </div>
   </div>
   <div class="brand"><span class="dot">●</span> TÜV PRÜFSTELLE PRO</div>
-  <div class="slide-num">05 / 15</div>
+  <div class="slide-num">06 / 19</div>
 </div>
 
 <!-- ═════════════ 06  PERFORMANCE-BUDGET ═════════════ -->
@@ -585,12 +640,12 @@
     </div>
   </div>
   <div class="brand"><span class="dot">●</span> TÜV PRÜFSTELLE PRO</div>
-  <div class="slide-num">06 / 15</div>
+  <div class="slide-num">07 / 19</div>
 </div>
 
 <!-- ═════════════ 07  ARCHITEKTUR ═════════════ -->
 <div class="slide">
-  <div class="eyebrow">05 · Architektur</div>
+  <div class="eyebrow">06 · Architektur</div>
   <h2>Komponentenstruktur &amp; Technologie-Entscheidungen</h2>
   <div class="lede">3-Schichten-Architektur mit klarer Trennung von Präsentation, Logik und Infrastruktur. Jede Tech-Wahl ist im Design-Doc gegen Alternativen begründet.</div>
   <div class="asym-r">
@@ -639,12 +694,12 @@
     </div>
   </div>
   <div class="brand"><span class="dot">●</span> TÜV PRÜFSTELLE PRO</div>
-  <div class="slide-num">07 / 15</div>
+  <div class="slide-num">08 / 19</div>
 </div>
 
 <!-- ═════════════ 08  DATENMODELL ═════════════ -->
 <div class="slide">
-  <div class="eyebrow">06 · Datenmodell</div>
+  <div class="eyebrow">07 · Datenmodell</div>
   <h2>Entitäten, Beziehungen &amp; Integritätsbedingungen</h2>
   <div class="lede">Drei Kern-Entitäten in 1:N-Beziehung. Integrität wird auf vier Ebenen durchgesetzt — nicht nur Kardinalitäten.</div>
   <div class="asym-l">
@@ -690,12 +745,12 @@
     </div>
   </div>
   <div class="brand"><span class="dot">●</span> TÜV PRÜFSTELLE PRO</div>
-  <div class="slide-num">08 / 15</div>
+  <div class="slide-num">09 / 19</div>
 </div>
 
 <!-- ═════════════ 09  KLASSENDIAGRAMM ═════════════ -->
 <div class="slide">
-  <div class="eyebrow">07 · Klassendiagramm</div>
+  <div class="eyebrow">08 · Klassendiagramm</div>
   <h2>Typmodell &amp; Modellierungsentscheidungen</h2>
   <div class="lede">JavaScript hat keine Klassen im klassischen Sinn — das Datenmodell ist als Object-Schema mit PropTypes-Validation umgesetzt. UML-Notation für Lesbarkeit.</div>
   <div class="grid-2">
@@ -751,12 +806,12 @@
     </div>
   </div>
   <div class="brand"><span class="dot">●</span> TÜV PRÜFSTELLE PRO</div>
-  <div class="slide-num">09 / 15</div>
+  <div class="slide-num">10 / 19</div>
 </div>
 
 <!-- ═════════════ 10  PERSISTENZ DISKUSSION ═════════════ -->
 <div class="slide">
-  <div class="eyebrow">08 · Persistenz-Entscheidung</div>
+  <div class="eyebrow">09 · Persistenz-Entscheidung</div>
   <h2>NoSQL (Firestore) vs. relationale DB</h2>
   <div class="lede">Eine bewusst kontroverse Architektur-Entscheidung. Beide Optionen wurden gegeneinander abgewogen — hier die Argumente und unsere Bewertung.</div>
   <div class="grid-2">
@@ -790,7 +845,7 @@
     <strong>Migrationspfad dokumentiert</strong> in <span class="mono">datenmodell.md § 6</span>: SQL-Schema (PostgreSQL inkl. Trigger für Workflow-Regel WF-01), Backend-Layer-Vorschlag (tRPC oder PostgREST), Sync-Ersatz via Supabase Realtime oder eigenem WebSocket.
   </div>
   <div class="brand"><span class="dot">●</span> TÜV PRÜFSTELLE PRO</div>
-  <div class="slide-num">10 / 15</div>
+  <div class="slide-num">11 / 19</div>
 </div>
 
 <!-- ═════════════ 11  DATENSCHUTZ ═════════════ -->
@@ -834,12 +889,12 @@
     <strong>Alternative bei strenger Datenschutz-Anforderung:</strong> Selbst-gehostetes PostgreSQL im lokalen Netz der Prüfstelle. Datenmodell und Validierungs-Logik sind portabel — nur die Sync-Schicht müsste durch Polling oder eigenen WebSocket-Server ersetzt werden.
   </div>
   <div class="brand"><span class="dot">●</span> TÜV PRÜFSTELLE PRO</div>
-  <div class="slide-num">11 / 15</div>
+  <div class="slide-num">12 / 19</div>
 </div>
 
 <!-- ═════════════ 12  VALIDIERUNG & UX ═════════════ -->
 <div class="slide">
-  <div class="eyebrow">10 · Validierung</div>
+  <div class="eyebrow">11 · Validierung</div>
   <h2>Drei Verteidigungslinien gegen ungültige Daten</h2>
   <div class="lede">Defense in Depth: UX-Strukturierung &gt; Hard-Validation &gt; Soft-Warning. Tippfehler werden strukturell ausgeschlossen, nicht erst durch Fehlermeldungen abgefangen.</div>
   <div class="grid-3">
@@ -879,7 +934,89 @@
     <strong>Warum drei Linien?</strong> UX schützt 95 % der Eingaben strukturell. Hard-Validation greift im Sonstiger-Modus, bei programmatischen Aufrufen oder beim Editieren von Altdaten. Soft-Warnings markieren grenzwertige Fälle, ohne Sonderfälle zu blockieren. Auch wenn eine Linie umgangen wird, greift die nächste.
   </div>
   <div class="brand"><span class="dot">●</span> TÜV PRÜFSTELLE PRO</div>
-  <div class="slide-num">12 / 15</div>
+  <div class="slide-num">13 / 19</div>
+</div>
+
+<!-- ═════════════ 14  AKTIVITAETSDIAGRAMM ═════════════ -->
+<div class="slide">
+  <div class="eyebrow">12 · Aktivitätsdiagramm</div>
+  <h2>Hauptworkflow Termin → Bericht</h2>
+  <div class="lede">Fachlicher Ablauf einer Hauptuntersuchung — von der Halter-Anmeldung bis zum ausgehändigten PDF-Bericht. Verzweigungen am Mängel-Status nach § 29 StVZO. Vollständig in <span class="mono">design.md § 5.1</span>.</div>
+  <div class="grid-2">
+    <div>
+      <div class="ascii" style="font-size:10px; line-height:1.45; padding:14px 16px"><span class="c">┌──────────────────────────┐</span>
+<span class="c">│ Halter erscheint Termin  │</span>
+<span class="c">└────────────┬─────────────┘</span>
+             ▼
+<span class="c">┌──────────────────────────┐</span>
+<span class="c">│ Empfang ruft Termin auf  │</span>
+<span class="c">└────────────┬─────────────┘</span>
+             ▼
+       Daten aktuell?
+       ┌───────┴───────┐
+      ja              nein
+       │               ▼
+       │       <span class="a">Daten ergänzen</span>
+       │               │
+       └───────┬───────┘
+               ▼
+<span class="c">┌──────────────────────────┐</span>
+<span class="c">│ Prüfung starten          │</span>
+<span class="c">│ Status → IN_PRUEFUNG     │</span>
+<span class="c">└────────────┬─────────────┘</span>
+             ▼
+   <span class="g">StVZO Anlage VIII</span>
+             │
+        Mängel?
+       ┌───┴────┐
+      nein     ja
+       │       ▼
+       │   <span class="a">Erfassen:</span>
+       │   Code + Kat OM/LM/EM/HM/GM
+       │       │
+       │   ≥1 HM/GM?
+       │   ┌───┴────┐
+       │  ja       nein
+       │   │        │
+       │   ▼     ≥1 EM?
+       │ <span style="color:var(--red)">NICHT_BEST.</span> ┌─┴─┐
+       │   │     ja  nein
+       │   │     │    │
+       │   │     ▼    ▼
+       │   │ <span class="a">NACHPRÜF.</span> │
+       ▼   │     │    │
+   <span class="g">BESTANDEN</span> │     │    └→ <span class="g">BESTANDEN</span>
+       │   │     │           │
+       └───┴─────┴───────────┘
+                ▼
+<span class="c">┌──────────────────────────┐</span>
+<span class="c">│ PDF-Bericht erzeugen     │</span>
+<span class="c">│ Ref TPP-NDS-2026-XXXXXXX │</span>
+<span class="c">└────────────┬─────────────┘</span>
+             ▼
+       <span class="g">Bericht ausgehändigt</span></div>
+    </div>
+    <div>
+      <h3 style="margin-bottom:6px">Drei Schlüssel-Entscheidungspunkte</h3>
+      <div class="card tone-red pad-sm" style="padding:10px 14px">
+        <h4 style="margin-bottom:2px">≥1 Hauptmangel → harter Block</h4>
+        <p style="font-size:11.5px; line-height:1.45">"Bestanden" ist nicht mehr wählbar. Diese Regel nach § 29 StVZO ist auf <strong>vier Ebenen</strong> abgesichert (UI-Button disabled, Dropdown gefiltert, Auto-Demote, Store-Guard) — Defense in Depth.</p>
+      </div>
+      <div class="card tone-amber pad-sm" style="margin-top:6px; padding:10px 14px">
+        <h4 style="margin-bottom:2px">≥1 erheblicher Mangel → Nachprüfung</h4>
+        <p style="font-size:11.5px; line-height:1.45">Status <span class="mono">NACHPRUEFUNG</span> mit 1-Monats-Frist. Halter kann nachbessern und in dem Fenster ohne neue Anmeldung erneut vorfahren.</p>
+      </div>
+      <div class="card tone-green pad-sm" style="margin-top:6px; padding:10px 14px">
+        <h4 style="margin-bottom:2px">Bericht-PDF zwingend</h4>
+        <p style="font-size:11.5px; line-height:1.45">Egal welches Ergebnis — jede Prüfung erzeugt einen Bericht im A4-Behörden-Vordruck-Stil. Halter erhält ihn als rechtsverbindliches Dokument.</p>
+      </div>
+      <div class="callout green" style="margin-top:14px; font-size:11.5px">
+        <strong>Status-Codes</strong> entsprechen 1:1 dem <span class="mono">STATUS</span>-Enum in <span class="mono">utils/mangel.js</span> — keine Doppel-Definition.
+      </div>
+    </div>
+  </div>
+  <div class="brand"><span class="dot">●</span> TÜV PRÜFSTELLE PRO</div>
+  <div class="slide-num">14 / 19</div>
 </div>
 
 <!-- ═════════════ 13  TEST-STRATEGIE ═════════════ -->
@@ -930,12 +1067,12 @@
     </div>
   </div>
   <div class="brand"><span class="dot">●</span> TÜV PRÜFSTELLE PRO</div>
-  <div class="slide-num">13 / 15</div>
+  <div class="slide-num">15 / 19</div>
 </div>
 
 <!-- ═════════════ 14  VORGEHEN ═════════════ -->
 <div class="slide">
-  <div class="eyebrow">12 · Vorgehensmodell</div>
+  <div class="eyebrow">14 · Vorgehensmodell</div>
   <h2>Sprint-Methodik, DoD &amp; Backlog</h2>
   <div class="lede">Wir arbeiten in 2-Wochen-Sprints mit Product Backlog, Sprint Backlog und teamübergreifender Definition of Done. Stories nach MoSCoW priorisiert.</div>
   <div class="grid-2">
@@ -978,7 +1115,92 @@
     </div>
   </div>
   <div class="brand"><span class="dot">●</span> TÜV PRÜFSTELLE PRO</div>
-  <div class="slide-num">14 / 15</div>
+  <div class="slide-num">16 / 19</div>
+</div>
+
+<!-- ═════════════ 17  VORHER/NACHHER FEEDBACK-WIRKUNG ═════════════ -->
+<div class="slide">
+  <div class="eyebrow">15 · Feedback-Wirkung</div>
+  <h2>Was sich nach Feedback-Runde 1 geändert hat</h2>
+  <div class="lede">Vor / Nach-Vergleich der wichtigsten Verbesserungen aus Sprint 5 und 6. Detaillierte Liste aller Änderungen unter <span class="mono">docs/nacharbeit_fuchs.html</span>.</div>
+  <table style="width:100%; border-collapse:collapse; font-size:11.5px; line-height:1.45; margin-top:8px">
+    <tr style="background:rgba(148,163,184,0.06)">
+      <th style="text-align:left; padding:8px 10px; border-bottom:1px solid var(--line); font-weight:700; color:var(--t1); text-transform:uppercase; font-size:10px; letter-spacing:0.06em">Bereich</th>
+      <th style="text-align:left; padding:8px 10px; border-bottom:1px solid var(--line); font-weight:700; color:var(--amber); text-transform:uppercase; font-size:10px; letter-spacing:0.06em">Vorher</th>
+      <th style="text-align:left; padding:8px 10px; border-bottom:1px solid var(--line); font-weight:700; color:var(--green); text-transform:uppercase; font-size:10px; letter-spacing:0.06em">Nachher</th>
+    </tr>
+    <tr>
+      <td style="padding:8px 10px; border-bottom:1px solid var(--line); color:var(--t1); font-weight:600; vertical-align:top">"BMW Polo"-Eingabe</td>
+      <td style="padding:8px 10px; border-bottom:1px solid var(--line); color:var(--t3); vertical-align:top">Soft-Warning, Save war möglich</td>
+      <td style="padding:8px 10px; border-bottom:1px solid var(--line); color:var(--t2); vertical-align:top">Strukturell unmöglich durch Cascading-Dropdowns (Hersteller→Modell→Typ)</td>
+    </tr>
+    <tr>
+      <td style="padding:8px 10px; border-bottom:1px solid var(--line); color:var(--t1); font-weight:600; vertical-align:top">"Bestanden" trotz Hauptmangel</td>
+      <td style="padding:8px 10px; border-bottom:1px solid var(--line); color:var(--t3); vertical-align:top">Möglich, kein Workflow-Schutz</td>
+      <td style="padding:8px 10px; border-bottom:1px solid var(--line); color:var(--t2); vertical-align:top">An <strong>vier Stellen</strong> blockiert: Button, Dropdown, Auto-Fortschritt, Store-Guard</td>
+    </tr>
+    <tr>
+      <td style="padding:8px 10px; border-bottom:1px solid var(--line); color:var(--t1); font-weight:600; vertical-align:top">Pflichtenheft</td>
+      <td style="padding:8px 10px; border-bottom:1px solid var(--line); color:var(--t3); vertical-align:top">Existierte nicht</td>
+      <td style="padding:8px 10px; border-bottom:1px solid var(--line); color:var(--t2); vertical-align:top">280 Zeilen mit Lastprofil, Performance-Begründung, Datenschutz-Konzept</td>
+    </tr>
+    <tr>
+      <td style="padding:8px 10px; border-bottom:1px solid var(--line); color:var(--t1); font-weight:600; vertical-align:top">NoSQL-Wahl</td>
+      <td style="padding:8px 10px; border-bottom:1px solid var(--line); color:var(--t3); vertical-align:top">Ohne Begründung gegeben</td>
+      <td style="padding:8px 10px; border-bottom:1px solid var(--line); color:var(--t2); vertical-align:top">Pro/Kontra-Tabelle Firestore vs. Postgres + vollständiger SQL-Gegenentwurf inkl. Trigger</td>
+    </tr>
+    <tr>
+      <td style="padding:8px 10px; border-bottom:1px solid var(--line); color:var(--t1); font-weight:600; vertical-align:top">"Warum 100 ms?"</td>
+      <td style="padding:8px 10px; border-bottom:1px solid var(--line); color:var(--t3); vertical-align:top">Pauschal Nielsen zitiert</td>
+      <td style="padding:8px 10px; border-bottom:1px solid var(--line); color:var(--t2); vertical-align:top">Vergleichstabelle 50&thinsp;/&thinsp;100&thinsp;/&thinsp;200&thinsp;/&thinsp;1000&thinsp;ms + p95-Test-Methode</td>
+    </tr>
+    <tr>
+      <td style="padding:8px 10px; border-bottom:1px solid var(--line); color:var(--t1); font-weight:600; vertical-align:top">ESLint</td>
+      <td style="padding:8px 10px; border-bottom:1px solid var(--line); color:var(--t3); vertical-align:top">187 Errors</td>
+      <td style="padding:8px 10px; border-bottom:1px solid var(--line); color:var(--t2); vertical-align:top"><strong>0 Errors</strong>, PropTypes für alle 22 Komponenten, strenge Config</td>
+    </tr>
+    <tr>
+      <td style="padding:8px 10px; color:var(--t1); font-weight:600; vertical-align:top">Bericht-Ausgabe</td>
+      <td style="padding:8px 10px; color:var(--t3); vertical-align:top">ASCII-<span class="mono">.txt</span></td>
+      <td style="padding:8px 10px; color:var(--t2); vertical-align:top">A4-PDF im Behörden-Vordruck-Stil, römisch nummerierte Sektionen</td>
+    </tr>
+  </table>
+  <div class="callout green" style="margin-top:14px; font-size:11.5px; text-align:center">
+    <strong>Zusammenfassung:</strong> 6&thinsp;/&thinsp;6 Bug-Beispiele hart blockiert · 9&thinsp;/&thinsp;9 inhaltlichen Kritikpunkte adressiert · 75 Story Points über Sprint&nbsp;5&nbsp;+&nbsp;6 geliefert
+  </div>
+  <div class="brand"><span class="dot">●</span> TÜV PRÜFSTELLE PRO</div>
+  <div class="slide-num">17 / 19</div>
+</div>
+
+<!-- ═════════════ 18  APP-SCREENSHOTS ═════════════ -->
+<div class="slide">
+  <div class="eyebrow">16 · Implementation</div>
+  <h2>So sieht die App aus</h2>
+  <div class="lede">Vier Hauptansichten der Live-App auf <span class="mono">tuv-workflow.web.app</span>. Alle Screenshots aus dem laufenden Production-Build.</div>
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:8px">
+    <div style="border:1px solid var(--line); border-radius:8px; overflow:hidden; background:rgba(11,16,32,0.7)">
+      <div style="padding:8px 12px; font-size:10.5px; color:var(--cyan); font-family:'JetBrains Mono', monospace; border-bottom:1px solid var(--line); letter-spacing:0.04em; text-transform:uppercase">Tagesplan</div>
+      <img src="public/screenshots/tagesplan.png" alt="Tagesplan-Ansicht" style="width:100%; display:block; min-height:220px; max-height:240px; object-fit:cover; object-position:top" onerror="this.style.display='none';this.parentNode.innerHTML+='<div style=\'padding:60px 20px; text-align:center; color:var(--t4); font-size:11px\'>Screenshot wird automatisch generiert oder manuell ergänzt</div>'">
+      <div style="padding:8px 12px; font-size:11.5px; color:var(--t2); line-height:1.45">Echtzeit-Termin-Übersicht mit Status-Pills, Schnell-Aktionen pro Slot, Klick zum Anlegen.</div>
+    </div>
+    <div style="border:1px solid var(--line); border-radius:8px; overflow:hidden; background:rgba(11,16,32,0.7)">
+      <div style="padding:8px 12px; font-size:10.5px; color:var(--amber); font-family:'JetBrains Mono', monospace; border-bottom:1px solid var(--line); letter-spacing:0.04em; text-transform:uppercase">Mängelerfassung</div>
+      <img src="public/screenshots/maengel.png" alt="Mängelerfassung-Modal" style="width:100%; display:block; min-height:220px; max-height:240px; object-fit:cover; object-position:top" onerror="this.style.display='none';this.parentNode.innerHTML+='<div style=\'padding:60px 20px; text-align:center; color:var(--t4); font-size:11px\'>Screenshot wird automatisch generiert oder manuell ergänzt</div>'">
+      <div style="padding:8px 12px; font-size:11.5px; color:var(--t2); line-height:1.45">StVZO-Anlage-VIII-Katalog mit Schweregrad-Pills, Live-Validierung der "Bestanden"-Sperre.</div>
+    </div>
+    <div style="border:1px solid var(--line); border-radius:8px; overflow:hidden; background:rgba(11,16,32,0.7)">
+      <div style="padding:8px 12px; font-size:10.5px; color:var(--green); font-family:'JetBrains Mono', monospace; border-bottom:1px solid var(--line); letter-spacing:0.04em; text-transform:uppercase">PDF-Bericht</div>
+      <img src="public/screenshots/bericht.png" alt="PDF-Bericht-Vorschau" style="width:100%; display:block; min-height:220px; max-height:240px; object-fit:cover; object-position:top" onerror="this.style.display='none';this.parentNode.innerHTML+='<div style=\'padding:60px 20px; text-align:center; color:var(--t4); font-size:11px\'>Screenshot wird automatisch generiert oder manuell ergänzt</div>'">
+      <div style="padding:8px 12px; font-size:11.5px; color:var(--t2); line-height:1.45">A4-Behörden-Vordruck-Stil mit Siegel-Logo, Ref-Nr., römisch nummerierten Sektionen, Stempel-Feld.</div>
+    </div>
+    <div style="border:1px solid var(--line); border-radius:8px; overflow:hidden; background:rgba(11,16,32,0.7)">
+      <div style="padding:8px 12px; font-size:10.5px; color:var(--purple); font-family:'JetBrains Mono', monospace; border-bottom:1px solid var(--line); letter-spacing:0.04em; text-transform:uppercase">Mobile-Ansicht</div>
+      <img src="public/screenshots/mobile.png" alt="Mobile-Ansicht" style="width:100%; display:block; min-height:220px; max-height:240px; object-fit:cover; object-position:top" onerror="this.style.display='none';this.parentNode.innerHTML+='<div style=\'padding:60px 20px; text-align:center; color:var(--t4); font-size:11px\'>Screenshot wird automatisch generiert oder manuell ergänzt</div>'">
+      <div style="padding:8px 12px; font-size:11.5px; color:var(--t2); line-height:1.45">Sidebar als Overlay, Hamburger-Menu, Touch-Targets ≥ 36 px, Cascading-Dropdowns auch auf Phone.</div>
+    </div>
+  </div>
+  <div class="brand"><span class="dot">●</span> TÜV PRÜFSTELLE PRO</div>
+  <div class="slide-num">18 / 19</div>
 </div>
 
 <!-- ═════════════ 15  AUSBLICK + Q&A ═════════════ -->
@@ -1019,7 +1241,7 @@
     <strong>Vielen Dank für Ihre Aufmerksamkeit — wir freuen uns auf Ihre Fragen.</strong>
   </div>
   <div class="brand"><span class="dot">●</span> TÜV PRÜFSTELLE PRO</div>
-  <div class="slide-num">15 / 15</div>
+  <div class="slide-num">19 / 19</div>
 </div>
 
 </body>
