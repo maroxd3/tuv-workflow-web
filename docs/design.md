@@ -70,6 +70,11 @@ Datenfluss und Begründungen der gemachten Design-Entscheidungen.
    Hauptmangel" wird auf **vier** Ebenen durchgesetzt: UI-Button (disabled),
    Dropdown-Option (disabled), auto-advance-Funktion, Store-Guard. Beim Ausfall
    einer Ebene greifen die anderen.
+6. **Zentrale Katalogdaten statt Duplikate** — Mangelkategorien und
+   StVZO-Katalogeinträge liegen in `src/constants/mangel.js`. Views und Tests
+   verwenden daraus abgeleitete Strukturen (`MANGEL_KATALOG_BY_CODE`,
+   `MANGEL_KATALOG_EINTRAEGE`), damit Statistik-Auswertung, Mängelanzeige und
+   Validierung dieselbe Datenbasis nutzen.
 
 ### 1.4 Use-Case-Diagramm — Akteure und Anwendungsfälle
 
