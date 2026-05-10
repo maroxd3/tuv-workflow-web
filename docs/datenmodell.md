@@ -134,6 +134,12 @@ erzeugen ohne Nutzen.
 
 Über reine Typ- und Format-Prüfungen hinaus gelten folgende Regeln:
 
+Die Regeln sind bewusst an die fachlichen Kernfälle der Anwendung gekoppelt:
+Fahrzeugdaten müssen plausibel sein, Termine dürfen nicht auf nicht vorhandene
+Fahrzeuge zeigen, und der Prüfstatus muss zur Mängellage passen. Dadurch ist das
+Datenmodell nicht nur eine technische Struktur, sondern bildet direkt die
+zentralen TÜV-Workflow-Regeln ab.
+
 ### 4.1 Entitäts-Integrität
 
 | Regel-ID | Beschreibung | Durchsetzung |
