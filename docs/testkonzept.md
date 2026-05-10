@@ -144,7 +144,7 @@ Das Repo enthält Tests in `src/tests/`:
 | Datei | Test-Gegenstand | Abdeckung |
 |---|---|---|
 | `utils/date.test.js` | `isoDate`, `addDays`, `fmtDate`, `dayName`, `dayShort` | 13 Testfälle, alle Zeitzonen-kritischen Pfade |
-| `utils/mangel.test.js` | `hatHauptmangel` | 7 Testfälle, Äquivalenzklassen für Mängelkategorien |
+| `utils/mangel.test.js` | `hatHauptmangel`, Katalogstruktur | 9 Testfälle, Äquivalenzklassen für Mängelkategorien plus Strukturtests für eindeutige Katalogcodes |
 | `utils/validators.test.js` | Alle Validatoren (neu in Sprint 5) | 50+ Testfälle, Äquivalenzklassen + Grenzwerte + Regression Fuchs |
 
 ### 3.2 Component-Tests (React Testing Library)
