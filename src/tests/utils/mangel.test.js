@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { MANGEL_KATALOG_EINTRAEGE, MANGEL_KATALOG_GRUPPEN, MANGEL_KATEGORIEN } from '../../constants/mangel';
 import { hatHauptmangel } from '../../utils/mangel';
 
 describe('hatHauptmangel', () => {
@@ -29,5 +30,21 @@ describe('hatHauptmangel', () => {
 
   it('returns true even if GM is the only defect', () => {
     expect(hatHauptmangel([{ kat: 'GM' }])).toBe(true);
+  });
+});
+
+describe('MANGEL_KATALOG', () => {
+  it('contains grouped catalog entries', () => {
+    expect(MANGEL_KATALOG_GRUPPEN.length).toBeGreaterThan(0);
+    expect(MANGEL_KATALOG_EINTRAEGE.length).toBeGreaterThan(50);
+  });
+
+  it('uses unique codes and known categories', () => {
+    const codes = MANGEL_KATALOG_EINTRAEGE.map(e => e.code);
+    expect(new Set(codes).size).toBe(codes.length);
+
+    MANGEL_KATALOG_EINTRAEGE.forEach(e => {
+      expect(Object.keys(MANGEL_KATEGORIEN)).toContain(e.kat);
+    });
   });
 });
