@@ -15,7 +15,7 @@
 | **Functions** | **86.66 %** | 39 / 45 |
 | **Lines** | **98.21 %** | 165 / 168 |
 
-**Test-Bestand:** 114 Vitest-Tests in 7 Test-Dateien, Laufzeit ~22 s.
+**Test-Bestand:** 116 Vitest-Tests in 7 Test-Dateien, Laufzeit ~22 s.
 
 Alle vier Werte liegen deutlich über der branchenüblichen Schwelle von
 80 %. Insbesondere die Geschäftslogik-Module (`utils/validators.js`,
@@ -103,14 +103,19 @@ in unit-getrennten Tests gedeckt sind.
 | `src/tests/utils/date.test.js` | **18** | Grenzwertanalyse (Schaltjahre, Monatsenden, Jahres-Wechsel) |
 | `src/tests/components/buttons.test.jsx` | **9** | Snapshot + Render-Pfade (disabled, loading, icon-only) |
 | `src/tests/components/inputs.test.jsx` | **8** | Snapshot + Render-Pfade (Inp / Sel / Fld) |
-| `src/tests/utils/mangel.test.js` | **7** | Entscheidungstabelle (HM/EM/GM/GfM × Status) |
+| `src/tests/utils/mangel.test.js` | **9** | Entscheidungstabelle (HM/EM/GM/GfM × Status) + Katalogstruktur (eindeutige Codes, bekannte Kategorien) |
 | `src/tests/hooks/useToasts.test.js` | **6** | State-Lifecycle (push / dismiss / auto-clear) |
 | `src/tests/components/StatusPill.test.jsx` | **4** | Snapshot pro Status-Wert |
-| **Summe** | **114** | |
+| **Summe** | **116** | |
 
 Die methodische Herleitung der Testfälle nach Äquivalenzklassen,
 Grenzwertanalyse und Entscheidungstabelle ist in
 `docs/testkonzept.md` § 2 dokumentiert.
+
+Die zwei zusätzlichen Katalogstruktur-Tests sichern, dass der StVZO-Katalog
+weiter gruppiert bleibt, alle Mangelcodes eindeutig sind und jeder Eintrag eine
+bekannte Kategorie (`OM`, `LM`, `EM`, `HM`, `GM`) verwendet. Damit wird nicht nur
+die Statuslogik, sondern auch die Datenbasis der Statistik abgesichert.
 
 ---
 
