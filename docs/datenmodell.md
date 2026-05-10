@@ -130,6 +130,12 @@ erzeugen ohne Nutzen.
 | `kat` | string | Y | ∈ `{OM, LM, EM, HM, GM}` | `"HM"` |
 | `behoben` | boolean | N | Default `false` | `false` |
 
+Der Katalog selbst ist keine eigene persistente Entität, sondern Stammdaten im
+Frontend (`src/constants/mangel.js`). Gespeichert wird am Termin nur der
+konkrete Mangel-Eintrag mit Code, Text und Kategorie. Das reduziert
+Datenbank-Reads und hält historische Berichte stabil, selbst wenn der
+Demonstrationskatalog später ergänzt wird.
+
 ## 4. Integritätsbedingungen (Business Rules)
 
 Über reine Typ- und Format-Prüfungen hinaus gelten folgende Regeln:
