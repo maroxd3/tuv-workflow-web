@@ -40,6 +40,12 @@ Prototyp-Scope komplett darauf, dokumentieren aber, wie sie einzuführen wären
 Jeder Testfall in `src/tests/` ist nach einem der folgenden Verfahren hergeleitet.
 Die Wahl des Verfahrens hängt vom Typ der zu testenden Einheit ab.
 
+Damit sind die Testfälle nicht zufällig ausgewählt: einfache Eingabevalidierungen
+werden über Äquivalenzklassen und Grenzwerte abgesichert, kombinierte
+Workflow-Regeln über Entscheidungstabellen, und gemeldete Fehler über
+Regressionstests. Vitest ist dabei nur das Ausführungswerkzeug; die eigentliche
+Begründung der Testfälle liegt in diesen Testentwurfsverfahren.
+
 ### 2.1 Äquivalenzklassenbildung (bei allen Validatoren)
 
 **Vorgehen:** Eingaben werden in Klassen partitioniert, innerhalb derer sich der
@@ -189,6 +195,11 @@ Pflicht-Durchläufe, die nicht automatisiert sind, aber vor jedem Sprint-Ende ma
 **Messung:** Vitest kann `--coverage` via `@vitest/coverage-v8`; wird bei
 Bedarf in CI aktiviert. Für den Prototyp-Scope ist manuelle Zählung der
 Testfälle pro Einheit ausreichend.
+
+Ein Coverage-Report beantwortet dabei eine andere Frage als der normale
+Testlauf: `npm run test` zeigt, ob die erwarteten Ergebnisse stimmen; ein Lauf
+mit `npm run test -- --coverage` zeigt zusätzlich, welche Zeilen, Funktionen und
+Verzweigungen während der Tests tatsächlich ausgeführt wurden.
 
 ## 5. Testprozess im Team
 
