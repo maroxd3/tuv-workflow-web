@@ -38,6 +38,10 @@ Insbesondere versichern wir, dass
 
 ## Aufgabenverteilung im Team
 
+Die Zuordnung beschreibt die fachlichen Schwerpunkte. Einzelne Commits können
+technisch trotzdem mehrere Dateien betreffen, weil Code, Tests und Dokumentation
+in einem React-Projekt eng zusammenhängen.
+
 | Bereich | Verantwortung |
 |---|---|
 | Architektur, State-Management (`useStore`), Validierungs-Pipeline | Marwan Saleh |

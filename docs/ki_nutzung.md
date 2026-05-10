@@ -57,6 +57,9 @@ gekommen sind.
   wurden methodisch von uns entworfen, Implementierung der einzelnen
   Vitest-Test-Funktionen oft mit KI-Unterstützung. Jeder Test wurde
   vor der Aufnahme in den Test-Bestand auf Sinnhaftigkeit geprüft.
+- KI-Ausgaben wurden nicht ungeprüft übernommen: Wenn ein Testfall fachlich
+  nicht zur TÜV-Domäne passte oder nur die Implementierung statt der
+  Geschäftsregel bestätigte, wurde er verworfen oder manuell umformuliert.
 
 ---
 
