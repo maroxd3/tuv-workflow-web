@@ -35,6 +35,12 @@ StVZO-Katalog, automatische Berichtsgenerierung und Statistikauswertung.
 - **Keine Foto-Dokumentation** von Mängeln (als Ausblick, s. Abschnitt 8)
 - **Keine Hardware-Integration** (Bremsenprüfstand, OBD-Diagnosegerät etc.)
 
+Diese Abgrenzung ist Teil der Anforderungsentscheidung: Der Prototyp soll den
+fachlichen Kernworkflow "Fahrzeug -> Termin -> Mangel -> Bericht -> Statistik"
+zeigen. Produktive Randthemen wie Authentifizierung, Audit-Trail, echte
+Schnittstellen und Fotodokumentation bleiben bewusst als Ausblick dokumentiert,
+damit der Scope innerhalb des Semesterprojekts prüfbar bleibt.
+
 ## 2. Funktionale Anforderungen
 
 Jede Anforderung ist mit einer eindeutigen ID versehen; Akzeptanzkriterien sind
