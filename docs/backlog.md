@@ -28,6 +28,12 @@ Eine User Story gilt als **Done**, wenn **alle** folgenden Punkte erfüllt sind:
 Stories sind nach **MoSCoW** priorisiert (**M**ust / **S**hould / **C**ould /
 **W**on't) und mit einer groben Schätzung in **Story Points** (Fibonacci) versehen.
 
+Die Backlog-Einträge sind bewusst mit den IDs im Pflichtenheft abgestimmt:
+fachliche Stories aus den Epics 1-5 verweisen auf funktionale Anforderungen
+(`F-FZ`, `F-TR`, `F-MG`, `F-WF`, `F-BR`, `F-ST`), Qualitäts-Stories aus Epic 6
+auf nicht-funktionale Anforderungen (`NF-*`). Dadurch ist nachvollziehbar,
+welche Anforderung in welchem Sprint umgesetzt und geprüft wurde.
+
 ### Epic 1 — Fahrzeugverwaltung
 
 | ID | Story | Prio | SP | Status |
