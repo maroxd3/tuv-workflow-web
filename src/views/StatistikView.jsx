@@ -300,14 +300,14 @@ export function StatistikView({ termine, fahrzeuge }) {
           <div style={{ flex: 1 }}>
             <div style={{ height: 20, background: C.surfaceUp, borderRadius: 10, overflow: "hidden", border: `1px solid ${C.line}`, marginBottom: 8 }}>
               <motion.div initial={{ width: 0 }} animate={{ width: `${s.passR}%` }} transition={{ duration: 1.2, ease: "easeOut" }}
-                style={{ height: "100%", borderRadius: 10, background: s.passR >= 85 ? `linear-gradient(90deg,${C.green},${C.greenL})` : s.passR >= 70 ? `linear-gradient(90deg,${C.amber},${C.amberL})` : `linear-gradient(90deg,${C.red},${C.redL})` }} />
+                style={{ height: "100%", borderRadius: 10, background: `linear-gradient(90deg,${C.green},${C.greenL})` }} />
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: C.t4 }}>
               <span>0%</span><span>50%</span><span>100%</span>
             </div>
           </div>
           <div style={{ textAlign: "right", minWidth: 90 }}>
-            <div style={{ fontSize: 40, fontWeight: 700, fontFamily: C.mono, lineHeight: 1, color: s.passR >= 85 ? C.green : s.passR >= 70 ? C.amber : C.red }}>{s.passR}%</div>
+            <div style={{ fontSize: 40, fontWeight: 700, fontFamily: C.mono, lineHeight: 1, color: C.green }}>{s.passR}%</div>
             <div style={{ fontSize: 11, color: C.t4, marginTop: 4 }}>Bestandsquote</div>
           </div>
         </div>
