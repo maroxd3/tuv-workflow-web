@@ -180,3 +180,9 @@ export const MANGEL_KATALOG = [
   { code:"12.4.1",text:"Hubladebühne: Hubladebühne defekt",                         kat:"EM" },
   { code:"12.5.1",text:"Geschwindigkeitsbegrenzer: Nicht kalibriert",               kat:"HM" },
 ];
+
+export const MANGEL_KATALOG_EINTRAEGE = MANGEL_KATALOG.filter(e => e.code);
+export const MANGEL_KATALOG_GRUPPEN = MANGEL_KATALOG.filter(e => e.gruppe).map(e => e.gruppe);
+export const MANGEL_KATALOG_BY_CODE = Object.fromEntries(
+  MANGEL_KATALOG_EINTRAEGE.map(e => [e.code, e])
+);

@@ -11,7 +11,7 @@ import {
 import { C } from "../styles/theme";
 import { STATUS } from "../constants/status";
 import { PRUEFUNG_ARTEN, PRUEFER } from "../constants/pruefung";
-import { MANGEL_KATEGORIEN, MANGEL_KATALOG } from "../constants/mangel";
+import { MANGEL_KATEGORIEN, MANGEL_KATALOG_BY_CODE } from "../constants/mangel";
 import { isoDate } from "../utils/date";
 import { Kpi } from "../components/ui/Kpi";
 import { MangelPill } from "../components/ui/MangelPill";
@@ -91,7 +91,7 @@ export function StatistikView({ termine, fahrzeuge }) {
     const mCount = {};
     allM.forEach(m => { mCount[m.code] = (mCount[m.code] || 0) + 1; });
     const top10 = Object.entries(mCount).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([code, cnt]) => {
-      const tmpl = MANGEL_KATALOG.find(e => e.code === code);
+      const tmpl = MANGEL_KATALOG_BY_CODE[code];
       return { code, cnt, text: tmpl?.text || code, kat: tmpl?.kat || "EM" };
     });
     const huFaellig = fahrzeuge.filter(f => f.hu_faellig && new Date(f.hu_faellig) <= new Date(now + 30 * 86400000) && new Date(f.hu_faellig) >= new Date(now)).length;
