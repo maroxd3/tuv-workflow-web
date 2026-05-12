@@ -1,13 +1,13 @@
 import { useState } from "react";
 import PropTypes from "prop-types";
-import { Shield, RefreshCw, AlertOctagon, AlertTriangle } from "lucide-react";
+import { Shield, Trash2, Sparkles, AlertOctagon, AlertTriangle } from "lucide-react";
 import { C } from "../styles/theme";
 import { STATUS } from "../constants/status";
 import { NAV } from "../constants/nav";
 import { isoDate, fmtDate } from "../utils/date";
 import { FahrzeugShape, TerminShape } from "../types/propTypes";
 
-export function Sidebar({ view, setView, fahrzeuge, termine, resetAll }) {
+export function Sidebar({ view, setView, fahrzeuge, termine, resetAll, loadDemo }) {
   const today = isoDate();
   const todayTr = termine.filter(t => t.datum === today);
   const offenTr = todayTr.filter(t => t.status === STATUS.GEPLANT || t.status === STATUS.IN_PRUEFUNG);
@@ -133,14 +133,37 @@ export function Sidebar({ view, setView, fahrzeuge, termine, resetAll }) {
             </div>
           ))}
         </div>
-        <button onClick={resetAll} style={{
-          width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
-          background: "rgba(255,255,255,0.04)", border: `1px solid ${C.sbLine}`,
-          borderRadius: 8, padding: "10px 0", color: C.sbT3, cursor: "pointer",
-          fontSize: 11, fontFamily: C.sans, transition: "all 0.15s",
-        }}>
-          <RefreshCw size={10} /> Demo zurücksetzen
-        </button>
+        {fahrzeuge.length === 0 && termine.length === 0 ? (
+          <button
+            onClick={() => {
+              if (loadDemo) loadDemo();
+            }}
+            style={{
+              width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
+              background: "rgba(99,102,241,0.12)", border: "1px solid rgba(99,102,241,0.30)",
+              borderRadius: 8, padding: "10px 0", color: "#A5B4FC", cursor: "pointer",
+              fontSize: 11, fontWeight: 600, fontFamily: C.sans, transition: "all 0.15s",
+            }}
+          >
+            <Sparkles size={11} /> Beispieldaten laden
+          </button>
+        ) : (
+          <button
+            onClick={() => {
+              if (window.confirm("Wirklich alle Fahrzeuge und Termine löschen? Die App startet danach leer (Live-Modus).")) {
+                resetAll();
+              }
+            }}
+            style={{
+              width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
+              background: "rgba(220,38,38,0.08)", border: "1px solid rgba(220,38,38,0.20)",
+              borderRadius: 8, padding: "10px 0", color: "#FCA5A5", cursor: "pointer",
+              fontSize: 11, fontWeight: 500, fontFamily: C.sans, transition: "all 0.15s",
+            }}
+          >
+            <Trash2 size={10} /> Alle Daten löschen
+          </button>
+        )}
       </div>
     </div>
   );
@@ -152,4 +175,5 @@ Sidebar.propTypes = {
   fahrzeuge: PropTypes.arrayOf(FahrzeugShape).isRequired,
   termine: PropTypes.arrayOf(TerminShape).isRequired,
   resetAll: PropTypes.func.isRequired,
+  loadDemo: PropTypes.func,
 };

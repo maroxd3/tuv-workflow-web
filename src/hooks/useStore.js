@@ -9,6 +9,7 @@ const FZ_COL = "fahrzeuge";
 const TR_COL = "termine";
 const FZ_CACHE_KEY = "tuvpro_fz_v3";
 const TR_CACHE_KEY = "tuvpro_tr_v3";
+const CLEAR_FLAG_KEY = "tuvpro_user_cleared";
 const LOAD_FALLBACK_MS = 3000;
 
 function readLocalCache(key) {
@@ -18,6 +19,18 @@ function readLocalCache(key) {
   } catch {
     return [];
   }
+}
+
+function isUserCleared() {
+  try { return localStorage.getItem(CLEAR_FLAG_KEY) === "1"; }
+  catch { return false; }
+}
+
+function setUserCleared(value) {
+  try {
+    if (value) localStorage.setItem(CLEAR_FLAG_KEY, "1");
+    else localStorage.removeItem(CLEAR_FLAG_KEY);
+  } catch { /* quota / privacy mode */ }
 }
 
 function makeSeed() {
@@ -74,14 +87,15 @@ export function useStore() {
       if (active && fzLoaded && trLoaded) setReady(true);
     };
 
-    /* If Firestore hasn't replied in time, hydrate from cache (or seed) so the UI never hangs. */
+    /* If Firestore hasn't replied in time, hydrate from cache (or seed) so the UI never hangs.
+       Respect the user-cleared flag: if Marwan explicitly clicked "Alle Daten löschen", stay empty. */
     const fallbackTimer = window.setTimeout(() => {
       if (!active || (fzLoaded && trLoaded)) return;
       const cachedFz = readLocalCache(FZ_CACHE_KEY);
       const cachedTr = readLocalCache(TR_CACHE_KEY);
       const fallback = cachedFz.length || cachedTr.length
         ? { fahrzeuge: cachedFz, termine: cachedTr }
-        : makeSeed();
+        : isUserCleared() ? { fahrzeuge: [], termine: [] } : makeSeed();
       if (!fzLoaded) { setFz(fallback.fahrzeuge); fzLoaded = true; }
       if (!trLoaded) { setTr(fallback.termine); trLoaded = true; }
       markReady();
@@ -117,11 +131,11 @@ export function useStore() {
     };
   }, []);
 
-  /* ── Seed Firestore if empty (first launch) ── */
+  /* ── Seed Firestore if empty (first launch only — respect user-clear flag) ── */
   useEffect(() => {
     if (!ready || seeded.current) return;
     seeded.current = true;
-    if (fz.length === 0 && tr.length === 0) {
+    if (fz.length === 0 && tr.length === 0 && !isUserCleared()) {
       const seed = makeSeed();
       seed.fahrzeuge.forEach(f => writeFzDoc(f));
       seed.termine.forEach(t => writeTrDoc(t));
@@ -213,20 +227,35 @@ export function useStore() {
     }));
   }, []);
 
+  /* "Alle Daten löschen" — delete everything from Firestore + LocalStorage,
+     set the user-cleared flag so auto-seed doesn't fire on next load.
+     The app stays empty (live-mode) until loadDemo() is called. */
   const resetAll = useCallback(() => {
-    /* Delete all existing docs */
     fz.forEach(f => removeFzDoc(f.id));
     tr.forEach(t => removeTrDoc(t.id));
-    /* Write fresh seed */
+    try {
+      localStorage.removeItem(FZ_CACHE_KEY);
+      localStorage.removeItem(TR_CACHE_KEY);
+    } catch { /* ignore */ }
+    setUserCleared(true);
+    setFz([]);
+    setTr([]);
+  }, [fz, tr]);
+
+  /* "Beispieldaten laden" — explicitly opt back into the demo seed.
+     Clears the cleared-flag so the app doesn't immediately revert to empty. */
+  const loadDemo = useCallback(() => {
+    setUserCleared(false);
     const seed = makeSeed();
     seed.fahrzeuge.forEach(f => writeFzDoc(f));
     seed.termine.forEach(t => writeTrDoc(t));
     setFz(seed.fahrzeuge);
     setTr(seed.termine);
-  }, [fz, tr]);
+  }, []);
 
   return {
     fahrzeuge: fz, termine: tr, ready,
-    addFz, updFz, delFz, addTr, updTr, delTr, addMangel, delMangel, resetAll,
+    addFz, updFz, delFz, addTr, updTr, delTr, addMangel, delMangel,
+    resetAll, loadDemo,
   };
 }
