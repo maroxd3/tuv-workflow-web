@@ -2,7 +2,7 @@ import { lazy, Suspense, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Toaster } from "sonner";
 import { C, GLOBAL_CSS } from "./styles/theme";
-import { useStore } from "./hooks/useStore";
+import { useStoreCompat as useStore } from "./hooks/useStoreCompat";
 import { useToasts } from "./hooks/useToasts";
 import { useIsMobile } from "./hooks/useIsMobile";
 import { Sidebar } from "./layout/Sidebar";

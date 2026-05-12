@@ -14,7 +14,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { runMigrations } from "../db/migrate";
-import { seedDomainTables } from "../db/seed";
+import { seedDomainTables, seedDemoBestand, clearAllDataTables } from "../db/seed";
 import * as q from "../db/queries";
 import type {
   Fahrzeug,
@@ -49,6 +49,9 @@ export interface UseDbResult {
   // Mangel
   addMangel: (m: NeuerMangel) => ReturnType<typeof q.addMangel>;
   delMangel: (id: string) => Promise<void>;
+  // Daten-Management
+  resetAllData: () => Promise<void>;
+  loadDemoData: () => Promise<void>;
 }
 
 export function useDb(): UseDbResult {
@@ -87,6 +90,18 @@ export function useDb(): UseDbResult {
         await runMigrations();
         await seedDomainTables();
         if (cancelled) return;
+
+        // Auto-Seed bei leerer DB — außer der User hat explizit "Alle Daten löschen" geklickt
+        const cleared = (() => {
+          try { return localStorage.getItem("tuvpro_user_cleared") === "1"; }
+          catch { return false; }
+        })();
+        const fzCount = await q.countFahrzeuge();
+        if (fzCount === 0 && !cleared) {
+          await seedDemoBestand();
+        }
+
+        if (cancelled) return;
         await refresh();
         if (cancelled) return;
         setReady(true);
@@ -99,6 +114,20 @@ export function useDb(): UseDbResult {
     return () => {
       cancelled = true;
     };
+  }, [refresh]);
+
+  // ── Daten-Management (Sidebar-Buttons) ──
+  const resetAllData = useCallback(async () => {
+    await clearAllDataTables();
+    try { localStorage.setItem("tuvpro_user_cleared", "1"); } catch { /* ignore */ }
+    await refresh();
+  }, [refresh]);
+
+  const loadDemoData = useCallback(async () => {
+    try { localStorage.removeItem("tuvpro_user_cleared"); } catch { /* ignore */ }
+    await clearAllDataTables();
+    await seedDemoBestand();
+    await refresh();
   }, [refresh]);
 
   // ── Halter ──────────────────────────────────────────────
@@ -184,5 +213,6 @@ export function useDb(): UseDbResult {
     addFahrzeug, updFahrzeug, delFahrzeug,
     addTermin, updTermin, delTermin, updTerminStatus,
     addMangel, delMangel,
+    resetAllData, loadDemoData,
   };
 }
