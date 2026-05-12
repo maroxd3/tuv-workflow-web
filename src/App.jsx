@@ -100,6 +100,7 @@ export default function App() {
               view={view} setView={handleSetView}
               fahrzeuge={S.fahrzeuge} termine={S.termine}
               resetAll={S.resetAll}
+              loadDemo={S.loadDemo}
               onClose={() => setSidebarOpen(false)}
             />
           </motion.div>
