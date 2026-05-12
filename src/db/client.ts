@@ -31,7 +31,8 @@ let _db: ReturnType<typeof drizzle<typeof schema>> | null = null;
 export async function getDb() {
   if (_db) return _db;
 
-  _pglite = new PGlite("idb://tuvpro-db-v1");
+  // v2: nach Status-Code-Korrektur (Geplant statt GEPLANT) — frische DB für alle.
+  _pglite = new PGlite("idb://tuvpro-db-v2");
   await _pglite.waitReady;
 
   _db = drizzle(_pglite, { schema, logger: import.meta.env.DEV });
