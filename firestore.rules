@@ -1,30 +1,124 @@
 rules_version = '2';
 
+// Shared Firestore-Rules für das Firebase-Projekt `tuv-prufstelle-pro`.
+// Enthält Collections für BEIDE Apps:
+//   • gotakt / Zeiterfassung (ze_*, leads)
+//   • TÜV Prüfstelle Pro Workflow (fahrzeuge, termine)
+//
+// Wichtig: Diese Datei muss in beiden Repos identisch sein, damit
+// `firebase deploy --only firestore:rules` aus einem Repo nicht
+// die Collections der anderen App blockiert.
+
 service cloud.firestore {
   match /databases/{database}/documents {
-    function isDemoWindow() {
-      return request.time < timestamp.date(2026, 8, 1);
+
+    // ════════════════════════════════════════════════════════
+    // gotakt (Zeiterfassung) — Praxis-/Handwerk-Mitarbeiter
+    // ════════════════════════════════════════════════════════
+
+    match /ze_employees/{docId} {
+      allow read: if true;
+      allow create: if request.resource.data.keys().hasAll(["id", "vorname", "nachname", "pin"])
+                    && request.resource.data.id == docId;
+      allow update: if request.resource.data.id == docId;
+      allow delete: if true;
     }
 
-    function validFahrzeug() {
+    match /ze_records/{docId} {
+      allow read: if true;
+      allow create: if request.resource.data.keys().hasAll(["id", "employeeId", "date", "clockIn"])
+                    && request.resource.data.id == docId;
+      allow update: if request.resource.data.id == docId
+                    && request.resource.data.employeeId == resource.data.employeeId;
+      allow delete: if true;
+    }
+
+    match /ze_absences/{docId} {
+      allow read: if true;
+      allow create: if request.resource.data.keys().hasAll(["id", "employeeId", "type"])
+                    && request.resource.data.id == docId;
+      allow update: if request.resource.data.id == docId;
+      allow delete: if true;
+    }
+
+    match /ze_settings/{docId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    match /ze_audit/{docId} {
+      allow read: if true;
+      allow create: if request.resource.data.keys().hasAll(["id", "action", "timestamp"])
+                    && request.resource.data.id == docId;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    match /ze_requests/{docId} {
+      allow read: if true;
+      allow create: if request.resource.data.keys().hasAll(["id", "employeeId", "type", "status"])
+                    && request.resource.data.id == docId;
+      allow update: if request.resource.data.id == docId;
+      allow delete: if true;
+    }
+
+    match /ze_kunden/{docId} {
+      allow read: if true;
+      allow create: if request.resource.data.keys().hasAll(["id", "name"])
+                    && request.resource.data.id == docId;
+      allow update: if request.resource.data.id == docId;
+      allow delete: if true;
+    }
+
+    match /ze_auftraege/{docId} {
+      allow read: if true;
+      allow create: if request.resource.data.keys().hasAll(["id", "titel", "gewerk", "status"])
+                    && request.resource.data.id == docId;
+      allow update: if request.resource.data.id == docId;
+      allow delete: if true;
+    }
+
+    // Landing-Page Lead-Formular: nur Create vom anonymen Public erlaubt,
+    // niemand kann Leads lesen / ändern / löschen (nur über Firebase Console).
+    match /leads/{docId} {
+      allow read: if false;
+      allow create: if request.resource.data.keys().hasAll(["email"])
+                    && request.resource.data.email is string
+                    && request.resource.data.email.size() < 200
+                    && request.resource.data.email.size() > 3
+                    && (!("praxisName" in request.resource.data) || request.resource.data.praxisName.size() < 200)
+                    && (!("nachricht" in request.resource.data) || request.resource.data.nachricht.size() < 2000);
+      allow update, delete: if false;
+    }
+
+    // ════════════════════════════════════════════════════════
+    // TÜV Prüfstelle Pro Workflow (Hochschul-Projekt)
+    //
+    // Hinweis: KEIN Auto-Cutoff mehr — Marwan deaktiviert manuell,
+    // wenn das Projekt abgegeben ist. Zum Sperren: in beiden Repos
+    // die zwei match-Blöcke unten auf `allow read, write: if false;`
+    // setzen und re-deployen.
+    // ════════════════════════════════════════════════════════
+
+    function validFahrzeug(docId) {
       return request.resource.data.keys().hasOnly([
         "id", "kennzeichen", "fin", "hersteller", "modell", "baujahr",
         "farbe", "typ", "kmStand", "besitzer", "telefon", "email",
         "createdAt", "hu_faellig"
       ])
-      && request.resource.data.id == resourceId
+      && request.resource.data.id == docId
       && request.resource.data.kennzeichen is string
       && request.resource.data.hersteller is string
       && request.resource.data.modell is string
       && request.resource.data.besitzer is string;
     }
 
-    function validTermin() {
+    function validTermin(docId) {
       return request.resource.data.keys().hasOnly([
         "id", "fahrzeugId", "datum", "uhrzeit", "art", "pruefer",
         "status", "notiz", "mängel", "createdAt"
       ])
-      && request.resource.data.id == resourceId
+      && request.resource.data.id == docId
       && request.resource.data.fahrzeugId is string
       && request.resource.data.datum is string
       && request.resource.data.uhrzeit is string
@@ -34,17 +128,21 @@ service cloud.firestore {
       ];
     }
 
-    match /fahrzeuge/{resourceId} {
-      allow read: if isDemoWindow();
-      allow create, update: if isDemoWindow() && validFahrzeug();
-      allow delete: if isDemoWindow();
+    match /fahrzeuge/{docId} {
+      allow read: if true;
+      allow create, update: if validFahrzeug(docId);
+      allow delete: if true;
     }
 
-    match /termine/{resourceId} {
-      allow read: if isDemoWindow();
-      allow create, update: if isDemoWindow() && validTermin();
-      allow delete: if isDemoWindow();
+    match /termine/{docId} {
+      allow read: if true;
+      allow create, update: if validTermin(docId);
+      allow delete: if true;
     }
+
+    // ════════════════════════════════════════════════════════
+    // Default-deny — alles was hier nicht oben erlaubt ist, ist verboten
+    // ════════════════════════════════════════════════════════
 
     match /{document=**} {
       allow read, write: if false;
