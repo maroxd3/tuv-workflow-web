@@ -46,6 +46,20 @@ service cloud.firestore {
       allow delete: if isDemoWindow();
     }
 
+    // "Normal" workspace — separate from the demo sandbox. Same schema, same
+    // demo-window guard for now; once a real auth model lands we'd tighten this.
+    match /fahrzeuge_real/{resourceId} {
+      allow read: if isDemoWindow();
+      allow create, update: if isDemoWindow() && validFahrzeug();
+      allow delete: if isDemoWindow();
+    }
+
+    match /termine_real/{resourceId} {
+      allow read: if isDemoWindow();
+      allow create, update: if isDemoWindow() && validTermin();
+      allow delete: if isDemoWindow();
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

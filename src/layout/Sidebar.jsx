@@ -1,13 +1,14 @@
 import { useState } from "react";
 import PropTypes from "prop-types";
-import { Shield, RefreshCw, AlertOctagon, AlertTriangle } from "lucide-react";
+import { Shield, RefreshCw, AlertOctagon, AlertTriangle, FlaskConical, Briefcase } from "lucide-react";
 import { C } from "../styles/theme";
 import { STATUS } from "../constants/status";
 import { NAV } from "../constants/nav";
 import { isoDate, fmtDate } from "../utils/date";
 import { FahrzeugShape, TerminShape } from "../types/propTypes";
 
-export function Sidebar({ view, setView, fahrzeuge, termine, resetAll }) {
+export function Sidebar({ view, setView, fahrzeuge, termine, resetAll, mode, toggleMode }) {
+  const isDemo = mode === "demo";
   const today = isoDate();
   const todayTr = termine.filter(t => t.datum === today);
   const offenTr = todayTr.filter(t => t.status === STATUS.GEPLANT || t.status === STATUS.IN_PRUEFUNG);
@@ -41,17 +42,29 @@ export function Sidebar({ view, setView, fahrzeuge, termine, resetAll }) {
           </div>
         </div>
 
-        {/* Status pill */}
-        <div style={{
-          background: "rgba(16,185,129,0.12)", border: "1px solid rgba(16,185,129,0.22)",
-          borderRadius: 8, padding: "7px 12px", display: "flex", alignItems: "center", gap: 8,
-        }}>
-          <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#10B981", boxShadow: "0 0 8px #10B981", flexShrink: 0 }} />
-          <span style={{ fontSize: 11, color: "#34D399", flex: 1, fontWeight: 500 }}>System aktiv</span>
+        {/* Mode pill — clickable to toggle between Demo and Normal */}
+        <button
+          onClick={toggleMode}
+          title={isDemo ? "Zu Normalmodus wechseln" : "Zu Demomodus wechseln"}
+          style={{
+            width: "100%",
+            background: isDemo ? "rgba(245,158,11,0.12)" : "rgba(16,185,129,0.12)",
+            border: `1px solid ${isDemo ? "rgba(245,158,11,0.28)" : "rgba(16,185,129,0.22)"}`,
+            borderRadius: 8, padding: "7px 12px",
+            display: "flex", alignItems: "center", gap: 8,
+            cursor: "pointer", fontFamily: C.sans, textAlign: "left",
+          }}
+        >
+          {isDemo
+            ? <FlaskConical size={12} color="#FCD34D" />
+            : <Briefcase size={12} color="#34D399" />}
+          <span style={{ fontSize: 11, color: isDemo ? "#FCD34D" : "#34D399", flex: 1, fontWeight: 600 }}>
+            {isDemo ? "Demomodus" : "Normalmodus"}
+          </span>
           <span style={{ fontSize: 10, color: C.sbT3, fontFamily: C.mono }}>
             {new Date().toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })}
           </span>
-        </div>
+        </button>
       </div>
 
       {/* Nav */}
@@ -139,7 +152,7 @@ export function Sidebar({ view, setView, fahrzeuge, termine, resetAll }) {
           borderRadius: 8, padding: "10px 0", color: C.sbT3, cursor: "pointer",
           fontSize: 11, fontFamily: C.sans, transition: "all 0.15s",
         }}>
-          <RefreshCw size={10} /> Demo zurücksetzen
+          <RefreshCw size={10} /> {isDemo ? "Demo zurücksetzen" : "Alle Daten löschen"}
         </button>
       </div>
     </div>
@@ -152,4 +165,6 @@ Sidebar.propTypes = {
   fahrzeuge: PropTypes.arrayOf(FahrzeugShape).isRequired,
   termine: PropTypes.arrayOf(TerminShape).isRequired,
   resetAll: PropTypes.func.isRequired,
+  mode: PropTypes.oneOf(["demo", "normal"]).isRequired,
+  toggleMode: PropTypes.func.isRequired,
 };

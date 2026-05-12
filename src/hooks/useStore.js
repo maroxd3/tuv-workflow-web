@@ -5,11 +5,31 @@ import { uid, isoDate, addDays } from "../utils/date";
 import { STATUS } from "../constants/status";
 import { hatHauptmangel } from "../utils/mangel";
 
-const FZ_COL = "fahrzeuge";
-const TR_COL = "termine";
-const FZ_CACHE_KEY = "tuvpro_fz_v3";
-const TR_CACHE_KEY = "tuvpro_tr_v3";
+const MODE_KEY = "tuvpro_mode_v1";
 const LOAD_FALLBACK_MS = 3000;
+
+const COLLECTIONS = {
+  demo: {
+    fz: "fahrzeuge",
+    tr: "termine",
+    fzCache: "tuvpro_fz_v3",
+    trCache: "tuvpro_tr_v3",
+  },
+  normal: {
+    fz: "fahrzeuge_real",
+    tr: "termine_real",
+    fzCache: "tuvpro_fz_v3_real",
+    trCache: "tuvpro_tr_v3_real",
+  },
+};
+
+function readMode() {
+  try {
+    return localStorage.getItem(MODE_KEY) === "normal" ? "normal" : "demo";
+  } catch {
+    return "demo";
+  }
+}
 
 function readLocalCache(key) {
   try {
@@ -17,6 +37,14 @@ function readLocalCache(key) {
     return raw ? JSON.parse(raw) : [];
   } catch {
     return [];
+  }
+}
+
+function writeLocalCache(key, data) {
+  try {
+    localStorage.setItem(key, JSON.stringify(data));
+  } catch {
+    /* quota exceeded — silently drop */
   }
 }
 
@@ -53,20 +81,32 @@ function makeSeed() {
   return { fahrzeuge: fz, termine: tr };
 }
 
-/* ── Firestore helpers ── */
-function writeFzDoc(f) { setDoc(doc(db, FZ_COL, f.id), f).catch(() => {}); }
-function writeTrDoc(t) { setDoc(doc(db, TR_COL, t.id), t).catch(() => {}); }
-function removeFzDoc(id) { deleteDoc(doc(db, FZ_COL, id)).catch(() => {}); }
-function removeTrDoc(id) { deleteDoc(doc(db, TR_COL, id)).catch(() => {}); }
+/* ── Firestore helpers (collection name passed explicitly so the same helper
+   serves demo + normal modes) ── */
+function writeFzDoc(col, f) { setDoc(doc(db, col, f.id), f).catch(() => {}); }
+function writeTrDoc(col, t) { setDoc(doc(db, col, t.id), t).catch(() => {}); }
+function removeFzDoc(col, id) { deleteDoc(doc(db, col, id)).catch(() => {}); }
+function removeTrDoc(col, id) { deleteDoc(doc(db, col, id)).catch(() => {}); }
 
 export function useStore() {
-  const [fz, setFz] = useState([]);
-  const [tr, setTr] = useState([]);
-  const [ready, setReady] = useState(false);
-  const seeded = useRef(false);
+  const [mode, setMode] = useState(readMode);
 
-  /* ── Subscribe to Firestore in real-time ── */
+  /* Initialise state from the *current mode's* cache so reloads and mode
+     toggles paint instantly without a blank flash. */
+  const [fz, setFz] = useState(() => readLocalCache(COLLECTIONS[readMode()].fzCache));
+  const [tr, setTr] = useState(() => readLocalCache(COLLECTIONS[readMode()].trCache));
+  const [ready, setReady] = useState(false);
+
+  /* Track which modes we've already auto-seeded so toggling away and back
+     doesn't repeatedly recreate seed rows with fresh UUIDs. */
+  const seeded = useRef({});
+
+  /* ── Subscribe to Firestore for the active mode; re-runs on mode change.
+     `ready` only flips false→true once on first load; subsequent mode toggles
+     don't reset it because toggleMode pre-fills state from the target cache
+     synchronously, so the UI never needs a second loading screen. ── */
   useEffect(() => {
+    const cfg = COLLECTIONS[mode];
     let fzLoaded = false, trLoaded = false;
     let active = true;
 
@@ -74,37 +114,34 @@ export function useStore() {
       if (active && fzLoaded && trLoaded) setReady(true);
     };
 
-    /* If Firestore hasn't replied in time, hydrate from cache (or seed) so the UI never hangs. */
+    /* If Firestore never replies (offline / unconfigured), unblock the UI. We
+       keep whatever was loaded from the localStorage cache at hook init. */
     const fallbackTimer = window.setTimeout(() => {
       if (!active || (fzLoaded && trLoaded)) return;
-      const cachedFz = readLocalCache(FZ_CACHE_KEY);
-      const cachedTr = readLocalCache(TR_CACHE_KEY);
-      const fallback = cachedFz.length || cachedTr.length
-        ? { fahrzeuge: cachedFz, termine: cachedTr }
-        : makeSeed();
-      if (!fzLoaded) { setFz(fallback.fahrzeuge); fzLoaded = true; }
-      if (!trLoaded) { setTr(fallback.termine); trLoaded = true; }
+      fzLoaded = true;
+      trLoaded = true;
       markReady();
     }, LOAD_FALLBACK_MS);
 
-    const unsubFz = onSnapshot(collection(db, FZ_COL), snap => {
+    const unsubFz = onSnapshot(collection(db, cfg.fz), snap => {
+      if (!active) return;
       setFz(snap.docs.map(d => d.data()));
       fzLoaded = true;
       markReady();
     }, () => {
-      const cached = readLocalCache(FZ_CACHE_KEY);
-      if (cached.length) setFz(cached);
+      if (!active) return;
+      /* Error path: keep cache-prefilled state untouched. */
       fzLoaded = true;
       markReady();
     });
 
-    const unsubTr = onSnapshot(collection(db, TR_COL), snap => {
+    const unsubTr = onSnapshot(collection(db, cfg.tr), snap => {
+      if (!active) return;
       setTr(snap.docs.map(d => d.data()));
       trLoaded = true;
       markReady();
     }, () => {
-      const cached = readLocalCache(TR_CACHE_KEY);
-      if (cached.length) setTr(cached);
+      if (!active) return;
       trLoaded = true;
       markReady();
     });
@@ -115,117 +152,157 @@ export function useStore() {
       unsubFz();
       unsubTr();
     };
-  }, []);
+  }, [mode]);
 
-  /* ── Seed Firestore if empty (first launch) ── */
+  /* ── Seed the *demo* collections once if both Firestore and cache are empty.
+     Normal mode never auto-seeds — it stays empty until the user adds data.
+     setFz/setTr are deferred to a microtask so the seed effect itself stays
+     a pure side-effect (writes to Firestore) and React's "no setState in
+     effect" guidance is honoured. ── */
   useEffect(() => {
-    if (!ready || seeded.current) return;
-    seeded.current = true;
-    if (fz.length === 0 && tr.length === 0) {
-      const seed = makeSeed();
-      seed.fahrzeuge.forEach(f => writeFzDoc(f));
-      seed.termine.forEach(t => writeTrDoc(t));
+    if (!ready) return;
+    if (mode !== "demo") return;
+    if (seeded.current[mode]) return;
+    if (fz.length !== 0 || tr.length !== 0) {
+      seeded.current[mode] = true;
+      return;
     }
-  }, [ready, fz.length, tr.length]);
+    seeded.current[mode] = true;
+    const cfg = COLLECTIONS[mode];
+    const seed = makeSeed();
+    seed.fahrzeuge.forEach(f => writeFzDoc(cfg.fz, f));
+    seed.termine.forEach(t => writeTrDoc(cfg.tr, t));
+    queueMicrotask(() => {
+      setFz(seed.fahrzeuge);
+      setTr(seed.termine);
+    });
+  }, [ready, mode, fz.length, tr.length]);
 
-  /* ── Keep localStorage as offline cache ── */
-  useEffect(() => { if (fz.length) localStorage.setItem(FZ_CACHE_KEY, JSON.stringify(fz)); }, [fz]);
-  useEffect(() => { if (tr.length) localStorage.setItem(TR_CACHE_KEY, JSON.stringify(tr)); }, [tr]);
+  /* ── Mirror state to localStorage cache. Always writes (no length guard) so
+     deletions and "leere Liste" states survive a refresh. ── */
+  useEffect(() => {
+    writeLocalCache(COLLECTIONS[mode].fzCache, fz);
+  }, [fz, mode]);
+  useEffect(() => {
+    writeLocalCache(COLLECTIONS[mode].trCache, tr);
+  }, [tr, mode]);
 
-  /* ── CRUD operations (update local state + Firestore) ── */
+  /* ── CRUD operations (update local state + Firestore for current mode) ── */
   const addFz = useCallback(data => {
     const r = { ...data, id: uid(), createdAt: isoDate() };
     setFz(p => [r, ...p]);
-    writeFzDoc(r);
+    writeFzDoc(COLLECTIONS[mode].fz, r);
     return r;
-  }, []);
+  }, [mode]);
 
   const updFz = useCallback((id, patch) => {
+    const col = COLLECTIONS[mode].fz;
     setFz(prev => prev.map(f => {
       if (f.id !== id) return f;
       const updated = { ...f, ...patch };
-      writeFzDoc(updated);
+      writeFzDoc(col, updated);
       return updated;
     }));
-  }, []);
+  }, [mode]);
 
   const delFz = useCallback(id => {
+    const { fz: fzCol, tr: trCol } = COLLECTIONS[mode];
     setFz(p => p.filter(f => f.id !== id));
     setTr(p => {
       const keep = [], remove = [];
       p.forEach(t => (t.fahrzeugId === id ? remove : keep).push(t));
-      remove.forEach(t => removeTrDoc(t.id));
+      remove.forEach(t => removeTrDoc(trCol, t.id));
       return keep;
     });
-    removeFzDoc(id);
-  }, []);
+    removeFzDoc(fzCol, id);
+  }, [mode]);
 
   const addTr = useCallback(data => {
     const r = { ...data, id: uid(), mängel: [], createdAt: isoDate() };
     setTr(p => [r, ...p]);
-    writeTrDoc(r);
+    writeTrDoc(COLLECTIONS[mode].tr, r);
     return r;
-  }, []);
+  }, [mode]);
 
   const updTr = useCallback((id, patch) => {
+    const col = COLLECTIONS[mode].tr;
     setTr(prev => prev.map(t => {
       if (t.id !== id) return t;
       const updated = { ...t, ...patch };
-      /* Guard: "Bestanden" bei Hauptmangel/gefährlichem Mangel nicht zulassen
-         (§ 29 StVZO). Defense in depth — fängt auch programmatische Calls ab. */
-      if (
-        patch.status === STATUS.BESTANDEN &&
-        hatHauptmangel(updated.mängel)
-      ) {
+      /* "Bestanden" bei Hauptmangel nicht zulassen (§ 29 StVZO) — defense in depth. */
+      if (patch.status === STATUS.BESTANDEN && hatHauptmangel(updated.mängel)) {
         return t;
       }
-      writeTrDoc(updated);
+      writeTrDoc(col, updated);
       return updated;
     }));
-  }, []);
+  }, [mode]);
 
   const delTr = useCallback(id => {
+    const col = COLLECTIONS[mode].tr;
     setTr(p => p.filter(t => t.id !== id));
-    removeTrDoc(id);
-  }, []);
+    removeTrDoc(col, id);
+  }, [mode]);
 
   const addMangel = useCallback((tid, m) => {
+    const col = COLLECTIONS[mode].tr;
     setTr(p => p.map(t => {
       if (t.id !== tid) return t;
       const newMaengel = [...(t.mängel || []), { ...m, id: uid() }];
       const updated = { ...t, mängel: newMaengel };
-      /* Auto-demote: wird ein Hauptmangel zu einem BESTANDENen Termin hinzugefügt,
-         ist das Prüfergebnis nicht mehr haltbar → auf NICHT_BESTANDEN zurücksetzen. */
+      /* Auto-demote: Hauptmangel auf BESTANDEN ist unhaltbar → zurückstufen. */
       if (t.status === STATUS.BESTANDEN && hatHauptmangel(newMaengel)) {
         updated.status = STATUS.NICHT_BESTANDEN;
       }
-      writeTrDoc(updated);
+      writeTrDoc(col, updated);
       return updated;
     }));
-  }, []);
+  }, [mode]);
 
   const delMangel = useCallback((tid, mid) => {
+    const col = COLLECTIONS[mode].tr;
     setTr(p => p.map(t => {
       if (t.id !== tid) return t;
       const updated = { ...t, mängel: t.mängel.filter(m => m.id !== mid) };
-      writeTrDoc(updated);
+      writeTrDoc(col, updated);
       return updated;
     }));
+  }, [mode]);
+
+  /* Mode-aware reset:
+       demo   → wipe + reload fresh seed (keeps demo as a sandbox)
+       normal → wipe to empty (user-owned data) */
+  const resetAll = useCallback(() => {
+    const cfg = COLLECTIONS[mode];
+    fz.forEach(f => removeFzDoc(cfg.fz, f.id));
+    tr.forEach(t => removeTrDoc(cfg.tr, t.id));
+    if (mode === "demo") {
+      const seed = makeSeed();
+      seed.fahrzeuge.forEach(f => writeFzDoc(cfg.fz, f));
+      seed.termine.forEach(t => writeTrDoc(cfg.tr, t));
+      setFz(seed.fahrzeuge);
+      setTr(seed.termine);
+    } else {
+      setFz([]);
+      setTr([]);
+    }
+  }, [mode, fz, tr]);
+
+  /* Toggle between demo and normal. State is swapped to the *target* mode's
+     cache inside the same React batch so we never flash the wrong dataset
+     into the other mode's cache. */
+  const toggleMode = useCallback(() => {
+    setMode(prev => {
+      const next = prev === "demo" ? "normal" : "demo";
+      try { localStorage.setItem(MODE_KEY, next); } catch { /* ignore */ }
+      setFz(readLocalCache(COLLECTIONS[next].fzCache));
+      setTr(readLocalCache(COLLECTIONS[next].trCache));
+      return next;
+    });
   }, []);
 
-  const resetAll = useCallback(() => {
-    /* Delete all existing docs */
-    fz.forEach(f => removeFzDoc(f.id));
-    tr.forEach(t => removeTrDoc(t.id));
-    /* Write fresh seed */
-    const seed = makeSeed();
-    seed.fahrzeuge.forEach(f => writeFzDoc(f));
-    seed.termine.forEach(t => writeTrDoc(t));
-    setFz(seed.fahrzeuge);
-    setTr(seed.termine);
-  }, [fz, tr]);
-
   return {
+    mode, toggleMode,
     fahrzeuge: fz, termine: tr, ready,
     addFz, updFz, delFz, addTr, updTr, delTr, addMangel, delMangel, resetAll,
   };
