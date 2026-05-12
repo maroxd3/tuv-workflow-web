@@ -14,23 +14,33 @@ import {
   mangelKategorie,
 } from "./schema";
 
+// statusCode = exakt der Wert von `STATUS.*` aus constants/status.js
+// (deutsche Labels). Ein einziger Wahrheitswert für DB + UI.
 const STATUS_SEED = [
-  { statusCode: "GEPLANT",          bezeichnung: "Geplant",          istEndzustand: false },
-  { statusCode: "IN_PRUEFUNG",      bezeichnung: "In Prüfung",       istEndzustand: false },
-  { statusCode: "BESTANDEN",        bezeichnung: "Bestanden",        istEndzustand: true },
-  { statusCode: "NICHT_BESTANDEN",  bezeichnung: "Nicht bestanden",  istEndzustand: true },
-  { statusCode: "NACHPRUEFUNG",     bezeichnung: "Nachprüfung",      istEndzustand: false },
-  { statusCode: "NICHT_ERSCHIENEN", bezeichnung: "Nicht erschienen", istEndzustand: true },
-  { statusCode: "ABGEBROCHEN",      bezeichnung: "Abgebrochen",      istEndzustand: true },
+  { statusCode: "Geplant",          bezeichnung: "Geplant",          istEndzustand: false },
+  { statusCode: "In Prüfung",       bezeichnung: "In Prüfung",       istEndzustand: false },
+  { statusCode: "Bestanden",        bezeichnung: "Bestanden",        istEndzustand: true },
+  { statusCode: "Nicht bestanden",  bezeichnung: "Nicht bestanden",  istEndzustand: true },
+  { statusCode: "Nachprüfung",      bezeichnung: "Nachprüfung",      istEndzustand: false },
+  { statusCode: "Nicht erschienen", bezeichnung: "Nicht erschienen", istEndzustand: true },
+  { statusCode: "Abgebrochen",      bezeichnung: "Abgebrochen",      istEndzustand: true },
 ];
 
+// Alle 12 Prüf-Arten aus constants/pruefung.js — sonst FK-Fehler wenn
+// User „Saisonzulassung" oder „§ 21" auswählt.
 const PRUEFART_SEED = [
-  { prueftCode: "HU",       bezeichnung: "Hauptuntersuchung" },
-  { prueftCode: "AU",       bezeichnung: "Abgasuntersuchung" },
-  { prueftCode: "HU_AU",    bezeichnung: "HU + AU kombiniert" },
-  { prueftCode: "NP",       bezeichnung: "Nachprüfung" },
-  { prueftCode: "SP",       bezeichnung: "Sicherheitsprüfung" },
-  { prueftCode: "Abnahme",  bezeichnung: "Abnahme nach Reparatur" },
+  { prueftCode: "HU",      bezeichnung: "Hauptuntersuchung (HU)" },
+  { prueftCode: "AU",      bezeichnung: "Abgasuntersuchung (AU)" },
+  { prueftCode: "HU_AU",   bezeichnung: "HU + AU (kombiniert)" },
+  { prueftCode: "NP",      bezeichnung: "Nachprüfung" },
+  { prueftCode: "§21",     bezeichnung: "Einzelgenehmigung § 21 StVZO" },
+  { prueftCode: "§19",     bezeichnung: "Teilegutachten § 19 StVZO" },
+  { prueftCode: "SP",      bezeichnung: "Sicherheitsprüfung (SP)" },
+  { prueftCode: "Saison",  bezeichnung: "Saisonzulassung" },
+  { prueftCode: "GAS",     bezeichnung: "Gasanlagenprüfung (CNG/LPG)" },
+  { prueftCode: "Abnahme", bezeichnung: "Fahrzeugabnahme / Umrüstung" },
+  { prueftCode: "OBD",     bezeichnung: "OBD-Prüfung" },
+  { prueftCode: "Licht",   bezeichnung: "Lichttest / Scheinwerfereinst." },
 ];
 
 const PRUEFER_SEED = [
@@ -126,19 +136,19 @@ export async function seedDemoBestand() {
   const trRows = await db
     .insert(termin)
     .values([
-      { fahrzeugId: f1.fahrzeugId, datum: today, uhrzeit: "08:00:00", prueftCode: "HU_AU", prueferKuerzel: "MW", statusCode: "BESTANDEN", notiz: "Fahrzeug in sehr gutem Zustand. Geringer Mangel an Bremsflüssigkeit notiert." },
-      { fahrzeugId: f2.fahrzeugId, datum: today, uhrzeit: "09:00:00", prueftCode: "HU", prueferKuerzel: "AF", statusCode: "IN_PRUEFUNG", notiz: null },
-      { fahrzeugId: f3.fahrzeugId, datum: today, uhrzeit: "10:30:00", prueftCode: "HU_AU", prueferKuerzel: "SK", statusCode: "NICHT_BESTANDEN", notiz: "Fahrzeug nicht verkehrssicher. Hauptmängel an Bremsen und Reifen." },
-      { fahrzeugId: f4.fahrzeugId, datum: today, uhrzeit: "13:00:00", prueftCode: "NP", prueferKuerzel: "MW", statusCode: "GEPLANT", notiz: "Nachprüfung nach HU vom 15.06." },
-      { fahrzeugId: f5.fahrzeugId, datum: today, uhrzeit: "14:30:00", prueftCode: "HU", prueferKuerzel: "LN", statusCode: "GEPLANT", notiz: null },
-      { fahrzeugId: f6.fahrzeugId, datum: today, uhrzeit: "15:00:00", prueftCode: "SP", prueferKuerzel: "TB", statusCode: "GEPLANT", notiz: "Regelmäßige SP für Gewerbebetrieb" },
-      { fahrzeugId: f7.fahrzeugId, datum: today, uhrzeit: "16:00:00", prueftCode: "HU_AU", prueferKuerzel: "AF", statusCode: "GEPLANT", notiz: "Erstprüfung BEV — OBD-Diagnose einplanen." },
-      { fahrzeugId: f2.fahrzeugId, datum: isoDate(-1), uhrzeit: "09:30:00", prueftCode: "AU", prueferKuerzel: "TB", statusCode: "BESTANDEN", notiz: null },
-      { fahrzeugId: f1.fahrzeugId, datum: isoDate(1), uhrzeit: "08:30:00", prueftCode: "HU", prueferKuerzel: "MW", statusCode: "GEPLANT", notiz: null },
-      { fahrzeugId: f8.fahrzeugId, datum: today, uhrzeit: "11:00:00", prueftCode: "HU_AU", prueferKuerzel: "SK", statusCode: "NACHPRUEFUNG", notiz: "Erhebliche Mängel. Nachprüfung in 4 Wochen empfohlen." },
-      { fahrzeugId: f3.fahrzeugId, datum: isoDate(-1), uhrzeit: "14:00:00", prueftCode: "Abnahme", prueferKuerzel: "AF", statusCode: "BESTANDEN", notiz: null },
-      { fahrzeugId: f6.fahrzeugId, datum: isoDate(-2), uhrzeit: "10:00:00", prueftCode: "HU_AU", prueferKuerzel: "MW", statusCode: "BESTANDEN", notiz: null },
-      { fahrzeugId: f4.fahrzeugId, datum: isoDate(-2), uhrzeit: "13:30:00", prueftCode: "HU", prueferKuerzel: "LN", statusCode: "NICHT_BESTANDEN", notiz: null },
+      { fahrzeugId: f1.fahrzeugId, datum: today, uhrzeit: "08:00:00", prueftCode: "HU_AU", prueferKuerzel: "MW", statusCode: "Bestanden", notiz: "Fahrzeug in sehr gutem Zustand. Geringer Mangel an Bremsflüssigkeit notiert." },
+      { fahrzeugId: f2.fahrzeugId, datum: today, uhrzeit: "09:00:00", prueftCode: "HU", prueferKuerzel: "AF", statusCode: "In Prüfung", notiz: null },
+      { fahrzeugId: f3.fahrzeugId, datum: today, uhrzeit: "10:30:00", prueftCode: "HU_AU", prueferKuerzel: "SK", statusCode: "Nicht bestanden", notiz: "Fahrzeug nicht verkehrssicher. Hauptmängel an Bremsen und Reifen." },
+      { fahrzeugId: f4.fahrzeugId, datum: today, uhrzeit: "13:00:00", prueftCode: "NP", prueferKuerzel: "MW", statusCode: "Geplant", notiz: "Nachprüfung nach HU vom 15.06." },
+      { fahrzeugId: f5.fahrzeugId, datum: today, uhrzeit: "14:30:00", prueftCode: "HU", prueferKuerzel: "LN", statusCode: "Geplant", notiz: null },
+      { fahrzeugId: f6.fahrzeugId, datum: today, uhrzeit: "15:00:00", prueftCode: "SP", prueferKuerzel: "TB", statusCode: "Geplant", notiz: "Regelmäßige SP für Gewerbebetrieb" },
+      { fahrzeugId: f7.fahrzeugId, datum: today, uhrzeit: "16:00:00", prueftCode: "HU_AU", prueferKuerzel: "AF", statusCode: "Geplant", notiz: "Erstprüfung BEV — OBD-Diagnose einplanen." },
+      { fahrzeugId: f2.fahrzeugId, datum: isoDate(-1), uhrzeit: "09:30:00", prueftCode: "AU", prueferKuerzel: "TB", statusCode: "Bestanden", notiz: null },
+      { fahrzeugId: f1.fahrzeugId, datum: isoDate(1), uhrzeit: "08:30:00", prueftCode: "HU", prueferKuerzel: "MW", statusCode: "Geplant", notiz: null },
+      { fahrzeugId: f8.fahrzeugId, datum: today, uhrzeit: "11:00:00", prueftCode: "HU_AU", prueferKuerzel: "SK", statusCode: "Nachprüfung", notiz: "Erhebliche Mängel. Nachprüfung in 4 Wochen empfohlen." },
+      { fahrzeugId: f3.fahrzeugId, datum: isoDate(-1), uhrzeit: "14:00:00", prueftCode: "Abnahme", prueferKuerzel: "AF", statusCode: "Bestanden", notiz: null },
+      { fahrzeugId: f6.fahrzeugId, datum: isoDate(-2), uhrzeit: "10:00:00", prueftCode: "HU_AU", prueferKuerzel: "MW", statusCode: "Bestanden", notiz: null },
+      { fahrzeugId: f4.fahrzeugId, datum: isoDate(-2), uhrzeit: "13:30:00", prueftCode: "HU", prueferKuerzel: "LN", statusCode: "Nicht bestanden", notiz: null },
     ])
     .returning();
 

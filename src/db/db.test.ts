@@ -66,10 +66,10 @@ beforeEach(async () => {
 
   // Re-seed domain tables
   await db.insert(status).values([
-    { statusCode: "GEPLANT", bezeichnung: "Geplant", istEndzustand: false },
-    { statusCode: "IN_PRUEFUNG", bezeichnung: "In Prüfung", istEndzustand: false },
-    { statusCode: "BESTANDEN", bezeichnung: "Bestanden", istEndzustand: true },
-    { statusCode: "NICHT_BESTANDEN", bezeichnung: "Nicht bestanden", istEndzustand: true },
+    { statusCode: "Geplant", bezeichnung: "Geplant", istEndzustand: false },
+    { statusCode: "In Prüfung", bezeichnung: "In Prüfung", istEndzustand: false },
+    { statusCode: "Bestanden", bezeichnung: "Bestanden", istEndzustand: true },
+    { statusCode: "Nicht bestanden", bezeichnung: "Nicht bestanden", istEndzustand: true },
   ]);
   await db.insert(pruefart).values([
     { prueftCode: "HU", bezeichnung: "Hauptuntersuchung" },
@@ -213,7 +213,7 @@ describe("DB integration — Termin + ON DELETE CASCADE", () => {
       uhrzeit: "10:00:00",
       prueftCode: "HU",
       prueferKuerzel: "MW",
-      statusCode: "GEPLANT",
+      statusCode: "Geplant",
     });
 
     expect(await db.select().from(termin)).toHaveLength(1);
@@ -236,7 +236,7 @@ describe("DB integration — Mangel + Termin Cascade", () => {
       fahrzeugId: f.fahrzeugId,
       datum: "2026-06-01",
       prueftCode: "HU",
-      statusCode: "GEPLANT",
+      statusCode: "Geplant",
     }).returning();
     await db.insert(mangel).values({
       terminId: t.terminId,

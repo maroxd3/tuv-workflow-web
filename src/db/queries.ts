@@ -168,7 +168,7 @@ export async function updTerminStatus(
 ): Promise<{ ok: true; termin: Termin } | { ok: false; reason: string }> {
   const db = await getDb();
 
-  if (neuerStatus === "BESTANDEN") {
+  if (neuerStatus === "Bestanden") {
     const blocker = await db
       .select({ count: sql<number>`count(*)`.mapWith(Number) })
       .from(mangel)
@@ -223,10 +223,10 @@ export async function addMangel(data: NeuerMangel): Promise<{
       .from(termin)
       .where(eq(termin.terminId, data.terminId));
 
-    if (t?.statusCode === "BESTANDEN") {
+    if (t?.statusCode === "Bestanden") {
       await db
         .update(termin)
-        .set({ statusCode: "NICHT_BESTANDEN" })
+        .set({ statusCode: "Nicht bestanden" })
         .where(eq(termin.terminId, data.terminId));
       terminDemoted = true;
     }
