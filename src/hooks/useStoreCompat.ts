@@ -88,7 +88,15 @@ interface LegacyTermin {
 // (uhrzeit) — also normalisieren wir hier einmal zentral.
 function normDateStr(d: unknown): string {
   if (typeof d === "string") return d.slice(0, 10);
-  if (d instanceof Date) return d.toISOString().slice(0, 10);
+  if (d instanceof Date) {
+    // LOKAL-Zeit (nicht UTC), sonst springt das Datum um Mitternacht eine
+    // Zeitzone in den vorherigen Tag und matchet TagesplanView's
+    // isoDate()-Filter nicht mehr.
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
+  }
   return "";
 }
 function normDateStrOrNull(d: unknown): string | null {
