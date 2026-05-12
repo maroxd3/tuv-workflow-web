@@ -24,7 +24,7 @@ import {
   index,
   check,
 } from "drizzle-orm/pg-core";
-import { sql } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 
 // ════════════════════════════════════════════════════════════
 // Domänen-Tabellen (Stamm-/Wahrheits-Tabellen)
@@ -155,6 +155,32 @@ export const mangel = pgTable("mangel", {
 }, (t) => ({
   terminIdx: index("mangel_termin_idx").on(t.terminId),
   kategorieIdx: index("mangel_kategorie_idx").on(t.kategorieCode),
+}));
+
+// ════════════════════════════════════════════════════════════
+// Relations — für Drizzle Query API (db.query.X.findMany({ with: ... }))
+// ════════════════════════════════════════════════════════════
+
+export const halterRelations = relations(halter, ({ many }) => ({
+  fahrzeuge: many(fahrzeug),
+}));
+
+export const fahrzeugRelations = relations(fahrzeug, ({ one, many }) => ({
+  halter: one(halter, { fields: [fahrzeug.halterId], references: [halter.halterId] }),
+  termine: many(termin),
+}));
+
+export const terminRelations = relations(termin, ({ one, many }) => ({
+  fahrzeug: one(fahrzeug, { fields: [termin.fahrzeugId], references: [fahrzeug.fahrzeugId] }),
+  pruefart: one(pruefart, { fields: [termin.prueftCode], references: [pruefart.prueftCode] }),
+  pruefer: one(pruefer, { fields: [termin.prueferKuerzel], references: [pruefer.prueferKuerzel] }),
+  status: one(status, { fields: [termin.statusCode], references: [status.statusCode] }),
+  mängel: many(mangel),
+}));
+
+export const mangelRelations = relations(mangel, ({ one }) => ({
+  termin: one(termin, { fields: [mangel.terminId], references: [termin.terminId] }),
+  kategorie: one(mangelKategorie, { fields: [mangel.kategorieCode], references: [mangelKategorie.kategorieCode] }),
 }));
 
 // ════════════════════════════════════════════════════════════
