@@ -81,6 +81,29 @@ interface LegacyTermin {
  * Liefert ein Objekt mit der Form des alten `useStore()`-Rückgabewerts,
  * intern aber via PGlite.
  */
+// Defensive Normalisierung:
+// PGlite/Drizzle liefert date/time-Spalten teils als String, teils als
+// Date-Objekt zurück. Die alten Firestore-basierten Views vergleichen
+// stets gegen `"yyyy-mm-dd"`-Strings (datum) und `"HH:MM"`-Strings
+// (uhrzeit) — also normalisieren wir hier einmal zentral.
+function normDateStr(d: unknown): string {
+  if (typeof d === "string") return d.slice(0, 10);
+  if (d instanceof Date) return d.toISOString().slice(0, 10);
+  return "";
+}
+function normDateStrOrNull(d: unknown): string | null {
+  if (d === null || d === undefined || d === "") return null;
+  return normDateStr(d);
+}
+function normTimeStrOrNull(u: unknown): string | null {
+  if (u === null || u === undefined || u === "") return null;
+  if (typeof u === "string") return u.slice(0, 5); // "08:00:00" → "08:00"
+  if (u instanceof Date) {
+    return `${String(u.getHours()).padStart(2, "0")}:${String(u.getMinutes()).padStart(2, "0")}`;
+  }
+  return null;
+}
+
 export function useStoreCompat() {
   const db = useDb();
 
@@ -108,8 +131,8 @@ export function useStoreCompat() {
           besitzer: h?.name ?? "",
           telefon: h?.telefon ?? null,
           email: h?.email ?? null,
-          hu_faellig: f.huFaellig,
-          createdAt: typeof f.erfasstAm === "string" ? f.erfasstAm : f.erfasstAm.toISOString().slice(0, 10),
+          hu_faellig: normDateStrOrNull(f.huFaellig),
+          createdAt: normDateStr(f.erfasstAm),
         };
       }),
     [db.fahrzeuge, halterMap],
@@ -121,8 +144,8 @@ export function useStoreCompat() {
       db.termine.map((t) => ({
         id: t.terminId,
         fahrzeugId: t.fahrzeugId,
-        datum: t.datum,
-        uhrzeit: t.uhrzeit,
+        datum: normDateStr(t.datum),
+        uhrzeit: normTimeStrOrNull(t.uhrzeit),
         art: t.prueftCode,
         pruefer: t.prueferKuerzel,
         status: t.statusCode,
@@ -134,7 +157,7 @@ export function useStoreCompat() {
           kat: m.kategorieCode,
           behoben: m.behoben,
         })),
-        createdAt: typeof t.erfasstAm === "string" ? t.erfasstAm : t.erfasstAm.toISOString().slice(0, 10),
+        createdAt: normDateStr(t.erfasstAm),
       })),
     [db.termine],
   );
