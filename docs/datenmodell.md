@@ -1,352 +1,634 @@
 # Datenmodell — TÜV Prüfstelle Pro
 
-Vollständige Beschreibung der Entitäten, Attribute, Integritätsbedingungen,
-Indizes und der Diskussion NoSQL-vs-RDBMS.
+**Vollständiger Drei-Schichten-Entwurf** nach klassischer Datenbank-Methodik
+(Codd 1970, Chen 1976, Date 2003):
+
+1. **Konzeptuelles Modell** — Entity-Relationship-Diagramm, frei von
+   Implementierungsdetails
+2. **Logisches Modell** — Relationenschema in 3. Normalform (3NF), Schlüssel
+   und referentielle Integrität, aber ohne Indizes oder Trigger
+3. **Physisches Modell** — PostgreSQL-spezifische DDL, Indizes, Constraints,
+   ggf. Trigger als Implementierungsoption
+
+Diese Trennung folgt dem ANSI/SPARC-Drei-Ebenen-Modell von 1975 und stellt
+sicher, dass Geschäftsanforderungen unabhängig von der konkreten
+Datenbank-Technologie diskutierbar sind.
 
 ---
 
-## 1. Entity-Relationship-Diagramm
+## 1. Konzeptuelles Modell — Entity-Relationship-Diagramm
+
+Die konzeptuelle Sicht stellt das Universum of Discourse dar. Sie enthält
+**ausschließlich** Entitäten, ihre Attribute und Beziehungen. Keine Tabellen,
+keine Fremdschlüssel-Spalten, keine Indizes, keine Trigger, keine
+DB-System-spezifischen Datentypen.
+
+### 1.1 ER-Diagramm (Chen-Notation, kompakt als Mermaid)
 
 ```mermaid
 erDiagram
-  FAHRZEUG ||--o{ TERMIN : hat
-  TERMIN ||--o{ MANGEL : enthaelt
+  HALTER     ||--o{ FAHRZEUG : "besitzt"
+  FAHRZEUG   ||--o{ TERMIN   : "wird geprüft in"
+  TERMIN     ||--o{ MANGEL   : "weist auf"
+  PRUEFER    ||--o{ TERMIN   : "führt durch"
+  PRUEFART   ||--o{ TERMIN   : "klassifiziert"
+  STATUS     ||--o{ TERMIN   : "beschreibt Zustand"
+
+  HALTER {
+    string name
+    string telefon
+    string email
+    string anschrift
+  }
 
   FAHRZEUG {
-    string id PK "uid, nicht änderbar"
-    string kennzeichen UK "DE-Format, unique"
-    string fin "17 Zeichen, optional"
-    string hersteller "required"
-    string modell "required"
-    int    baujahr "≥ 1885, ≤ Jahr+1"
+    string kennzeichen
+    string fin
+    string hersteller
+    string modell
+    int    baujahr
     string farbe
-    string typ "FK→FAHRZEUG_TYPEN"
-    int    kmStand "≥ 0, ≤ 3 000 000"
-    string besitzer "required"
-    string telefon "Regex-validiert"
-    string email "Regex-validiert"
+    string typ
+    int    kilometerstand
     date   hu_faellig
-    date   createdAt
   }
 
   TERMIN {
-    string id PK "uid"
-    string fahrzeugId FK "→ FAHRZEUG.id"
-    date   datum "required"
-    string uhrzeit "HH:MM, 30-min-Slots"
-    string art "FK→PRUEFUNG_ARTEN"
-    string pruefer "FK→PRUEFER"
-    string status "FK→STATUS"
-    string notiz
-    date   createdAt
+    date datum
+    time uhrzeit
+    text notiz
   }
 
   MANGEL {
-    string id PK "uid, lokal pro Termin"
-    string code "StVZO-Anlage-VIII-Ref."
-    string text "beschreibend"
-    string kat "FK→MANGEL_KATEGORIE"
+    string code
+    text   beschreibung
+    string kategorie
     bool   behoben
   }
+
+  PRUEFER   { string kuerzel string name }
+  PRUEFART  { string code    string bezeichnung }
+  STATUS    { string code    string bezeichnung }
 ```
 
-## 2. Warum diese Granularität?
+### 1.2 Entitäten und ihre Bedeutung
 
-**Warum `Fahrzeug` und `Termin` separate Entitäten?**
-Ein Fahrzeug existiert unabhängig von seinen Prüfungen (auch nach Abschluss
-aller Termine wird es nicht gelöscht). Ein Termin bezieht sich zwingend auf
-genau ein Fahrzeug. Klassische 1:N-Beziehung mit eigenständigem Lebenszyklus je
-Entität.
-
-**Warum `Mangel` als Array innerhalb `Termin`, nicht als eigene Entität?**
-Ein Mangel hat **keine eigenständige Existenz**: Er gehört immer zu genau einer
-Prüfung, wird nur im Kontext der Prüfung angezeigt/bearbeitet und hat keine
-Beziehungen zu anderen Entitäten außer seinem Termin. Die Frage "Welche Mängel
-gibt es insgesamt?" wird in der Statistik über eine Aggregation gelöst
-(`termine.flatMap(t => t.mängel)`), nicht über eine Select-Abfrage. In
-Firestore ist das Einbetten daher idiomatisch und performanter als eine
-Sub-Collection (1 Read statt N+1).
-
-**Warum `besitzer`, `telefon`, `email` als Attribute des Fahrzeugs, nicht als
-eigene Entität `Halter`?**
-Aus Scope-Gründen: Die aktuelle Anwendung modelliert einen Halter pro Fahrzeug
-und hat keinen Bedarf, mehrere Fahrzeuge eines Halters zu gruppieren oder
-Halter-Adressdaten zu pflegen. **Für einen Produktivbetrieb wäre eine eigene
-Entität `Halter` mit Normalisierung sinnvoll** (ein Halter kann mehrere
-Fahrzeuge besitzen, ein Halter-Update würde dann nicht N Fahrzeuge berühren).
-Diese Änderung wäre eine klassische 3NF-Normalisierung und ist im Ausblick
-dokumentiert.
-
-**Warum `art` (Prüfungsart) und `pruefer` als Referenzen (FK) auf
-Konstanten-Listen statt auf Datenbank-Collections?**
-Beide Listen sind Stammdaten mit < 15 Einträgen, ändern sich selten, und sind
-stärker mit dem Code (Rechtsgrundlagen, Zertifizierungen) verknüpft als mit
-Laufzeit-Daten. Eine Datenbank-Collection würde nur unnötige Komplexität
-erzeugen ohne Nutzen.
-
-## 3. Vollständige Attributliste
-
-### 3.1 Entität `Fahrzeug`
-
-| Attribut | Typ | Pflicht | Validierung | Beispiel |
-|---|---|---|---|---|
-| `id` | string (uid) | Y | generiert | `"lm5r2-hj9"` |
-| `kennzeichen` | string | Y | Regex `^[A-ZÄÖÜ]{1,3}[-\s][A-Z]{1,2}\s?\d{1,4}[HE]?$`; global unique; normalisiert (Uppercase, Single-Space) | `"B-TK 1234"` |
-| `fin` | string | N | 17 Zeichen, ohne `I`, `O`, `Q` (Regex `[A-HJ-NPR-Z0-9]{17}`) | `"WBA3A5C50CF256985"` |
-| `hersteller` | string | Y | trim, nicht leer | `"BMW"` |
-| `modell` | string | Y | trim, nicht leer | `"320d xDrive"` |
-| `baujahr` | number | N | Integer, 1885 ≤ x ≤ aktuelles Jahr + 1 | `2018` |
-| `farbe` | string | N | Freitext | `"Sophistograu Metallic"` |
-| `typ` | string | Y | ∈ FAHRZEUG_TYPEN.id | `"PKW"` |
-| `kmStand` | number | N | Integer, 0 ≤ x ≤ 3 000 000 | `87420` |
-| `besitzer` | string | Y | trim, nicht leer | `"Klaus Müller"` |
-| `telefon` | string | N | Regex `[+()\d\s\-/]{5,30}`, keine Buchstaben, ≥ 5 Ziffern | `"+49 176 1234567"` |
-| `email` | string | N | Regex `^[^\s@]+@[^\s@]+\.[^\s@]{2,}$`, normalisiert (lowercase) | `"k.mueller@mail.de"` |
-| `hu_faellig` | string (ISO-Datum) | N | gültiges Datum | `"2026-06-15"` |
-| `createdAt` | string (ISO-Datum) | Y | automatisch gesetzt | `"2026-04-24"` |
-
-### 3.2 Entität `Termin`
-
-| Attribut | Typ | Pflicht | Validierung | Beispiel |
-|---|---|---|---|---|
-| `id` | string | Y | generiert | `"xt2-kl9nm"` |
-| `fahrzeugId` | string (FK) | Y | muss existierendes Fahrzeug referenzieren | `"lm5r2-hj9"` |
-| `datum` | string (ISO) | Y | gültiges Datum | `"2026-04-24"` |
-| `uhrzeit` | string | N | ∈ TIME_SLOTS (30-Min-Raster 07:00–17:30) | `"08:00"` |
-| `art` | string | N | ∈ PRUEFUNG_ARTEN.id | `"HU_AU"` |
-| `pruefer` | string | N | ∈ PRUEFER.id | `"MW"` |
-| `status` | string | Y | ∈ STATUS, Default `GEPLANT` | `"Bestanden"` |
-| `notiz` | string | N | Freitext | `"Bremsflüssigkeit prüfen"` |
-| `mängel` | Mangel[] | N | eingebettetes Array, Default `[]` | `[{...}]` |
-| `createdAt` | string | Y | automatisch | `"2026-04-24"` |
-
-### 3.3 Entität `Mangel` (eingebettet in `Termin.mängel`)
-
-| Attribut | Typ | Pflicht | Validierung | Beispiel |
-|---|---|---|---|---|
-| `id` | string | Y | generiert | `"ab3-xy7"` |
-| `code` | string | Y | typischerweise StVZO-Referenz, bei Freitext `"FR"` | `"2.1.1"` |
-| `text` | string | Y | beschreibend | `"Betriebsbremse: Ungleichmäßige Bremswirkung"` |
-| `kat` | string | Y | ∈ `{OM, LM, EM, HM, GM}` | `"HM"` |
-| `behoben` | boolean | N | Default `false` | `false` |
-
-Der Katalog selbst ist keine eigene persistente Entität, sondern Stammdaten im
-Frontend (`src/constants/mangel.js`). Gespeichert wird am Termin nur der
-konkrete Mangel-Eintrag mit Code, Text und Kategorie. Das reduziert
-Datenbank-Reads und hält historische Berichte stabil, selbst wenn der
-Demonstrationskatalog später ergänzt wird.
-
-## 4. Integritätsbedingungen (Business Rules)
-
-Über reine Typ- und Format-Prüfungen hinaus gelten folgende Regeln:
-
-Die Regeln sind bewusst an die fachlichen Kernfälle der Anwendung gekoppelt:
-Fahrzeugdaten müssen plausibel sein, Termine dürfen nicht auf nicht vorhandene
-Fahrzeuge zeigen, und der Prüfstatus muss zur Mängellage passen. Dadurch ist das
-Datenmodell nicht nur eine technische Struktur, sondern bildet direkt die
-zentralen TÜV-Workflow-Regeln ab.
-
-### 4.1 Entitäts-Integrität
-
-| Regel-ID | Beschreibung | Durchsetzung |
-|---|---|---|
-| INT-01 | `Fahrzeug.kennzeichen` ist global eindeutig (case/whitespace-insensitiv) | `validateKennzeichenUnique` vor Speichern; fehlt: Firestore-Unique-Index (geplant mit Security Rules, s. Ausblick) |
-| INT-02 | `Fahrzeug.id`, `Termin.id`, `Mangel.id` sind stabil und unveränderlich | useStore.updFz/updTr verhindern ID-Änderung (Patches ohne `id`-Feld) |
-| INT-03 | `Termin.fahrzeugId` muss auf existierendes Fahrzeug zeigen | aktuell nur über UI gewährleistet (Dropdown mit validierten Optionen); für Cloud-Betrieb: Security Rule oder Cloud Function |
-
-### 4.2 Referentielle Integrität
-
-| Regel-ID | Beschreibung | Durchsetzung |
-|---|---|---|
-| REF-01 | Löschen eines `Fahrzeug` löscht kaskadiert alle zugehörigen `Termin`e | `useStore.delFz` führt Batch-Delete durch |
-| REF-02 | `Termin.art` muss in `PRUEFUNG_ARTEN` vorkommen | UI-Dropdown limitiert Auswahl |
-| REF-03 | `Termin.pruefer` muss in `PRUEFER` vorkommen | UI-Dropdown limitiert Auswahl |
-
-### 4.3 Workflow-Integrität
-
-| Regel-ID | Beschreibung | Begründung | Durchsetzung |
-|---|---|---|---|
-| WF-01 | Ein `Termin` mit mindestens einem Mangel der Kategorie `HM` oder `GM` kann nicht den Status `BESTANDEN` haben | § 29 StVZO Anlage VIII: Hauptmängel und gefährliche Mängel begründen "nicht bestanden" bis zur Nachprüfung | 4 Durchsetzungsstellen (s. `design.md` Abschnitt 1.3): MaengelModal (Button disabled), TerminModal (Dropdown-Option disabled), TagesplanView.advance() (Auto-Route auf NICHT_BESTANDEN), useStore.updTr (Guard) |
-| WF-02 | `Termin.status` darf nicht von `BESTANDEN`/`NICHT_BESTANDEN`/`NACHPRUEFUNG` zurück auf `GEPLANT` wechseln, außer bewusster Revert | Nicht explizit durchgesetzt — Akzeptanz für Korrekturfälle. In einer Produktivversion wäre ein Audit-Trail Pflicht (Ausblick) |
-| WF-03 | Wird ein HM/GM-Mangel zu einem bereits `BESTANDEN`en Termin hinzugefügt, wird der Status automatisch auf `NICHT_BESTANDEN` zurückgesetzt | Datenintegrität wahrt sich selbst | `useStore.addMangel` Guard |
-
-### 4.4 Wertebereichs-Integrität
-
-Alle in 3.1–3.3 unter Spalte "Validierung" aufgeführten Format- und
-Bereichsprüfungen sind in `src/utils/validators.js` implementiert und per
-Vitest-Tests (`src/tests/utils/validators.test.js`) abgesichert.
-
-Zusätzlich werden seit Sprint 5 (2026-04-27) **Domänen-Whitelists** durchgesetzt:
-
-- **Kennzeichen-Kreis-Code**: Der Stadt-/Landkreis-Prefix muss in der KBA-Liste
-  `src/constants/kfzKreis.js` (~430 aktuelle und historische Codes) vorkommen —
-  `QWE-RT 1234` würde abgewiesen, `B-TK 1234` (Berlin) akzeptiert.
-- **Hersteller-Modell-Typ-Konsistenz**: Die Liste `src/constants/kfzReferenz.js`
-  definiert pro Hersteller die zulässigen Modelle und Fahrzeugtypen. Im UI sind
-  diese als abhängige Dropdowns realisiert; bei Freitext-Eingabe (Sonstiger-Modus)
-  greift `validateHerstellerModellKonsistenz` als Hard-Validator.
-- **Saison-Kennzeichen**: `MM-MM`-Suffix mit gültigen Monatszahlen (01–12) und
-  Wrap-Around-Erlaubnis (`11-03` für November bis März).
-- **FIN-Prüfziffer (weich)**: ISO 3779 / FMVSS 115 — als nicht-blockende Warnung,
-  weil die Prüfziffer nur für Nordamerika-Markt-Fahrzeuge ab 1981 verpflichtend ist.
-
-## 5. Indizes
-
-Firestore-Automatik: jeder einzelne Feldname bekommt einen Index automatisch.
-Für zusammengesetzte Abfragen sind zusätzliche Indizes definierbar; im
-Prototyp-Scope ist das nicht nötig, da alle Filter clientseitig laufen.
-
-**Bei Skalierung (> ~10 000 Termine)** wären sinnvoll:
-
-- `termine` — Index auf `datum ASC, uhrzeit ASC` (für Tagesplan-Sortierung)
-- `termine` — Index auf `fahrzeugId ASC, datum DESC` (Prüfhistorie eines Fahrzeugs)
-- `fahrzeuge` — Index auf `hu_faellig ASC` (Fälligkeits-Reports)
-
-## 6. Diskussion: NoSQL (Firestore) vs. Relationale DB
-
-Frau Fuchs hat im Feedback vom 24.04.2026 die Entscheidung für Firestore
-kritisch hinterfragt. Die folgende Analyse nimmt die Kritik ernst.
-
-### 6.1 Ihr Argument (korrekt zusammengefasst)
-
-> "Dokumentenbasierte DB sind eher für semistrukturierte Daten geeignet. Bei
-> dem TÜV-Verwaltungssystem hat man es dagegen mit strukturierten Daten zu tun
-> (der TÜV-Bericht hat eine fest vorgegeben Struktur und auch wenn man als
-> Feature noch eine Fotodokumentation hinzufügt, kann man das problemlos als
-> BLOB-Feld oder auch einfach als Feld mit einer Url/Pfad der Fotos auf eine
-> Foto-Repository realisieren)"
-
-Dieses Argument ist **korrekt** — unser Datenmodell ist tatsächlich hochgradig
-strukturiert, und eine relationale DB (PostgreSQL, MySQL) wäre eine legitime,
-teilweise sogar bessere Wahl. Wir hätten das in der Präsentation gründlicher
-begründen müssen.
-
-### 6.2 Pro RDBMS (PostgreSQL)
-
-| Aspekt | RDBMS-Vorteil |
+| Entität | Reale Bedeutung |
 |---|---|
-| Strukturierte Daten, feste Relationen | Schema-Enforcement, bessere Integrität (Foreign Keys als DB-Constraint, nicht nur Code-Layer) |
-| Reporting (Statistik-Auswertungen) | SQL-Aggregationen (`GROUP BY`, `HAVING`, Window Functions) sind für Kennzahlen optimiert |
-| Transaktionen | ACID standardmäßig; Firestore Transaktionen sind begrenzter (max 500 Operationen) |
-| Komplexere JOINs | Native SQL-JOINs vs. Firestore's Notwendigkeit zu Client-Side-JOINs oder Datendenormalisierung |
-| Migration / Schema Evolution | Tools wie Flyway/Liquibase bewährt; bei Firestore nur per manuellen Migrationsskripten |
-| Datenschutz / lokale Verwaltung | Leichter on-premise hostbar (z. B. Prüfstelle kann eigene Instanz im lokalen Netz betreiben) |
+| **HALTER** | Eigentümer eines oder mehrerer Fahrzeuge — natürliche oder juristische Person |
+| **FAHRZEUG** | Eindeutiges Kraftfahrzeug, identifiziert durch Kennzeichen und/oder FIN |
+| **TERMIN** | Konkreter Prüfungs-Termin eines Fahrzeugs zu einem Zeitpunkt |
+| **MANGEL** | Festgestellte Beanstandung bei einer Prüfung gemäß StVZO Anlage VIII |
+| **PRUEFER** | Sachverständiger Prüfingenieur, der den Termin durchführt |
+| **PRUEFART** | Klassifikation der Prüfung (HU, AU, HU+AU, Nachprüfung, ...) |
+| **STATUS** | Zustand eines Termins im Workflow |
 
-### 6.3 Pro Firestore (warum wir es gewählt haben)
+### 1.3 Beziehungen und Kardinalitäten
 
-| Aspekt | Firestore-Vorteil |
-|---|---|
-| Echtzeit-Synchronisation | `onSnapshot`-API out-of-the-box ohne Websocket-Server; mehrere Nutzer sehen Änderungen sofort |
-| Serverloses Backend | Kein eigener Backend-Dienst nötig → reduziert Projektkomplexität für eine 2-Personen-Prototyp-Abgabe |
-| Offline-Support | Eingebaute Offline-Persistence (in unserer Umsetzung zusätzlich LocalStorage) |
-| Eingebettete Dokumente (`mängel` in `Termin`) | Weniger Reads in unserem Zugriffsmuster (Mangel wird nie alleine gelesen) |
-| Skalierung out-of-the-box | Auto-Sharding, keine manuelle Replikation |
-| Firebase-Ökosystem | Direkter Anschluss an Auth, Storage, Cloud Functions (für Ausbau) |
+| Beziehung | Kardinalität | Erläuterung |
+|---|---|---|
+| HALTER **besitzt** FAHRZEUG | 1 : N | Ein Halter kann mehrere Fahrzeuge besitzen; jedes Fahrzeug gehört zu genau einem Halter (zum gegebenen Zeitpunkt) |
+| FAHRZEUG **wird geprüft in** TERMIN | 1 : N | Ein Fahrzeug hat im Laufe der Zeit beliebig viele Termine; jeder Termin gilt genau einem Fahrzeug |
+| TERMIN **weist auf** MANGEL | 1 : N | Ein Termin kann mehrere Mängel haben; jeder Mangel ist genau einem Termin zugeordnet |
+| PRUEFER **führt durch** TERMIN | 1 : N | Ein Prüfer macht viele Termine; jeder Termin hat genau einen Prüfer |
+| PRUEFART **klassifiziert** TERMIN | 1 : N | Jeder Termin ist genau einer Prüfart zugeordnet |
+| STATUS **beschreibt Zustand** TERMIN | 1 : N | Jeder Termin hat zu einem Zeitpunkt genau einen Status |
 
-### 6.4 Bewertung im Projekt-Kontext
+### 1.4 Geschäftsregeln auf konzeptueller Ebene
 
-**Für den Prototyp**: Firestore ist eine **akzeptable, nicht optimale** Wahl.
-Die Vorteile (Echtzeit, serverlos, Tauri-Integration über REST-SDK) überwiegen
-die Nachteile in einem 2-Personen-Semester-Projekt.
+Diese Regeln stellen das Geschäftswissen dar, **unabhängig** davon, wie sie
+später technisch erzwungen werden (Anwendungslogik, DB-Constraints, Trigger).
 
-**Für einen Produktivbetrieb**: Die Kritik der Dozentin trifft zu. Ab dem Punkt,
-an dem realistische Anforderungen dazukommen (Multi-Tenancy, komplexe
-Auswertungen, audit-trails, Reporting über Prüfstellen hinweg), wäre ein
-Migration auf **PostgreSQL + Node/Go-Backend** mittelfristig sauberer:
+| ID | Regel | Quelle |
+|---|---|---|
+| GR-01 | Jedes Fahrzeug ist über sein Kennzeichen eindeutig identifizierbar | KBA / StVZO |
+| GR-02 | Wenn eine Fahrgestellnummer (FIN) angegeben ist, ist sie weltweit eindeutig | ISO 3779 |
+| GR-03 | Ein Termin mit Hauptmangel oder gefährlichem Mangel darf nicht den Status BESTANDEN haben | § 29 StVZO |
+| GR-04 | Baujahr eines Fahrzeugs liegt zwischen 1885 (Patent-Motorwagen) und (aktuelles Jahr + 1) | Plausibilität |
+| GR-05 | Kilometerstand ist nichtnegativ und unter einer Plausibilitätsgrenze (z. B. 3.000.000 km) | Plausibilität |
+| GR-06 | Beim Löschen eines Fahrzeugs werden alle zugehörigen Termine und Mängel kaskadierend entfernt | Domänen-Konsistenz |
 
-- `Fahrzeug`, `Halter`, `Termin`, `Mangel` als normalisierte Tabellen (3NF)
-- Foto-Storage separat (S3, MinIO, Firebase Storage) mit URL-Referenz am `Mangel`
-- PostGIS-Extension falls Standort-Features hinzukommen (Prüfstellen-Karten)
+---
 
-**Konkreter Migrationspfad** (Ausblick):
+## 2. Logisches Modell — Relationenschema in 3NF
 
-1. Schema in SQL ableiten (siehe Entwurf unten)
-2. Backend-Layer einziehen (z. B. tRPC, PostgREST, oder klassisches Express/NestJS)
-3. React-Client umstellen von `firestore.onSnapshot` → Websocket oder
-   SSE-basiertes Live-Update (z. B. Supabase Realtime)
+Das logische Modell überführt das konzeptuelle ER-Diagramm in eine Sammlung
+**normalisierter Relationen**. Wir streben **dritte Normalform (3NF)** an, um
+Anomalien bei Insert / Update / Delete zu vermeiden (Codd 1971).
 
-### 6.5 Alternativer SQL-Entwurf
+### 2.1 Schritte der Normalisierung — kurz dokumentiert
+
+Aus dem konzeptuellen Modell ergeben sich diese Entitäten als initiale
+Relationen:
+
+```
+FAHRZEUG_KONZEPT = { kennzeichen, fin, hersteller, modell, baujahr,
+                    farbe, typ, kilometerstand, hu_faellig,
+                    halter_name, halter_telefon, halter_email,
+                    halter_anschrift }
+```
+
+**1NF**: Alle Attribute sind atomar (keine Mehrfachwerte) — bereits erfüllt,
+sobald wir uns gegen das eingebettete Mängel-Array entscheiden.
+
+**2NF**: Keine partielle funktionale Abhängigkeit vom Schlüssel — erfüllt, da
+unsere Schlüssel einspaltig sind.
+
+**3NF**: Keine transitiven Abhängigkeiten. Das ist hier verletzt:
+
+- `kennzeichen → halter_name` (Schlüsselattribut bestimmt Halter)
+- `halter_name → halter_telefon, halter_email, halter_anschrift` (transitive Abh.)
+
+→ Verletzung der 3NF. Auflösung durch **Ausgliederung des Halters** in
+eine eigene Relation:
+
+```
+HALTER = { halter_id, name, telefon, email, anschrift }
+FAHRZEUG = { kennzeichen, fin, hersteller, modell, baujahr, farbe,
+            typ, kilometerstand, hu_faellig, halter_id }
+```
+
+Analog für das Mängel-Array in TERMIN: ein Termin kann mehrere Mängel haben →
+das verletzt 1NF (mehrwertige Attribute) → Auflösung in eigene Relation
+MANGEL mit Fremdschlüssel auf TERMIN.
+
+### 2.2 Endgültiges Relationenschema (3NF)
+
+Notation: `RELATION(unterstrichener_PK, Attribute, fremdschlüssel↗ZIEL)`
+
+```
+HALTER(halter_id, name, telefon, email, anschrift, erfasst_am)
+
+FAHRZEUG(fahrzeug_id, kennzeichen, fin?, hersteller, modell, baujahr?, farbe?,
+        typ, kilometerstand?, hu_faellig?, halter_id↗HALTER, erfasst_am)
+
+PRUEFART(prueft_code, bezeichnung)
+
+PRUEFER(pruefer_kuerzel, name, qualifikation?)
+
+STATUS(status_code, bezeichnung, ist_endzustand)
+
+TERMIN(termin_id, fahrzeug_id↗FAHRZEUG, datum, uhrzeit, prueft_code↗PRUEFART,
+      pruefer_kuerzel↗PRUEFER, status_code↗STATUS, notiz?, erfasst_am)
+
+MANGEL_KATEGORIE(kategorie_code, bezeichnung, blockiert_bestanden)
+
+MANGEL(mangel_id, termin_id↗TERMIN, code_stvzo?, beschreibung,
+      kategorie_code↗MANGEL_KATEGORIE, behoben, erfasst_am)
+```
+
+**Legende:**
+- Unterstrichener Bezeichner = Primärschlüssel
+- `?` = nullable
+- `↗ZIEL` = Fremdschlüssel referenziert ZIEL
+- `STATUS.ist_endzustand` = boolean, markiert ob ein Status terminal ist (BESTANDEN, NICHT_BESTANDEN, ABGEBROCHEN, NICHT_ERSCHIENEN)
+- `MANGEL_KATEGORIE.blockiert_bestanden` = boolean, dokumentiert ob diese Kategorie WF-01 auslöst (true für HM, GM; false für OM, LM, EM)
+
+### 2.3 Schlüssel und Eindeutigkeitsbedingungen
+
+| Relation | Primärschlüssel | Unique-Constraints |
+|---|---|---|
+| HALTER | `halter_id` (UUID) | E-Mail (falls vorhanden) |
+| FAHRZEUG | `fahrzeug_id` (UUID) | `kennzeichen` global; `fin` global wenn nicht NULL |
+| PRUEFART | `prueft_code` (text) | — |
+| PRUEFER | `pruefer_kuerzel` (text) | — |
+| STATUS | `status_code` (text) | — |
+| TERMIN | `termin_id` (UUID) | `(fahrzeug_id, datum, uhrzeit)` zusammengesetzt |
+| MANGEL_KATEGORIE | `kategorie_code` (text) | — |
+| MANGEL | `mangel_id` (UUID) | — |
+
+### 2.4 Referentielle Integrität
+
+| Fremdschlüssel | Referenziert | ON DELETE | ON UPDATE | Begründung |
+|---|---|---|---|---|
+| `FAHRZEUG.halter_id` | `HALTER.halter_id` | RESTRICT | CASCADE | Ein Halter mit Fahrzeugen darf nicht gelöscht werden |
+| `TERMIN.fahrzeug_id` | `FAHRZEUG.fahrzeug_id` | CASCADE | CASCADE | Wird ein Fahrzeug gelöscht, gehen alle Termine mit (Domänen-Anforderung) |
+| `TERMIN.prueft_code` | `PRUEFART.prueft_code` | RESTRICT | CASCADE | Prüfarten dürfen nicht gelöscht werden solange referenziert |
+| `TERMIN.pruefer_kuerzel` | `PRUEFER.pruefer_kuerzel` | SET NULL | CASCADE | Bei Ausscheiden eines Prüfers bleiben Termine bestehen, Prüfer-Verweis wird NULL |
+| `TERMIN.status_code` | `STATUS.status_code` | RESTRICT | CASCADE | Status-Codes sind Domänen-Konstante |
+| `MANGEL.termin_id` | `TERMIN.termin_id` | CASCADE | CASCADE | Wird der Termin gelöscht, gehen die Mängel mit |
+| `MANGEL.kategorie_code` | `MANGEL_KATEGORIE.kategorie_code` | RESTRICT | CASCADE | Kategorien sind Domänen-Konstante |
+
+### 2.5 Geschäftsregeln im logischen Modell
+
+Auf logischer Ebene können wir Geschäftsregeln entweder als **deklarative
+Integritätsbedingungen** ausdrücken oder als **Pflichten der Anwendungslogik**
+markieren. Das SQL-92-Konstrukt `CREATE ASSERTION` wäre der Königsweg für
+relationsübergreifende Constraints, ist aber in keinem produktiven DBMS
+implementiert (Date 2003).
+
+| Regel | Logische Ausdrucksform | Erzwingung |
+|---|---|---|
+| GR-01 Kennzeichen-Eindeutigkeit | `UNIQUE(kennzeichen)` auf FAHRZEUG | deklarativ |
+| GR-02 FIN-Eindeutigkeit | `UNIQUE(fin) WHERE fin IS NOT NULL` | deklarativ (Postgres: partial unique index) |
+| GR-03 WF-01 — Bestanden ⊥ Hauptmangel | **Nicht durch CHECK ausdrückbar** (Subquery in CHECK ist nicht SQL-Standard) | Anwendungslogik (Schicht 1+2 unten) oder physischer Trigger (s. § 3.3) |
+| GR-04 Baujahr-Plausibilität | `CHECK (baujahr BETWEEN 1885 AND extract(year FROM CURRENT_DATE) + 1)` | deklarativ |
+| GR-05 Kilometerstand-Plausibilität | `CHECK (kilometerstand BETWEEN 0 AND 3000000)` | deklarativ |
+| GR-06 Cascade beim Fahrzeug-Löschen | `ON DELETE CASCADE` an `TERMIN.fahrzeug_id` und `MANGEL.termin_id` | deklarativ |
+
+### 2.6 Hinweis zur Lage von GR-03
+
+WF-01 (kein BESTANDEN bei Hauptmangel) ist eine **relationsübergreifende**
+Integritätsbedingung: sie bezieht sich auf die Existenz/Nicht-Existenz von
+Tupeln in MANGEL, abhängig von einem Tupel in TERMIN. SQL bietet dafür im
+Standard `CREATE ASSERTION` an — in der Praxis wird dies aber von keinem
+gängigen DBMS implementiert (PostgreSQL, Oracle, SQL Server, MySQL: alle nicht).
+
+**Konsequenz:** WF-01 ist im logischen Modell **nicht** als deklarative
+Constraint ausdrückbar. Drei Implementierungsoptionen bleiben:
+
+1. **Anwendungslogik** (App-Layer-Guard) — primärer Ort
+2. **Stored Procedure als einziger Schreib-Pfad** — Status-Wechsel nur über `sp_update_termin_status(...)` möglich
+3. **Trigger** als sekundäre Verteidigung im DB-Layer
+
+Die Wahl zwischen diesen drei Optionen ist eine **physische
+Implementierungs-Entscheidung** und gehört daher in das nächste Kapitel.
+
+---
+
+## 3. Physisches Modell — PostgreSQL-Implementierung
+
+Dieses Kapitel beschreibt die konkrete Realisierung des logischen Modells in
+**PostgreSQL 16**. Indizes, Triggers, Stored Procedures, partielle UNIQUE-Index
+und andere implementierungsspezifische Konstrukte sind hier — und nur hier —
+zulässig.
+
+> **Hinweis zur Akademischen Korrektheit:** In einem reinen
+> Entwurfsdokument (Konzeptionell + Logisch) gehören **keine Trigger** vor.
+> Trigger sind ein physisches Werkzeug, das eine konkrete DB-Engine-Funktion
+> nutzt. Wir trennen daher die Schichten klar — Trigger erscheinen ausschließlich
+> in diesem Kapitel.
+
+### 3.1 DDL — Tabellen-Definitionen
 
 ```sql
 CREATE TABLE halter (
-  id           UUID PRIMARY KEY,
-  name         TEXT NOT NULL,
-  telefon      TEXT,
-  email        TEXT,
-  created_at   TIMESTAMPTZ NOT NULL DEFAULT now()
+  halter_id     UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name          TEXT NOT NULL,
+  telefon       TEXT,
+  email         TEXT,
+  anschrift     TEXT,
+  erfasst_am    TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CONSTRAINT halter_email_unique UNIQUE (email)
 );
 
 CREATE TABLE fahrzeug (
-  id           UUID PRIMARY KEY,
-  kennzeichen  TEXT NOT NULL UNIQUE,
-  fin          TEXT UNIQUE,
-  hersteller   TEXT NOT NULL,
-  modell       TEXT NOT NULL,
-  baujahr      INTEGER CHECK (baujahr BETWEEN 1885 AND EXTRACT(YEAR FROM now())::int + 1),
-  farbe        TEXT,
-  typ          TEXT NOT NULL,
-  km_stand     INTEGER CHECK (km_stand >= 0 AND km_stand <= 3000000),
-  halter_id    UUID NOT NULL REFERENCES halter(id) ON DELETE RESTRICT,
-  hu_faellig   DATE,
-  created_at   TIMESTAMPTZ NOT NULL DEFAULT now()
+  fahrzeug_id     UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  kennzeichen     TEXT NOT NULL,
+  fin             TEXT,
+  hersteller      TEXT NOT NULL,
+  modell          TEXT NOT NULL,
+  baujahr         INTEGER CHECK (
+                    baujahr BETWEEN 1885
+                    AND EXTRACT(YEAR FROM CURRENT_DATE)::int + 1
+                  ),
+  farbe           TEXT,
+  typ             TEXT NOT NULL,
+  kilometerstand  INTEGER CHECK (
+                    kilometerstand BETWEEN 0 AND 3000000
+                  ),
+  hu_faellig      DATE,
+  halter_id       UUID NOT NULL
+                  REFERENCES halter(halter_id)
+                  ON DELETE RESTRICT
+                  ON UPDATE CASCADE,
+  erfasst_am      TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CONSTRAINT fahrzeug_kennzeichen_unique UNIQUE (kennzeichen)
 );
 
-CREATE INDEX idx_fahrzeug_hu ON fahrzeug(hu_faellig);
+-- Partial UNIQUE-Index für FIN: nur prüfen wenn nicht NULL
+CREATE UNIQUE INDEX fahrzeug_fin_unique
+  ON fahrzeug(fin)
+  WHERE fin IS NOT NULL;
+
+CREATE TABLE prueft (
+  prueft_code   TEXT PRIMARY KEY,
+  bezeichnung   TEXT NOT NULL
+);
+
+CREATE TABLE pruefer (
+  pruefer_kuerzel TEXT PRIMARY KEY,
+  name            TEXT NOT NULL,
+  qualifikation   TEXT
+);
+
+CREATE TABLE status (
+  status_code     TEXT PRIMARY KEY,
+  bezeichnung     TEXT NOT NULL,
+  ist_endzustand  BOOLEAN NOT NULL DEFAULT false
+);
 
 CREATE TABLE termin (
-  id           UUID PRIMARY KEY,
-  fahrzeug_id  UUID NOT NULL REFERENCES fahrzeug(id) ON DELETE CASCADE,
-  datum        DATE NOT NULL,
-  uhrzeit      TIME,
-  art          TEXT NOT NULL,
-  pruefer_id   TEXT NOT NULL,
-  status       TEXT NOT NULL CHECK (status IN (
-    'Geplant','In Prüfung','Bestanden','Nicht bestanden',
-    'Nachprüfung','Nicht erschienen','Abgebrochen'
-  )),
-  notiz        TEXT,
-  created_at   TIMESTAMPTZ NOT NULL DEFAULT now()
+  termin_id       UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  fahrzeug_id     UUID NOT NULL
+                  REFERENCES fahrzeug(fahrzeug_id)
+                  ON DELETE CASCADE
+                  ON UPDATE CASCADE,
+  datum           DATE NOT NULL,
+  uhrzeit         TIME,
+  prueft_code     TEXT NOT NULL
+                  REFERENCES prueft(prueft_code)
+                  ON DELETE RESTRICT,
+  pruefer_kuerzel TEXT
+                  REFERENCES pruefer(pruefer_kuerzel)
+                  ON DELETE SET NULL,
+  status_code     TEXT NOT NULL DEFAULT 'GEPLANT'
+                  REFERENCES status(status_code)
+                  ON DELETE RESTRICT,
+  notiz           TEXT,
+  erfasst_am      TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CONSTRAINT termin_eindeutig UNIQUE (fahrzeug_id, datum, uhrzeit)
 );
 
-CREATE INDEX idx_termin_datum  ON termin(datum, uhrzeit);
-CREATE INDEX idx_termin_fz     ON termin(fahrzeug_id, datum DESC);
+CREATE TABLE mangel_kategorie (
+  kategorie_code        TEXT PRIMARY KEY,
+  bezeichnung           TEXT NOT NULL,
+  blockiert_bestanden   BOOLEAN NOT NULL DEFAULT false
+);
 
 CREATE TABLE mangel (
-  id           UUID PRIMARY KEY,
-  termin_id    UUID NOT NULL REFERENCES termin(id) ON DELETE CASCADE,
-  code         TEXT NOT NULL,
-  text         TEXT NOT NULL,
-  kat          TEXT NOT NULL CHECK (kat IN ('OM','LM','EM','HM','GM')),
-  behoben      BOOLEAN NOT NULL DEFAULT false,
-  photo_url    TEXT   -- für die Foto-Dokumentation
+  mangel_id        UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  termin_id        UUID NOT NULL
+                   REFERENCES termin(termin_id)
+                   ON DELETE CASCADE,
+  code_stvzo       TEXT,
+  beschreibung     TEXT NOT NULL,
+  kategorie_code   TEXT NOT NULL
+                   REFERENCES mangel_kategorie(kategorie_code)
+                   ON DELETE RESTRICT,
+  behoben          BOOLEAN NOT NULL DEFAULT false,
+  erfasst_am       TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+```
 
--- Business Rule WF-01 als DB-Constraint:
+### 3.2 Indizes
+
+```sql
+-- Häufigste Abfrage: Tagesplan (alle Termine für ein Datum)
+CREATE INDEX termin_datum_idx ON termin(datum, uhrzeit);
+
+-- Prüfhistorie eines Fahrzeugs (Berichte-View)
+CREATE INDEX termin_fahrzeug_idx ON termin(fahrzeug_id, datum DESC);
+
+-- HU-Fälligkeits-Report
+CREATE INDEX fahrzeug_hu_idx ON fahrzeug(hu_faellig)
+  WHERE hu_faellig IS NOT NULL;
+
+-- Mängel-Aggregation für Statistik
+CREATE INDEX mangel_kategorie_idx ON mangel(kategorie_code);
+
+-- Halter-Suche nach Name (Volltextsuche wäre Erweiterung)
+CREATE INDEX halter_name_idx ON halter(LOWER(name));
+```
+
+### 3.3 Diskussion: Wie WF-01 erzwingen?
+
+Die Geschäftsregel **GR-03 / WF-01** (kein BESTANDEN bei Hauptmangel) ist auf
+logischer Ebene nicht deklarativ als CHECK-Constraint ausdrückbar, weil eine
+CHECK-Klausel keine Subqueries auf andere Relationen referenzieren darf
+(SQL-Standard 8.6 + nahezu alle DBMS-Implementierungen).
+
+Drei physische Optionen — wir entscheiden uns für **Defense in Depth**
+(mehrere Ebenen):
+
+#### Option A — Anwendungsschicht (primäre Verteidigungslinie)
+
+In `src/hooks/useStore.js`, Funktion `updTr`:
+
+```javascript
+const updTr = useCallback((id, patch) => {
+  if (
+    patch.status === STATUS.BESTANDEN &&
+    hatHauptmangel(termin.mängel)
+  ) {
+    return termin; // Schreibvorgang verweigert
+  }
+  // ...
+});
+```
+
+**Vorteil:** Schnell, gut testbar, direkt in der Geschäftslogik.
+**Nachteil:** Wer den App-Code umgeht (direkter DB-Zugriff), umgeht die Regel.
+
+#### Option B — Stored Procedure als einziger Schreibpfad
+
+```sql
+CREATE OR REPLACE FUNCTION sp_termin_status_setzen(
+  p_termin_id UUID,
+  p_neuer_status TEXT
+) RETURNS VOID AS $$
+DECLARE
+  v_hat_hauptmangel BOOLEAN;
+BEGIN
+  IF p_neuer_status = 'BESTANDEN' THEN
+    SELECT EXISTS(
+      SELECT 1 FROM mangel m
+        JOIN mangel_kategorie k USING (kategorie_code)
+      WHERE m.termin_id = p_termin_id
+        AND k.blockiert_bestanden = true
+    ) INTO v_hat_hauptmangel;
+
+    IF v_hat_hauptmangel THEN
+      RAISE EXCEPTION 'BESTANDEN nicht möglich bei Hauptmangel (§29 StVZO)';
+    END IF;
+  END IF;
+
+  UPDATE termin SET status_code = p_neuer_status WHERE termin_id = p_termin_id;
+END;
+$$ LANGUAGE plpgsql;
+```
+
+Plus: `REVOKE UPDATE(status_code) ON termin FROM PUBLIC` — niemand kann direkt
+am `status_code` herumdrehen, nur über die Procedure.
+
+**Vorteil:** Saubere API auf DB-Ebene, Regel zentral im DB-Layer.
+**Nachteil:** Schreibvorgang nicht mehr direkt per `UPDATE` möglich (alle
+Schreiber müssen die SP kennen), schwieriger zu testen, PL/pgSQL-spezifisch.
+
+#### Option C — Trigger (BEFORE UPDATE)
+
+```sql
 CREATE OR REPLACE FUNCTION trg_termin_status_check()
 RETURNS TRIGGER AS $$
 BEGIN
-  IF NEW.status = 'Bestanden' AND EXISTS (
-    SELECT 1 FROM mangel WHERE termin_id = NEW.id AND kat IN ('HM','GM')
+  IF NEW.status_code = 'BESTANDEN' AND EXISTS (
+    SELECT 1 FROM mangel m
+      JOIN mangel_kategorie k USING (kategorie_code)
+    WHERE m.termin_id = NEW.termin_id
+      AND k.blockiert_bestanden = true
   ) THEN
-    RAISE EXCEPTION 'Bestanden nicht möglich bei Hauptmangel';
+    RAISE EXCEPTION 'BESTANDEN nicht möglich bei Hauptmangel (§29 StVZO)';
   END IF;
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER termin_status_check
-  BEFORE UPDATE OF status ON termin
+CREATE TRIGGER termin_status_guard
+  BEFORE INSERT OR UPDATE OF status_code ON termin
   FOR EACH ROW EXECUTE FUNCTION trg_termin_status_check();
 ```
 
-**Beobachtung:** Die Workflow-Regel WF-01, die wir heute auf 4 JavaScript-Ebenen
-durchsetzen, wäre in PostgreSQL als ein einziger Trigger deklarativ und
-bulletproof lösbar. Das ist ein konkretes Argument für RDBMS in diesem Kontext.
+**Vorteil:** Greift bei jedem `INSERT` und `UPDATE`, egal von welchem Klienten.
+**Nachteil (von Frau Fuchs zurecht angemerkt):** Trigger sind
+**implementierungsabhängiges Verhalten**, im konzeptuellen / logischen Modell
+nicht ausdrückbar, und können Debugging schwierig machen, weil
+Schreibvorgänge unsichtbar zusätzliche Logik auslösen.
+
+#### Unsere Wahl
+
+Wir kombinieren **A + B** für Defense in Depth. **C (Trigger)** dokumentieren
+wir hier als physische Option, **setzen ihn aber nicht ein**, weil:
+
+1. Triggers sind Black-Box-Verhalten — neue Entwickler stolpern darüber
+2. Stored Procedures + REVOKE deckt den DB-Layer ab
+3. Anwendungslogik deckt den App-Layer ab
+4. Drei Ebenen wären Overkill für eine einzelne Regel
+
+→ **Wir akzeptieren die Trigger-Kritik der Dozentin in vollem Umfang.**
+
+### 3.4 Initial-Daten (Seed der Domänen-Tabellen)
+
+```sql
+INSERT INTO status (status_code, bezeichnung, ist_endzustand) VALUES
+  ('GEPLANT',          'Geplant',          false),
+  ('IN_PRUEFUNG',      'In Prüfung',       false),
+  ('BESTANDEN',        'Bestanden',        true),
+  ('NICHT_BESTANDEN',  'Nicht bestanden',  true),
+  ('NACHPRUEFUNG',     'Nachprüfung',      false),
+  ('NICHT_ERSCHIENEN', 'Nicht erschienen', true),
+  ('ABGEBROCHEN',      'Abgebrochen',      true);
+
+INSERT INTO mangel_kategorie (kategorie_code, bezeichnung, blockiert_bestanden) VALUES
+  ('OM', 'Ohne Mangel',         false),
+  ('LM', 'Leichter Mangel',     false),
+  ('EM', 'Erheblicher Mangel',  false),
+  ('HM', 'Hauptmangel',         true),
+  ('GM', 'Gefährlicher Mangel', true);
+```
+
+### 3.5 Sichten für häufige Abfragen
+
+```sql
+-- Tagesplan-View: alle Termine eines Datums, dekoriert mit Fahrzeug- und Status-Info
+CREATE VIEW v_tagesplan AS
+SELECT
+  t.termin_id, t.datum, t.uhrzeit,
+  f.kennzeichen, f.hersteller || ' ' || f.modell AS fahrzeug,
+  h.name AS halter,
+  pa.bezeichnung AS prueft,
+  pr.name AS pruefer,
+  s.bezeichnung AS status,
+  EXISTS(
+    SELECT 1 FROM mangel m
+      JOIN mangel_kategorie k USING (kategorie_code)
+    WHERE m.termin_id = t.termin_id
+      AND k.blockiert_bestanden = true
+  ) AS hat_hauptmangel
+FROM termin t
+  JOIN fahrzeug f ON f.fahrzeug_id = t.fahrzeug_id
+  JOIN halter h ON h.halter_id = f.halter_id
+  JOIN prueft pa ON pa.prueft_code = t.prueft_code
+  LEFT JOIN pruefer pr ON pr.pruefer_kuerzel = t.pruefer_kuerzel
+  JOIN status s ON s.status_code = t.status_code;
+
+-- HU-Fälligkeits-Report
+CREATE VIEW v_hu_faellig AS
+SELECT
+  f.kennzeichen, f.hersteller || ' ' || f.modell AS fahrzeug,
+  h.name AS halter, h.telefon, h.email,
+  f.hu_faellig,
+  (f.hu_faellig - CURRENT_DATE) AS tage_bis_faellig,
+  CASE
+    WHEN f.hu_faellig < CURRENT_DATE THEN 'ueberfaellig'
+    WHEN f.hu_faellig < CURRENT_DATE + 30 THEN 'kritisch'
+    WHEN f.hu_faellig < CURRENT_DATE + 90 THEN 'bald'
+    ELSE 'ok'
+  END AS status
+FROM fahrzeug f
+JOIN halter h ON h.halter_id = f.halter_id
+WHERE f.hu_faellig IS NOT NULL
+ORDER BY f.hu_faellig;
+```
+
+---
+
+## 4. Vergleich: Konzeptionell vs. Logisch vs. Physisch — was gehört wohin?
+
+| Aspekt | Konzeptuell | Logisch | Physisch |
+|---|---|---|---|
+| Entitäten / Beziehungen | ✓ | — | — |
+| Attribute (Domäne, fachlich) | ✓ | — | — |
+| Geschäftsregeln (textuell) | ✓ | — | — |
+| Relationen / Schlüssel | — | ✓ | — |
+| Normalisierung 3NF | — | ✓ | — |
+| Referentielle Integrität (FK, ON DELETE) | — | ✓ | — |
+| CHECK-Constraints (deklarativ) | — | ✓ | — |
+| Datentypen (DBMS-spezifisch wie UUID, TIMESTAMPTZ) | — | (✓) | ✓ |
+| Indizes | — | — | ✓ |
+| Trigger | — | — | ✓ |
+| Stored Procedures | — | — | ✓ |
+| Sichten (Views) | — | — | ✓ |
+| Tablespaces / Partitionierung | — | — | ✓ |
+
+---
+
+## 5. Diskussion: Warum überhaupt PostgreSQL?
+
+Die ursprüngliche Sprint-1-Wahl war Firebase Firestore (NoSQL-Document-Store).
+Im Sprint-5-Feedback hat Frau Fuchs zurecht argumentiert, dass unsere Daten
+stark strukturiert sind und sich für eine relationale Datenbank besser eignen.
+Mit Sprint 7 (geplant nach 13.05.2026) migrieren wir auf PostgreSQL.
+
+### 5.1 Pro PostgreSQL
+
+| Aspekt | Vorteil |
+|---|---|
+| Strukturierte Daten | Schema-Erzwingung verhindert Datenmüll |
+| Referentielle Integrität | FK-Constraints und ON DELETE-Verhalten deklarativ |
+| Transaktionen | Echtes ACID — atomare Mehrfach-Updates ohne Aufwand |
+| Reporting | SQL-Aggregationen, GROUP BY, Window Functions |
+| Migrationen | Werkzeuge wie Flyway, Liquibase, Drizzle Migrations |
+| Lokal lauffähig | Per Docker oder über PGlite (WASM) sogar im Browser |
+
+### 5.2 Pro Firestore (warum es initial gewählt wurde)
+
+| Aspekt | Vorteil |
+|---|---|
+| Echtzeit-Sync | `onSnapshot` API gratis |
+| Serverlos | Kein eigenes Backend |
+| Skalierung | Automatisch |
+
+### 5.3 Bewertung im Projekt-Kontext
+
+**Akademisch:** PostgreSQL ist die saubere Wahl für strukturierte Daten mit
+relationalem Charakter. Firestore war eine Pragmatik-Entscheidung, die wir mit
+Sprint 7 korrigieren.
+
+**Technisch:** Mit **PGlite** (electric-sql.com/pglite) lässt sich
+PostgreSQL als WebAssembly **lokal im Browser** ausführen — Persistenz über
+IndexedDB, Größe ~3 MB. Damit erfüllen wir Frau Fuchs's Anforderung
+„**lokale relationale Datenbank**" wörtlich und ohne Backend-Komponente.
+
+---
+
+## 6. Migrationsplan (Sprint 7)
+
+| Phase | Inhalt | Aufwand |
+|---|---|---|
+| **7.1** | DDL-Skripte erstellen (`schema.sql`), Seed-Skript für Domänen-Tabellen | 0,5 d |
+| **7.2** | PGlite + Drizzle ORM in das Projekt einbinden, `useDb`-Hook ersetzt `useStore` | 1 d |
+| **7.3** | Export-Skript Firestore → PostgreSQL (einmalig) für Demo-Daten-Übernahme | 0,5 d |
+| **7.4** | Echtzeit-Update via Polling oder Event-Bus (kein `onSnapshot` mehr) | 0,5 d |
+| **7.5** | Tests aktualisieren: vorher Firestore-Mock, jetzt SQL-Asserts | 0,5 d |
+| **Gesamt** | | **3 d** |
+
+---
 
 ## 7. Änderungshistorie
 
 | Version | Datum | Änderung |
 |---|---|---|
-| 1.0 | 2026-04-15 | Rudimentäre Skizze nur in der Präsentation |
-| 1.1 | 2026-04-24 | Vollständige Attributlisten, Integritätsbedingungen explizit, Diskussion NoSQL vs. RDBMS aufgenommen (nach Feedback Fuchs), SQL-Gegenentwurf |
-| 1.2 | 2026-04-27 | Wertebereichs-Integrität §4.4 um Domänen-Whitelists erweitert (KBA-Kreis-Code-Liste, Hersteller-Modell-Typ-Konsistenz hart, Saison-Kennzeichen, FIN-Prüfziffer weich) |
+| 1.0 | 2026-04-15 | Erste Sprint-1-Skizze (eingebettetes Halter / Mangel) |
+| 1.1 | 2026-04-24 | Attribute formalisiert, Integritätsbedingungen explizit, NoSQL-vs-RDBMS-Diskussion |
+| 1.2 | 2026-04-27 | Domänen-Whitelists (KBA-Liste, Hersteller-Modell-Konsistenz) ergänzt |
+| **2.0** | **2026-05-13** | **Komplett umstrukturiert nach Feedback Frau Fuchs (13.05.):** Drei-Schichten-Modell (konzeptuell / logisch / physisch); 3NF-Normalisierung mit eigenständiger HALTER- und MANGEL-Relation; SQL-Trigger ausschließlich im physischen Kapitel diskutiert und bewusst nicht eingesetzt; PostgreSQL-Migration in Sprint 7 als Antwort auf „lokale relationale Datenbank"-Anforderung |
