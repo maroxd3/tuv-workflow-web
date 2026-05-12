@@ -60,6 +60,21 @@ export function validateFin(raw) {
   return null;
 }
 
+/**
+ * Eindeutigkeit der FIN — jede Fahrgestellnummer darf weltweit nur einmal
+ * existieren (ISO 3779). Wir prüfen case-insensitiv gegen den bestehenden
+ * Fahrzeug-Bestand.
+ */
+export function validateFinUnique(raw, fahrzeuge = [], excludeId = null) {
+  const v = (raw || "").trim().toUpperCase();
+  if (!v) return null;
+  const duplicate = fahrzeuge.some(f =>
+    f.id !== excludeId &&
+    (f.fin || "").trim().toUpperCase() === v
+  );
+  return duplicate ? "FIN bereits an anderem Fahrzeug vergeben" : null;
+}
+
 export function validateBaujahr(raw) {
   if (raw === "" || raw === null || raw === undefined) return null;
   const n = Number(raw);
@@ -140,6 +155,10 @@ export function validateFahrzeug(form, allFahrzeuge = [], editId = null) {
 
   const eFin = validateFin(form.fin);
   if (eFin) errors.fin = eFin;
+  else {
+    const eFinUnique = validateFinUnique(form.fin, allFahrzeuge, editId);
+    if (eFinUnique) errors.fin = eFinUnique;
+  }
 
   const eKm = validateKmStand(form.kmStand);
   if (eKm) errors.kmStand = eKm;

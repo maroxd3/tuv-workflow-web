@@ -3,6 +3,7 @@ import {
   validateKennzeichen,
   validateKennzeichenUnique,
   validateFin,
+  validateFinUnique,
   validateBaujahr,
   validateKmStand,
   validateTelefon,
@@ -93,6 +94,37 @@ describe("validateKennzeichenUnique", () => {
   it("lehnt leeres Kennzeichen still ab (nicht Aufgabe dieser Funktion)", () => {
     // Leer-Check liegt bei validateKennzeichen, hier nur Unique-Logik
     expect(validateKennzeichenUnique("", fahrzeuge)).toBeNull();
+  });
+});
+
+describe("validateFinUnique", () => {
+  const fahrzeuge = [
+    { id: "a", fin: "WBA3A5C50CF256985" },
+    { id: "b", fin: "WVWZZZ1KZ5W315264" },
+    { id: "c", fin: "" }, // Fahrzeug ohne FIN — soll nicht matchen
+  ];
+
+  it("erlaubt neue FIN", () => {
+    expect(validateFinUnique("3FADP4BJ1EM198765", fahrzeuge)).toBeNull();
+  });
+
+  it("blockiert Duplikat-FIN (case-insensitiv)", () => {
+    expect(validateFinUnique("WBA3A5C50CF256985", fahrzeuge)).toMatch(/vergeben/);
+    expect(validateFinUnique("wba3a5c50cf256985", fahrzeuge)).toMatch(/vergeben/);
+    expect(validateFinUnique("  WBA3A5C50CF256985  ", fahrzeuge)).toMatch(/vergeben/);
+  });
+
+  it("erlaubt Edit des eigenen Eintrags (über excludeId)", () => {
+    expect(validateFinUnique("WBA3A5C50CF256985", fahrzeuge, "a")).toBeNull();
+  });
+
+  it("ignoriert leere FIN-Eingabe (Optional-Feld)", () => {
+    expect(validateFinUnique("", fahrzeuge)).toBeNull();
+    expect(validateFinUnique(null, fahrzeuge)).toBeNull();
+  });
+
+  it("matcht nicht gegen andere Fahrzeuge ohne FIN", () => {
+    expect(validateFinUnique("X", fahrzeuge)).toBeNull();
   });
 });
 
