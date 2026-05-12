@@ -258,9 +258,11 @@ export function useStoreCompat() {
   }, [db]);
 
   // ── Write-Adapter: addTr ──
-  // - Status-Default jetzt "Geplant" (deutscher Label aus STATUS.GEPLANT).
-  // - Try/catch + sichtbarer Alert: TagesplanView awaitet den Promise nicht,
-  //   ohne diesen Catch verschwinden FK-/CHECK-Fehler still in der Konsole.
+  // Status-Default "Geplant" — matches STATUS.GEPLANT aus constants/status.js.
+  // try/catch + console.error: TagesplanView awaitet den Promise nicht;
+  // ohne den Catch würden FK-/CHECK-Fehler im "unhandledrejection"-Limbo
+  // verschwinden. Wir loggen prominent und werfen weiter — der Caller
+  // (App / Toast-System) kann darauf reagieren.
   const addTr = useCallback(
     async (data: any) => {
       try {
@@ -276,11 +278,6 @@ export function useStoreCompat() {
         return { id: t.terminId, ...data };
       } catch (e) {
         console.error("[useStoreCompat.addTr] INSERT failed", { data, error: e });
-        if (typeof window !== "undefined") {
-          window.alert(
-            `Termin konnte nicht gespeichert werden:\n\n${e instanceof Error ? e.message : String(e)}\n\nDevTools (F12) → Console für Details.`,
-          );
-        }
         throw e;
       }
     },
