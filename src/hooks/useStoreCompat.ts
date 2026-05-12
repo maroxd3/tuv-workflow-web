@@ -250,18 +250,31 @@ export function useStoreCompat() {
   }, [db]);
 
   // ── Write-Adapter: addTr ──
+  // - Status-Default jetzt "Geplant" (deutscher Label aus STATUS.GEPLANT).
+  // - Try/catch + sichtbarer Alert: TagesplanView awaitet den Promise nicht,
+  //   ohne diesen Catch verschwinden FK-/CHECK-Fehler still in der Konsole.
   const addTr = useCallback(
     async (data: any) => {
-      const t = await db.addTermin({
-        fahrzeugId: data.fahrzeugId,
-        datum: data.datum,
-        uhrzeit: data.uhrzeit || null,
-        prueftCode: data.art,
-        prueferKuerzel: data.pruefer || null,
-        statusCode: data.status || "GEPLANT",
-        notiz: data.notiz || null,
-      });
-      return { id: t.terminId, ...data };
+      try {
+        const t = await db.addTermin({
+          fahrzeugId: data.fahrzeugId,
+          datum: data.datum,
+          uhrzeit: data.uhrzeit || null,
+          prueftCode: data.art,
+          prueferKuerzel: data.pruefer || null,
+          statusCode: data.status || "Geplant",
+          notiz: data.notiz || null,
+        });
+        return { id: t.terminId, ...data };
+      } catch (e) {
+        console.error("[useStoreCompat.addTr] INSERT failed", { data, error: e });
+        if (typeof window !== "undefined") {
+          window.alert(
+            `Termin konnte nicht gespeichert werden:\n\n${e instanceof Error ? e.message : String(e)}\n\nDevTools (F12) → Console für Details.`,
+          );
+        }
+        throw e;
+      }
     },
     [db],
   );
