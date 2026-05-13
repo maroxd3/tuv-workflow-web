@@ -1,8 +1,9 @@
 name: Deploy to Firebase Hosting
 
+# Auto-Deploy ist erst aktiv sobald der GitHub-Secret
+# FIREBASE_SERVICE_ACCOUNT_TUV_PRUFSTELLE_PRO gesetzt ist.
+# Bis dahin nur manueller Trigger (Actions-Tab → Run workflow).
 on:
-  push:
-    branches: [master]
   workflow_dispatch:
 
 jobs:
@@ -10,7 +11,6 @@ jobs:
     name: Build & Deploy
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    if: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' }}
 
     steps:
       - uses: actions/checkout@v4
