@@ -71,8 +71,7 @@ export async function seedDomainTables() {
 
 // ════════════════════════════════════════════════════════════
 // Demo-Daten: Halter, Fahrzeuge, Termine, Mängel
-// (Port der ehemaligen makeSeed()-Funktion aus useStore.js,
-//  jetzt korrekt 3NF-normalisiert auf die neuen Tabellen verteilt.)
+// 3NF-normalisiert auf die jeweiligen Tabellen verteilt.
 // ════════════════════════════════════════════════════════════
 
 import { halter, fahrzeug, termin, mangel } from "./schema";
