@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<title>tuv-workflow-web - Architecture Map</title>
+<title>tuv-workflow-web - Architecture Map (post-PGlite migration)</title>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <style>
   :root {
@@ -57,6 +57,7 @@
   .side .finding { background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; font-size: 12px; margin-bottom: 8px; line-height: 1.5; }
   .side .finding strong { color: var(--accent); }
   .side .finding.warn strong { color: var(--critical); }
+  .side .finding.good strong { color: var(--route); }
   .side .empty { color: var(--muted); font-size: 12px; padding: 8px 0; }
   .side .bug { background: rgba(255,56,96,0.08); border: 1px solid rgba(255,56,96,0.28); border-radius: 6px; padding: 6px 9px; margin-bottom: 6px; font-size: 11.5px; }
   .side .bug .sev { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 9px; font-weight: 700; padding: 1px 5px; border-radius: 3px; margin-right: 6px; }
@@ -86,11 +87,11 @@
 <body>
 <div class="app">
   <div class="topbar">
-    <div class="title">tuv-workflow-web<span class="sub">React 19 · Vite · Firestore</span></div>
+    <div class="title">tuv-workflow-web<span class="sub">React 19 · Vite · TypeScript · PGlite + Drizzle (IndexedDB)</span></div>
     <div class="chips" id="chips"></div>
   </div>
   <div class="canvas-wrap">
-    <svg class="map" id="map" viewBox="0 0 2200 1380" preserveAspectRatio="xMidYMid meet">
+    <svg class="map" id="map" viewBox="0 0 2300 1400" preserveAspectRatio="xMidYMid meet">
       <defs>
         <marker id="arrow-normal" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto">
           <path d="M0,0 L8,4 L0,8 z" fill="#8a8a8a" />
@@ -132,18 +133,21 @@
 <script>
 /* ════════════════════════════════════════════════════════════════════
    DATA — clusters, nodes, edges, FIXES, KNOWN_BUGS
-   Each label/path/line number was confirmed by reading the file.
+   Reflects master @ 63fcc3e (post-PGlite/Drizzle migration).
+   Every label / path / line number was confirmed by reading the file.
    Editable by hand — preserve this shape.
    ════════════════════════════════════════════════════════════════════ */
 
 const clusters = [
-  { id: 'entry',     label: 'Entry',                 x: 30,   y: 50,  w: 240, h: 540 },
-  { id: 'layout',    label: 'Layout',                x: 300,  y: 50,  w: 220, h: 360 },
-  { id: 'views',     label: 'Views (Pages)',         x: 550,  y: 50,  w: 260, h: 600 },
-  { id: 'modals',    label: 'Feature Modals',        x: 840,  y: 50,  w: 240, h: 580 },
-  { id: 'state',     label: 'State, Hooks & Domain', x: 1110, y: 50,  w: 290, h: 1280 },
-  { id: 'ui',        label: 'UI Primitives',         x: 1430, y: 50,  w: 230, h: 720 },
-  { id: 'external',  label: 'External',              x: 1690, y: 50,  w: 200, h: 600 },
+  { id: 'entry',     label: 'Entry',                 x: 20,   y: 50,  w: 220, h: 480 },
+  { id: 'layout',    label: 'Layout',                x: 260,  y: 50,  w: 200, h: 320 },
+  { id: 'views',     label: 'Views (Pages)',         x: 480,  y: 50,  w: 230, h: 460 },
+  { id: 'modals',    label: 'Feature Modals',        x: 730,  y: 50,  w: 220, h: 590 },
+  { id: 'state',     label: 'State + Compat Layer',  x: 970,  y: 50,  w: 230, h: 470 },
+  { id: 'db',        label: 'DB Layer (PGlite/Drizzle)', x: 1220, y: 50, w: 260, h: 700 },
+  { id: 'domain',    label: 'Domain · Utils · Constants', x: 1500, y: 50, w: 240, h: 870 },
+  { id: 'ui',        label: 'UI Primitives',         x: 1760, y: 50,  w: 200, h: 720 },
+  { id: 'external',  label: 'External + Browser',    x: 1980, y: 50,  w: 200, h: 700 },
 ];
 
 const N = (id, cluster, label, sub, x, y, w, h, color, opts = {}) => ({
@@ -152,432 +156,534 @@ const N = (id, cluster, label, sub, x, y, w, h, color, opts = {}) => ({
 
 const nodes = [
   /* ── Entry ── */
-  N('index-html', 'entry', 'index.html', 'browser entry', 50, 100, 200, 56, 'client', {
+  N('index-html', 'entry', 'index.html', 'browser entry', 30, 90, 200, 52, 'client', {
     role: 'Vite-served HTML that mounts the React app into a single root element.',
-    plain: 'This is the very first file your browser loads. It just makes a blank page with one slot, then the React app fills it in.',
+    plain: 'The very first file your browser loads. Just a blank page with one slot the React app fills in.',
     path: 'index.html',
     notes: ['div id="root" is the mount point', 'loads src/main.jsx as a module'],
     tag: ['overview', 'all'],
   }),
-  N('main', 'entry', 'main.jsx', 'React root', 50, 175, 200, 56, 'client', {
+  N('main', 'entry', 'main.jsx', 'React root', 30, 155, 200, 56, 'client', {
     role: 'Bootstraps React into <div id="root"> inside <StrictMode>.',
-    plain: 'Tells React to take over the blank page and start drawing the actual app, with extra safety checks turned on during development.',
+    plain: 'Tells React to take over the blank page and start drawing the app, with extra safety checks turned on in dev.',
     path: 'src/main.jsx:1',
-    notes: ['line:1, createRoot from react-dom/client', 'line:7, StrictMode wraps App', 'pulls in global index.css'],
+    notes: ['createRoot from react-dom/client', 'StrictMode wraps App', 'pulls in global index.css'],
     tag: ['overview', 'all'],
     critical: true,
   }),
-  N('App', 'entry', 'App.jsx', 'shell · view switch', 50, 252, 200, 64, 'client', {
-    role: 'Top-level shell: holds active view in state, mounts Sidebar/Topbar, lazy-loads the four views.',
+  N('App', 'entry', 'App.jsx', 'shell · view switch', 30, 225, 200, 64, 'client', {
+    role: 'Top-level shell: holds active view in state, mounts Sidebar/Topbar, lazy-loads the four views; binds the compat store.',
     plain: 'The frame around everything. Tracks which page you are on, draws the sidebar and top bar, and swaps in the right page in the middle.',
-    path: 'src/App.jsx:31',
-    notes: ['line:33, useState("tagesplan") = default view', 'line:36, single useStore() drives all data', 'line:47, blocking loading state until S.ready', 'lines:124-140, conditional render per view key'],
-    tag: ['overview', 'tagesplan', 'fahrzeuge', 'statistik', 'berichte', 'demo-mode', 'all'],
+    path: 'src/App.jsx:32',
+    notes: ['line:5, useStoreCompat aliased AS useStore', 'line:35, useStore() drives all data', 'line:48, blocking spinner until S.ready', 'lines:10-13, all 4 views React.lazy + Suspense'],
+    tag: ['overview', 'tagesplan', 'fahrzeuge', 'statistik', 'berichte', 'all'],
     critical: true,
   }),
-  N('firebase', 'entry', 'firebase.js', 'Firestore init', 50, 340, 200, 60, 'db', {
-    role: 'Initialises Firebase from VITE_FIREBASE_* env vars and exports the Firestore handle.',
-    plain: 'Connects the app to Google\'s online database. Reads the connection settings from environment variables - if those are missing, the connection silently fails.',
-    path: 'src/firebase.js:1',
-    notes: ['line:4-11, all keys via import.meta.env', 'line:14, exports db = getFirestore(app)', 'no env validation - undefined keys init silently'],
-    tag: ['overview', 'data', 'all'],
-    critical: true,
-  }),
-  N('theme', 'entry', 'styles/theme.js', 'colors + globals', 50, 420, 200, 56, 'client', {
+  N('theme', 'entry', 'styles/theme.js', 'colors + globals', 30, 305, 200, 56, 'client', {
     role: 'Exports the color palette (C) and global CSS string used across the app.',
-    plain: 'A single file that holds every color and shared style. Every component reads from here so the look stays consistent.',
+    plain: 'A single file with every color and shared style. Every component reads from here so the look stays consistent.',
     path: 'src/styles/theme.js',
-    notes: ['used by every visual component', 'C.blue / C.red / C.amber etc.', 'GLOBAL_CSS injected from App.jsx'],
+    notes: ['used by every visual component', 'C.blue / C.red / C.amber / C.sb*', 'GLOBAL_CSS injected from App.jsx'],
     tag: ['overview', 'all'],
   }),
-  N('index-css', 'entry', 'index.css', 'CSS reset', 50, 496, 200, 52, 'client', {
-    role: 'Tailwind + reset baseline imported once by main.jsx.',
-    plain: 'A few basic style rules that wipe the browser defaults and apply common helpers.',
+  N('index-css', 'entry', 'index.css', 'CSS reset', 30, 377, 200, 52, 'client', {
+    role: 'Tailwind v4 reset + base imported once by main.jsx.',
+    plain: 'A few basic style rules that wipe browser defaults.',
     path: 'src/index.css',
-    notes: ['imported by main.jsx', 'mostly Tailwind v4 base'],
+    notes: ['Tailwind 4.2 baseline'],
     tag: ['overview', 'all'],
   }),
 
   /* ── Layout ── */
-  N('Sidebar', 'layout', 'Sidebar.jsx', 'nav + mode toggle', 320, 100, 180, 76, 'route', {
-    role: 'Left navigation rail with nav buttons, KPI counters, mode pill (demo/normal), and reset button.',
-    plain: 'The dark vertical menu on the left. Lets you jump between pages, shows today\'s counts, and lets you switch between practice and real-data modes.',
+  N('Sidebar', 'layout', 'Sidebar.jsx', 'nav + KPIs + reset', 270, 100, 180, 84, 'route', {
+    role: 'Left navigation rail with nav buttons, HU warning chips, today KPIs, and a context-aware reset/load-demo button.',
+    plain: 'The dark vertical menu on the left. Jumps between pages, shows today\'s counts and overdue inspections, and lets you load demo data or wipe everything.',
     path: 'src/layout/Sidebar.jsx:10',
-    notes: ['line:10, props: view, setView, fahrzeuge, termine, resetAll, mode, toggleMode', 'lines:35-59, clickable mode pill (demo↔normal)', 'line:142, reset label depends on mode'],
-    tag: ['overview', 'navigation', 'demo-mode', 'all'],
-  }),
-  N('Topbar', 'layout', 'Topbar.jsx', 'header bar', 320, 200, 180, 56, 'route', {
-    role: 'Top bar with hamburger, current view title from NAV table, today\'s date, and user pill.',
-    plain: 'The slim bar across the top: shows which page you\'re on, the date, and the user.',
-    path: 'src/layout/Topbar.jsx:6',
-    notes: ['line:7, looks up NAV entry by view key', 'line:14, sticky top, height 60'],
+    notes: ['line:10, props: view, setView, fahrzeuge, termine, resetAll, loadDemo', 'lines:135-149, "Beispieldaten laden" only when DB empty', 'lines:152-167, "Alle Daten löschen" with window.confirm', 'mode toggle from old demo/normal scheme is GONE (single mode now)'],
     tag: ['overview', 'navigation', 'all'],
   }),
-  N('nav-const', 'layout', 'constants/nav.js', '4 entries', 320, 280, 180, 56, 'service', {
+  N('Topbar', 'layout', 'Topbar.jsx', 'header bar', 270, 200, 180, 56, 'route', {
+    role: 'Top bar with hamburger, current view title from NAV table, today\'s date, user pill.',
+    plain: 'The slim bar across the top — shows which page you\'re on, the date, the user.',
+    path: 'src/layout/Topbar.jsx:6',
+    notes: ['NAV lookup by view key', 'sticky top, height 60'],
+    tag: ['overview', 'navigation', 'all'],
+  }),
+  N('nav-const', 'layout', 'constants/nav.js', '4 entries', 270, 275, 180, 56, 'service', {
     role: 'Array of 4 view definitions: key, label, icon, description. Drives Sidebar + Topbar.',
-    plain: 'A small lookup table listing the four pages of the app. Both the sidebar menu and the page-title bar read from it.',
+    plain: 'A small lookup table listing the four pages. Both the sidebar menu and page-title bar read from it.',
     path: 'src/constants/nav.js',
     notes: ['tagesplan / fahrzeuge / statistik / berichte', 'icons from lucide-react'],
     tag: ['overview', 'navigation', 'all'],
   }),
 
   /* ── Views ── */
-  N('TagesplanView', 'views', 'TagesplanView.jsx', 'daily schedule', 570, 100, 220, 80, 'route', {
+  N('TagesplanView', 'views', 'TagesplanView.jsx', 'daily schedule', 490, 100, 210, 80, 'route', {
     role: 'Day view: time-slot timeline + table mode, KPIs, context menu, opens TerminModal and MaengelModal.',
-    plain: 'The main "today\'s appointments" page. Shows every half-hour slot of the day, lets you click slots to add bookings, and walk a vehicle through the testing process.',
+    plain: 'The main "today\'s appointments" page. Shows every half-hour slot, lets you book a vehicle, walk it through testing.',
     path: 'src/views/TagesplanView.jsx:87',
-    notes: ['line:87, props include addTr/updTr/delTr/addMangel/delMangel', 'lines:130-140, advance() moves status GEPLANT→IN_PRUEFUNG→BESTANDEN/NICHT_BESTANDEN', 'lines:213-298, timeline render across TIME_SLOTS', 'lines:300-351, table view alternative'],
+    notes: ['receives addTr/updTr/delTr/addMangel/delMangel as props', 'advance() moves status GEPLANT→IN_PRUEFUNG→BESTANDEN/NICHT_BESTANDEN', 'filters termine.filter(t => t.datum === isoDate()) - normalization done in compat layer'],
     tag: ['overview', 'tagesplan', 'termine', 'all'],
     critical: true,
   }),
-  N('FahrzeugeView', 'views', 'FahrzeugeView.jsx', 'vehicle directory', 570, 200, 220, 76, 'route', {
+  N('FahrzeugeView', 'views', 'FahrzeugeView.jsx', 'vehicle directory', 490, 195, 210, 76, 'route', {
     role: 'Vehicle grid + searchable filter + sliding detail drawer with full inspection history.',
-    plain: 'The vehicles page. Shows a tile per car/truck with its plate and owner, lets you filter and search, and slides out a detailed history when you click one.',
+    plain: 'The vehicles page. Tile per car/truck with plate + owner, filterable, drawer with full history per vehicle.',
     path: 'src/views/FahrzeugeView.jsx:24',
-    notes: ['line:35, useMemo filter by q/typFilter/sortBy', 'line:47, getHuStatus computes inspection-due color and label', 'lines:131-208, off-canvas detail panel'],
+    notes: ['receives addFz/updFz/delFz as props', 'getHuStatus computes overdue color', 'sees `besitzer` (legacy field) — actually halter.name under the hood'],
     tag: ['overview', 'fahrzeuge', 'all'],
   }),
-  N('StatistikView', 'views', 'StatistikView.jsx', 'KPIs + recharts', 570, 296, 220, 76, 'route', {
-    role: 'Analytics dashboard with recharts area/bar/pie charts for pass rate, defect categories, monthly trends.',
-    plain: 'The statistics page. Draws charts of how many tests passed, what kinds of defects come up most, and how things change month to month.',
+  N('StatistikView', 'views', 'StatistikView.jsx', 'KPIs + recharts', 490, 290, 210, 76, 'route', {
+    role: 'Analytics dashboard with recharts area/bar/pie for pass rate, defect categories, monthly trends.',
+    plain: 'The statistics page. Charts of how many tests passed, what defects come up most, monthly trends.',
     path: 'src/views/StatistikView.jsx',
-    notes: ['recharts 3.8 (AreaChart, BarChart, PieChart)', 'reads MANGEL_KATEGORIEN and MANGEL_KATALOG_BY_CODE', 'pure render - no mutations'],
+    notes: ['recharts 3.8 (AreaChart, BarChart, PieChart)', 'reads termine + fahrzeuge only — no mutations'],
     tag: ['overview', 'statistik', 'all'],
   }),
-  N('BerichteView', 'views', 'BerichteView.jsx', 'report search + print', 570, 392, 220, 80, 'route', {
-    role: 'Lists every inspection, lets you search/filter, and renders a printable ASCII-art TÜV report modal.',
-    plain: 'The reports page. Searchable list of every inspection, and a one-click preview/print button that builds a formal-looking report on screen.',
+  N('BerichteView', 'views', 'BerichteView.jsx', 'report search + print', 490, 385, 210, 80, 'route', {
+    role: 'Lists every inspection, lets you search/filter, renders a printable ASCII-art TÜV report in a modal.',
+    plain: 'The reports page. Searchable list of every inspection plus a one-click preview/print of a formal-looking report.',
     path: 'src/views/BerichteView.jsx:22',
-    notes: ['line:29, filter+search+sort memo', 'line:42, buildBericht() returns a literal ASCII-banner report string', 'preview modal opens with the generated text'],
+    notes: ['buildBericht() returns ASCII-banner report string', 'preview modal opens with generated text'],
     tag: ['overview', 'berichte', 'all'],
   }),
 
   /* ── Feature Modals ── */
-  N('TerminModal', 'modals', 'TerminModal.jsx', 'create/edit appt', 860, 100, 200, 76, 'service', {
-    role: 'Form for creating or editing an inspection appointment; enforces the Hauptmangel→Bestanden block.',
-    plain: 'The popup that lets you book a vehicle into a slot or edit an existing booking. Refuses to mark "passed" if a serious defect is on file.',
+  N('TerminModal', 'modals', 'TerminModal.jsx', 'create/edit appt', 740, 100, 200, 76, 'service', {
+    role: 'Form for creating or editing an inspection appointment; UI-side enforces the Hauptmangel→Bestanden block.',
+    plain: 'Popup to book a vehicle into a slot or edit a booking. Refuses "passed" if a serious defect is on file.',
     path: 'src/features/termin/TerminModal.jsx:15',
-    notes: ['line:16, bestanden_gesperrt = hatHauptmangel(initial.mängel)', 'lines:32-34, validate blocks BESTANDEN with Hauptmangel (§29 StVZO)', 'line:39, save() calls onSave(form) → addTr/updTr in useStore'],
+    notes: ['bestanden_gesperrt = hatHauptmangel(initial.mängel)', 'validate blocks BESTANDEN with Hauptmangel (§29 StVZO)', 'onSave bubbles to addTr/updTr in useStoreCompat'],
     tag: ['overview', 'tagesplan', 'termine', 'all'],
     critical: true,
   }),
-  N('FahrzeugModal', 'modals', 'FahrzeugModal.jsx', 'create/edit vehicle', 860, 196, 200, 76, 'service', {
+  N('FahrzeugModal', 'modals', 'FahrzeugModal.jsx', 'create/edit vehicle', 740, 195, 200, 76, 'service', {
     role: 'Vehicle form with cascading manufacturer→model→type dropdowns and Kennzeichen/FIN validation.',
-    plain: 'The popup to add or edit a vehicle. Smart: if you pick a brand it knows, the model list shortens to that brand\'s lineup; otherwise lets you type free text.',
+    plain: 'Popup to add/edit a vehicle. Smart cascading dropdowns by brand; free-text fallback for "other".',
     path: 'src/features/fahrzeug/FahrzeugModal.jsx:16',
-    notes: ['line:29, checkFinPruefziffer soft-warning', 'line:42, onHerstellerChange resets dependent fields', 'line:68, validateFahrzeug runs hard validators'],
+    notes: ['checkFinPruefziffer soft-warning', 'cascading dropdowns: brand → model + type', 'validateFahrzeug runs hard validators'],
     tag: ['overview', 'fahrzeuge', 'all'],
   }),
-  N('MaengelModal', 'modals', 'MaengelModal.jsx', 'record defects', 860, 292, 200, 80, 'service', {
+  N('MaengelModal', 'modals', 'MaengelModal.jsx', 'record defects', 740, 290, 200, 80, 'service', {
     role: 'Two-pane modal: recorded defects + StVZO catalog search; status switcher blocks BESTANDEN if a Hauptmangel exists.',
-    plain: 'The popup for recording defects on a vehicle. Search the official catalog or type a free-text defect; the system stops you from marking "passed" if a major defect is on the list.',
+    plain: 'Popup for recording defects. Search the official catalog or type a free-text defect; system stops "passed" if a major defect is in the list.',
     path: 'src/features/mangel/MaengelModal.jsx:16',
-    notes: ['line:36, addVorlage adds catalog entry via onAdd', 'line:41, addCustom adds free-text entry', 'lines:111-128, status buttons; Bestanden disabled when hasHM'],
+    notes: ['addVorlage adds catalog entry via onAdd', 'status buttons disable BESTANDEN when hasHM', 'kategorieCode HM/GM trigger DB-level auto-demotion (queries.ts:218)'],
     tag: ['overview', 'tagesplan', 'maengel', 'all'],
     critical: true,
   }),
-  N('Modal', 'modals', 'Modal.jsx', 'generic dialog', 860, 392, 200, 60, 'service', {
+  N('Modal', 'modals', 'Modal.jsx', 'generic dialog', 740, 390, 200, 60, 'service', {
     role: 'Reusable modal frame: backdrop, animated card, Escape-to-close, click-outside-to-close.',
-    plain: 'The basic popup shell that all three modals sit inside. Handles the dark backdrop, escape key, and click-outside-to-close.',
+    plain: 'The basic popup shell that all three modals sit inside.',
     path: 'src/components/modal/Modal.jsx:7',
-    notes: ['line:8-12, Escape key listener', 'line:19, click on backdrop closes', 'framer-motion for enter/exit'],
+    notes: ['Escape key listener', 'click backdrop closes', 'framer-motion enter/exit'],
     tag: ['overview', 'all'],
   }),
-  N('ConfirmModal', 'modals', 'ConfirmModal.jsx', 'delete confirm', 860, 472, 200, 56, 'service', {
+  N('ConfirmModal', 'modals', 'ConfirmModal.jsx', 'delete confirm', 740, 470, 200, 56, 'service', {
     role: 'Thin wrapper over Modal with two buttons (cancel / confirm) for destructive actions.',
-    plain: 'The yes/no popup that appears before deleting anything.',
+    plain: 'The yes/no popup before deleting anything.',
     path: 'src/components/modal/ConfirmModal.jsx:6',
-    notes: ['used by TagesplanView (delete appointment) and FahrzeugeView (delete vehicle)'],
+    notes: ['used by Tagesplan (delete appointment) and Fahrzeuge (delete vehicle)'],
     tag: ['overview', 'all'],
   }),
-  N('ContextMenu', 'modals', 'ContextMenu', 'right-click menu', 860, 548, 200, 60, 'service', {
+  N('ContextMenu', 'modals', 'ContextMenu', 'right-click menu', 740, 546, 200, 60, 'service', {
     role: 'Inline component inside TagesplanView; right-click on a slot or appointment surfaces actions.',
-    plain: 'The right-click menu you get on the schedule. Lets you start, edit, delete or record defects without opening a full popup.',
+    plain: 'The right-click menu on the schedule. Start/edit/delete/record-defects without opening a full popup.',
     path: 'src/views/TagesplanView.jsx:26',
-    notes: ['lines:26-85, inline component', 'clamps position inside viewport (line:53)', 'closes on Escape or click-outside'],
+    notes: ['inline component, lines 26-85', 'clamps position inside viewport', 'closes on Escape / click-outside'],
     tag: ['tagesplan', 'termine', 'all'],
   }),
 
-  /* ── State, Hooks & Domain ── */
-  N('useStore', 'state', 'useStore.js', 'core store · Firestore', 1130, 100, 250, 96, 'service', {
-    role: 'Mode-aware single source of truth: subscribes to Firestore collections per mode, mirrors to localStorage, exposes CRUD.',
-    plain: 'The brain of the app. Talks to the cloud database, keeps a backup in your browser, and gives every page the same list of vehicles and appointments. Knows about demo mode vs normal mode and keeps them in separate buckets.',
-    path: 'src/hooks/useStore.js:64',
-    notes: ['lines:11-25, COLLECTIONS map (demo: fahrzeuge/termine; normal: fahrzeuge_real/termine_real)', 'lines:106-150, onSnapshot + 3s fallback timer', 'lines:153-171, seed effect (demo only, via queueMicrotask)', 'lines:182-294, CRUD callbacks (addFz/updFz/delFz/addTr/updTr/delTr/addMangel/delMangel)', 'lines:296-310, resetAll + toggleMode'],
-    tag: ['overview', 'data', 'demo-mode', 'all'],
+  /* ── State + Compat Layer ── */
+  N('useStoreCompat', 'state', 'useStoreCompat.ts', 'old-API adapter', 980, 95, 210, 96, 'service', {
+    role: 'Adapter from legacy Firestore-style shape (fahrzeug.id, .besitzer, termin.mängel embedded) to the PGlite tables. Views see the OLD shape.',
+    plain: 'A translator. The pages were written for the old database and use names like "besitzer". This file makes the new database talk to them in their old language so we did not have to rewrite every page.',
+    path: 'src/hooks/useStoreCompat.ts:46',
+    notes: ['exposes the OLD useStore() shape: fahrzeuge / termine / addFz / addTr etc.', 'reads via useDb() under the hood', 'splits incoming form data: writes besitzer/telefon/email INTO halter table, links via halterId', 'normDateStr fixes PG\'s Date-object timezone bug (line:79)', 'roadmap: this file is temporary — Welle 1 / Schritt 4 will rewrite views directly on useDb'],
+    tag: ['overview', 'tagesplan', 'termine', 'fahrzeuge', 'maengel', 'data', 'all'],
     critical: true,
   }),
-  N('useToasts', 'state', 'useToasts.js', 'sonner wrapper', 1130, 218, 250, 60, 'service', {
+  N('useDb', 'state', 'useDb.ts', 'PGlite React hook', 980, 205, 210, 96, 'service', {
+    role: 'Native PGlite-shaped React hook: runs migrations, seeds domain + demo, exposes typed CRUD, refresh()es after every mutation.',
+    plain: 'The actual hand that touches the database. Runs the database setup on first load, fills in lookup tables, and re-loads everything after each change. There is no real-time push from the DB; the app pulls.',
+    path: 'src/hooks/useDb.ts:53',
+    notes: ['line:90-115, mount effect: runMigrations → seedDomainTables → auto-seedDemoBestand', 'line:80, refresh() reloads halter + fahrzeuge + termine + per-termin mängel', 'NO onSnapshot equivalent — every mutation calls refresh() to keep state fresh', 'multi-tab: tab A\'s writes are invisible to tab B until B\'s next refresh()'],
+    tag: ['overview', 'data', 'tagesplan', 'fahrzeuge', 'maengel', 'all'],
+    critical: true,
+  }),
+  N('useToasts', 'state', 'useToasts.js', 'sonner wrapper', 980, 315, 210, 60, 'service', {
     role: 'Returns { add, toasts, rm } where add() is a thin shim over sonner; toasts/rm are vestigial no-ops.',
-    plain: 'A small helper that pops the green/red status messages in the corner when something happens (saved, deleted, error).',
+    plain: 'Small helper that pops green/red status messages in the corner.',
     path: 'src/hooks/useToasts.js:3',
-    notes: ['line:7, success → sonner.success', 'lines:11-12, toasts:[] and rm:() are leftovers from old custom toast system'],
+    notes: ['success → sonner.success', 'toasts:[] and rm:() are leftovers from old custom toast system'],
     tag: ['overview', 'all'],
   }),
-  N('useIsMobile', 'state', 'useIsMobile.js', 'viewport hook', 1130, 296, 250, 60, 'service', {
+  N('useIsMobile', 'state', 'useIsMobile.js', 'viewport hook', 980, 390, 210, 60, 'service', {
     role: 'Tracks window.innerWidth < breakpoint (default 768) on resize; used by App to auto-close sidebar.',
-    plain: 'Watches the browser window size so the app can hide the sidebar on small phones automatically.',
+    plain: 'Watches window size so the sidebar auto-hides on phones.',
     path: 'src/hooks/useIsMobile.js:7',
-    notes: ['line:12, resize listener with cleanup', 'used once in App.jsx:32'],
+    notes: ['resize listener with cleanup', 'used once in App.jsx:33'],
     tag: ['overview', 'all'],
   }),
-  N('validators', 'state', 'utils/validators.js', 'hard + soft checks', 1130, 374, 250, 76, 'service', {
+
+  /* ── DB Layer (the new heart of the app) ── */
+  N('db-client', 'db', 'db/client.ts', 'PGlite singleton + Drizzle', 1230, 90, 240, 84, 'db', {
+    role: 'Initialises a singleton PGlite instance at idb://tuvpro-db-v2 and wraps it with Drizzle (typed query builder).',
+    plain: 'Boots the in-browser PostgreSQL once per tab, stores it under the name tuvpro-db-v2 inside the browser\'s IndexedDB. Every other DB file goes through this.',
+    path: 'src/db/client.ts:25',
+    notes: ['singleton _pglite + _db (lines:21-22)', 'line:33, idb://tuvpro-db-v2 (v2 = post status-code fix)', 'line:36, drizzle(_pglite, { schema, logger: import.meta.env.DEV })', 'resetDatabase() drops all 8 tables — for tests'],
+    tag: ['overview', 'data', 'all'],
+    critical: true,
+  }),
+  N('db-schema', 'db', 'db/schema.ts', '8 tables · 3NF · TS types', 1230, 188, 240, 80, 'db', {
+    role: 'Drizzle definitions of all 8 tables, FKs, unique/partial indexes, CHECK constraints, relations(), inferred TS types.',
+    plain: 'The blueprint for the database. Lists every table (status, pruefart, pruefer, mangel_kategorie, halter, fahrzeug, termin, mangel), every link between them, every rule (e.g. plate must be unique).',
+    path: 'src/db/schema.ts',
+    notes: ['8 pgTable() definitions in 3NF', 'partial UNIQUE on fahrzeug.fin WHERE fin IS NOT NULL — fixes Fuchs 2-Fahrzeuge-1-VIN bug', 'CHECK baujahr BETWEEN 1885 AND year+1', 'CASCADE on fahrzeug.delete → termine + mängel', 'relations() blocks enable db.query.X.with()'],
+    tag: ['overview', 'data', 'fahrzeuge', 'termine', 'maengel', 'all'],
+    critical: true,
+  }),
+  N('db-queries', 'db', 'db/queries.ts', 'repository · CRUD + JOINs', 1230, 282, 240, 80, 'db', {
+    role: 'All SQL lives here. ~30 typed functions: CRUD per entity, getTagesplan() JOIN, getHuFaellig() view, WF-01 guard inside updTerminStatus and addMangel.',
+    plain: 'The only file in the app that writes SQL. Every other file asks this one. Has business rules baked in: it refuses to mark a Termin "Bestanden" if a major defect exists, and automatically demotes a passed Termin if you later add a major defect to it.',
+    path: 'src/db/queries.ts:43',
+    notes: ['line:152, updTerminStatus enforces WF-01: JOIN mangel + mangel_kategorie, blocks Bestanden when blockiertBestanden=true', 'line:204, addMangel auto-demotes Termin from Bestanden → Nicht bestanden when HM/GM added', 'line:259, getTagesplan uses Drizzle Query API (nested `with` clauses) — one SQL JOIN, not N+1', 'line:280, getHuFaellig is raw SQL (replicates v_hu_faellig view from datenmodell.md §3.5)'],
+    tag: ['overview', 'data', 'tagesplan', 'fahrzeuge', 'maengel', 'all'],
+    critical: true,
+  }),
+  N('db-migrate', 'db', 'db/migrate.ts', 'idempotent runner', 1230, 376, 240, 72, 'db', {
+    role: 'Loads SQL files from src/db/migrations/*.sql via Vite raw-import, executes pending ones, tracks applied in __drizzle_migrations table.',
+    plain: 'Runs the SQL setup files on first load. Remembers what it already ran so opening another tab doesn\'t crash. Comes from drizzle-kit generate at build time.',
+    path: 'src/db/migrate.ts:14',
+    notes: ['line:17, import.meta.glob("./migrations/*.sql", { query: "?raw", eager: true })', 'line:36, splits by drizzle\'s --> statement-breakpoint marker', 'invoked from useDb effect on mount'],
+    tag: ['data', 'all'],
+  }),
+  N('db-seed', 'db', 'db/seed.ts', 'domain + demo data', 1230, 460, 240, 72, 'db', {
+    role: 'seedDomainTables() inserts the 4 lookup tables (idempotent); seedDemoBestand() loads 8 halter, 8 fahrzeuge, 13 termine, 12 mängel.',
+    plain: 'Fills the lookup tables (statuses, inspection types, inspectors) once, and on a fresh DB also adds the demo customers, vehicles, appointments and defects so the app isn\'t empty.',
+    path: 'src/db/seed.ts:20',
+    notes: ['STATUS_SEED uses GERMAN labels as codes ("Geplant" not "GEPLANT") — matches STATUS.* in constants/status.js', 'all 12 PRUEFART_SEED entries (missing entries used to FK-violate)', 'seedDemoBestand: 8 halter incl. "Marwan Saleh", 8 fahrzeuge with German plates, 13 termine spread today/-1/-2/+1, 12 mängel split by category'],
+    tag: ['overview', 'data', 'all'],
+  }),
+  N('db-migrations-sql', 'db', 'db/migrations/0000_*.sql', 'generated DDL', 1230, 544, 240, 60, 'db', {
+    role: 'drizzle-kit output: raw SQL for the entire initial schema (CREATE TABLE × 8 + indexes + FKs + CHECKs).',
+    plain: 'The actual CREATE TABLE statements, auto-generated from db/schema.ts. Don\'t edit by hand; re-run npm run db:generate after schema changes.',
+    path: 'src/db/migrations/0000_spicy_sunfire.sql',
+    notes: ['4862 bytes', 'plus migrations/meta/ snapshots used by drizzle-kit', 'imported as text via Vite ?raw glob'],
+    tag: ['data', 'all'],
+  }),
+  N('drizzle-config', 'db', 'drizzle.config.ts', 'drizzle-kit input', 1230, 616, 240, 60, 'db', {
+    role: 'Tells drizzle-kit where the schema is and where to emit migrations; dialect set to postgresql.',
+    plain: 'Configuration for the SQL-generator tool. Used at build time, not runtime.',
+    path: 'drizzle.config.ts',
+    notes: ['dialect: "postgresql"', 'consumed by npm run db:generate / db:studio'],
+    tag: ['data', 'all'],
+  }),
+
+  /* ── Domain · Utils · Constants · Types ── */
+  N('validators', 'domain', 'utils/validators.js', 'hard + soft checks', 1510, 90, 220, 76, 'service', {
     role: 'Pure validation: Kennzeichen regex, FIN length+chars+checksum, baujahr/kmStand range, status workflow guard.',
-    plain: 'Pure check functions: is this plate valid German format, is this VIN 17 chars and the right kind of letters, is this year sane. Some checks block saving, some only warn.',
+    plain: 'Pure check functions: is this plate valid German format, is this VIN 17 chars, is this year sane. Some checks block saving, some only warn.',
     path: 'src/utils/validators.js:33',
-    notes: ['line:21, Kennzeichen regex (handles season plates)', 'line:121, validateFahrzeug aggregates all field checks', 'line:181, Hersteller↔Modell↔Typ consistency (soft)', 'line:219, FIN checksum check (soft, ISO 3779)'],
+    notes: ['Kennzeichen regex handles season plates (e.g. B-TK 1234 04-10)', 'validateFahrzeug aggregates all field checks', 'FIN checksum check (soft, ISO 3779)', 'validateStatusWechsel mirrors WF-01 at UI layer'],
     tag: ['overview', 'fahrzeuge', 'all'],
   }),
-  N('utils-date', 'state', 'utils/date.js', 'date helpers', 1130, 470, 250, 56, 'service', {
-    role: 'uid(), isoDate(), addDays(), fmtDate(), fmtDateLong(), dayName(), dayShort() — pure, no deps.',
+  N('utils-date', 'domain', 'utils/date.js', 'date helpers', 1510, 184, 220, 56, 'service', {
+    role: 'uid(), isoDate(), addDays(), fmtDate(), fmtDateLong(), dayName(), dayShort() — pure.',
     plain: 'Small date helpers used everywhere: format a date as German DD.MM.YYYY, add days, generate a unique ID.',
     path: 'src/utils/date.js',
-    notes: ['de-DE Intl.DateTimeFormat', 'uid = timestamp36 + random36'],
+    notes: ['de-DE Intl.DateTimeFormat', 'uid = timestamp36 + random36', 'isoDate() builds LOCAL date string — must match useStoreCompat normDateStr (timezone bug fix)'],
     tag: ['overview', 'all'],
   }),
-  N('utils-mangel', 'state', 'utils/mangel.js', '1-liner', 1130, 548, 250, 52, 'service', {
+  N('utils-mangel', 'domain', 'utils/mangel.js', '1-liner', 1510, 256, 220, 52, 'service', {
     role: 'One-liner: hatHauptmangel(maengel) → boolean (HM or GM in list).',
     plain: 'A single check: does this defect list contain anything severe enough to fail the inspection?',
     path: 'src/utils/mangel.js:1',
-    notes: ['1 line; central to the §29 StVZO "cannot pass with main defect" rule'],
+    notes: ['central to §29 StVZO "no pass with main defect" rule', 'mirrored at DB level via mangel_kategorie.blockiertBestanden'],
     tag: ['overview', 'maengel', 'all'],
   }),
-  N('const-status', 'state', 'constants/status.js', 'status enum', 1130, 624, 250, 60, 'service', {
-    role: 'STATUS enum (7 values) + STATUS_CFG (per-status color/glow/border/dot).',
-    plain: 'The seven states an appointment can be in (Planned, In progress, Passed, etc.) plus the colors used to draw each one.',
+  N('const-status', 'domain', 'constants/status.js', 'status enum', 1510, 326, 220, 56, 'service', {
+    role: 'STATUS enum (7 German labels) + STATUS_CFG (per-status color/glow/border/dot).',
+    plain: 'The seven states an appointment can be in (Geplant, In Prüfung, Bestanden…) plus the colors used to draw each.',
     path: 'src/constants/status.js',
-    notes: ['used by useStore for guards', 'used by StatusPill for rendering'],
+    notes: ['values are German labels: "Geplant", "Bestanden", etc.', 'matches db.status.statusCode primary key 1:1 (per seed.ts line:22)'],
     tag: ['overview', 'all'],
   }),
-  N('const-pruefung', 'state', 'constants/pruefung.js', 'inspection types', 1130, 702, 250, 60, 'service', {
+  N('const-pruefung', 'domain', 'constants/pruefung.js', 'inspection types', 1510, 398, 220, 56, 'service', {
     role: 'PRUEFUNG_ARTEN (12 inspection types with code+duration) and PRUEFER (5 inspectors).',
-    plain: 'List of inspection kinds (main, emissions, safety, etc.) and the five inspectors who can perform them.',
+    plain: 'List of inspection kinds (HU, AU, §21, etc.) and the five inspectors. Codes match pruefart.prueftCode in DB.',
     path: 'src/constants/pruefung.js',
-    notes: ['§29 / §47a / §21 references', 'durations drive scheduling'],
+    notes: ['12 entries; §29 / §47a / §21 references', 'codes mirrored 1:1 in db/seed.ts PRUEFART_SEED'],
     tag: ['overview', 'termine', 'all'],
   }),
-  N('const-fahrzeug', 'state', 'constants/fahrzeug.js', 'vehicle types', 1130, 780, 250, 60, 'service', {
+  N('const-fahrzeug', 'domain', 'constants/fahrzeug.js', 'vehicle types', 1510, 470, 220, 56, 'service', {
     role: 'FAHRZEUG_TYPEN (16 vehicle types with emoji icons) and TIME_SLOTS (07:00-17:30 in 30-min steps).',
-    plain: 'The vehicle categories (car, truck, motorcycle, etc.) and the half-hour time slots used on the schedule.',
+    plain: 'Vehicle categories (PKW, LKW, Motorrad…) and the half-hour slots used on the schedule.',
     path: 'src/constants/fahrzeug.js',
     notes: ['23 time slots from 07:00 to 17:30', 'icons stored as emoji strings'],
     tag: ['overview', 'fahrzeuge', 'termine', 'all'],
   }),
-  N('const-mangel', 'state', 'constants/mangel.js', 'defect catalog', 1130, 858, 250, 60, 'service', {
+  N('const-mangel', 'domain', 'constants/mangel.js', 'defect catalog', 1510, 542, 220, 56, 'service', {
     role: 'MANGEL_KATALOG (StVZO defect entries grouped by system) + MANGEL_KATEGORIEN (5 severity tiers).',
-    plain: 'The official defect catalog: codes, descriptions, and how severe each is (minor, major, danger).',
+    plain: 'The official defect catalog: codes, descriptions, severity. The 5 categories also exist in the DB as mangel_kategorie.',
     path: 'src/constants/mangel.js',
-    notes: ['188 lines', 'used by MaengelModal catalog tab', 'MANGEL_KATALOG_BY_CODE for lookups in StatistikView'],
+    notes: ['used by MaengelModal catalog tab', 'MANGEL_KATALOG_BY_CODE for lookups in StatistikView', '5 categories (OM/LM/EM/HM/GM) match db.mangelKategorie.kategorieCode'],
     tag: ['overview', 'maengel', 'all'],
   }),
-  N('const-kfzReferenz', 'state', 'constants/kfzReferenz.js', 'manufacturer→models', 1130, 936, 250, 60, 'service', {
-    role: 'HERSTELLER_REFERENZ map of brand → { models[], allowed types, display name }; used for cascading dropdowns.',
-    plain: 'A database of car brands and the models they actually make, so the form can pre-fill model options when you pick a brand.',
+  N('const-kfzReferenz', 'domain', 'constants/kfzReferenz.js', 'manufacturer→models', 1510, 614, 220, 56, 'service', {
+    role: 'HERSTELLER_REFERENZ map brand → { models[], allowed types, display name }; used for cascading dropdowns.',
+    plain: 'Database of car brands and the models they actually make. Lets the form pre-fill model options after picking a brand.',
     path: 'src/constants/kfzReferenz.js',
-    notes: ['normalizeHersteller folds case/punctuation', 'getHerstellerDisplayList gives sorted UI list'],
+    notes: ['normalizeHersteller folds case/punctuation', 'getHerstellerDisplayList for sorted UI list'],
     tag: ['fahrzeuge', 'all'],
   }),
-  N('const-kfzKreis', 'state', 'constants/kfzKreis.js', '700 KBA plate codes', 1130, 1014, 250, 64, 'service', {
-    role: 'KFZ_KREIS_CODES — full official KBA list of German regional plate prefixes (B, M, HH, etc.).',
-    plain: 'The complete list of German plate prefixes and the city/county each one belongs to. Used to autocomplete and validate plate input.',
+  N('const-kfzKreis', 'domain', 'constants/kfzKreis.js', '700 KBA plate codes', 1510, 686, 220, 60, 'service', {
+    role: 'KFZ_KREIS_CODES — official KBA list of German regional plate prefixes (B, M, HH, etc.).',
+    plain: 'Complete list of German plate prefixes and which city/county each belongs to. Used for autocomplete and validation.',
     path: 'src/constants/kfzKreis.js',
-    notes: ['700+ entries', 'isValidKreisCode() check used by validateKennzeichen'],
+    notes: ['700+ entries', 'isValidKreisCode() used by validateKennzeichen'],
     tag: ['fahrzeuge', 'all'],
   }),
-  N('types-propTypes', 'state', 'types/propTypes.js', 'shared shapes', 1130, 1098, 250, 60, 'service', {
+  N('types-propTypes', 'domain', 'types/propTypes.js', 'shared shapes', 1510, 770, 220, 60, 'service', {
     role: 'FahrzeugShape, TerminShape, MangelShape, ToastShape — runtime PropTypes for component contracts.',
-    plain: 'Definitions of what a Vehicle, Appointment, Defect and Toast object look like. Used by all views/modals so React can warn when something is missing.',
+    plain: 'Definitions of what a Vehicle/Appointment/Defect/Toast object looks like. Lets React warn when something is missing.',
     path: 'src/types/propTypes.js',
-    notes: ['kat is one-of OM/GM/EM/HM/GF', 'ToastShape unused except by dead Toast.jsx'],
+    notes: ['describes the LEGACY useStore shape — matches what useStoreCompat outputs', 'kat is one-of OM/GM/EM/HM/GF (older 5-letter set, vs DB\'s OM/LM/EM/HM/GM)', 'ToastShape unused except by dead Toast.jsx'],
     tag: ['overview', 'all'],
+  }),
+  N('drizzle-orm', 'domain', '(drizzle-orm import)', 'eq · and · sql · desc', 1510, 850, 220, 60, 'service', {
+    role: 'Drizzle helpers (eq, and, desc, sql) imported by queries.ts to build typed SQL fragments.',
+    plain: 'The little helpers like "where X equals Y" that build SQL pieces in queries.ts. Not a separate file - just imports.',
+    path: '(import "drizzle-orm" in src/db/queries.ts:17)',
+    notes: ['eq, and, desc, sql tagged template', 'no separate file in repo'],
+    tag: ['data', 'all'],
   }),
 
   /* ── UI Primitives ── */
-  N('StatusPill', 'ui', 'StatusPill.jsx', 'status badge', 1450, 100, 200, 56, 'service', {
+  N('StatusPill', 'ui', 'StatusPill.jsx', 'status badge', 1770, 100, 180, 52, 'service', {
     role: 'Coloured pill with dot indicator driven by STATUS_CFG.',
-    plain: 'The little colored badge that says "Passed" / "Planned" / "In progress" etc.',
+    plain: 'The little colored badge that says Bestanden / Geplant / In Prüfung etc.',
     path: 'src/components/ui/StatusPill.jsx:5',
     notes: ['size sm/lg', 'pulse glow for IN_PRUEFUNG'],
     tag: ['overview', 'all'],
   }),
-  N('MangelPill', 'ui', 'MangelPill.jsx', 'defect tag', 1450, 172, 200, 56, 'service', {
+  N('MangelPill', 'ui', 'MangelPill.jsx', 'defect tag', 1770, 170, 180, 52, 'service', {
     role: 'Small monospace tag rendering the defect-category short code (HM/EM/GM…).',
     plain: 'The short two-letter tag shown next to each defect to flag its severity.',
     path: 'src/components/ui/MangelPill.jsx:5',
     notes: ['reads MANGEL_KATEGORIEN', '5 categories'],
     tag: ['maengel', 'all'],
   }),
-  N('HauptmangelBadge', 'ui', 'HauptmangelBadge.jsx', '"HAUPTMANGEL"', 1450, 244, 200, 56, 'service', {
+  N('HauptmangelBadge', 'ui', 'HauptmangelBadge.jsx', '"HAUPTMANGEL"', 1770, 240, 180, 52, 'service', {
     role: 'Static red HAUPTMANGEL chip; no props.',
-    plain: 'A bright red badge that simply says "MAIN DEFECT" - shown when a serious problem is found.',
+    plain: 'Bright red badge that simply says "HAUPTMANGEL" - shown when a major defect is present.',
     path: 'src/components/ui/HauptmangelBadge.jsx:3',
-    notes: ['rendered in TagesplanView (line:262) and BerichteView (line:683)'],
+    notes: ['rendered in TagesplanView and BerichteView'],
     tag: ['maengel', 'all'],
   }),
-  N('Kpi', 'ui', 'Kpi.jsx', 'metric card', 1450, 316, 200, 56, 'service', {
+  N('Kpi', 'ui', 'Kpi.jsx', 'metric card', 1770, 310, 180, 52, 'service', {
     role: 'Big-number metric card with accent gradient stripe; framer-motion fade-in.',
     plain: 'The boxes at the top of pages showing a number with a label like "Vehicles: 8" or "Passed: 3".',
     path: 'src/components/ui/Kpi.jsx:5',
     notes: ['used by TagesplanView/FahrzeugeView/StatistikView'],
     tag: ['overview', 'all'],
   }),
-  N('SectionHead', 'ui', 'SectionHead.jsx', 'section title', 1450, 388, 200, 52, 'service', {
+  N('SectionHead', 'ui', 'SectionHead.jsx', 'section title', 1770, 380, 180, 52, 'service', {
     role: 'Small section header with optional icon and right-slot.',
-    plain: 'A small grey title that introduces a section of the page.',
+    plain: 'Small grey title that introduces a section of the page.',
     path: 'src/components/ui/SectionHead.jsx:4',
     notes: ['used in FahrzeugeView drawer and MaengelModal'],
     tag: ['overview', 'all'],
   }),
-  N('EmptyState', 'ui', 'EmptyState.jsx', 'no-data placeholder', 1450, 456, 200, 56, 'service', {
+  N('EmptyState', 'ui', 'EmptyState.jsx', 'no-data placeholder', 1770, 450, 180, 52, 'service', {
     role: 'Centred empty-state with icon + title + subtitle.',
-    plain: 'The friendly "no items yet, try adding one" block shown when a list is empty.',
+    plain: 'The friendly "no items yet" block shown when a list is empty.',
     path: 'src/components/ui/EmptyState.jsx:4',
     notes: ['used in TagesplanView, FahrzeugeView, BerichteView'],
     tag: ['overview', 'all'],
   }),
-  N('inputs', 'ui', 'inputs.jsx', 'Inp · Sel · Fld', 1450, 528, 200, 56, 'service', {
-    role: 'Three primitives: Inp (text/number/date), Sel (dropdown with chevron), Fld (label + error wrapper).',
-    plain: 'The styled text boxes, dropdowns and labels used in every form.',
+  N('inputs', 'ui', 'inputs.jsx', 'Inp · Sel · Fld', 1770, 520, 180, 52, 'service', {
+    role: 'Three primitives: Inp (text/number/date), Sel (dropdown), Fld (label + error wrapper).',
+    plain: 'The styled text boxes, dropdowns, labels used in every form.',
     path: 'src/components/ui/inputs.jsx:6',
     notes: ['focus state, error state, mono variant'],
     tag: ['overview', 'all'],
   }),
-  N('buttons', 'ui', 'buttons.jsx', 'BtnP · BtnG · IconBtn', 1450, 600, 200, 56, 'service', {
+  N('buttons', 'ui', 'buttons.jsx', 'BtnP · BtnG · IconBtn', 1770, 590, 180, 52, 'service', {
     role: 'BtnP (filled primary), BtnG (ghost), IconBtn (square icon-only).',
-    plain: 'The three button styles used throughout - primary (blue), ghost (outline), and icon-only.',
+    plain: 'The three button styles used throughout - primary, ghost, icon-only.',
     path: 'src/components/ui/buttons.jsx:4',
     notes: ['danger variant; sm variant; gradient on BtnP'],
     tag: ['overview', 'all'],
   }),
-  N('Toast-dead', 'ui', 'Toast.jsx', 'DEAD · zero callers', 1450, 672, 200, 60, 'service', {
-    role: 'Defines Toast + ToastStack components — no file imports them.',
-    plain: 'A toast-notification component that no part of the app uses anymore. The app actually shows toasts via the Sonner library.',
+  N('Toast-dead', 'ui', 'Toast.jsx', 'DEAD · zero callers', 1770, 660, 180, 56, 'service', {
+    role: 'Defines Toast + ToastContainer components — no file in src/ imports either.',
+    plain: 'A toast-notification component that the app does not use anymore. Toasts are produced through the Sonner library via useToasts. Safe to delete.',
     path: 'src/components/Toast.jsx:7',
-    notes: ['line:33, ToastStack iterates over `toasts` array', 'no imports from src/ found (only internal Toast↔ToastStack)', 'safe to delete'],
+    notes: ['ToastContainer iterates over `toasts` array (renamed from ToastStack in earlier code)', 'no imports from src/ found apart from internal Toast↔ToastContainer', 'survived the cleanup commit (af65884) which removed useStore.js and firebase.js'],
     tag: ['dead', 'all'],
   }),
 
-  /* ── External ── */
-  N('firestore', 'external', 'Firestore', 'Google Cloud DB', 1710, 100, 160, 76, 'db', {
-    role: 'Two pairs of collections: fahrzeuge/termine (demo) and fahrzeuge_real/termine_real (normal).',
-    plain: 'Google\'s cloud database. Holds two separate sets of data - one for demo, one for real - so they never mix.',
-    path: '(remote: firebase.google.com)',
-    notes: ['rules in firestore.rules', 'demo-window guard until 2026-08-01', 'no auth - public reads/writes inside window'],
-    tag: ['overview', 'data', 'demo-mode', 'all'],
+  /* ── External + Browser ── */
+  N('pglite-wasm', 'external', 'PGlite (WASM)', 'in-browser Postgres', 1990, 95, 180, 80, 'db', {
+    role: '@electric-sql/pglite — PostgreSQL 16 compiled to WebAssembly. Full SQL: FKs, JOINs, CHECK, JSONB, CTEs, triggers.',
+    plain: 'A complete PostgreSQL database compiled into a small WebAssembly program that runs inside your browser tab — no server, no installation.',
+    path: 'node_modules/@electric-sql/pglite',
+    notes: ['v0.4.5', 'first DB access lazy-fetches ~3 MB WASM (then cached)', 'singleton per tab — multiple tabs each load their own WASM instance and operate on separate views of the same IndexedDB'],
+    tag: ['overview', 'data', 'all'],
     critical: true,
   }),
-  N('sonner', 'external', 'sonner', 'toast library', 1710, 192, 160, 56, 'external', {
-    role: 'Third-party toast/notification library; mounted via <Toaster> in App.jsx and called via useToasts.',
+  N('indexeddb', 'external', 'IndexedDB', 'browser-side storage', 1990, 192, 180, 76, 'external', {
+    role: 'Browser persistent KV store. PGlite writes its data files here under the name idb://tuvpro-db-v2.',
+    plain: 'The browser\'s built-in long-term storage. Survives reloads and restarts. Wiped only if the user clears site data.',
+    path: '(browser API, no source file)',
+    notes: ['storage namespace: tuvpro-db-v2 (v2 = after status-code fix)', 'per-origin: each domain gets its own', 'NO sync to other devices or other browsers'],
+    tag: ['overview', 'data', 'all'],
+    critical: true,
+  }),
+  N('drizzle-lib', 'external', 'drizzle-orm', 'typed SQL builder', 1990, 286, 180, 64, 'external', {
+    role: 'Type-safe SQL builder for TypeScript. Generates typed insert/select/update/delete + Query API (with: { ... }).',
+    plain: 'A library that lets the code write SQL in JavaScript with full type checking — fewer typos and silent runtime errors.',
+    path: 'node_modules/drizzle-orm',
+    notes: ['v0.45.2', 'pglite adapter (drizzle-orm/pglite)', 'drizzle-kit (v0.31.10) is the build-time companion for migrations'],
+    tag: ['overview', 'data', 'all'],
+  }),
+  N('sonner', 'external', 'sonner', 'toast library', 1990, 362, 180, 56, 'external', {
+    role: '3rd-party toast/notification library; mounted via <Toaster> in App.jsx and called through useToasts.',
     plain: 'The library that actually draws the green/red status messages in the corner.',
     path: 'node_modules/sonner',
     notes: ['v2.0.7', 'rich colors, bottom-right'],
     tag: ['overview', 'all'],
   }),
-  N('framer', 'external', 'framer-motion', 'animations', 1710, 264, 160, 56, 'external', {
+  N('framer', 'external', 'framer-motion', 'animations', 1990, 434, 180, 56, 'external', {
     role: 'Animation library used for view transitions, modal enter/exit, sidebar slide.',
-    plain: 'The library that makes things slide and fade smoothly when they appear or disappear.',
+    plain: 'Makes things slide and fade smoothly.',
     path: 'node_modules/framer-motion',
-    notes: ['v12.38.0', 'AnimatePresence used in App.jsx and modals'],
+    notes: ['v12.38.0', 'AnimatePresence in App.jsx and modals'],
     tag: ['overview', 'all'],
   }),
-  N('lucide', 'external', 'lucide-react', 'icons', 1710, 336, 160, 56, 'external', {
-    role: 'Icon set used everywhere (Calendar, Car, ChevronLeft, Plus, Trash2, etc.).',
+  N('lucide', 'external', 'lucide-react', 'icons', 1990, 506, 180, 56, 'external', {
+    role: 'Icon set used everywhere.',
     plain: 'The line-icon set used throughout the app.',
     path: 'node_modules/lucide-react',
     notes: ['imported by Sidebar, Topbar, every view and modal'],
     tag: ['overview', 'all'],
   }),
-  N('recharts', 'external', 'recharts', 'charts (Statistik only)', 1710, 408, 160, 64, 'external', {
+  N('recharts', 'external', 'recharts', 'charts (Statistik)', 1990, 578, 180, 60, 'external', {
     role: 'Charting library; imported only by StatistikView.',
-    plain: 'The chart library that draws the bar/area/pie graphs on the statistics page.',
+    plain: 'The chart library on the statistics page.',
     path: 'node_modules/recharts',
-    notes: ['v3.8 - heavy bundle (~110kb gzipped)', 'lazy-loaded via React.lazy'],
+    notes: ['v3.8.1 — heavy bundle (~110kb gzipped)', 'lazy-loaded via React.lazy(StatistikView)'],
     tag: ['statistik', 'all'],
   }),
-  N('proptypes', 'external', 'prop-types', 'runtime types', 1710, 488, 160, 56, 'external', {
+  N('proptypes', 'external', 'prop-types', 'runtime types', 1990, 654, 180, 56, 'external', {
     role: 'React prop-type runtime checks; used by every component file.',
-    plain: 'A small library for warning about missing or wrongly-typed props during development.',
+    plain: 'Library for warning about wrong props in dev.',
     path: 'node_modules/prop-types',
-    notes: ['v15.8'],
+    notes: ['v15.8', 'redundant with TS in db layer but used throughout legacy .jsx'],
     tag: ['overview', 'all'],
   }),
 ];
 
 const edges = [
-  /* ── Spine (critical user flow: open app → see today → add/edit Termin → record Mangel → save) ── */
-  { from: 'main',           to: 'App',            kind: 'critical', label: '1 · render <App/>', tag: ['overview', 'tagesplan', 'termine', 'all'] },
-  { from: 'App',            to: 'useStore',       kind: 'critical', label: '2 · useStore()',    tag: ['overview', 'tagesplan', 'termine', 'demo-mode', 'data', 'all'] },
-  { from: 'App',            to: 'TagesplanView',  kind: 'critical', label: '3 · default view',  tag: ['overview', 'tagesplan', 'all'] },
-  { from: 'TagesplanView',  to: 'TerminModal',    kind: 'critical', label: '4 · open modal',    tag: ['overview', 'tagesplan', 'termine', 'all'] },
-  { from: 'TagesplanView',  to: 'MaengelModal',   kind: 'critical', label: '5 · open Mängel',   tag: ['overview', 'tagesplan', 'maengel', 'all'] },
-  { from: 'TerminModal',    to: 'useStore',       kind: 'critical', label: '6 · addTr/updTr',   tag: ['overview', 'tagesplan', 'termine', 'all'] },
-  { from: 'MaengelModal',   to: 'useStore',       kind: 'critical', label: '7 · addMangel',     tag: ['overview', 'tagesplan', 'maengel', 'all'] },
-  { from: 'useStore',       to: 'firestore',      kind: 'critical', label: '8 · onSnapshot · setDoc · deleteDoc', tag: ['overview', 'tagesplan', 'termine', 'demo-mode', 'data', 'all'] },
+  /* ── Critical spine (boot → user clicks "add Termin" → row in PGlite/IndexedDB) ── */
+  { from: 'main',           to: 'App',             kind: 'critical', label: '1 · render <App/>',           tag: ['overview', 'tagesplan', 'termine', 'all'] },
+  { from: 'App',            to: 'useStoreCompat',  kind: 'critical', label: '2 · useStoreCompat as useStore', tag: ['overview', 'tagesplan', 'termine', 'data', 'all'] },
+  { from: 'App',            to: 'TagesplanView',   kind: 'critical', label: '3 · default view',            tag: ['overview', 'tagesplan', 'all'] },
+  { from: 'TagesplanView',  to: 'TerminModal',     kind: 'critical', label: '4 · open modal',              tag: ['overview', 'tagesplan', 'termine', 'all'] },
+  { from: 'TerminModal',    to: 'useStoreCompat',  kind: 'critical', label: '5 · addTr (prop callback)',   tag: ['overview', 'tagesplan', 'termine', 'all'] },
+  { from: 'useStoreCompat', to: 'useDb',           kind: 'critical', label: '6 · db.addTermin',            tag: ['overview', 'tagesplan', 'termine', 'data', 'all'] },
+  { from: 'useDb',          to: 'db-queries',      kind: 'critical', label: '7 · q.addTermin',             tag: ['overview', 'tagesplan', 'termine', 'data', 'all'] },
+  { from: 'db-queries',     to: 'db-client',       kind: 'critical', label: '8 · getDb()',                 tag: ['overview', 'tagesplan', 'termine', 'data', 'all'] },
+  { from: 'db-client',      to: 'pglite-wasm',     kind: 'critical', label: '9 · drizzle(pglite)',         tag: ['overview', 'tagesplan', 'termine', 'data', 'all'] },
+  { from: 'pglite-wasm',    to: 'indexeddb',       kind: 'critical', label: '10 · idb://tuvpro-db-v2',     tag: ['overview', 'tagesplan', 'termine', 'data', 'all'] },
 
   /* ── Mount edges (App → top-level) ── */
-  { from: 'index-html', to: 'main',           kind: 'mount',  label: 'loads', tag: ['overview', 'all'] },
-  { from: 'App',        to: 'Sidebar',        kind: 'mount',  label: 'mounts', tag: ['overview', 'navigation', 'all'] },
-  { from: 'App',        to: 'Topbar',         kind: 'mount',  label: 'mounts', tag: ['overview', 'navigation', 'all'] },
-  { from: 'App',        to: 'FahrzeugeView',  kind: 'mount',  label: 'lazy', tag: ['overview', 'fahrzeuge', 'all'] },
-  { from: 'App',        to: 'StatistikView',  kind: 'mount',  label: 'lazy', tag: ['overview', 'statistik', 'all'] },
-  { from: 'App',        to: 'BerichteView',   kind: 'mount',  label: 'lazy', tag: ['overview', 'berichte', 'all'] },
-  { from: 'App',        to: 'useToasts',      kind: 'mount',  label: 'add()', tag: ['overview', 'all'] },
-  { from: 'App',        to: 'useIsMobile',    kind: 'mount',  label: 'reactive', tag: ['overview', 'all'] },
-  { from: 'firebase',   to: 'firestore',      kind: 'api',    label: 'initializeApp', tag: ['overview', 'data', 'all'] },
+  { from: 'index-html', to: 'main',           kind: 'mount',  label: 'loads',     tag: ['overview', 'all'] },
+  { from: 'App',        to: 'Sidebar',        kind: 'mount',  label: 'mounts',    tag: ['overview', 'navigation', 'all'] },
+  { from: 'App',        to: 'Topbar',         kind: 'mount',  label: 'mounts',    tag: ['overview', 'navigation', 'all'] },
+  { from: 'App',        to: 'FahrzeugeView',  kind: 'mount',  label: 'lazy',      tag: ['overview', 'fahrzeuge', 'all'] },
+  { from: 'App',        to: 'StatistikView',  kind: 'mount',  label: 'lazy',      tag: ['overview', 'statistik', 'all'] },
+  { from: 'App',        to: 'BerichteView',   kind: 'mount',  label: 'lazy',      tag: ['overview', 'berichte', 'all'] },
+  { from: 'App',        to: 'useToasts',      kind: 'mount',  label: 'add()',     tag: ['overview', 'all'] },
+  { from: 'App',        to: 'useIsMobile',    kind: 'mount',  label: 'reactive',  tag: ['overview', 'all'] },
+  { from: 'main',       to: 'index-css',      kind: 'mount',  label: 'import',    tag: ['overview', 'all'] },
 
-  /* ── View → modal / view-specific deps ── */
-  { from: 'TagesplanView',  to: 'ContextMenu',   kind: 'normal', label: 'right-click', tag: ['tagesplan', 'all'] },
-  { from: 'TagesplanView',  to: 'ConfirmModal',  kind: 'normal', label: 'delete?',     tag: ['tagesplan', 'all'] },
-  { from: 'FahrzeugeView',  to: 'FahrzeugModal', kind: 'normal', label: 'add/edit',    tag: ['fahrzeuge', 'all'] },
-  { from: 'FahrzeugeView',  to: 'ConfirmModal',  kind: 'normal', label: 'delete?',     tag: ['fahrzeuge', 'all'] },
-  { from: 'FahrzeugeView',  to: 'useStore',      kind: 'normal', label: 'addFz · updFz · delFz', tag: ['fahrzeuge', 'all'] },
-  { from: 'StatistikView',  to: 'useStore',      kind: 'normal', label: 'read-only',   tag: ['statistik', 'all'] },
-  { from: 'BerichteView',   to: 'useStore',      kind: 'normal', label: 'read-only',   tag: ['berichte', 'all'] },
-  { from: 'BerichteView',   to: 'Modal',         kind: 'normal', label: 'report preview', tag: ['berichte', 'all'] },
+  /* ── DB-internal wiring ── */
+  { from: 'db-queries', to: 'db-schema',      kind: 'db',     label: 'table refs',          tag: ['data', 'all'] },
+  { from: 'db-client',  to: 'db-schema',      kind: 'db',     label: 'drizzle({schema})',   tag: ['data', 'all'] },
+  { from: 'db-migrate', to: 'db-client',      kind: 'db',     label: 'getPGlite()',         tag: ['data', 'all'] },
+  { from: 'db-migrate', to: 'db-migrations-sql', kind: 'db',  label: 'glob ?raw',           tag: ['data', 'all'] },
+  { from: 'db-seed',    to: 'db-client',      kind: 'db',     label: 'getDb()',             tag: ['data', 'all'] },
+  { from: 'db-seed',    to: 'db-schema',      kind: 'db',     label: 'insert(table)',       tag: ['data', 'all'] },
+  { from: 'drizzle-config', to: 'db-schema',  kind: 'normal', label: 'schemaPath',          tag: ['data', 'all'] },
+  { from: 'drizzle-config', to: 'db-migrations-sql', kind: 'normal', label: 'outDir',       tag: ['data', 'all'] },
+  { from: 'db-queries', to: 'drizzle-orm',    kind: 'normal', label: 'eq · and · sql',      tag: ['data', 'all'] },
+  { from: 'db-client',  to: 'drizzle-lib',    kind: 'api',    label: 'drizzle/pglite',      tag: ['overview', 'data', 'all'] },
+
+  /* ── useDb startup chain ── */
+  { from: 'useDb',      to: 'db-migrate',     kind: 'normal', label: 'runMigrations()',     tag: ['data', 'all'] },
+  { from: 'useDb',      to: 'db-seed',        kind: 'normal', label: 'seedDomain + seedDemo', tag: ['data', 'all'] },
+  { from: 'useDb',      to: 'db-queries',     kind: 'normal', label: 'all CRUD via q.*',    tag: ['data', 'all'] },
+
+  /* ── Views → State (logical: props from App) ── */
+  { from: 'TagesplanView',  to: 'useStoreCompat',  kind: 'normal', label: 'addTr · updTr · addMangel', tag: ['tagesplan', 'termine', 'maengel', 'all'] },
+  { from: 'FahrzeugeView',  to: 'useStoreCompat',  kind: 'normal', label: 'addFz · updFz · delFz',     tag: ['fahrzeuge', 'all'] },
+  { from: 'StatistikView',  to: 'useStoreCompat',  kind: 'normal', label: 'read-only',                 tag: ['statistik', 'all'] },
+  { from: 'BerichteView',   to: 'useStoreCompat',  kind: 'normal', label: 'read-only',                 tag: ['berichte', 'all'] },
+  { from: 'Sidebar',        to: 'useStoreCompat',  kind: 'normal', label: 'resetAll · loadDemo',       tag: ['navigation', 'all'] },
+
+  /* ── View → modal (open) ── */
+  { from: 'TagesplanView',  to: 'MaengelModal',   kind: 'normal', label: 'open Mängel',                 tag: ['tagesplan', 'maengel', 'all'] },
+  { from: 'TagesplanView',  to: 'ContextMenu',    kind: 'normal', label: 'right-click',                 tag: ['tagesplan', 'all'] },
+  { from: 'TagesplanView',  to: 'ConfirmModal',   kind: 'normal', label: 'delete?',                     tag: ['tagesplan', 'all'] },
+  { from: 'FahrzeugeView',  to: 'FahrzeugModal',  kind: 'normal', label: 'add/edit',                    tag: ['fahrzeuge', 'all'] },
+  { from: 'FahrzeugeView',  to: 'ConfirmModal',   kind: 'normal', label: 'delete?',                     tag: ['fahrzeuge', 'all'] },
+  { from: 'BerichteView',   to: 'Modal',          kind: 'normal', label: 'report preview',              tag: ['berichte', 'all'] },
 
   /* ── Modal wrappers ── */
-  { from: 'TerminModal',    to: 'Modal',        kind: 'normal', label: 'frame', tag: ['termine', 'all'] },
-  { from: 'FahrzeugModal',  to: 'Modal',        kind: 'normal', label: 'frame', tag: ['fahrzeuge', 'all'] },
-  { from: 'MaengelModal',   to: 'Modal',        kind: 'normal', label: 'frame', tag: ['maengel', 'all'] },
-  { from: 'ConfirmModal',   to: 'Modal',        kind: 'normal', label: 'extends', tag: ['overview', 'all'] },
+  { from: 'TerminModal',   to: 'Modal',          kind: 'normal', label: 'frame',  tag: ['termine', 'all'] },
+  { from: 'FahrzeugModal', to: 'Modal',          kind: 'normal', label: 'frame',  tag: ['fahrzeuge', 'all'] },
+  { from: 'MaengelModal',  to: 'Modal',          kind: 'normal', label: 'frame',  tag: ['maengel', 'all'] },
+  { from: 'ConfirmModal',  to: 'Modal',          kind: 'normal', label: 'extends', tag: ['overview', 'all'] },
 
   /* ── FahrzeugModal → validators + reference data ── */
-  { from: 'FahrzeugModal',  to: 'validators',      kind: 'normal', label: 'validateFahrzeug', tag: ['fahrzeuge', 'all'] },
-  { from: 'FahrzeugModal',  to: 'const-fahrzeug',  kind: 'normal', label: 'types',            tag: ['fahrzeuge', 'all'] },
+  { from: 'FahrzeugModal',  to: 'validators',      kind: 'normal', label: 'validateFahrzeug',  tag: ['fahrzeuge', 'all'] },
+  { from: 'FahrzeugModal',  to: 'const-fahrzeug',  kind: 'normal', label: 'types',             tag: ['fahrzeuge', 'all'] },
   { from: 'FahrzeugModal',  to: 'const-kfzReferenz', kind: 'normal', label: 'brands→models', tag: ['fahrzeuge', 'all'] },
-  { from: 'FahrzeugModal',  to: 'const-kfzKreis',  kind: 'normal', label: 'KBA list',         tag: ['fahrzeuge', 'all'] },
-  { from: 'validators',     to: 'const-kfzReferenz', kind: 'normal', label: 'lookup',         tag: ['fahrzeuge', 'all'] },
-  { from: 'validators',     to: 'const-kfzKreis',  kind: 'normal', label: 'isValidKreisCode', tag: ['fahrzeuge', 'all'] },
-  { from: 'validators',     to: 'const-fahrzeug',  kind: 'normal', label: 'FAHRZEUG_TYPEN',   tag: ['fahrzeuge', 'all'] },
-  { from: 'validators',     to: 'const-status',    kind: 'normal', label: 'STATUS guard',     tag: ['termine', 'all'] },
+  { from: 'FahrzeugModal',  to: 'const-kfzKreis',  kind: 'normal', label: 'KBA list',          tag: ['fahrzeuge', 'all'] },
+  { from: 'validators',     to: 'const-kfzReferenz', kind: 'normal', label: 'lookup',          tag: ['fahrzeuge', 'all'] },
+  { from: 'validators',     to: 'const-kfzKreis',  kind: 'normal', label: 'isValidKreisCode',  tag: ['fahrzeuge', 'all'] },
+  { from: 'validators',     to: 'const-fahrzeug',  kind: 'normal', label: 'FAHRZEUG_TYPEN',    tag: ['fahrzeuge', 'all'] },
+  { from: 'validators',     to: 'const-status',    kind: 'normal', label: 'STATUS guard',      tag: ['termine', 'all'] },
 
   /* ── TerminModal / MaengelModal → domain constants ── */
-  { from: 'TerminModal',    to: 'const-pruefung',  kind: 'normal', label: 'arten/prüfer', tag: ['termine', 'all'] },
-  { from: 'TerminModal',    to: 'const-fahrzeug',  kind: 'normal', label: 'TIME_SLOTS',   tag: ['termine', 'all'] },
-  { from: 'TerminModal',    to: 'const-status',    kind: 'normal', label: 'STATUS',       tag: ['termine', 'all'] },
+  { from: 'TerminModal',    to: 'const-pruefung',  kind: 'normal', label: 'arten/prüfer',         tag: ['termine', 'all'] },
+  { from: 'TerminModal',    to: 'const-fahrzeug',  kind: 'normal', label: 'TIME_SLOTS',           tag: ['termine', 'all'] },
+  { from: 'TerminModal',    to: 'const-status',    kind: 'normal', label: 'STATUS',               tag: ['termine', 'all'] },
   { from: 'TerminModal',    to: 'utils-mangel',    kind: 'normal', label: 'hatHauptmangel guard', tag: ['termine', 'maengel', 'all'] },
-  { from: 'TerminModal',    to: 'utils-date',      kind: 'normal', label: 'isoDate',      tag: ['termine', 'all'] },
-  { from: 'MaengelModal',   to: 'const-mangel',    kind: 'normal', label: 'catalog',      tag: ['maengel', 'all'] },
-  { from: 'MaengelModal',   to: 'const-status',    kind: 'normal', label: 'STATUS_CFG',   tag: ['maengel', 'all'] },
-  { from: 'MaengelModal',   to: 'utils-mangel',    kind: 'normal', label: 'hatHauptmangel', tag: ['maengel', 'all'] },
+  { from: 'TerminModal',    to: 'utils-date',      kind: 'normal', label: 'isoDate',              tag: ['termine', 'all'] },
+  { from: 'MaengelModal',   to: 'const-mangel',    kind: 'normal', label: 'catalog',              tag: ['maengel', 'all'] },
+  { from: 'MaengelModal',   to: 'const-status',    kind: 'normal', label: 'STATUS_CFG',           tag: ['maengel', 'all'] },
+  { from: 'MaengelModal',   to: 'utils-mangel',    kind: 'normal', label: 'hatHauptmangel',       tag: ['maengel', 'all'] },
 
-  /* ── Views → domain constants / utils (only the heavy ones, to keep it readable) ── */
-  { from: 'TagesplanView',  to: 'const-pruefung',  kind: 'normal', label: 'arten/prüfer', tag: ['tagesplan', 'all'] },
-  { from: 'TagesplanView',  to: 'const-fahrzeug',  kind: 'normal', label: 'TIME_SLOTS',   tag: ['tagesplan', 'all'] },
-  { from: 'TagesplanView',  to: 'const-status',    kind: 'normal', label: 'STATUS',       tag: ['tagesplan', 'all'] },
-  { from: 'TagesplanView',  to: 'utils-mangel',    kind: 'normal', label: 'hatHauptmangel', tag: ['tagesplan', 'maengel', 'all'] },
-  { from: 'TagesplanView',  to: 'utils-date',      kind: 'normal', label: 'date helpers', tag: ['tagesplan', 'all'] },
-  { from: 'StatistikView',  to: 'const-mangel',    kind: 'normal', label: 'catalog',      tag: ['statistik', 'all'] },
-  { from: 'StatistikView',  to: 'const-pruefung',  kind: 'normal', label: 'arten/prüfer', tag: ['statistik', 'all'] },
-  { from: 'StatistikView',  to: 'const-status',    kind: 'normal', label: 'STATUS',       tag: ['statistik', 'all'] },
-  { from: 'BerichteView',   to: 'const-mangel',    kind: 'normal', label: 'categories',   tag: ['berichte', 'all'] },
-  { from: 'BerichteView',   to: 'const-pruefung',  kind: 'normal', label: 'arten/prüfer', tag: ['berichte', 'all'] },
-  { from: 'BerichteView',   to: 'utils-mangel',    kind: 'normal', label: 'hatHauptmangel', tag: ['berichte', 'maengel', 'all'] },
+  /* ── Views → domain constants / utils (representative heavy ones) ── */
+  { from: 'TagesplanView',  to: 'const-pruefung',  kind: 'normal', label: 'arten/prüfer',     tag: ['tagesplan', 'all'] },
+  { from: 'TagesplanView',  to: 'const-fahrzeug',  kind: 'normal', label: 'TIME_SLOTS',       tag: ['tagesplan', 'all'] },
+  { from: 'TagesplanView',  to: 'const-status',    kind: 'normal', label: 'STATUS',           tag: ['tagesplan', 'all'] },
+  { from: 'TagesplanView',  to: 'utils-mangel',    kind: 'normal', label: 'hatHauptmangel',   tag: ['tagesplan', 'maengel', 'all'] },
+  { from: 'TagesplanView',  to: 'utils-date',      kind: 'normal', label: 'date helpers',     tag: ['tagesplan', 'all'] },
+  { from: 'StatistikView',  to: 'const-mangel',    kind: 'normal', label: 'catalog',          tag: ['statistik', 'all'] },
+  { from: 'StatistikView',  to: 'const-pruefung',  kind: 'normal', label: 'arten/prüfer',     tag: ['statistik', 'all'] },
+  { from: 'StatistikView',  to: 'const-status',    kind: 'normal', label: 'STATUS',           tag: ['statistik', 'all'] },
+  { from: 'BerichteView',   to: 'const-mangel',    kind: 'normal', label: 'categories',       tag: ['berichte', 'all'] },
+  { from: 'BerichteView',   to: 'const-pruefung',  kind: 'normal', label: 'arten/prüfer',     tag: ['berichte', 'all'] },
+  { from: 'BerichteView',   to: 'utils-mangel',    kind: 'normal', label: 'hatHauptmangel',   tag: ['berichte', 'maengel', 'all'] },
 
-  /* ── Sidebar / Topbar → nav + status ── */
+  /* ── Sidebar / Topbar → nav + status + utils ── */
   { from: 'Sidebar',        to: 'nav-const',       kind: 'normal', label: 'NAV',          tag: ['navigation', 'all'] },
   { from: 'Sidebar',        to: 'const-status',    kind: 'normal', label: 'open count',   tag: ['navigation', 'all'] },
-  { from: 'Sidebar',        to: 'useStore',        kind: 'normal', label: 'mode/toggleMode/resetAll', tag: ['navigation', 'demo-mode', 'all'] },
+  { from: 'Sidebar',        to: 'utils-date',      kind: 'normal', label: 'isoDate · fmtDate', tag: ['navigation', 'all'] },
   { from: 'Topbar',         to: 'nav-const',       kind: 'normal', label: 'title lookup', tag: ['navigation', 'all'] },
 
   /* ── UI primitives → constants ── */
@@ -585,54 +691,67 @@ const edges = [
   { from: 'MangelPill',     to: 'const-mangel',    kind: 'normal', label: 'KATEGORIEN',   tag: ['maengel', 'all'] },
 
   /* ── State → external ── */
-  { from: 'useStore',       to: 'firebase',        kind: 'normal', label: 'imports db',   tag: ['overview', 'data', 'all'] },
-  { from: 'useToasts',      to: 'sonner',          kind: 'api',    label: 'toast()',       tag: ['overview', 'all'] },
-  { from: 'App',            to: 'sonner',          kind: 'mount',  label: '<Toaster/>',    tag: ['overview', 'all'] },
-  { from: 'StatistikView',  to: 'recharts',        kind: 'api',    label: 'Area/Bar/Pie',  tag: ['statistik', 'all'] },
+  { from: 'useToasts',      to: 'sonner',          kind: 'api',    label: 'toast()',      tag: ['overview', 'all'] },
+  { from: 'App',            to: 'sonner',          kind: 'mount',  label: '<Toaster/>',   tag: ['overview', 'all'] },
+  { from: 'StatistikView',  to: 'recharts',        kind: 'api',    label: 'Area/Bar/Pie', tag: ['statistik', 'all'] },
   { from: 'App',            to: 'framer',          kind: 'normal', label: 'AnimatePresence', tag: ['overview', 'all'] },
-  { from: 'Modal',          to: 'framer',          kind: 'normal', label: 'enter/exit',    tag: ['overview', 'all'] },
+  { from: 'Modal',          to: 'framer',          kind: 'normal', label: 'enter/exit',   tag: ['overview', 'all'] },
 
-  /* ── PropTypes consumers (representative; nearly every component uses it) ── */
-  { from: 'TagesplanView',  to: 'types-propTypes', kind: 'normal', label: 'shapes',        tag: ['overview', 'all'] },
-  { from: 'FahrzeugeView',  to: 'types-propTypes', kind: 'normal', label: 'shapes',        tag: ['overview', 'all'] },
-  { from: 'TerminModal',    to: 'types-propTypes', kind: 'normal', label: 'shapes',        tag: ['termine', 'all'] },
-  { from: 'MaengelModal',   to: 'types-propTypes', kind: 'normal', label: 'shapes',        tag: ['maengel', 'all'] },
-  { from: 'types-propTypes', to: 'proptypes',      kind: 'normal', label: 'PropTypes.*',   tag: ['overview', 'all'] },
+  /* ── PropTypes consumers (representative) ── */
+  { from: 'TagesplanView',  to: 'types-propTypes', kind: 'normal', label: 'shapes',       tag: ['overview', 'all'] },
+  { from: 'FahrzeugeView',  to: 'types-propTypes', kind: 'normal', label: 'shapes',       tag: ['overview', 'all'] },
+  { from: 'TerminModal',    to: 'types-propTypes', kind: 'normal', label: 'shapes',       tag: ['termine', 'all'] },
+  { from: 'MaengelModal',   to: 'types-propTypes', kind: 'normal', label: 'shapes',       tag: ['maengel', 'all'] },
+  { from: 'types-propTypes', to: 'proptypes',      kind: 'normal', label: 'PropTypes.*',  tag: ['overview', 'all'] },
 
-  /* ── theme imported by basically everything (one representative edge) ── */
+  /* ── theme + index.css ── */
   { from: 'App',            to: 'theme',           kind: 'normal', label: 'C, GLOBAL_CSS', tag: ['overview', 'all'] },
-  { from: 'main',           to: 'index-css',       kind: 'mount',  label: 'import',        tag: ['overview', 'all'] },
 ];
 
-/* ── FIXES (recent / planned changes) ──────────────────────────────── */
+/* ── FIXES (recent / planned changes, citing concrete files) ──────── */
 const FIXES = {
-  'useStore':     [
-    { n: 1, t: 'Split demo/normal into separate Firestore collections (fahrzeuge_real / termine_real)' },
-    { n: 2, t: 'Drop length>0 guard on cache write so deletes propagate across refresh' },
-    { n: 3, t: 'Restrict auto-seed to demo mode + use cache to avoid re-seeding on every load' },
+  'db-client':      [
+    { n: 1, t: 'Bumped IndexedDB namespace v1→v2 after status-code labels switched from English to German — forces fresh DB for all users (commit 7c1c047)' },
   ],
-  'Sidebar':      [
-    { n: 1, t: 'Status pill rebuilt as a clickable demo↔normal mode toggle' },
-    { n: 2, t: 'Reset button label flips per mode (re-seed in demo / clear-to-empty in normal)' },
+  'db-seed':        [
+    { n: 1, t: 'STATUS_SEED now uses German labels matching constants/status.js (was English codes → FK violation on Termin create)' },
+    { n: 2, t: 'PRUEFART_SEED extended from 6 to all 12 entries — Saison, §21 etc. now FK-resolveable' },
   ],
-  'firestore':    [
-    { n: 1, t: 'firestore.rules allow rules added for fahrzeuge_real and termine_real' },
+  'db-queries':     [
+    { n: 1, t: 'updTerminStatus enforces WF-01 (Defense in Depth): blocks Bestanden when any HM/GM exists, even if UI guard is bypassed' },
+    { n: 2, t: 'addMangel auto-demotes Termin from Bestanden → Nicht bestanden if added defect is HM/GM' },
+  ],
+  'useStoreCompat': [
+    { n: 1, t: 'normDateStr fixes timezone bug — formats Date objects via local Y/M/D (was using toISOString → UTC shift past midnight made Termin invisible in TagesplanView)' },
+    { n: 2, t: 'addFz splits incoming form: looks up halter by name (case-insensitive), reuses or creates new halter, links via halterId' },
+  ],
+  'db-schema':      [
+    { n: 1, t: 'partial UNIQUE on fahrzeug.fin WHERE fin IS NOT NULL — closes the 2-Fahrzeuge-1-VIN bug Fuchs flagged' },
+    { n: 2, t: '8-table 3NF normalization with halter and mangel as separate entities (vs old embedded shape)' },
   ],
 };
 
-/* ── KNOWN_BUGS (only items confirmed by reading the file) ──────────── */
+/* ── KNOWN_BUGS (only items confirmed by reading the file) ────────── */
 const KNOWN_BUGS = {
-  'Toast-dead':   [
-    { sev: 'low', t: 'Toast.jsx and ToastStack are not imported anywhere; sonner is used instead via useToasts. Safe to delete.' },
+  'Toast-dead':     [
+    { sev: 'low', t: 'Toast.jsx and ToastContainer have zero importers in src/. App uses sonner instead via useToasts. Safe to delete — survived the af65884 cleanup.' },
   ],
-  'useToasts':    [
+  'useToasts':      [
     { sev: 'low', t: 'Lines 11-12 expose toasts:[] and rm:() — leftovers from a previous custom toast implementation. No caller reads them.' },
   ],
-  'firebase':     [
-    { sev: 'med', t: 'Lines 4-11 read VITE_FIREBASE_* env vars with no presence check. If .env is missing, initializeApp() still succeeds but every onSnapshot/setDoc fails silently — and writeFzDoc/writeTrDoc use .catch(() => {}) so errors are swallowed.' },
+  'useStoreCompat': [
+    { sev: 'med', t: 'Line 67 imports `* as q from "../db/queries"` but never references q — dead import that survived cleanup.' },
+    { sev: 'med', t: 'Lines 256-265: updTr with status patch calls updTerminStatus and silently returns on failure (no toast, no throw). The App-layer guard is the only barrier the user sees.' },
   ],
-  'useStore':     [
-    { sev: 'low', t: 'queueMicrotask in the seed effect (lines 167-170) defers setState to satisfy the react-hooks/set-state-in-effect lint rule; if seeding takes long the UI briefly shows empty state.' },
+  'useDb':          [
+    { sev: 'med', t: 'No real-time sync. Comment at line 13 acknowledges this. Two browser tabs each have an isolated PGlite instance over the SAME IndexedDB — writes from tab A are not visible to tab B until tab B reloads.' },
+    { sev: 'low', t: 'refresh() reloads halter + fahrzeuge + termine in parallel, but mängel are loaded SEQUENTIALLY per termin (line:69 Promise.all over t.map(async)). 13+ extra round-trips per refresh — fine for demo size, would need JOIN at production scale.' },
+  ],
+  'db-client':      [
+    { sev: 'low', t: 'IndexedDB version is hard-coded in the file path string (tuvpro-db-v2). Schema-changing migrations require bumping this manually here AND adding a new migration SQL — easy to forget.' },
+  ],
+  'types-propTypes': [
+    { sev: 'low', t: 'MangelShape.kat oneOf is ["OM","GM","EM","HM","GF"] but the DB and seed.ts use ["OM","LM","EM","HM","GM"] (LM not GF). Inconsistency between legacy PropTypes and current DB schema.' },
   ],
 };
 
@@ -670,6 +789,8 @@ const clusterColorById = (id) => {
   if (id === 'views') return COLOR_MAP.route;
   if (id === 'modals') return COLOR_MAP.service;
   if (id === 'state') return COLOR_MAP.service;
+  if (id === 'db') return COLOR_MAP.db;
+  if (id === 'domain') return COLOR_MAP.service;
   if (id === 'ui') return COLOR_MAP.service;
   if (id === 'external') return COLOR_MAP.external;
   return '#888';
@@ -686,8 +807,7 @@ const FILTERS = [
   { id: 'statistik',  label: 'Statistik' },
   { id: 'berichte',   label: 'Berichte' },
   { id: 'navigation', label: 'Navigation' },
-  { id: 'demo-mode',  label: 'Demo mode' },
-  { id: 'data',       label: 'Critical path', critical: true },
+  { id: 'data',       label: 'Critical path (spine)', critical: true },
   { id: 'all',        label: 'Show all wires' },
   { id: 'fixes-bugs', label: 'Roadmap & bugs', danger: true },
 ];
@@ -734,11 +854,9 @@ clusters.forEach(c => {
 /* ── Render edges ── */
 const edgesGroup = document.getElementById('edges');
 function edgePath(a, b) {
-  /* Use right-edge of a → left-edge of b, with bezier through gutter */
   let x1 = a.x + a.w, y1 = a.y + a.h / 2;
   let x2 = b.x,       y2 = b.y + b.h / 2;
   if (b.x < a.x) {
-    /* edge goes right→left: route around via vertical drop, fall back to centre-to-centre */
     x1 = a.x; y1 = a.y + a.h / 2;
     x2 = b.x + b.w; y2 = b.y + b.h / 2;
   }
@@ -763,12 +881,9 @@ edges.forEach((e, i) => {
   if (e.kind === 'mount') path.setAttribute('stroke-dasharray', '4 3');
   g.appendChild(path);
 
-  /* Compute midpoint for the label */
-  const tt = 0.5;
   const x1 = a.x + a.w, y1 = a.y + a.h / 2;
   const x2 = b.x,       y2 = b.y + b.h / 2;
   const mx = (x1 + x2) / 2;
-  /* Offset stagger to reduce label collisions */
   const my = (y1 + y2) / 2 + ((i % 4) - 1.5) * 4;
 
   if (e.label) {
@@ -781,7 +896,6 @@ edges.forEach((e, i) => {
     lbl.setAttribute('fill', EDGE_COLOR[e.kind] || '#aaa');
     lbl.setAttribute('opacity', e.kind === 'critical' ? 0.92 : 0.7);
     lbl.textContent = e.label;
-    /* Measure after insertion */
     g.appendChild(bg);
     g.appendChild(lbl);
     edgesGroup.appendChild(g);
@@ -817,7 +931,6 @@ nodes.forEach(n => {
   rect.setAttribute('class', 'node-shadow');
   g.appendChild(rect);
 
-  /* Label */
   const lbl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
   lbl.setAttribute('x', n.x + 12);
   lbl.setAttribute('y', n.y + 22);
@@ -838,7 +951,6 @@ nodes.forEach(n => {
     g.appendChild(sub);
   }
 
-  /* Tiny path footer */
   if (n.path) {
     const p = document.createElementNS('http://www.w3.org/2000/svg', 'text');
     p.setAttribute('x', n.x + 12);
@@ -850,7 +962,6 @@ nodes.forEach(n => {
     g.appendChild(p);
   }
 
-  /* Badges (top-right) */
   const fixCount = FIXES[n.id]?.length || 0;
   const bugCount = KNOWN_BUGS[n.id]?.length || 0;
   let bx = n.x + n.w - 14;
@@ -890,20 +1001,21 @@ let selectedId = null;
 
 function showDefault() {
   sideEl.innerHTML = `
-    <h1>Architecture map</h1>
-    <div class="role">React 19 + Vite single-page app. Firestore on the right edge is the only persistence layer.</div>
+    <h1>Architecture map · post-PGlite migration</h1>
+    <div class="role">React 19 + Vite + TypeScript. Persistence is local: PGlite (PostgreSQL in WebAssembly) writes its data files into the browser's IndexedDB. No backend, no Firestore, no sync across devices.</div>
     <h2>How to read this</h2>
     <div class="finding">
-      Red lines are the spine — the path data takes from app launch to a saved Termin. Click any node to pin it; hover any node to peek. Use the chips at the top to dim everything outside one feature.
+      Red edges are the 10-hop spine from app boot to a row landing in IndexedDB. Click any node to pin it; hover any node to peek. Use the chips at the top to dim everything outside one feature.
     </div>
     <h2>Notable findings from this map</h2>
-    <div class="finding warn"><strong>Dead code · src/components/Toast.jsx</strong><br>Defines Toast + ToastStack but nothing in the app imports either. Toast notifications are produced via Sonner (App.jsx:67) through useToasts. The file can be deleted.</div>
-    <div class="finding warn"><strong>Silent Firebase failures · src/firebase.js:4-11</strong><br>VITE_FIREBASE_* env vars are read with no presence check. If .env is missing in production, initializeApp() still returns a handle, every Firestore call fails — and useStore swallows errors with <code>.catch(() => {})</code>. The 3-second fallback timer at useStore.js:122 then loads the demo seed, masking the misconfig.</div>
-    <div class="finding"><strong>Vestigial useToasts API · src/hooks/useToasts.js:11-12</strong><br><code>toasts: []</code> and <code>rm: () => {}</code> are leftovers from a prior custom toast implementation. No caller reads them — they could be dropped.</div>
-    <div class="finding"><strong>Unexpectedly heavy: StatistikView</strong><br>Charts on the Statistik page pull in recharts (~110 kB gzipped, the largest single chunk in the build). The view is lazy-loaded in App.jsx:12, so this only hits when a user actually opens the page.</div>
-    <div class="finding"><strong>Single store, no Redux/Zustand</strong><br>useStore.js (309 lines) does it all: Firestore subscription, localStorage cache, seeding, CRUD, demo-mode toggling. Replacing it touches every view because data flows top-down from App.jsx:36.</div>
+    <div class="finding good"><strong>Single source of truth for SQL</strong><br>Every database operation goes through <code>src/db/queries.ts</code> (Repository pattern, ADR-007). Views talk to <code>useStoreCompat</code>, which talks to <code>useDb</code>, which talks to <code>queries.ts</code>. No SQL leaks out — the compat layer is the only file aware of both shapes.</div>
+    <div class="finding good"><strong>WF-01 enforced twice (Defense in Depth)</strong><br>UI layer (TerminModal lines 32-34) refuses to set BESTANDEN with a Hauptmangel. Repository layer (queries.ts:152) double-checks via SQL JOIN before the UPDATE. If the UI is bypassed, the DB still rejects it.</div>
+    <div class="finding warn"><strong>No real-time sync</strong><br><code>useDb</code> line 13 acknowledges this: Firestore's <code>onSnapshot</code> is gone. Two browser tabs each spin up their own PGlite instance over the same IndexedDB; writes in tab A do not propagate to tab B until B reloads or calls <code>refresh()</code>. For multi-workstation use a Postgres server + small backend would replace PGlite.</div>
+    <div class="finding warn"><strong>Compat layer is technical debt by design</strong><br><code>useStoreCompat.ts</code> exists to keep views unchanged. Its 11-row mapping table (file header) translates field-by-field. The roadmap in its docstring: "Welle 1 / Schritt 4 will rewrite views directly on useDb". Until then every read path makes two trips through the adapter.</div>
+    <div class="finding warn"><strong>Dead code still in tree</strong><br><code>src/components/Toast.jsx</code> survived the af65884 cleanup. App uses sonner via useToasts. <code>useStoreCompat.ts:67</code> imports <code>* as q from "../db/queries"</code> but never references q.</div>
+    <div class="finding"><strong>Schema-code drift in MangelShape</strong><br><code>types/propTypes.js</code> says <code>kat</code> is one of <code>["OM","GM","EM","HM","GF"]</code> but DB and seed.ts use <code>["OM","LM","EM","HM","GM"]</code> (LM not GF). PropTypes warns but nothing rejects the mismatch — bug waiting for a Mangel with kat="LM" to be logged.</div>
     <h2>Filters</h2>
-    <div class="finding">Click a chip to dim everything outside that feature. "Roadmap & bugs" highlights only nodes with green/red badges.</div>
+    <div class="finding">Click a chip to dim everything outside that feature. "Critical path" highlights only the 10 red edges of the spine. "Roadmap & bugs" highlights only nodes with green/red badges.</div>
   `;
 }
 
@@ -961,7 +1073,6 @@ function applyFilter() {
       el.classList.toggle('dim', !(hot.has(e.from) && hot.has(e.to)));
     });
   } else if (activeFilter === 'data') {
-    /* "Critical path" — show only nodes/edges on the spine */
     document.querySelectorAll('.node-bg').forEach(el => {
       const n = nodeById[el.dataset.id];
       el.classList.toggle('dim', !n.critical);
@@ -989,11 +1100,7 @@ const svg = document.getElementById('map');
 const vp = document.getElementById('viewport');
 let tx = 0, ty = 0, scale = 1;
 function apply() { vp.setAttribute('transform', `translate(${tx} ${ty}) scale(${scale})`); }
-function fit() {
-  /* Fit the natural viewBox 0 0 2200 1380; reset transform. */
-  tx = 0; ty = 0; scale = 1;
-  apply();
-}
+function fit() { tx = 0; ty = 0; scale = 1; apply(); }
 fit();
 
 svg.addEventListener('wheel', (e) => {
