@@ -1,0 +1,1048 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>tuv-workflow-web - Architecture Map</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  :root {
+    --bg: #0F0F0F;
+    --panel: #161616;
+    --panel-2: #1c1c1c;
+    --border: #2a2a2a;
+    --text: #e8e8e8;
+    --muted: #8a8a8a;
+    --client: #4ea1ff;
+    --route: #7bd389;
+    --service: #c792ea;
+    --db: #ffb86b;
+    --external: #ff6b9d;
+    --critical: #ff3860;
+    --accent: #f5b942;
+    --accent-2: #ff7a45;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; height: 100%; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: 13px; line-height: 1.45; }
+  .app { display: grid; grid-template-rows: 56px 1fr; grid-template-columns: 1fr 380px; grid-template-areas: "topbar topbar" "canvas side"; height: 100vh; overflow: hidden; }
+  .topbar { grid-area: topbar; border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 16px; gap: 10px; background: var(--panel); }
+  .title { font-weight: 700; letter-spacing: -0.01em; font-size: 14px; margin-right: 8px; color: var(--text); }
+  .title .sub { color: var(--muted); font-weight: 400; margin-left: 6px; font-size: 11px; }
+  .chips { display: flex; gap: 6px; flex: 1; overflow-x: auto; padding-right: 8px; }
+  .chip { background: var(--panel-2); border: 1px solid var(--border); color: var(--muted); padding: 5px 12px; border-radius: 999px; cursor: pointer; font-size: 11px; white-space: nowrap; user-select: none; font-weight: 500; transition: all 0.15s; }
+  .chip:hover { color: var(--text); border-color: #3a3a3a; }
+  .chip.active { background: rgba(78,161,255,0.14); color: var(--client); border-color: rgba(78,161,255,0.45); }
+  .chip.danger.active { background: rgba(255,56,96,0.14); color: var(--critical); border-color: rgba(255,56,96,0.45); }
+  .canvas-wrap { grid-area: canvas; position: relative; overflow: hidden; background: radial-gradient(circle at 20% 10%, #1a1a1a 0%, #0F0F0F 60%); }
+  svg.map { width: 100%; height: 100%; user-select: none; cursor: grab; }
+  svg.map.dragging { cursor: grabbing; }
+  .zoom-controls { position: absolute; bottom: 14px; left: 14px; display: flex; gap: 6px; z-index: 5; }
+  .zoom-btn { background: var(--panel); border: 1px solid var(--border); color: var(--text); width: 32px; height: 32px; border-radius: 7px; cursor: pointer; font-size: 14px; line-height: 1; font-weight: 600; transition: all 0.15s; }
+  .zoom-btn:hover { background: var(--panel-2); border-color: #3a3a3a; }
+  .legend { position: absolute; bottom: 14px; right: 14px; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; font-size: 10px; color: var(--muted); display: flex; gap: 12px; align-items: center; z-index: 5; }
+  .legend .li { display: flex; align-items: center; gap: 5px; }
+  .legend .sw { width: 18px; height: 2px; border-radius: 1px; }
+  .side { grid-area: side; border-left: 1px solid var(--border); overflow-y: auto; background: var(--panel); padding: 18px 18px 28px; }
+  .side h1 { font-size: 13px; margin: 0 0 4px; font-weight: 700; letter-spacing: -0.01em; }
+  .side h2 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin: 18px 0 8px; font-weight: 600; }
+  .side .role { color: var(--muted); font-size: 12px; margin: 4px 0 10px; }
+  .side .plain { background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; color: var(--text); font-size: 12px; line-height: 1.55; margin-bottom: 12px; }
+  .side .path { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 11px; color: var(--accent); margin-bottom: 8px; word-break: break-all; }
+  .side .notes { list-style: none; padding: 0; margin: 0; }
+  .side .notes li { font-size: 11.5px; padding: 4px 0; border-bottom: 1px dashed var(--border); color: #c8c8c8; }
+  .side .notes li:last-child { border-bottom: none; }
+  .side .edge-list { list-style: none; padding: 0; margin: 0; font-size: 11.5px; }
+  .side .edge-list li { padding: 4px 0; color: #c8c8c8; }
+  .side .edge-list .arrow { color: var(--muted); margin: 0 5px; }
+  .side .edge-list .lbl { color: var(--accent); font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 10.5px; margin-left: 4px; }
+  .side .finding { background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; font-size: 12px; margin-bottom: 8px; line-height: 1.5; }
+  .side .finding strong { color: var(--accent); }
+  .side .finding.warn strong { color: var(--critical); }
+  .side .empty { color: var(--muted); font-size: 12px; padding: 8px 0; }
+  .side .bug { background: rgba(255,56,96,0.08); border: 1px solid rgba(255,56,96,0.28); border-radius: 6px; padding: 6px 9px; margin-bottom: 6px; font-size: 11.5px; }
+  .side .bug .sev { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 9px; font-weight: 700; padding: 1px 5px; border-radius: 3px; margin-right: 6px; }
+  .side .bug .sev.high { background: var(--critical); color: #fff; }
+  .side .bug .sev.med { background: var(--accent); color: #1a1a1a; }
+  .side .bug .sev.low { background: var(--muted); color: #1a1a1a; }
+  .side .fix { background: rgba(123,211,137,0.08); border: 1px solid rgba(123,211,137,0.28); border-radius: 6px; padding: 6px 9px; margin-bottom: 6px; font-size: 11.5px; }
+  .side .fix .n { display: inline-block; width: 18px; height: 18px; line-height: 18px; text-align: center; background: var(--route); color: #1a1a1a; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 10px; font-weight: 700; border-radius: 9px; margin-right: 6px; }
+  text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; pointer-events: none; }
+  .node-bg { transition: opacity 0.15s; cursor: pointer; }
+  .node-bg:hover .node-shadow { filter: drop-shadow(0 4px 14px rgba(0,0,0,0.55)); }
+  .node-bg.dim { opacity: 0.18; }
+  .edge { transition: opacity 0.15s; }
+  .edge.dim { opacity: 0.07; }
+  .edge-label { font-size: 10px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  .cluster-label { font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
+  .badge-fix circle { fill: var(--route); }
+  .badge-fix text { fill: #1a1a1a; font-size: 10px; font-weight: 700; }
+  .badge-bug circle { fill: var(--critical); }
+  .badge-bug text { fill: #fff; font-size: 10px; font-weight: 700; }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: #3a3a3a; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div class="title">tuv-workflow-web<span class="sub">React 19 · Vite · Firestore</span></div>
+    <div class="chips" id="chips"></div>
+  </div>
+  <div class="canvas-wrap">
+    <svg class="map" id="map" viewBox="0 0 2200 1380" preserveAspectRatio="xMidYMid meet">
+      <defs>
+        <marker id="arrow-normal" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto">
+          <path d="M0,0 L8,4 L0,8 z" fill="#8a8a8a" />
+        </marker>
+        <marker id="arrow-critical" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto">
+          <path d="M0,0 L8,4 L0,8 z" fill="#ff3860" />
+        </marker>
+        <marker id="arrow-api" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto">
+          <path d="M0,0 L8,4 L0,8 z" fill="#ff7a45" />
+        </marker>
+        <marker id="arrow-db" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto">
+          <path d="M0,0 L8,4 L0,8 z" fill="#ffb86b" />
+        </marker>
+        <marker id="arrow-mount" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto">
+          <path d="M0,0 L8,4 L0,8 z" fill="#4ea1ff" />
+        </marker>
+      </defs>
+      <g id="viewport">
+        <g id="clusters"></g>
+        <g id="edges"></g>
+        <g id="nodes"></g>
+      </g>
+    </svg>
+    <div class="zoom-controls">
+      <button class="zoom-btn" id="z-fit" title="Fit to screen">⛶</button>
+      <button class="zoom-btn" id="z-in" title="Zoom in">+</button>
+      <button class="zoom-btn" id="z-out" title="Zoom out">−</button>
+    </div>
+    <div class="legend">
+      <div class="li"><span class="sw" style="background:#ff3860"></span>critical</div>
+      <div class="li"><span class="sw" style="background:#ff7a45"></span>api</div>
+      <div class="li"><span class="sw" style="background:#ffb86b"></span>db</div>
+      <div class="li"><span class="sw" style="background:#4ea1ff"></span>mount</div>
+      <div class="li"><span class="sw" style="background:#8a8a8a"></span>normal</div>
+    </div>
+  </div>
+  <aside class="side" id="side"></aside>
+</div>
+<script>
+/* ════════════════════════════════════════════════════════════════════
+   DATA — clusters, nodes, edges, FIXES, KNOWN_BUGS
+   Each label/path/line number was confirmed by reading the file.
+   Editable by hand — preserve this shape.
+   ════════════════════════════════════════════════════════════════════ */
+
+const clusters = [
+  { id: 'entry',     label: 'Entry',                 x: 30,   y: 50,  w: 240, h: 540 },
+  { id: 'layout',    label: 'Layout',                x: 300,  y: 50,  w: 220, h: 360 },
+  { id: 'views',     label: 'Views (Pages)',         x: 550,  y: 50,  w: 260, h: 600 },
+  { id: 'modals',    label: 'Feature Modals',        x: 840,  y: 50,  w: 240, h: 580 },
+  { id: 'state',     label: 'State, Hooks & Domain', x: 1110, y: 50,  w: 290, h: 1280 },
+  { id: 'ui',        label: 'UI Primitives',         x: 1430, y: 50,  w: 230, h: 720 },
+  { id: 'external',  label: 'External',              x: 1690, y: 50,  w: 200, h: 600 },
+];
+
+const N = (id, cluster, label, sub, x, y, w, h, color, opts = {}) => ({
+  id, cluster, label, sub, x, y, w, h, color, ...opts
+});
+
+const nodes = [
+  /* ── Entry ── */
+  N('index-html', 'entry', 'index.html', 'browser entry', 50, 100, 200, 56, 'client', {
+    role: 'Vite-served HTML that mounts the React app into a single root element.',
+    plain: 'This is the very first file your browser loads. It just makes a blank page with one slot, then the React app fills it in.',
+    path: 'index.html',
+    notes: ['div id="root" is the mount point', 'loads src/main.jsx as a module'],
+    tag: ['overview', 'all'],
+  }),
+  N('main', 'entry', 'main.jsx', 'React root', 50, 175, 200, 56, 'client', {
+    role: 'Bootstraps React into <div id="root"> inside <StrictMode>.',
+    plain: 'Tells React to take over the blank page and start drawing the actual app, with extra safety checks turned on during development.',
+    path: 'src/main.jsx:1',
+    notes: ['line:1, createRoot from react-dom/client', 'line:7, StrictMode wraps App', 'pulls in global index.css'],
+    tag: ['overview', 'all'],
+    critical: true,
+  }),
+  N('App', 'entry', 'App.jsx', 'shell · view switch', 50, 252, 200, 64, 'client', {
+    role: 'Top-level shell: holds active view in state, mounts Sidebar/Topbar, lazy-loads the four views.',
+    plain: 'The frame around everything. Tracks which page you are on, draws the sidebar and top bar, and swaps in the right page in the middle.',
+    path: 'src/App.jsx:31',
+    notes: ['line:33, useState("tagesplan") = default view', 'line:36, single useStore() drives all data', 'line:47, blocking loading state until S.ready', 'lines:124-140, conditional render per view key'],
+    tag: ['overview', 'tagesplan', 'fahrzeuge', 'statistik', 'berichte', 'demo-mode', 'all'],
+    critical: true,
+  }),
+  N('firebase', 'entry', 'firebase.js', 'Firestore init', 50, 340, 200, 60, 'db', {
+    role: 'Initialises Firebase from VITE_FIREBASE_* env vars and exports the Firestore handle.',
+    plain: 'Connects the app to Google\'s online database. Reads the connection settings from environment variables - if those are missing, the connection silently fails.',
+    path: 'src/firebase.js:1',
+    notes: ['line:4-11, all keys via import.meta.env', 'line:14, exports db = getFirestore(app)', 'no env validation - undefined keys init silently'],
+    tag: ['overview', 'data', 'all'],
+    critical: true,
+  }),
+  N('theme', 'entry', 'styles/theme.js', 'colors + globals', 50, 420, 200, 56, 'client', {
+    role: 'Exports the color palette (C) and global CSS string used across the app.',
+    plain: 'A single file that holds every color and shared style. Every component reads from here so the look stays consistent.',
+    path: 'src/styles/theme.js',
+    notes: ['used by every visual component', 'C.blue / C.red / C.amber etc.', 'GLOBAL_CSS injected from App.jsx'],
+    tag: ['overview', 'all'],
+  }),
+  N('index-css', 'entry', 'index.css', 'CSS reset', 50, 496, 200, 52, 'client', {
+    role: 'Tailwind + reset baseline imported once by main.jsx.',
+    plain: 'A few basic style rules that wipe the browser defaults and apply common helpers.',
+    path: 'src/index.css',
+    notes: ['imported by main.jsx', 'mostly Tailwind v4 base'],
+    tag: ['overview', 'all'],
+  }),
+
+  /* ── Layout ── */
+  N('Sidebar', 'layout', 'Sidebar.jsx', 'nav + mode toggle', 320, 100, 180, 76, 'route', {
+    role: 'Left navigation rail with nav buttons, KPI counters, mode pill (demo/normal), and reset button.',
+    plain: 'The dark vertical menu on the left. Lets you jump between pages, shows today\'s counts, and lets you switch between practice and real-data modes.',
+    path: 'src/layout/Sidebar.jsx:10',
+    notes: ['line:10, props: view, setView, fahrzeuge, termine, resetAll, mode, toggleMode', 'lines:35-59, clickable mode pill (demo↔normal)', 'line:142, reset label depends on mode'],
+    tag: ['overview', 'navigation', 'demo-mode', 'all'],
+  }),
+  N('Topbar', 'layout', 'Topbar.jsx', 'header bar', 320, 200, 180, 56, 'route', {
+    role: 'Top bar with hamburger, current view title from NAV table, today\'s date, and user pill.',
+    plain: 'The slim bar across the top: shows which page you\'re on, the date, and the user.',
+    path: 'src/layout/Topbar.jsx:6',
+    notes: ['line:7, looks up NAV entry by view key', 'line:14, sticky top, height 60'],
+    tag: ['overview', 'navigation', 'all'],
+  }),
+  N('nav-const', 'layout', 'constants/nav.js', '4 entries', 320, 280, 180, 56, 'service', {
+    role: 'Array of 4 view definitions: key, label, icon, description. Drives Sidebar + Topbar.',
+    plain: 'A small lookup table listing the four pages of the app. Both the sidebar menu and the page-title bar read from it.',
+    path: 'src/constants/nav.js',
+    notes: ['tagesplan / fahrzeuge / statistik / berichte', 'icons from lucide-react'],
+    tag: ['overview', 'navigation', 'all'],
+  }),
+
+  /* ── Views ── */
+  N('TagesplanView', 'views', 'TagesplanView.jsx', 'daily schedule', 570, 100, 220, 80, 'route', {
+    role: 'Day view: time-slot timeline + table mode, KPIs, context menu, opens TerminModal and MaengelModal.',
+    plain: 'The main "today\'s appointments" page. Shows every half-hour slot of the day, lets you click slots to add bookings, and walk a vehicle through the testing process.',
+    path: 'src/views/TagesplanView.jsx:87',
+    notes: ['line:87, props include addTr/updTr/delTr/addMangel/delMangel', 'lines:130-140, advance() moves status GEPLANT→IN_PRUEFUNG→BESTANDEN/NICHT_BESTANDEN', 'lines:213-298, timeline render across TIME_SLOTS', 'lines:300-351, table view alternative'],
+    tag: ['overview', 'tagesplan', 'termine', 'all'],
+    critical: true,
+  }),
+  N('FahrzeugeView', 'views', 'FahrzeugeView.jsx', 'vehicle directory', 570, 200, 220, 76, 'route', {
+    role: 'Vehicle grid + searchable filter + sliding detail drawer with full inspection history.',
+    plain: 'The vehicles page. Shows a tile per car/truck with its plate and owner, lets you filter and search, and slides out a detailed history when you click one.',
+    path: 'src/views/FahrzeugeView.jsx:24',
+    notes: ['line:35, useMemo filter by q/typFilter/sortBy', 'line:47, getHuStatus computes inspection-due color and label', 'lines:131-208, off-canvas detail panel'],
+    tag: ['overview', 'fahrzeuge', 'all'],
+  }),
+  N('StatistikView', 'views', 'StatistikView.jsx', 'KPIs + recharts', 570, 296, 220, 76, 'route', {
+    role: 'Analytics dashboard with recharts area/bar/pie charts for pass rate, defect categories, monthly trends.',
+    plain: 'The statistics page. Draws charts of how many tests passed, what kinds of defects come up most, and how things change month to month.',
+    path: 'src/views/StatistikView.jsx',
+    notes: ['recharts 3.8 (AreaChart, BarChart, PieChart)', 'reads MANGEL_KATEGORIEN and MANGEL_KATALOG_BY_CODE', 'pure render - no mutations'],
+    tag: ['overview', 'statistik', 'all'],
+  }),
+  N('BerichteView', 'views', 'BerichteView.jsx', 'report search + print', 570, 392, 220, 80, 'route', {
+    role: 'Lists every inspection, lets you search/filter, and renders a printable ASCII-art TÜV report modal.',
+    plain: 'The reports page. Searchable list of every inspection, and a one-click preview/print button that builds a formal-looking report on screen.',
+    path: 'src/views/BerichteView.jsx:22',
+    notes: ['line:29, filter+search+sort memo', 'line:42, buildBericht() returns a literal ASCII-banner report string', 'preview modal opens with the generated text'],
+    tag: ['overview', 'berichte', 'all'],
+  }),
+
+  /* ── Feature Modals ── */
+  N('TerminModal', 'modals', 'TerminModal.jsx', 'create/edit appt', 860, 100, 200, 76, 'service', {
+    role: 'Form for creating or editing an inspection appointment; enforces the Hauptmangel→Bestanden block.',
+    plain: 'The popup that lets you book a vehicle into a slot or edit an existing booking. Refuses to mark "passed" if a serious defect is on file.',
+    path: 'src/features/termin/TerminModal.jsx:15',
+    notes: ['line:16, bestanden_gesperrt = hatHauptmangel(initial.mängel)', 'lines:32-34, validate blocks BESTANDEN with Hauptmangel (§29 StVZO)', 'line:39, save() calls onSave(form) → addTr/updTr in useStore'],
+    tag: ['overview', 'tagesplan', 'termine', 'all'],
+    critical: true,
+  }),
+  N('FahrzeugModal', 'modals', 'FahrzeugModal.jsx', 'create/edit vehicle', 860, 196, 200, 76, 'service', {
+    role: 'Vehicle form with cascading manufacturer→model→type dropdowns and Kennzeichen/FIN validation.',
+    plain: 'The popup to add or edit a vehicle. Smart: if you pick a brand it knows, the model list shortens to that brand\'s lineup; otherwise lets you type free text.',
+    path: 'src/features/fahrzeug/FahrzeugModal.jsx:16',
+    notes: ['line:29, checkFinPruefziffer soft-warning', 'line:42, onHerstellerChange resets dependent fields', 'line:68, validateFahrzeug runs hard validators'],
+    tag: ['overview', 'fahrzeuge', 'all'],
+  }),
+  N('MaengelModal', 'modals', 'MaengelModal.jsx', 'record defects', 860, 292, 200, 80, 'service', {
+    role: 'Two-pane modal: recorded defects + StVZO catalog search; status switcher blocks BESTANDEN if a Hauptmangel exists.',
+    plain: 'The popup for recording defects on a vehicle. Search the official catalog or type a free-text defect; the system stops you from marking "passed" if a major defect is on the list.',
+    path: 'src/features/mangel/MaengelModal.jsx:16',
+    notes: ['line:36, addVorlage adds catalog entry via onAdd', 'line:41, addCustom adds free-text entry', 'lines:111-128, status buttons; Bestanden disabled when hasHM'],
+    tag: ['overview', 'tagesplan', 'maengel', 'all'],
+    critical: true,
+  }),
+  N('Modal', 'modals', 'Modal.jsx', 'generic dialog', 860, 392, 200, 60, 'service', {
+    role: 'Reusable modal frame: backdrop, animated card, Escape-to-close, click-outside-to-close.',
+    plain: 'The basic popup shell that all three modals sit inside. Handles the dark backdrop, escape key, and click-outside-to-close.',
+    path: 'src/components/modal/Modal.jsx:7',
+    notes: ['line:8-12, Escape key listener', 'line:19, click on backdrop closes', 'framer-motion for enter/exit'],
+    tag: ['overview', 'all'],
+  }),
+  N('ConfirmModal', 'modals', 'ConfirmModal.jsx', 'delete confirm', 860, 472, 200, 56, 'service', {
+    role: 'Thin wrapper over Modal with two buttons (cancel / confirm) for destructive actions.',
+    plain: 'The yes/no popup that appears before deleting anything.',
+    path: 'src/components/modal/ConfirmModal.jsx:6',
+    notes: ['used by TagesplanView (delete appointment) and FahrzeugeView (delete vehicle)'],
+    tag: ['overview', 'all'],
+  }),
+  N('ContextMenu', 'modals', 'ContextMenu', 'right-click menu', 860, 548, 200, 60, 'service', {
+    role: 'Inline component inside TagesplanView; right-click on a slot or appointment surfaces actions.',
+    plain: 'The right-click menu you get on the schedule. Lets you start, edit, delete or record defects without opening a full popup.',
+    path: 'src/views/TagesplanView.jsx:26',
+    notes: ['lines:26-85, inline component', 'clamps position inside viewport (line:53)', 'closes on Escape or click-outside'],
+    tag: ['tagesplan', 'termine', 'all'],
+  }),
+
+  /* ── State, Hooks & Domain ── */
+  N('useStore', 'state', 'useStore.js', 'core store · Firestore', 1130, 100, 250, 96, 'service', {
+    role: 'Mode-aware single source of truth: subscribes to Firestore collections per mode, mirrors to localStorage, exposes CRUD.',
+    plain: 'The brain of the app. Talks to the cloud database, keeps a backup in your browser, and gives every page the same list of vehicles and appointments. Knows about demo mode vs normal mode and keeps them in separate buckets.',
+    path: 'src/hooks/useStore.js:64',
+    notes: ['lines:11-25, COLLECTIONS map (demo: fahrzeuge/termine; normal: fahrzeuge_real/termine_real)', 'lines:106-150, onSnapshot + 3s fallback timer', 'lines:153-171, seed effect (demo only, via queueMicrotask)', 'lines:182-294, CRUD callbacks (addFz/updFz/delFz/addTr/updTr/delTr/addMangel/delMangel)', 'lines:296-310, resetAll + toggleMode'],
+    tag: ['overview', 'data', 'demo-mode', 'all'],
+    critical: true,
+  }),
+  N('useToasts', 'state', 'useToasts.js', 'sonner wrapper', 1130, 218, 250, 60, 'service', {
+    role: 'Returns { add, toasts, rm } where add() is a thin shim over sonner; toasts/rm are vestigial no-ops.',
+    plain: 'A small helper that pops the green/red status messages in the corner when something happens (saved, deleted, error).',
+    path: 'src/hooks/useToasts.js:3',
+    notes: ['line:7, success → sonner.success', 'lines:11-12, toasts:[] and rm:() are leftovers from old custom toast system'],
+    tag: ['overview', 'all'],
+  }),
+  N('useIsMobile', 'state', 'useIsMobile.js', 'viewport hook', 1130, 296, 250, 60, 'service', {
+    role: 'Tracks window.innerWidth < breakpoint (default 768) on resize; used by App to auto-close sidebar.',
+    plain: 'Watches the browser window size so the app can hide the sidebar on small phones automatically.',
+    path: 'src/hooks/useIsMobile.js:7',
+    notes: ['line:12, resize listener with cleanup', 'used once in App.jsx:32'],
+    tag: ['overview', 'all'],
+  }),
+  N('validators', 'state', 'utils/validators.js', 'hard + soft checks', 1130, 374, 250, 76, 'service', {
+    role: 'Pure validation: Kennzeichen regex, FIN length+chars+checksum, baujahr/kmStand range, status workflow guard.',
+    plain: 'Pure check functions: is this plate valid German format, is this VIN 17 chars and the right kind of letters, is this year sane. Some checks block saving, some only warn.',
+    path: 'src/utils/validators.js:33',
+    notes: ['line:21, Kennzeichen regex (handles season plates)', 'line:121, validateFahrzeug aggregates all field checks', 'line:181, Hersteller↔Modell↔Typ consistency (soft)', 'line:219, FIN checksum check (soft, ISO 3779)'],
+    tag: ['overview', 'fahrzeuge', 'all'],
+  }),
+  N('utils-date', 'state', 'utils/date.js', 'date helpers', 1130, 470, 250, 56, 'service', {
+    role: 'uid(), isoDate(), addDays(), fmtDate(), fmtDateLong(), dayName(), dayShort() — pure, no deps.',
+    plain: 'Small date helpers used everywhere: format a date as German DD.MM.YYYY, add days, generate a unique ID.',
+    path: 'src/utils/date.js',
+    notes: ['de-DE Intl.DateTimeFormat', 'uid = timestamp36 + random36'],
+    tag: ['overview', 'all'],
+  }),
+  N('utils-mangel', 'state', 'utils/mangel.js', '1-liner', 1130, 548, 250, 52, 'service', {
+    role: 'One-liner: hatHauptmangel(maengel) → boolean (HM or GM in list).',
+    plain: 'A single check: does this defect list contain anything severe enough to fail the inspection?',
+    path: 'src/utils/mangel.js:1',
+    notes: ['1 line; central to the §29 StVZO "cannot pass with main defect" rule'],
+    tag: ['overview', 'maengel', 'all'],
+  }),
+  N('const-status', 'state', 'constants/status.js', 'status enum', 1130, 624, 250, 60, 'service', {
+    role: 'STATUS enum (7 values) + STATUS_CFG (per-status color/glow/border/dot).',
+    plain: 'The seven states an appointment can be in (Planned, In progress, Passed, etc.) plus the colors used to draw each one.',
+    path: 'src/constants/status.js',
+    notes: ['used by useStore for guards', 'used by StatusPill for rendering'],
+    tag: ['overview', 'all'],
+  }),
+  N('const-pruefung', 'state', 'constants/pruefung.js', 'inspection types', 1130, 702, 250, 60, 'service', {
+    role: 'PRUEFUNG_ARTEN (12 inspection types with code+duration) and PRUEFER (5 inspectors).',
+    plain: 'List of inspection kinds (main, emissions, safety, etc.) and the five inspectors who can perform them.',
+    path: 'src/constants/pruefung.js',
+    notes: ['§29 / §47a / §21 references', 'durations drive scheduling'],
+    tag: ['overview', 'termine', 'all'],
+  }),
+  N('const-fahrzeug', 'state', 'constants/fahrzeug.js', 'vehicle types', 1130, 780, 250, 60, 'service', {
+    role: 'FAHRZEUG_TYPEN (16 vehicle types with emoji icons) and TIME_SLOTS (07:00-17:30 in 30-min steps).',
+    plain: 'The vehicle categories (car, truck, motorcycle, etc.) and the half-hour time slots used on the schedule.',
+    path: 'src/constants/fahrzeug.js',
+    notes: ['23 time slots from 07:00 to 17:30', 'icons stored as emoji strings'],
+    tag: ['overview', 'fahrzeuge', 'termine', 'all'],
+  }),
+  N('const-mangel', 'state', 'constants/mangel.js', 'defect catalog', 1130, 858, 250, 60, 'service', {
+    role: 'MANGEL_KATALOG (StVZO defect entries grouped by system) + MANGEL_KATEGORIEN (5 severity tiers).',
+    plain: 'The official defect catalog: codes, descriptions, and how severe each is (minor, major, danger).',
+    path: 'src/constants/mangel.js',
+    notes: ['188 lines', 'used by MaengelModal catalog tab', 'MANGEL_KATALOG_BY_CODE for lookups in StatistikView'],
+    tag: ['overview', 'maengel', 'all'],
+  }),
+  N('const-kfzReferenz', 'state', 'constants/kfzReferenz.js', 'manufacturer→models', 1130, 936, 250, 60, 'service', {
+    role: 'HERSTELLER_REFERENZ map of brand → { models[], allowed types, display name }; used for cascading dropdowns.',
+    plain: 'A database of car brands and the models they actually make, so the form can pre-fill model options when you pick a brand.',
+    path: 'src/constants/kfzReferenz.js',
+    notes: ['normalizeHersteller folds case/punctuation', 'getHerstellerDisplayList gives sorted UI list'],
+    tag: ['fahrzeuge', 'all'],
+  }),
+  N('const-kfzKreis', 'state', 'constants/kfzKreis.js', '700 KBA plate codes', 1130, 1014, 250, 64, 'service', {
+    role: 'KFZ_KREIS_CODES — full official KBA list of German regional plate prefixes (B, M, HH, etc.).',
+    plain: 'The complete list of German plate prefixes and the city/county each one belongs to. Used to autocomplete and validate plate input.',
+    path: 'src/constants/kfzKreis.js',
+    notes: ['700+ entries', 'isValidKreisCode() check used by validateKennzeichen'],
+    tag: ['fahrzeuge', 'all'],
+  }),
+  N('types-propTypes', 'state', 'types/propTypes.js', 'shared shapes', 1130, 1098, 250, 60, 'service', {
+    role: 'FahrzeugShape, TerminShape, MangelShape, ToastShape — runtime PropTypes for component contracts.',
+    plain: 'Definitions of what a Vehicle, Appointment, Defect and Toast object look like. Used by all views/modals so React can warn when something is missing.',
+    path: 'src/types/propTypes.js',
+    notes: ['kat is one-of OM/GM/EM/HM/GF', 'ToastShape unused except by dead Toast.jsx'],
+    tag: ['overview', 'all'],
+  }),
+
+  /* ── UI Primitives ── */
+  N('StatusPill', 'ui', 'StatusPill.jsx', 'status badge', 1450, 100, 200, 56, 'service', {
+    role: 'Coloured pill with dot indicator driven by STATUS_CFG.',
+    plain: 'The little colored badge that says "Passed" / "Planned" / "In progress" etc.',
+    path: 'src/components/ui/StatusPill.jsx:5',
+    notes: ['size sm/lg', 'pulse glow for IN_PRUEFUNG'],
+    tag: ['overview', 'all'],
+  }),
+  N('MangelPill', 'ui', 'MangelPill.jsx', 'defect tag', 1450, 172, 200, 56, 'service', {
+    role: 'Small monospace tag rendering the defect-category short code (HM/EM/GM…).',
+    plain: 'The short two-letter tag shown next to each defect to flag its severity.',
+    path: 'src/components/ui/MangelPill.jsx:5',
+    notes: ['reads MANGEL_KATEGORIEN', '5 categories'],
+    tag: ['maengel', 'all'],
+  }),
+  N('HauptmangelBadge', 'ui', 'HauptmangelBadge.jsx', '"HAUPTMANGEL"', 1450, 244, 200, 56, 'service', {
+    role: 'Static red HAUPTMANGEL chip; no props.',
+    plain: 'A bright red badge that simply says "MAIN DEFECT" - shown when a serious problem is found.',
+    path: 'src/components/ui/HauptmangelBadge.jsx:3',
+    notes: ['rendered in TagesplanView (line:262) and BerichteView (line:683)'],
+    tag: ['maengel', 'all'],
+  }),
+  N('Kpi', 'ui', 'Kpi.jsx', 'metric card', 1450, 316, 200, 56, 'service', {
+    role: 'Big-number metric card with accent gradient stripe; framer-motion fade-in.',
+    plain: 'The boxes at the top of pages showing a number with a label like "Vehicles: 8" or "Passed: 3".',
+    path: 'src/components/ui/Kpi.jsx:5',
+    notes: ['used by TagesplanView/FahrzeugeView/StatistikView'],
+    tag: ['overview', 'all'],
+  }),
+  N('SectionHead', 'ui', 'SectionHead.jsx', 'section title', 1450, 388, 200, 52, 'service', {
+    role: 'Small section header with optional icon and right-slot.',
+    plain: 'A small grey title that introduces a section of the page.',
+    path: 'src/components/ui/SectionHead.jsx:4',
+    notes: ['used in FahrzeugeView drawer and MaengelModal'],
+    tag: ['overview', 'all'],
+  }),
+  N('EmptyState', 'ui', 'EmptyState.jsx', 'no-data placeholder', 1450, 456, 200, 56, 'service', {
+    role: 'Centred empty-state with icon + title + subtitle.',
+    plain: 'The friendly "no items yet, try adding one" block shown when a list is empty.',
+    path: 'src/components/ui/EmptyState.jsx:4',
+    notes: ['used in TagesplanView, FahrzeugeView, BerichteView'],
+    tag: ['overview', 'all'],
+  }),
+  N('inputs', 'ui', 'inputs.jsx', 'Inp · Sel · Fld', 1450, 528, 200, 56, 'service', {
+    role: 'Three primitives: Inp (text/number/date), Sel (dropdown with chevron), Fld (label + error wrapper).',
+    plain: 'The styled text boxes, dropdowns and labels used in every form.',
+    path: 'src/components/ui/inputs.jsx:6',
+    notes: ['focus state, error state, mono variant'],
+    tag: ['overview', 'all'],
+  }),
+  N('buttons', 'ui', 'buttons.jsx', 'BtnP · BtnG · IconBtn', 1450, 600, 200, 56, 'service', {
+    role: 'BtnP (filled primary), BtnG (ghost), IconBtn (square icon-only).',
+    plain: 'The three button styles used throughout - primary (blue), ghost (outline), and icon-only.',
+    path: 'src/components/ui/buttons.jsx:4',
+    notes: ['danger variant; sm variant; gradient on BtnP'],
+    tag: ['overview', 'all'],
+  }),
+  N('Toast-dead', 'ui', 'Toast.jsx', 'DEAD · zero callers', 1450, 672, 200, 60, 'service', {
+    role: 'Defines Toast + ToastStack components — no file imports them.',
+    plain: 'A toast-notification component that no part of the app uses anymore. The app actually shows toasts via the Sonner library.',
+    path: 'src/components/Toast.jsx:7',
+    notes: ['line:33, ToastStack iterates over `toasts` array', 'no imports from src/ found (only internal Toast↔ToastStack)', 'safe to delete'],
+    tag: ['dead', 'all'],
+  }),
+
+  /* ── External ── */
+  N('firestore', 'external', 'Firestore', 'Google Cloud DB', 1710, 100, 160, 76, 'db', {
+    role: 'Two pairs of collections: fahrzeuge/termine (demo) and fahrzeuge_real/termine_real (normal).',
+    plain: 'Google\'s cloud database. Holds two separate sets of data - one for demo, one for real - so they never mix.',
+    path: '(remote: firebase.google.com)',
+    notes: ['rules in firestore.rules', 'demo-window guard until 2026-08-01', 'no auth - public reads/writes inside window'],
+    tag: ['overview', 'data', 'demo-mode', 'all'],
+    critical: true,
+  }),
+  N('sonner', 'external', 'sonner', 'toast library', 1710, 192, 160, 56, 'external', {
+    role: 'Third-party toast/notification library; mounted via <Toaster> in App.jsx and called via useToasts.',
+    plain: 'The library that actually draws the green/red status messages in the corner.',
+    path: 'node_modules/sonner',
+    notes: ['v2.0.7', 'rich colors, bottom-right'],
+    tag: ['overview', 'all'],
+  }),
+  N('framer', 'external', 'framer-motion', 'animations', 1710, 264, 160, 56, 'external', {
+    role: 'Animation library used for view transitions, modal enter/exit, sidebar slide.',
+    plain: 'The library that makes things slide and fade smoothly when they appear or disappear.',
+    path: 'node_modules/framer-motion',
+    notes: ['v12.38.0', 'AnimatePresence used in App.jsx and modals'],
+    tag: ['overview', 'all'],
+  }),
+  N('lucide', 'external', 'lucide-react', 'icons', 1710, 336, 160, 56, 'external', {
+    role: 'Icon set used everywhere (Calendar, Car, ChevronLeft, Plus, Trash2, etc.).',
+    plain: 'The line-icon set used throughout the app.',
+    path: 'node_modules/lucide-react',
+    notes: ['imported by Sidebar, Topbar, every view and modal'],
+    tag: ['overview', 'all'],
+  }),
+  N('recharts', 'external', 'recharts', 'charts (Statistik only)', 1710, 408, 160, 64, 'external', {
+    role: 'Charting library; imported only by StatistikView.',
+    plain: 'The chart library that draws the bar/area/pie graphs on the statistics page.',
+    path: 'node_modules/recharts',
+    notes: ['v3.8 - heavy bundle (~110kb gzipped)', 'lazy-loaded via React.lazy'],
+    tag: ['statistik', 'all'],
+  }),
+  N('proptypes', 'external', 'prop-types', 'runtime types', 1710, 488, 160, 56, 'external', {
+    role: 'React prop-type runtime checks; used by every component file.',
+    plain: 'A small library for warning about missing or wrongly-typed props during development.',
+    path: 'node_modules/prop-types',
+    notes: ['v15.8'],
+    tag: ['overview', 'all'],
+  }),
+];
+
+const edges = [
+  /* ── Spine (critical user flow: open app → see today → add/edit Termin → record Mangel → save) ── */
+  { from: 'main',           to: 'App',            kind: 'critical', label: '1 · render <App/>', tag: ['overview', 'tagesplan', 'termine', 'all'] },
+  { from: 'App',            to: 'useStore',       kind: 'critical', label: '2 · useStore()',    tag: ['overview', 'tagesplan', 'termine', 'demo-mode', 'data', 'all'] },
+  { from: 'App',            to: 'TagesplanView',  kind: 'critical', label: '3 · default view',  tag: ['overview', 'tagesplan', 'all'] },
+  { from: 'TagesplanView',  to: 'TerminModal',    kind: 'critical', label: '4 · open modal',    tag: ['overview', 'tagesplan', 'termine', 'all'] },
+  { from: 'TagesplanView',  to: 'MaengelModal',   kind: 'critical', label: '5 · open Mängel',   tag: ['overview', 'tagesplan', 'maengel', 'all'] },
+  { from: 'TerminModal',    to: 'useStore',       kind: 'critical', label: '6 · addTr/updTr',   tag: ['overview', 'tagesplan', 'termine', 'all'] },
+  { from: 'MaengelModal',   to: 'useStore',       kind: 'critical', label: '7 · addMangel',     tag: ['overview', 'tagesplan', 'maengel', 'all'] },
+  { from: 'useStore',       to: 'firestore',      kind: 'critical', label: '8 · onSnapshot · setDoc · deleteDoc', tag: ['overview', 'tagesplan', 'termine', 'demo-mode', 'data', 'all'] },
+
+  /* ── Mount edges (App → top-level) ── */
+  { from: 'index-html', to: 'main',           kind: 'mount',  label: 'loads', tag: ['overview', 'all'] },
+  { from: 'App',        to: 'Sidebar',        kind: 'mount',  label: 'mounts', tag: ['overview', 'navigation', 'all'] },
+  { from: 'App',        to: 'Topbar',         kind: 'mount',  label: 'mounts', tag: ['overview', 'navigation', 'all'] },
+  { from: 'App',        to: 'FahrzeugeView',  kind: 'mount',  label: 'lazy', tag: ['overview', 'fahrzeuge', 'all'] },
+  { from: 'App',        to: 'StatistikView',  kind: 'mount',  label: 'lazy', tag: ['overview', 'statistik', 'all'] },
+  { from: 'App',        to: 'BerichteView',   kind: 'mount',  label: 'lazy', tag: ['overview', 'berichte', 'all'] },
+  { from: 'App',        to: 'useToasts',      kind: 'mount',  label: 'add()', tag: ['overview', 'all'] },
+  { from: 'App',        to: 'useIsMobile',    kind: 'mount',  label: 'reactive', tag: ['overview', 'all'] },
+  { from: 'firebase',   to: 'firestore',      kind: 'api',    label: 'initializeApp', tag: ['overview', 'data', 'all'] },
+
+  /* ── View → modal / view-specific deps ── */
+  { from: 'TagesplanView',  to: 'ContextMenu',   kind: 'normal', label: 'right-click', tag: ['tagesplan', 'all'] },
+  { from: 'TagesplanView',  to: 'ConfirmModal',  kind: 'normal', label: 'delete?',     tag: ['tagesplan', 'all'] },
+  { from: 'FahrzeugeView',  to: 'FahrzeugModal', kind: 'normal', label: 'add/edit',    tag: ['fahrzeuge', 'all'] },
+  { from: 'FahrzeugeView',  to: 'ConfirmModal',  kind: 'normal', label: 'delete?',     tag: ['fahrzeuge', 'all'] },
+  { from: 'FahrzeugeView',  to: 'useStore',      kind: 'normal', label: 'addFz · updFz · delFz', tag: ['fahrzeuge', 'all'] },
+  { from: 'StatistikView',  to: 'useStore',      kind: 'normal', label: 'read-only',   tag: ['statistik', 'all'] },
+  { from: 'BerichteView',   to: 'useStore',      kind: 'normal', label: 'read-only',   tag: ['berichte', 'all'] },
+  { from: 'BerichteView',   to: 'Modal',         kind: 'normal', label: 'report preview', tag: ['berichte', 'all'] },
+
+  /* ── Modal wrappers ── */
+  { from: 'TerminModal',    to: 'Modal',        kind: 'normal', label: 'frame', tag: ['termine', 'all'] },
+  { from: 'FahrzeugModal',  to: 'Modal',        kind: 'normal', label: 'frame', tag: ['fahrzeuge', 'all'] },
+  { from: 'MaengelModal',   to: 'Modal',        kind: 'normal', label: 'frame', tag: ['maengel', 'all'] },
+  { from: 'ConfirmModal',   to: 'Modal',        kind: 'normal', label: 'extends', tag: ['overview', 'all'] },
+
+  /* ── FahrzeugModal → validators + reference data ── */
+  { from: 'FahrzeugModal',  to: 'validators',      kind: 'normal', label: 'validateFahrzeug', tag: ['fahrzeuge', 'all'] },
+  { from: 'FahrzeugModal',  to: 'const-fahrzeug',  kind: 'normal', label: 'types',            tag: ['fahrzeuge', 'all'] },
+  { from: 'FahrzeugModal',  to: 'const-kfzReferenz', kind: 'normal', label: 'brands→models', tag: ['fahrzeuge', 'all'] },
+  { from: 'FahrzeugModal',  to: 'const-kfzKreis',  kind: 'normal', label: 'KBA list',         tag: ['fahrzeuge', 'all'] },
+  { from: 'validators',     to: 'const-kfzReferenz', kind: 'normal', label: 'lookup',         tag: ['fahrzeuge', 'all'] },
+  { from: 'validators',     to: 'const-kfzKreis',  kind: 'normal', label: 'isValidKreisCode', tag: ['fahrzeuge', 'all'] },
+  { from: 'validators',     to: 'const-fahrzeug',  kind: 'normal', label: 'FAHRZEUG_TYPEN',   tag: ['fahrzeuge', 'all'] },
+  { from: 'validators',     to: 'const-status',    kind: 'normal', label: 'STATUS guard',     tag: ['termine', 'all'] },
+
+  /* ── TerminModal / MaengelModal → domain constants ── */
+  { from: 'TerminModal',    to: 'const-pruefung',  kind: 'normal', label: 'arten/prüfer', tag: ['termine', 'all'] },
+  { from: 'TerminModal',    to: 'const-fahrzeug',  kind: 'normal', label: 'TIME_SLOTS',   tag: ['termine', 'all'] },
+  { from: 'TerminModal',    to: 'const-status',    kind: 'normal', label: 'STATUS',       tag: ['termine', 'all'] },
+  { from: 'TerminModal',    to: 'utils-mangel',    kind: 'normal', label: 'hatHauptmangel guard', tag: ['termine', 'maengel', 'all'] },
+  { from: 'TerminModal',    to: 'utils-date',      kind: 'normal', label: 'isoDate',      tag: ['termine', 'all'] },
+  { from: 'MaengelModal',   to: 'const-mangel',    kind: 'normal', label: 'catalog',      tag: ['maengel', 'all'] },
+  { from: 'MaengelModal',   to: 'const-status',    kind: 'normal', label: 'STATUS_CFG',   tag: ['maengel', 'all'] },
+  { from: 'MaengelModal',   to: 'utils-mangel',    kind: 'normal', label: 'hatHauptmangel', tag: ['maengel', 'all'] },
+
+  /* ── Views → domain constants / utils (only the heavy ones, to keep it readable) ── */
+  { from: 'TagesplanView',  to: 'const-pruefung',  kind: 'normal', label: 'arten/prüfer', tag: ['tagesplan', 'all'] },
+  { from: 'TagesplanView',  to: 'const-fahrzeug',  kind: 'normal', label: 'TIME_SLOTS',   tag: ['tagesplan', 'all'] },
+  { from: 'TagesplanView',  to: 'const-status',    kind: 'normal', label: 'STATUS',       tag: ['tagesplan', 'all'] },
+  { from: 'TagesplanView',  to: 'utils-mangel',    kind: 'normal', label: 'hatHauptmangel', tag: ['tagesplan', 'maengel', 'all'] },
+  { from: 'TagesplanView',  to: 'utils-date',      kind: 'normal', label: 'date helpers', tag: ['tagesplan', 'all'] },
+  { from: 'StatistikView',  to: 'const-mangel',    kind: 'normal', label: 'catalog',      tag: ['statistik', 'all'] },
+  { from: 'StatistikView',  to: 'const-pruefung',  kind: 'normal', label: 'arten/prüfer', tag: ['statistik', 'all'] },
+  { from: 'StatistikView',  to: 'const-status',    kind: 'normal', label: 'STATUS',       tag: ['statistik', 'all'] },
+  { from: 'BerichteView',   to: 'const-mangel',    kind: 'normal', label: 'categories',   tag: ['berichte', 'all'] },
+  { from: 'BerichteView',   to: 'const-pruefung',  kind: 'normal', label: 'arten/prüfer', tag: ['berichte', 'all'] },
+  { from: 'BerichteView',   to: 'utils-mangel',    kind: 'normal', label: 'hatHauptmangel', tag: ['berichte', 'maengel', 'all'] },
+
+  /* ── Sidebar / Topbar → nav + status ── */
+  { from: 'Sidebar',        to: 'nav-const',       kind: 'normal', label: 'NAV',          tag: ['navigation', 'all'] },
+  { from: 'Sidebar',        to: 'const-status',    kind: 'normal', label: 'open count',   tag: ['navigation', 'all'] },
+  { from: 'Sidebar',        to: 'useStore',        kind: 'normal', label: 'mode/toggleMode/resetAll', tag: ['navigation', 'demo-mode', 'all'] },
+  { from: 'Topbar',         to: 'nav-const',       kind: 'normal', label: 'title lookup', tag: ['navigation', 'all'] },
+
+  /* ── UI primitives → constants ── */
+  { from: 'StatusPill',     to: 'const-status',    kind: 'normal', label: 'STATUS_CFG',   tag: ['overview', 'all'] },
+  { from: 'MangelPill',     to: 'const-mangel',    kind: 'normal', label: 'KATEGORIEN',   tag: ['maengel', 'all'] },
+
+  /* ── State → external ── */
+  { from: 'useStore',       to: 'firebase',        kind: 'normal', label: 'imports db',   tag: ['overview', 'data', 'all'] },
+  { from: 'useToasts',      to: 'sonner',          kind: 'api',    label: 'toast()',       tag: ['overview', 'all'] },
+  { from: 'App',            to: 'sonner',          kind: 'mount',  label: '<Toaster/>',    tag: ['overview', 'all'] },
+  { from: 'StatistikView',  to: 'recharts',        kind: 'api',    label: 'Area/Bar/Pie',  tag: ['statistik', 'all'] },
+  { from: 'App',            to: 'framer',          kind: 'normal', label: 'AnimatePresence', tag: ['overview', 'all'] },
+  { from: 'Modal',          to: 'framer',          kind: 'normal', label: 'enter/exit',    tag: ['overview', 'all'] },
+
+  /* ── PropTypes consumers (representative; nearly every component uses it) ── */
+  { from: 'TagesplanView',  to: 'types-propTypes', kind: 'normal', label: 'shapes',        tag: ['overview', 'all'] },
+  { from: 'FahrzeugeView',  to: 'types-propTypes', kind: 'normal', label: 'shapes',        tag: ['overview', 'all'] },
+  { from: 'TerminModal',    to: 'types-propTypes', kind: 'normal', label: 'shapes',        tag: ['termine', 'all'] },
+  { from: 'MaengelModal',   to: 'types-propTypes', kind: 'normal', label: 'shapes',        tag: ['maengel', 'all'] },
+  { from: 'types-propTypes', to: 'proptypes',      kind: 'normal', label: 'PropTypes.*',   tag: ['overview', 'all'] },
+
+  /* ── theme imported by basically everything (one representative edge) ── */
+  { from: 'App',            to: 'theme',           kind: 'normal', label: 'C, GLOBAL_CSS', tag: ['overview', 'all'] },
+  { from: 'main',           to: 'index-css',       kind: 'mount',  label: 'import',        tag: ['overview', 'all'] },
+];
+
+/* ── FIXES (recent / planned changes) ──────────────────────────────── */
+const FIXES = {
+  'useStore':     [
+    { n: 1, t: 'Split demo/normal into separate Firestore collections (fahrzeuge_real / termine_real)' },
+    { n: 2, t: 'Drop length>0 guard on cache write so deletes propagate across refresh' },
+    { n: 3, t: 'Restrict auto-seed to demo mode + use cache to avoid re-seeding on every load' },
+  ],
+  'Sidebar':      [
+    { n: 1, t: 'Status pill rebuilt as a clickable demo↔normal mode toggle' },
+    { n: 2, t: 'Reset button label flips per mode (re-seed in demo / clear-to-empty in normal)' },
+  ],
+  'firestore':    [
+    { n: 1, t: 'firestore.rules allow rules added for fahrzeuge_real and termine_real' },
+  ],
+};
+
+/* ── KNOWN_BUGS (only items confirmed by reading the file) ──────────── */
+const KNOWN_BUGS = {
+  'Toast-dead':   [
+    { sev: 'low', t: 'Toast.jsx and ToastStack are not imported anywhere; sonner is used instead via useToasts. Safe to delete.' },
+  ],
+  'useToasts':    [
+    { sev: 'low', t: 'Lines 11-12 expose toasts:[] and rm:() — leftovers from a previous custom toast implementation. No caller reads them.' },
+  ],
+  'firebase':     [
+    { sev: 'med', t: 'Lines 4-11 read VITE_FIREBASE_* env vars with no presence check. If .env is missing, initializeApp() still succeeds but every onSnapshot/setDoc fails silently — and writeFzDoc/writeTrDoc use .catch(() => {}) so errors are swallowed.' },
+  ],
+  'useStore':     [
+    { sev: 'low', t: 'queueMicrotask in the seed effect (lines 167-170) defers setState to satisfy the react-hooks/set-state-in-effect lint rule; if seeding takes long the UI briefly shows empty state.' },
+  ],
+};
+
+/* ════════════════════════════════════════════════════════════════════
+   RENDERING
+   ════════════════════════════════════════════════════════════════════ */
+
+const COLOR_MAP = {
+  client:   '#4ea1ff',
+  route:    '#7bd389',
+  service:  '#c792ea',
+  db:       '#ffb86b',
+  external: '#ff6b9d',
+};
+const EDGE_COLOR = {
+  critical: '#ff3860',
+  api:      '#ff7a45',
+  db:       '#ffb86b',
+  mount:    '#4ea1ff',
+  normal:   '#8a8a8a',
+};
+
+const nodeById = Object.fromEntries(nodes.map(n => [n.id, n]));
+
+function tint(hex, alpha) {
+  const m = hex.match(/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i);
+  if (!m) return hex;
+  const r = parseInt(m[1], 16), g = parseInt(m[2], 16), b = parseInt(m[3], 16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
+const clusterColorById = (id) => {
+  if (id === 'entry') return COLOR_MAP.client;
+  if (id === 'layout') return COLOR_MAP.client;
+  if (id === 'views') return COLOR_MAP.route;
+  if (id === 'modals') return COLOR_MAP.service;
+  if (id === 'state') return COLOR_MAP.service;
+  if (id === 'ui') return COLOR_MAP.service;
+  if (id === 'external') return COLOR_MAP.external;
+  return '#888';
+};
+
+/* ── Build chips ── */
+const chipsRoot = document.getElementById('chips');
+const FILTERS = [
+  { id: 'overview',   label: 'Overview',           default: true },
+  { id: 'tagesplan',  label: 'Tagesplan' },
+  { id: 'fahrzeuge',  label: 'Fahrzeuge' },
+  { id: 'maengel',    label: 'Mängel' },
+  { id: 'termine',    label: 'Termine' },
+  { id: 'statistik',  label: 'Statistik' },
+  { id: 'berichte',   label: 'Berichte' },
+  { id: 'navigation', label: 'Navigation' },
+  { id: 'demo-mode',  label: 'Demo mode' },
+  { id: 'data',       label: 'Critical path', critical: true },
+  { id: 'all',        label: 'Show all wires' },
+  { id: 'fixes-bugs', label: 'Roadmap & bugs', danger: true },
+];
+let activeFilter = 'overview';
+FILTERS.forEach(f => {
+  const b = document.createElement('button');
+  b.className = 'chip' + (f.default ? ' active' : '') + (f.danger ? ' danger' : '');
+  b.textContent = f.label;
+  b.dataset.id = f.id;
+  b.addEventListener('click', () => {
+    activeFilter = f.id;
+    document.querySelectorAll('.chip').forEach(c => c.classList.toggle('active', c.dataset.id === f.id));
+    applyFilter();
+  });
+  chipsRoot.appendChild(b);
+});
+
+/* ── Render clusters ── */
+const clustersGroup = document.getElementById('clusters');
+clusters.forEach(c => {
+  const col = clusterColorById(c.id);
+  const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+  rect.setAttribute('x', c.x);
+  rect.setAttribute('y', c.y);
+  rect.setAttribute('width', c.w);
+  rect.setAttribute('height', c.h);
+  rect.setAttribute('rx', 14);
+  rect.setAttribute('fill', tint(col, 0.04));
+  rect.setAttribute('stroke', tint(col, 0.22));
+  rect.setAttribute('stroke-width', 1);
+  rect.setAttribute('stroke-dasharray', '4 4');
+  g.appendChild(rect);
+  const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  t.setAttribute('x', c.x + 14);
+  t.setAttribute('y', c.y + 26);
+  t.setAttribute('class', 'cluster-label');
+  t.setAttribute('fill', tint(col, 0.75));
+  t.textContent = c.label;
+  g.appendChild(t);
+  clustersGroup.appendChild(g);
+});
+
+/* ── Render edges ── */
+const edgesGroup = document.getElementById('edges');
+function edgePath(a, b) {
+  /* Use right-edge of a → left-edge of b, with bezier through gutter */
+  let x1 = a.x + a.w, y1 = a.y + a.h / 2;
+  let x2 = b.x,       y2 = b.y + b.h / 2;
+  if (b.x < a.x) {
+    /* edge goes right→left: route around via vertical drop, fall back to centre-to-centre */
+    x1 = a.x; y1 = a.y + a.h / 2;
+    x2 = b.x + b.w; y2 = b.y + b.h / 2;
+  }
+  const dx = Math.max(40, Math.abs(x2 - x1) * 0.5);
+  const cx1 = x1 + (x2 > x1 ? dx : -dx);
+  const cx2 = x2 + (x2 > x1 ? -dx : dx);
+  return `M ${x1} ${y1} C ${cx1} ${y1}, ${cx2} ${y2}, ${x2} ${y2}`;
+}
+edges.forEach((e, i) => {
+  const a = nodeById[e.from], b = nodeById[e.to];
+  if (!a || !b) return;
+  const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  g.setAttribute('class', 'edge');
+  g.dataset.edgeIdx = i;
+  const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  path.setAttribute('d', edgePath(a, b));
+  path.setAttribute('fill', 'none');
+  path.setAttribute('stroke', EDGE_COLOR[e.kind] || '#8a8a8a');
+  path.setAttribute('stroke-width', e.kind === 'critical' ? 1.8 : 1.1);
+  path.setAttribute('stroke-opacity', e.kind === 'critical' ? 0.95 : 0.55);
+  path.setAttribute('marker-end', `url(#arrow-${e.kind})`);
+  if (e.kind === 'mount') path.setAttribute('stroke-dasharray', '4 3');
+  g.appendChild(path);
+
+  /* Compute midpoint for the label */
+  const tt = 0.5;
+  const x1 = a.x + a.w, y1 = a.y + a.h / 2;
+  const x2 = b.x,       y2 = b.y + b.h / 2;
+  const mx = (x1 + x2) / 2;
+  /* Offset stagger to reduce label collisions */
+  const my = (y1 + y2) / 2 + ((i % 4) - 1.5) * 4;
+
+  if (e.label) {
+    const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    const lbl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    lbl.setAttribute('x', mx);
+    lbl.setAttribute('y', my);
+    lbl.setAttribute('class', 'edge-label');
+    lbl.setAttribute('text-anchor', 'middle');
+    lbl.setAttribute('fill', EDGE_COLOR[e.kind] || '#aaa');
+    lbl.setAttribute('opacity', e.kind === 'critical' ? 0.92 : 0.7);
+    lbl.textContent = e.label;
+    /* Measure after insertion */
+    g.appendChild(bg);
+    g.appendChild(lbl);
+    edgesGroup.appendChild(g);
+    const bbox = lbl.getBBox();
+    bg.setAttribute('x', bbox.x - 4);
+    bg.setAttribute('y', bbox.y - 1.5);
+    bg.setAttribute('width', bbox.width + 8);
+    bg.setAttribute('height', bbox.height + 3);
+    bg.setAttribute('fill', '#0F0F0F');
+    bg.setAttribute('rx', 3);
+  } else {
+    edgesGroup.appendChild(g);
+  }
+});
+
+/* ── Render nodes ── */
+const nodesGroup = document.getElementById('nodes');
+nodes.forEach(n => {
+  const col = COLOR_MAP[n.color] || '#888';
+  const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  g.setAttribute('class', 'node-bg');
+  g.dataset.id = n.id;
+
+  const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+  rect.setAttribute('x', n.x);
+  rect.setAttribute('y', n.y);
+  rect.setAttribute('width', n.w);
+  rect.setAttribute('height', n.h);
+  rect.setAttribute('rx', 8);
+  rect.setAttribute('fill', tint(col, 0.10));
+  rect.setAttribute('stroke', col);
+  rect.setAttribute('stroke-width', n.critical ? 2.2 : 1.2);
+  rect.setAttribute('class', 'node-shadow');
+  g.appendChild(rect);
+
+  /* Label */
+  const lbl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  lbl.setAttribute('x', n.x + 12);
+  lbl.setAttribute('y', n.y + 22);
+  lbl.setAttribute('fill', '#f5f5f5');
+  lbl.setAttribute('font-weight', '700');
+  lbl.setAttribute('font-size', '13');
+  lbl.textContent = n.label;
+  g.appendChild(lbl);
+
+  if (n.sub) {
+    const sub = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    sub.setAttribute('x', n.x + 12);
+    sub.setAttribute('y', n.y + 40);
+    sub.setAttribute('fill', tint(col, 0.85));
+    sub.setAttribute('font-size', '10.5');
+    sub.setAttribute('font-family', 'ui-monospace, SFMono-Regular, Menlo, monospace');
+    sub.textContent = n.sub;
+    g.appendChild(sub);
+  }
+
+  /* Tiny path footer */
+  if (n.path) {
+    const p = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    p.setAttribute('x', n.x + 12);
+    p.setAttribute('y', n.y + n.h - 8);
+    p.setAttribute('fill', '#777');
+    p.setAttribute('font-size', '9');
+    p.setAttribute('font-family', 'ui-monospace, SFMono-Regular, Menlo, monospace');
+    p.textContent = n.path.replace(/^src\//, '');
+    g.appendChild(p);
+  }
+
+  /* Badges (top-right) */
+  const fixCount = FIXES[n.id]?.length || 0;
+  const bugCount = KNOWN_BUGS[n.id]?.length || 0;
+  let bx = n.x + n.w - 14;
+  if (bugCount > 0) {
+    const bg = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    bg.setAttribute('class', 'badge-bug');
+    const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    c.setAttribute('cx', bx); c.setAttribute('cy', n.y + 12); c.setAttribute('r', 8);
+    const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    t.setAttribute('x', bx); t.setAttribute('y', n.y + 16); t.setAttribute('text-anchor', 'middle');
+    t.textContent = bugCount;
+    bg.appendChild(c); bg.appendChild(t);
+    g.appendChild(bg);
+    bx -= 20;
+  }
+  if (fixCount > 0) {
+    const fg = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    fg.setAttribute('class', 'badge-fix');
+    const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    c.setAttribute('cx', bx); c.setAttribute('cy', n.y + 12); c.setAttribute('r', 8);
+    const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    t.setAttribute('x', bx); t.setAttribute('y', n.y + 16); t.setAttribute('text-anchor', 'middle');
+    t.textContent = fixCount;
+    fg.appendChild(c); fg.appendChild(t);
+    g.appendChild(fg);
+  }
+
+  g.addEventListener('mouseenter', () => { if (!selectedId) showNode(n.id); highlight(n.id); });
+  g.addEventListener('mouseleave', () => { if (!selectedId) { unhighlight(); showDefault(); } else { highlight(selectedId); } });
+  g.addEventListener('click', (e) => { e.stopPropagation(); selectedId = n.id; showNode(n.id); highlight(n.id); });
+  nodesGroup.appendChild(g);
+});
+
+/* ── Sidebar render ── */
+const sideEl = document.getElementById('side');
+let selectedId = null;
+
+function showDefault() {
+  sideEl.innerHTML = `
+    <h1>Architecture map</h1>
+    <div class="role">React 19 + Vite single-page app. Firestore on the right edge is the only persistence layer.</div>
+    <h2>How to read this</h2>
+    <div class="finding">
+      Red lines are the spine — the path data takes from app launch to a saved Termin. Click any node to pin it; hover any node to peek. Use the chips at the top to dim everything outside one feature.
+    </div>
+    <h2>Notable findings from this map</h2>
+    <div class="finding warn"><strong>Dead code · src/components/Toast.jsx</strong><br>Defines Toast + ToastStack but nothing in the app imports either. Toast notifications are produced via Sonner (App.jsx:67) through useToasts. The file can be deleted.</div>
+    <div class="finding warn"><strong>Silent Firebase failures · src/firebase.js:4-11</strong><br>VITE_FIREBASE_* env vars are read with no presence check. If .env is missing in production, initializeApp() still returns a handle, every Firestore call fails — and useStore swallows errors with <code>.catch(() => {})</code>. The 3-second fallback timer at useStore.js:122 then loads the demo seed, masking the misconfig.</div>
+    <div class="finding"><strong>Vestigial useToasts API · src/hooks/useToasts.js:11-12</strong><br><code>toasts: []</code> and <code>rm: () => {}</code> are leftovers from a prior custom toast implementation. No caller reads them — they could be dropped.</div>
+    <div class="finding"><strong>Unexpectedly heavy: StatistikView</strong><br>Charts on the Statistik page pull in recharts (~110 kB gzipped, the largest single chunk in the build). The view is lazy-loaded in App.jsx:12, so this only hits when a user actually opens the page.</div>
+    <div class="finding"><strong>Single store, no Redux/Zustand</strong><br>useStore.js (309 lines) does it all: Firestore subscription, localStorage cache, seeding, CRUD, demo-mode toggling. Replacing it touches every view because data flows top-down from App.jsx:36.</div>
+    <h2>Filters</h2>
+    <div class="finding">Click a chip to dim everything outside that feature. "Roadmap & bugs" highlights only nodes with green/red badges.</div>
+  `;
+}
+
+function showNode(id) {
+  const n = nodeById[id];
+  if (!n) return;
+  const incoming = edges.filter(e => e.to === id);
+  const outgoing = edges.filter(e => e.from === id);
+  const fixes = FIXES[id] || [];
+  const bugs  = KNOWN_BUGS[id] || [];
+  sideEl.innerHTML = `
+    <h1>${escapeHtml(n.label)}${n.critical ? ' <span style="color:#ff3860; font-size:10px; vertical-align:middle; margin-left:6px;">CRITICAL</span>' : ''}</h1>
+    <div class="role">${escapeHtml(n.role || '')}</div>
+    <div class="path">${escapeHtml(n.path || '')}</div>
+    <div class="plain">${escapeHtml(n.plain || '')}</div>
+    ${n.notes?.length ? `<h2>Notes</h2><ul class="notes">${n.notes.map(x => `<li>${escapeHtml(x)}</li>`).join('')}</ul>` : ''}
+    ${bugs.length ? `<h2>Known bugs</h2>${bugs.map(b => `<div class="bug"><span class="sev ${b.sev}">${b.sev.toUpperCase()}</span>${escapeHtml(b.t)}</div>`).join('')}` : ''}
+    ${fixes.length ? `<h2>Fixes / roadmap</h2>${fixes.map(f => `<div class="fix"><span class="n">${f.n}</span>${escapeHtml(f.t)}</div>`).join('')}` : ''}
+    <h2>Incoming (${incoming.length})</h2>
+    ${incoming.length ? `<ul class="edge-list">${incoming.map(e => `<li>${escapeHtml(nodeById[e.from]?.label || e.from)}<span class="arrow">→</span>${escapeHtml(n.label)}${e.label ? `<span class="lbl">${escapeHtml(e.label)}</span>` : ''}</li>`).join('')}</ul>` : `<div class="empty">No callers in graph.</div>`}
+    <h2>Outgoing (${outgoing.length})</h2>
+    ${outgoing.length ? `<ul class="edge-list">${outgoing.map(e => `<li>${escapeHtml(n.label)}<span class="arrow">→</span>${escapeHtml(nodeById[e.to]?.label || e.to)}${e.label ? `<span class="lbl">${escapeHtml(e.label)}</span>` : ''}</li>`).join('')}</ul>` : `<div class="empty">Leaf node.</div>`}
+  `;
+}
+
+function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+/* ── Highlight / dim logic ── */
+function highlight(id) {
+  const connected = new Set([id]);
+  edges.forEach(e => {
+    if (e.from === id) connected.add(e.to);
+    if (e.to === id) connected.add(e.from);
+  });
+  document.querySelectorAll('.node-bg').forEach(el => {
+    el.classList.toggle('dim', !connected.has(el.dataset.id));
+  });
+  document.querySelectorAll('.edge').forEach(el => {
+    const e = edges[+el.dataset.edgeIdx];
+    el.classList.toggle('dim', !(e.from === id || e.to === id));
+  });
+}
+function unhighlight() {
+  document.querySelectorAll('.node-bg').forEach(el => el.classList.remove('dim'));
+  document.querySelectorAll('.edge').forEach(el => el.classList.remove('dim'));
+}
+
+/* ── Filter logic ── */
+function applyFilter() {
+  if (activeFilter === 'fixes-bugs') {
+    const hot = new Set([...Object.keys(FIXES), ...Object.keys(KNOWN_BUGS)]);
+    document.querySelectorAll('.node-bg').forEach(el => el.classList.toggle('dim', !hot.has(el.dataset.id)));
+    document.querySelectorAll('.edge').forEach(el => {
+      const e = edges[+el.dataset.edgeIdx];
+      el.classList.toggle('dim', !(hot.has(e.from) && hot.has(e.to)));
+    });
+  } else if (activeFilter === 'data') {
+    /* "Critical path" — show only nodes/edges on the spine */
+    document.querySelectorAll('.node-bg').forEach(el => {
+      const n = nodeById[el.dataset.id];
+      el.classList.toggle('dim', !n.critical);
+    });
+    document.querySelectorAll('.edge').forEach(el => {
+      const e = edges[+el.dataset.edgeIdx];
+      el.classList.toggle('dim', e.kind !== 'critical');
+    });
+  } else {
+    document.querySelectorAll('.node-bg').forEach(el => {
+      const n = nodeById[el.dataset.id];
+      el.classList.toggle('dim', !(n.tag || []).includes(activeFilter));
+    });
+    document.querySelectorAll('.edge').forEach(el => {
+      const e = edges[+el.dataset.edgeIdx];
+      el.classList.toggle('dim', !(e.tag || []).includes(activeFilter));
+    });
+  }
+  selectedId = null;
+  showDefault();
+}
+
+/* ── Pan + zoom ── */
+const svg = document.getElementById('map');
+const vp = document.getElementById('viewport');
+let tx = 0, ty = 0, scale = 1;
+function apply() { vp.setAttribute('transform', `translate(${tx} ${ty}) scale(${scale})`); }
+function fit() {
+  /* Fit the natural viewBox 0 0 2200 1380; reset transform. */
+  tx = 0; ty = 0; scale = 1;
+  apply();
+}
+fit();
+
+svg.addEventListener('wheel', (e) => {
+  e.preventDefault();
+  const pt = svg.createSVGPoint();
+  pt.x = e.clientX; pt.y = e.clientY;
+  const ctm = svg.getScreenCTM().inverse();
+  const cursor = pt.matrixTransform(ctm);
+  const dir = e.deltaY > 0 ? -1 : 1;
+  const factor = 1 + dir * 0.12;
+  const nextScale = Math.max(0.25, Math.min(3, scale * factor));
+  const ratio = nextScale / scale;
+  tx = cursor.x - (cursor.x - tx) * ratio;
+  ty = cursor.y - (cursor.y - ty) * ratio;
+  scale = nextScale;
+  apply();
+}, { passive: false });
+
+let dragging = false, dragSX = 0, dragSY = 0, dragTX = 0, dragTY = 0;
+svg.addEventListener('mousedown', (e) => {
+  if (e.target.closest('.node-bg')) return;
+  dragging = true; svg.classList.add('dragging');
+  dragSX = e.clientX; dragSY = e.clientY; dragTX = tx; dragTY = ty;
+});
+window.addEventListener('mousemove', (e) => {
+  if (!dragging) return;
+  tx = dragTX + (e.clientX - dragSX);
+  ty = dragTY + (e.clientY - dragSY);
+  apply();
+});
+window.addEventListener('mouseup', () => {
+  if (dragging) { dragging = false; svg.classList.remove('dragging'); }
+});
+
+document.getElementById('z-fit').addEventListener('click', fit);
+document.getElementById('z-in').addEventListener('click', () => { scale = Math.min(3, scale * 1.2); apply(); });
+document.getElementById('z-out').addEventListener('click', () => { scale = Math.max(0.25, scale / 1.2); apply(); });
+
+svg.addEventListener('click', (e) => {
+  if (e.target.closest('.node-bg')) return;
+  selectedId = null;
+  unhighlight();
+  if (activeFilter !== 'overview') applyFilter();
+  showDefault();
+});
+
+/* ── First paint ── */
+applyFilter();
+showDefault();
+</script>
+</body>
+</html>
