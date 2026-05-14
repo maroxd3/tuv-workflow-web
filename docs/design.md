@@ -1,515 +1,166 @@
-# Software-Design — TÜV Prüfstelle Pro
+# Design — TÜV Prüfstelle Pro
 
-**Dokumentiert:** Architektur-Entscheidungen, Komponentenstruktur, Klassenmodell,
-Datenfluss und Begründungen der gemachten Design-Entscheidungen.
-
----
+Dieses Dokument beschreibt den aktuellen Architekturstand nach der Migration von
+Firestore zu lokaler relationaler Persistenz mit PGlite und Drizzle ORM.
 
 ## 1. Architekturüberblick
 
-### 1.1 Layer-Struktur
+```mermaid
+flowchart TB
+  user[Browser / Tauri WebView]
+  app[React App]
+  views[Views: Tagesplan, Fahrzeuge, Statistik, Berichte]
+  hooks[Hooks: useDb, useStoreCompat, useToasts]
+  repo[Repository: src/db/queries.ts]
+  orm[Drizzle ORM]
+  db[(PGlite PostgreSQL<br/>idb://tuvpro-db-v2)]
+  idb[(IndexedDB)]
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                         PRÄSENTATION                         │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐    │
-│  │Tagesplan │  │Fahrzeuge │  │Statistik │  │Berichte  │    │
-│  │  View    │  │  View    │  │  View    │  │  View    │    │
-│  └──────────┘  └──────────┘  └──────────┘  └──────────┘    │
-│       │             │             │             │            │
-│       └─────────────┴──────┬──────┴─────────────┘            │
-│                            ▼                                 │
-│                      ┌──────────┐                            │
-│                      │  App.jsx │  Routing, Layout, State    │
-│                      └──────────┘                            │
-├─────────────────────────────────────────────────────────────┤
-│                         LOGIK                                │
-│     ┌──────────────┐      ┌────────────────┐                 │
-│     │  useStore    │      │   useToasts    │                 │
-│     │   Hook       │      │     Hook       │                 │
-│     └──────────────┘      └────────────────┘                 │
-│            │                                                 │
-│            ▼                                                 │
-│     ┌──────────────┐      ┌──────────────┐                   │
-│     │  validators  │      │    mangel    │                   │
-│     │  (utils)     │      │   (utils)    │                   │
-│     └──────────────┘      └──────────────┘                   │
-├─────────────────────────────────────────────────────────────┤
-│                    INFRASTRUKTUR                             │
-│      ┌───────────────────┐       ┌─────────────────┐         │
-│      │ Firebase Firestore│       │  LocalStorage   │         │
-│      │   (primär)        │       │  (Offline Cache)│         │
-│      └───────────────────┘       └─────────────────┘         │
-└─────────────────────────────────────────────────────────────┘
+  user --> app
+  app --> views
+  views --> hooks
+  hooks --> repo
+  repo --> orm
+  orm --> db
+  db --> idb
 ```
 
-### 1.2 Technologie-Entscheidungen mit Begründung
+Die App ist eine React/Vite-SPA. Es gibt keinen eigenen Backend-Server. Die
+Datenbank läuft lokal im Browser über PGlite; PGlite persistiert die
+PostgreSQL-kompatible Datenbank in IndexedDB. Firebase wird nur noch für
+statisches Hosting verwendet.
+
+## 2. Technologieentscheidungen
 
 | Entscheidung | Alternative(n) | Begründung |
 |---|---|---|
-| **React 19** mit Vite | Next.js, Remix | SPA ausreichend (kein SEO, keine Serverseitiges Rendering nötig); Vite bietet schnellsten DX mit HMR; React 19 bringt stabile `useOptimistic`/Actions — für künftige Auth-Integration hilfreich |
-| **Tauri 2** (Rust) | Electron, PWA | Kompakte Binary (~6 MB vs. ~150 MB Electron), native Performance, Rust-Backend reduziert Angriffsfläche — für künftige lokale Hardware-Integration (OBD-Diagnose) kriticher als Electron |
-| **Firestore (NoSQL)** | PostgreSQL + Node-Backend, Supabase | **Diese Entscheidung wurde von Frau Fuchs kritisch hinterfragt** — ausführliche Diskussion in `datenmodell.md` Abschnitt "NoSQL vs. RDBMS". Kurzfassung: Echtzeit-Sync out-of-the-box, serverloses Backend, realistisches Modell für eingebettete Mängel — ABER: bei wachsendem Reporting-Bedarf wäre RDBMS mittelfristig sauberer |
-| **Recharts** | Chart.js, D3 | React-nativ, deklarativ, ausreichend für die 3–4 benötigten Chart-Typen |
-| **Framer Motion** | CSS-only, react-spring | Deklarative Animationen direkt auf Komponenten; unterstützt `AnimatePresence` für Seitenübergänge |
-| **Keine zentrale State-Management-Lib** (Redux/Zustand) | Redux Toolkit, Zustand | Bei ~20 Top-Level-Komponenten reicht `useStore`-Custom-Hook; kein Props-Drilling-Problem, das Redux rechtfertigen würde |
-| **Inline-Styles + Tailwind-Resets** | CSS-Module, styled-components | Rapid Prototyping; Theme-Objekt `C` in `styles/theme.js` zentralisiert Farben; Tailwind wurde ursprünglich für Utility-Klassen eingebunden, hat sich in der Umsetzung aber auf globale Resets beschränkt |
+| React 19 + Vite | Next.js, Remix | SPA reicht aus; Vite liefert schnellen Entwicklungs-Workflow |
+| PGlite | Firestore, SQLite, PostgreSQL-Server | Lokale relationale SQL-Datenbank ohne Backend |
+| Drizzle ORM | Raw SQL, Prisma, Kysely | Typsichere Queries, PostgreSQL-Schema in TypeScript, SQL-Migrationen |
+| Tauri 2 | Electron, reine Web-App | Kleine Desktop-Binary und späterer Pfad für lokale Geräteintegration |
+| Recharts | Chart.js, D3 | React-nativ und ausreichend für die benötigten Diagramme |
+| Repository-Pattern | Direct-Drizzle in Views | DB-Zugriff zentral testbar und refactor-sicher |
 
-### 1.3 Kern-Entwurfsprinzipien
+Die detaillierten Architekturentscheidungen stehen in `docs/decisions/`.
 
-1. **Single Responsibility** — jede Komponente hat genau eine Aufgabe. `Kpi.jsx`
-   zeigt eine Kennzahl; `StatusPill.jsx` rendert genau einen Status als Pill.
-2. **Composition over Configuration** — Views komponieren UI-Bausteine, statt
-   sie über große Prop-Objekte zu konfigurieren.
-3. **Custom Hooks isolieren Logik** — `useStore`, `useToasts` trennen
-   Geschäftslogik/State-Management von UI-Komponenten.
-4. **Shared Shapes** — `src/types/propTypes.js` enthält wiederverwendbare
-   PropTypes-Definitionen (`FahrzeugShape`, `TerminShape`, `MangelShape`,
-   `ToastShape`), damit Typ-Definitionen nicht dupliziert werden.
-5. **Defense in Depth bei Business-Regeln** — Regel "kein BESTANDEN bei
-   Hauptmangel" wird auf **vier** Ebenen durchgesetzt: UI-Button (disabled),
-   Dropdown-Option (disabled), auto-advance-Funktion, Store-Guard. Beim Ausfall
-   einer Ebene greifen die anderen.
-6. **Zentrale Katalogdaten statt Duplikate** — Mangelkategorien und
-   StVZO-Katalogeinträge liegen in `src/constants/mangel.js`. Views und Tests
-   verwenden daraus abgeleitete Strukturen (`MANGEL_KATALOG_BY_CODE`,
-   `MANGEL_KATALOG_EINTRAEGE`), damit Statistik-Auswertung, Mängelanzeige und
-   Validierung dieselbe Datenbasis nutzen.
+## 3. Modulstruktur
 
-### 1.4 Use-Case-Diagramm — Akteure und Anwendungsfälle
-
-Das System unterscheidet drei interne Akteure mit unterschiedlichen
-Berechtigungen und einen externen Akteur (Fahrzeughalter) ohne Systemzugriff.
-
-```mermaid
-flowchart LR
-  classDef actor fill:#fef9f3,stroke:#b45309,stroke-width:2px,color:#78350f
-  classDef uc fill:#f0fdf4,stroke:#15803d,stroke-width:1.5px,color:#14532d
-
-  Pruefer(("👤 Prüfer"))
-  Empfang(("👤 Empfang /<br/>Verwaltung"))
-  Admin(("👤 Administrator"))
-  Halter(("👤 Fahrzeug-<br/>halter (extern)"))
-
-  uc1["Termin anlegen"]
-  uc2["Termin verschieben<br/>oder löschen"]
-  uc3["Prüfung starten"]
-  uc4["Mängel erfassen<br/>(StVZO-Katalog)"]
-  uc5["Prüfergebnis setzen"]
-  uc6["Bericht-PDF erzeugen"]
-  uc7["Fahrzeug anlegen"]
-  uc8["Fahrzeug suchen<br/>und filtern"]
-  uc9["Statistik &amp;<br/>Bestandsquote einsehen"]
-  uc10["Bericht-Historie<br/>durchsehen"]
-
-  class Pruefer,Empfang,Admin,Halter actor
-  class uc1,uc2,uc3,uc4,uc5,uc6,uc7,uc8,uc9,uc10 uc
-
-  Empfang --> uc1
-  Empfang --> uc2
-  Empfang --> uc7
-  Empfang --> uc8
-  Empfang --> uc10
-
-  Pruefer --> uc3
-  Pruefer --> uc4
-  Pruefer --> uc5
-  Pruefer --> uc6
-  Pruefer --> uc8
-
-  Admin --> uc9
-  Admin --> uc10
-  Admin --> uc8
-
-  Halter -. erscheint zum Termin .-> uc3
+```txt
+src/
+  db/
+    client.ts        PGlite- und Drizzle-Singleton
+    schema.ts        Tabellen, Relationen und TypeScript-Typen
+    migrate.ts       führt SQL-Migrationen beim App-Start aus
+    seed.ts          Domänen- und Demo-Daten
+    queries.ts       Repository-Schicht für CRUD und Aggregationen
+    migrations/      SQL-Migrationsdateien
+  hooks/
+    useDb.ts         React-Hook für Datenbankzustand
+    useStoreCompat.ts Adapter für bestehende View-API
+  views/             fachliche Screens
+  features/          Modals für Fahrzeug, Termin, Mangel
+  components/        UI-Bausteine
+  utils/             reine Hilfsfunktionen und Validatoren
 ```
 
-**Hinweise zum Diagramm:**
+Views greifen nicht direkt auf Drizzle oder PGlite zu. Der Zugriff läuft über
+`useStoreCompat` beziehungsweise `useDb`, danach über `src/db/queries.ts`.
 
-- *Prüfer* ist der TÜV-Sachverständige, der die Hauptuntersuchung durchführt
-  und auswertet. Er hat keinen Zugriff auf die Stammdaten-Verwaltung der
-  Prüfstelle, kann aber Fahrzeugdaten lesen, um sie zu kontrollieren.
-- *Empfang/Verwaltung* erfasst neue Fahrzeuge bei Anmeldung und plant Termine.
-- *Administrator* sieht aggregierte Kennzahlen für Geschäftsführung und
-  Qualitätssicherung.
-- *Fahrzeughalter* hat **keinen** Systemzugriff (im aktuellen Scope) — er
-  erscheint physisch zum Termin. Eine Self-Service-Anmeldung über ein Halter-
-  Portal ist auf der Roadmap, aber nicht im Prototyp.
-
-## 2. Komponentendiagramm
-
-```mermaid
-graph TB
-  subgraph "Einstiegspunkt"
-    main[main.jsx]
-    app[App.jsx]
-  end
-
-  subgraph "Layout"
-    sidebar[Sidebar]
-    topbar[Topbar]
-  end
-
-  subgraph "Views"
-    tp[TagesplanView]
-    fv[FahrzeugeView]
-    sv[StatistikView]
-    bv[BerichteView]
-  end
-
-  subgraph "Feature-Modals"
-    fm[FahrzeugModal]
-    tm[TerminModal]
-    mm[MaengelModal]
-  end
-
-  subgraph "UI-Bausteine"
-    modal[Modal]
-    confirm[ConfirmModal]
-    inputs["Inp / Sel / Fld"]
-    buttons["BtnP / BtnG / IconBtn"]
-    pills["StatusPill / MangelPill / HauptmangelBadge"]
-    others["Kpi / EmptyState / SectionHead / Toast"]
-  end
-
-  subgraph "Logik"
-    useStore[useStore hook]
-    useToasts[useToasts hook]
-    validators[utils/validators]
-    mangelU[utils/mangel]
-    dateU[utils/date]
-  end
-
-  subgraph "Infrastruktur"
-    firestore[(Firebase Firestore)]
-    localstorage[(LocalStorage)]
-  end
-
-  main --> app
-  app --> sidebar & topbar
-  app --> tp & fv & sv & bv
-  app --> useStore & useToasts
-
-  tp --> fm
-  tp --> tm
-  tp --> mm
-  fv --> fm
-  fv --> confirm
-
-  fm --> modal & inputs & buttons & validators
-  tm --> modal & inputs & buttons & mangelU
-  mm --> modal & inputs & buttons & pills & mangelU
-  confirm --> modal & buttons
-
-  tp & fv & sv & bv --> pills & others
-
-  useStore --> firestore
-  useStore --> localstorage
-  useStore --> mangelU
-```
-
-**Wichtige Abhängigkeits-Regeln:**
-
-- UI-Bausteine importieren **keine** Logik-Hooks — sie sind rein visuell
-- Views importieren UI-Bausteine und Custom Hooks; keine direkten Firestore-Aufrufe
-- `utils/*` enthält reine Funktionen (pure) ohne Seiteneffekte
-- Infrastruktur-Zugriff nur über `useStore` — keine direkten `setDoc`-Aufrufe in Views
-
-## 3. Klassendiagramm / Typen-Modell
-
-JavaScript hat keine Klassen im traditionellen Sinne; das Datenmodell ist als
-Objekt-Schema definiert. Die folgende UML-Notation zeigt die logischen
-Entitäten und ihre Beziehungen.
-
-```mermaid
-classDiagram
-  class Fahrzeug {
-    +string id «PK, uid»
-    +string kennzeichen «unique, DE-Format»
-    +string fin «17 Zeichen, optional»
-    +string hersteller «required»
-    +string modell «required»
-    +number baujahr «≥ 1885, ≤ Jahr+1»
-    +string farbe
-    +string typ «aus FAHRZEUG_TYPEN»
-    +number kmStand «≥ 0»
-    +string besitzer «required»
-    +string telefon «nur Ziffern/+()-/»
-    +string email «RFC-basic»
-    +string hu_faellig «ISO-Datum»
-    +string createdAt «ISO-Datum»
-  }
-
-  class Termin {
-    +string id «PK, uid»
-    +string fahrzeugId «FK → Fahrzeug.id»
-    +string datum «ISO-Datum»
-    +string uhrzeit «HH:MM, 30-min-Raster»
-    +string art «aus PRUEFUNG_ARTEN»
-    +string pruefer «aus PRUEFER»
-    +string status «aus STATUS»
-    +string notiz
-    +Mangel[] mängel «eingebettet»
-    +string createdAt
-  }
-
-  class Mangel {
-    +string id «PK, uid»
-    +string code «StVZO-Referenz»
-    +string text
-    +string kat «OM|LM|EM|HM|GM»
-    +bool behoben
-  }
-
-  class STATUS {
-    <<enumeration>>
-    GEPLANT
-    IN_PRUEFUNG
-    BESTANDEN
-    NICHT_BESTANDEN
-    NACHPRUEFUNG
-    NICHT_ERSCHIENEN
-    ABGEBROCHEN
-  }
-
-  class MANGEL_KATEGORIE {
-    <<enumeration>>
-    OM «Ohne Mangel»
-    LM «Geringer Mangel»
-    EM «Erheblicher Mangel»
-    HM «Hauptmangel»
-    GM «Gefährlicher Mangel»
-  }
-
-  Fahrzeug "1" --o "N" Termin : hat
-  Termin "1" --o "N" Mangel : enthält
-  Termin --> STATUS : kat
-  Mangel --> MANGEL_KATEGORIE : kat
-```
-
-### 3.1 Designentscheidungen am Modell
-
-| Entscheidung | Begründung |
-|---|---|
-| **`Mangel` als eingebettetes Array in `Termin`** (nicht eigene Top-Level-Collection) | Mängel haben keine eigenständige Existenz — sie gehören immer zu genau einem Termin, werden immer im Kontext gelesen/geschrieben. Eingebettetes Modell spart Firestore-Reads (1 statt N+1). Wäre als JOIN in SQL unelegant, in Firestore idiomatisch |
-| **`fahrzeugId` als Fremdschlüssel in `Termin`** | Klassische 1:N-Relation. Fahrzeug kann viele Termine haben, jeder Termin gehört zu genau einem Fahrzeug. Kein `terminIds`-Array im Fahrzeug, da die Richtung N→1 effizienter ist |
-| **IDs als UUIDs (client-generiert via `uid()`)** | Ermöglicht optimistisches Update (Client erzeugt die ID vor dem Write, zeigt das neue Objekt sofort an) |
-| **Status und Mangelkategorie als Enumerations in eigenen Konstanten-Modulen** | Zentrale Wahrheit; Änderungen an zulässigen Werten an einer Stelle |
-| **`kmStand`, `baujahr` nullable** | Nicht jedes Fahrzeug hat bei Erstanlage alle Daten; Pflicht wären Kennzeichen + Hersteller/Modell + Halter |
-| **`HU_FAELLIG` als ISO-Datum-String** (nicht Firestore `Timestamp`) | Vereinfacht Vergleiche und Sortierung; Firestore-Timestamps hätten Serialisierungs-Overhead |
-
-## 4. State-Management: `useStore`
+## 4. Datenfluss
 
 ```mermaid
 sequenceDiagram
-  participant UI as Views / Modals
-  participant Hook as useStore
-  participant Local as LocalStorage
-  participant Cloud as Firestore
-  
-  Note over Hook: Mount
-  Hook->>Cloud: onSnapshot(fahrzeuge)
-  Hook->>Cloud: onSnapshot(termine)
-  Cloud-->>Hook: Snapshot Fahrzeuge
-  Cloud-->>Hook: Snapshot Termine
-  Hook->>Local: Cache schreiben
-  Hook->>UI: State-Update
+  participant UI as View / Modal
+  participant Compat as useStoreCompat
+  participant Hook as useDb
+  participant Repo as queries.ts
+  participant DB as PGlite
 
-  Note over UI: User speichert Fahrzeug
-  UI->>Hook: addFz(data)
-  Hook->>Hook: uid() + createdAt
-  Hook->>UI: Optimistisches Update
-  Hook->>Cloud: setDoc(...)
-  Cloud-->>Hook: onSnapshot fires again
-  Hook->>UI: Reconciliation
+  UI->>Compat: addFz(data)
+  Compat->>Hook: addFahrzeug(...)
+  Hook->>Repo: addFahrzeug(row)
+  Repo->>DB: INSERT INTO fahrzeug ...
+  DB-->>Repo: created row
+  Repo-->>Hook: Fahrzeug
+  Hook->>Repo: listFahrzeuge(), listTermine()
+  Repo-->>Hook: aktueller Datenstand
+  Hook-->>Compat: State aktualisiert
+  Compat-->>UI: View rendert neu
 ```
 
-**Kernverantwortlichkeiten:**
+Nach Schreiboperationen wird der relevante Datenbestand neu geladen. Damit
+bleibt die UI konsistent, ohne Firestore-`onSnapshot` oder eigenen WebSocket.
 
-- **Subscription-Management** für beide Collections (`fahrzeuge`, `termine`)
-- **CRUD-API** für Components: `addFz`, `updFz`, `delFz`, `addTr`, `updTr`, `delTr`, `addMangel`, `delMangel`, `resetAll`
-- **Business-Rule-Guard** in `updTr` und `addMangel` (Workflow-Regel BESTANDEN
-  bei HM/GM ablehnen bzw. auto-demoten)
-- **Offline-Fallback** via LocalStorage, falls Firestore-Verbindung scheitert
-- **Seed-Daten** bei erster Nutzung (wenn beide Collections leer)
-- **3-Sekunden-Loading-Fallback** seit Sprint 5: hydratiert aus Cache oder Seed,
-  falls `onSnapshot` nicht antwortet — verhindert „hängender Spinner"-UX
+## 5. Datenmodell
 
-## 5. Workflow- und Datenfluss-Diagramme
+Das fachliche Datenmodell ist 3NF-normalisiert:
 
-### 5.1 Aktivitätsdiagramm: Hauptworkflow Termin → Bericht
-
-Zeigt den fachlichen Ablauf einer Hauptuntersuchung von der Anmeldung
-des Halters bis zum ausgehändigten Prüfbericht. Verzweigungen entstehen
-am Mängel-Status.
-
-```mermaid
-flowchart TD
-  Start([Halter erscheint zum Termin])
-  Empfang[Empfang ruft Termin auf]
-  Start --> Empfang
-  Empfang --> CheckDaten{Fahrzeug-<br/>daten aktuell?}
-  CheckDaten -->|Nein| UpdateDaten[Daten ergänzen<br/>FahrzeugModal]
-  UpdateDaten --> StartPruef
-  CheckDaten -->|Ja| StartPruef[Prüfung starten<br/>Status → IN_PRUEFUNG]
-  StartPruef --> Pruefen[Sachverständiger prüft<br/>nach StVZO Anlage VIII]
-  Pruefen --> MaengelGef{Mängel<br/>gefunden?}
-  MaengelGef -->|Nein| Bestanden[Status → BESTANDEN]
-  MaengelGef -->|Ja| ErfasseM[Mängel im Katalog erfassen<br/>Schweregrad GM/EM/HM/GfM]
-  ErfasseM --> CheckHM{Mindestens 1<br/>Hauptmangel<br/>oder Gef. Mangel?}
-  CheckHM -->|Ja| NichtBest[Status → NICHT_BESTANDEN<br/>BESTANDEN-Button gesperrt]
-  CheckHM -->|Nein| CheckEM{Mindestens 1<br/>Erheblicher<br/>Mangel?}
-  CheckEM -->|Ja| Nachpruef[Status → NACHPRUEFUNG<br/>Frist 1 Monat]
-  CheckEM -->|Nein| Bestanden
-  Bestanden --> Plakette[Plakette /<br/>Prüfbescheinigung]
-  Nachpruef --> Bericht
-  NichtBest --> Bericht
-  Plakette --> Bericht[PDF-Bericht erzeugen<br/>Ref-Nr. TPP-NDS-2026-...]
-  Bericht --> Aushaendigen([Bericht ausgehändigt<br/>+ Daten persistiert])
+```txt
+halter 1 -- N fahrzeug
+fahrzeug 1 -- N termin
+termin 1 -- N mangel
+pruefart 1 -- N termin
+pruefer 0..1 -- N termin
+status 1 -- N termin
+mangel_kategorie 1 -- N mangel
 ```
 
-**Lese-Hilfe:**
+Das vollständige ER-Diagramm, Relationenschema, DDL und die
+Integritätsbedingungen stehen in `docs/datenmodell.md`.
 
-- Rauten = Entscheidungspunkte (zwingend bewertet vor Status-Wechsel)
-- Die *Mehrebenen-Sperre* zwischen `CheckHM` und `Bestanden` ist im Code an
-  vier Stellen abgesichert (Defense in Depth, siehe § 1.3 Punkt 5)
-- Status-Codes entsprechen 1:1 dem `STATUS`-Enum in `src/utils/mangel.js`:
-  `GEPLANT → IN_PRUEFUNG → BESTANDEN | NICHT_BESTANDEN | NACHPRUEFUNG`
+## 6. Business-Regeln
 
-### 5.2 Sequenzdiagramm: Mängelerfassung (Detail-Szenario)
+Die wichtigste Regel ist WF-01:
 
-Detail-Sicht auf den Schritt *"Mängel erfassen"* aus dem Aktivitätsdiagramm.
-Zeigt, wie sich das Setzen eines Hauptmangels auf einen bereits gesetzten
-Bestanden-Status auswirkt (Auto-Demote-Mechanik).
-
-```mermaid
-sequenceDiagram
-  actor Pruefer
-  participant TP as TagesplanView
-  participant MM as MaengelModal
-  participant Hook as useStore
-  participant Val as validators
-  participant FS as Firestore
-
-  Pruefer->>TP: Klickt auf "Mängel erfassen"
-  TP->>MM: Öffnet Modal mit termin
-  Pruefer->>MM: Wählt Mangelcode "2.1.1 (HM)"
-  MM->>Hook: addMangel(tid, mangel)
-  Hook->>Hook: mängel.push + status-check
-  alt Termin war BESTANDEN
-    Hook->>Hook: Auto-Demote zu NICHT_BESTANDEN
-  end
-  Hook->>FS: setDoc(termin)
-  Hook-->>MM: State-Update (neuer termin)
-  MM->>MM: hasHM = true → BESTANDEN-Button disabled
-  Pruefer->>MM: Klickt "Nicht bestanden"
-  MM->>Hook: onStatus(tid, NICHT_BESTANDEN)
-  Hook->>Val: validateStatusWechsel ✓ (nicht BESTANDEN)
-  Hook->>FS: setDoc(termin)
+```txt
+Ein Termin mit Hauptmangel oder gefährlichem Mangel darf nicht den Status
+"Bestanden" erhalten.
 ```
 
-## 6. Fehler- und Eingabe-Validierung
+Diese Regel wird auf mehreren Ebenen abgesichert:
 
-Drei Ebenen (Stand nach Sprint 5 — 2026-04-27):
+- UI verhindert ungültige Statusauswahl.
+- `useStoreCompat` erhält die Legacy-View-API und normalisiert Datenformen.
+- `queries.ts` prüft Statuswechsel und Mangeländerungen zentral.
+- Das relationale Schema verhindert verwaiste Datensätze per Foreign Keys.
 
-1. **UX-Strukturierung** (Eingabe von Anfang an konsistent): Hersteller/Modell/Typ
-   sind im `FahrzeugModal` als **abhängige Dropdowns** umgesetzt — wer BMW wählt,
-   sieht nur BMW-Modelle und nur BMW-Typen. Tippfehler ("Vw" vs. "VW" vs.
-   "Volkswagen") oder Mismatches ("BMW Polo") sind so strukturell ausgeschlossen.
-   Ein expliziter "Sonstiger / Nicht aufgeführt"-Fallback erlaubt Freitext für
-   Oldtimer / Importe / Tuning-Werkstätten.
-2. **Hard-Validierung** (blockt Speichern): `validators.validateFahrzeug`,
-   `validators.validateStatusWechsel`, `validators.validateHerstellerModellKonsistenz`
-   (vormals weich, seit 27.04. hart) — Einzelfeldprüfungen nach Äquivalenzklassen,
-   plus KBA-Kreis-Code-Liste für Kennzeichen (s. `kfzKreis.js`, ~430 Codes) und
-   Saison-Kennzeichen-Format (`MM-MM`-Suffix).
-3. **Soft-Warnungen** (UI-Hinweis, nicht blockierend): `validators.checkFinPruefziffer`
-   prüft die ISO-3779-Prüfziffer. Bewusst weich, weil pre-1981 / Nicht-Nordamerika-
-   Fahrzeuge keine Prüfziffer tragen.
+## 7. Migrationen und Seed-Daten
 
-Begründung der Trennung: UX-Strukturierung ist der erste Schutzwall (User kann
-gar nicht erst falsch tippen). Hard-Validierung fängt Sonstiger-Modus und
-programmatische Aufrufe (Defense in Depth). Soft-Warnungen markieren Auffälligkeiten,
-die kontextabhängig erlaubt sind.
+Beim App-Start ruft `useDb` zuerst `runMigrations()` auf. Der Migrationsrunner
+führt die SQL-Dateien aus `src/db/migrations/` genau einmal aus und protokolliert
+dies in `__drizzle_migrations`.
 
-## 7. Bericht-PDF-Generierung
+Danach werden Domänentabellen idempotent befüllt:
 
-Berichte werden seit Sprint 5 nicht mehr als ASCII-Text-`.txt`, sondern als
-gedruckte A4-PDF im Behörden-Vordruck-Stil ausgegeben. Implementierung in
-`BerichteView.buildBerichtHtml(t)` + `exportPdf(t)`:
-
-```mermaid
-sequenceDiagram
-  actor Pruefer
-  participant UI as BerichteView
-  participant Win as window
-  participant Browser as Browser-Druck-Engine
-
-  Pruefer->>UI: Klickt "PDF" auf Bericht
-  UI->>UI: buildBerichtHtml(termin) - vollständiges HTML mit @page A4 und Print-CSS
-  UI->>Win: window.open neuer Tab
-  UI->>Win: document.write(html)
-  UI->>Win: document.close()
-  Win->>Win: Lädt Inline-CSS und Google-Font Source Serif 4
-  Win->>Win: setTimeout window.print 250ms - Auto-Trigger
-  Browser->>Pruefer: Druckdialog mit "Als PDF speichern"
-  Pruefer->>Browser: Wählt "Als PDF speichern" - Datei wird erzeugt
+```txt
+status
+pruefart
+pruefer
+mangel_kategorie
 ```
 
-**Begründung:**
-- **Keine externe Bibliothek** — `jsPDF` / `html2pdf` würden ~150 KB ans Bundle
-  hängen. Browser-natives `window.print()` reicht.
-- **Vector-PDF** mit echter Schriftart (Source Serif 4 von Google Fonts), nicht
-  Pixel-Bitmap.
-- **A4-konformes Layout** via `@page { size: A4; margin: 16mm 14mm 24mm; }`.
-- **Sektionen page-break-inside: avoid** verhindern Sektion-Mitte-Umbrüche.
-- **Eigene Brand „TPP — Prüfstelle Pro"** mit fiktivem Prüfstellen-Nr.-Format
-  `TPP-NDS-2026-XXXXXXX` — keine Verletzung von TÜV/DEKRA/GTÜ-Markenrechten.
+Wenn die Datenbank leer ist, lädt `seedDemoBestand()` Demo-Daten für Halter,
+Fahrzeuge, Termine und Mängel.
 
-**Layout-Bestandteile:** Top-Bar Navy/Amber, Siegel-Logo links, Prüfstellen-
-Adresse Mitte, Berichts-Nr.-Block rechts; zentrierter Titel mit Serif-Setzung;
-Verkehrssicherheits-Box farbcodiert (grün/rot/amber); Sektionen in römischen
-Zahlen mit Navy-Header (I. Fahrzeug, II. Halter, III. Mängel, IV. Bemerkungen);
-Form-Style-Felder (gepunktete Labels, durchgezogene Wert-Linien); Mängel-
-Tabelle mit HM-Hervorhebung; Unterschriftsfelder (Ort/Datum + Stempel); Footer
-mit Rechtshinweis nach § 29 StVZO und BGBl.-Verweis.
+## 8. Debugging
 
-## 8. Mobile-Responsive-Strategie
+Im Dev-Modus installiert `src/db/debug.ts` einen kleinen Debug-Helfer:
 
-Sprint 5 hat die ursprünglich Desktop-only-App vollständig responsive gemacht.
-Brechungspunkt: **768 px Viewport-Breite** (Tablet hochkant / Smartphone).
+```js
+await tuvdb.table("fahrzeug")
+await tuvdb.table("termin")
+await tuvdb.sql("SELECT * FROM fahrzeug")
+```
 
-**Layout-Verhalten:**
+Die physische PGlite-Datenbank ist in Chrome unter folgendem Pfad sichtbar:
 
-| Bereich | Desktop | Mobile |
-|---|---|---|
-| Sidebar | fixed 240 px, schiebt Content nach rechts | Overlay mit Backdrop-Blur, Hamburger-Button im Topbar |
-| KPI-Grids | 4 oder 5 Spalten | 2 Spalten (oder 1 bei sehr schmalen Phones) |
-| Modal-Forms | 2 Spalten | 1 Spalte |
-| Fahrzeug-Detail-Panel | 460 px Slide-In | Vollbild |
-| Charts | nebeneinander (2-spaltig) | untereinander |
-| Touch-Targets | beliebig | ≥ 36 px |
-| Tagesplan-Slot | Rechtsklick-Kontextmenü | klickbarer „+ Termin um HH:MM" Button |
+```txt
+DevTools -> Application -> IndexedDB -> /pglite/tuvpro-db-v2
+```
 
-**Implementierung:** `useIsMobile()`-Hook für JS-Layout-Entscheidungen
-(Sidebar-Mode), CSS-Klassen `.grid-resp-2/4/5`, `.full-mobile`, `.pad-mobile`,
-`.card-mobile`, `.btn-icon`, `.nav-btn` mit `@media (max-width: 768px)` Override
-in `theme.js` `GLOBAL_CSS`. Komponenten setzen die Klassen zusätzlich zu ihren
-Inline-Styles, sodass beide Welten (Desktop-Layout, Mobile-Override) klar
-getrennt bleiben.
+## 9. Deployment
 
-**iOS-/Android-Tweaks** in `index.html`:
-- `viewport-fit=cover` für iPhone-Notch
-- `theme-color="#1A1740"` für PWA / Tab-Chrome
-- `apple-mobile-web-app-capable` + Status-Bar-Style für Save-to-Home-Screen
-- `-webkit-tap-highlight-color: transparent` (kein graues Tap-Flash)
-- `overscroll-behavior-y: none` (kein Pull-to-Refresh, das den Tagesplan
-  versehentlich neu laden würde)
+Das Deployment baut statische Dateien in `dist/` und veröffentlicht sie über
+Firebase Hosting. Firebase Hosting ist nur CDN/Static-File-Delivery; Firestore
+wird nicht mehr als Datenbank verwendet.
 
-## 9. Barrel-Exports
-
-`src/components/ui/index.js` und `src/components/modal/index.js` bündeln die
-Exporte, damit Views über `import { Inp, Sel, Fld } from "../components/ui"`
-importieren statt jeden Pfad einzeln zu kennen. Nach Feedback evaluieren wir,
-ob wir die Barrel-Exports komplett nutzen oder aus Tree-Shaking-Gründen
-entfernen.

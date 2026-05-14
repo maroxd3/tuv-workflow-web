@@ -66,15 +66,13 @@ lückenlos getestet:
 ist eine Cleanup-Funktion, die nur beim Component-Unmount läuft und in
 der Test-Umgebung nicht getriggert wird.
 
-`useStore` (das State-Management-Herzstück) wird **nicht** in dieser
-Coverage-Tabelle gezeigt, weil es das Firebase-SDK direkt importiert
-und in den Tests nicht stub-getestet wird. Sein Verhalten ist
-**indirekt** abgesichert: die von ihm aufgerufenen Geschäftsregeln in
-`validators.js` und `utils/mangel.js` (insbesondere
-`validateStatusWechsel`, `addMangel`, Auto-Demote auf Hauptmangel)
-sind zu 100 % unit-getestet — der Hook bleibt ein dünner Sync-Adapter
-auf Firestore. Eine Mock-Firestore-Test-Suite direkt auf `useStore`
-ist auf der Roadmap (Sprint 7+).
+`useDb` ist die aktuelle Datenzugriffsschicht über PGlite/Drizzle. Die
+reinen Geschäftsregeln in `validators.js` und `utils/mangel.js`
+(insbesondere `validateStatusWechsel`, `addMangel`, Auto-Demote auf
+Hauptmangel) sind unit-getestet. Zusätzlich prüft `src/db/db.test.ts`
+das SQL-Schema und zentrale Repository-Pfade gegen eine echte lokale
+PGlite-Testdatenbank. Die interne IndexedDB-Ablage von PGlite wird nicht
+separat getestet.
 
 ### Konstanten (`src/constants/`) — Coverage 76 %
 

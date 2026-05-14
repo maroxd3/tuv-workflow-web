@@ -31,7 +31,7 @@ Prototyp-Scope komplett darauf, dokumentieren aber, wie sie einzuführen wären
 | Nicht getestet | Grund |
 |---|---|
 | Framer-Motion-Animationen | Visuelles Verhalten, nicht funktional relevant |
-| Firestore-Integration direkt | Externe Abhängigkeit, würde Firebase-Emulator brauchen (im Prototyp-Scope nicht aufgebaut) |
+| Browser-Persistenz in IndexedDB direkt | PGlite wird über Repository-Tests geprüft; interne IndexedDB-Dateien testen wir nicht separat |
 | Statistik-Charts (Recharts-Rendering) | Visual-Regression wäre ein Test-Framework für sich; nur Aggregations-Funktionen werden getestet |
 | Tauri-spezifische APIs | In der SPA-Code-Pfad nicht genutzt |
 
@@ -161,15 +161,21 @@ Das Repo enthält Tests in `src/tests/`:
 |---|---|---|
 | `hooks/useToasts.test.js` | `useToasts` | 6 Testfälle: Sonner-Integration (success/error/info/warn) |
 
-### 3.4 Absichtlich **nicht** abgedeckt
+### 3.4 Datenbank-/Repository-Tests
 
-- `useStore`-Hook: Würde einen Firestore-Mock brauchen. Geplant in US-66 bei DB-Migration, wenn wir ohnehin die Persistenz-Schicht überarbeiten.
+| Datei | Test-Gegenstand | Abdeckung |
+|---|---|---|
+| `db/db.test.ts` | PGlite/Drizzle-Schema, Seed-Daten, Repository-Operationen | SQL-Persistenz, Joins und zentrale Geschäftsregeln gegen eine echte lokale Test-Datenbank |
+
+### 3.5 Absichtlich **nicht** abgedeckt
+
+- Interne PGlite/IndexedDB-Implementierung: Wir testen unsere Repository-Schicht, nicht die Storage-Engine selbst.
 - Views (FahrzeugeView, TagesplanView, StatistikView, BerichteView): Zu viel Aggregation, würde hauptsächlich Mock-Daten testen. Business-Logik wurde in Utilities ausgelagert, die separat getestet werden.
 - Modals (FahrzeugModal, TerminModal, MaengelModal): Form-Logik ruft Utilities auf, diese sind getestet. Rendering ist mit PropTypes dokumentiert.
 - **PDF-Bericht-Layout** (`buildBerichtHtml`): visuelle Korrektheit — wird per Manual-Test gegen Referenz-Datensatz geprüft (Demo-Fahrzeug B-TK 1234, BESTANDEN-Fall + NICHT_BESTANDEN-Fall mit 5 HM). Visual-Regression-Framework (Percy/Chromatic) wäre eigener Aufbau, im Prototyp-Scope nicht aufgesetzt.
 - **Mobile-Responsive-Layout**: Manual-Tests auf realen Geräten (iPhone Safari, Android Chrome) sowie Browser-DevTools-Geräte-Emulation. Keine automatisierten Visual-Tests für unterschiedliche Viewports.
 
-### 3.5 Manuelle Test-Szenarien (Smoke-Tests vor jeder Abgabe)
+### 3.6 Manuelle Test-Szenarien (Smoke-Tests vor jeder Abgabe)
 
 Pflicht-Durchläufe, die nicht automatisiert sind, aber vor jedem Sprint-Ende manuell ausgeführt werden:
 
@@ -209,7 +215,7 @@ Verzweigungen während der Tests tatsächlich ausgeführt wurden.
 
 ## 6. Ausblick
 
-- **Integrations-Tests gegen Firestore-Emulator:** `@firebase/rules-unit-testing` ermöglicht das isolierte Testen der Store-Layer. Geplant bei Umstellung auf Auth/Security Rules (US-60, US-61).
+- **Persistenz-Reload-Test:** Automatisiert prüfen, dass PGlite-Daten nach Browser-Reload weiterhin aus IndexedDB geladen werden.
 - **E2E-Tests:** Playwright oder Cypress könnten den Kernflow "Fahrzeug → Termin → Mängel → Bericht" abdecken. Aufwand ~2 Sprints, daher nicht im Prototyp-Scope.
 - **Visual-Regression:** Percy oder Chromatic für Chart-Darstellungen.
 - **Last-Tests:** k6 oder Artillery, relevant erst ab realem Nutzerstamm.

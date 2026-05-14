@@ -112,7 +112,7 @@ gemappt.
 |---|---|---|---|
 | NF-PF-01 | Navigation zwischen Views: **< 150 ms** (p95) | Nielsen-Heuristik "System sollte innerhalb 100–200 ms reagieren, damit sich die Aktion direkt anfühlt". Für SPA-Navigation mit Framer-Motion-Transition (180 ms) reicht dieser Rahmen; ein niedrigerer Wert ist optisch nicht mehr wahrnehmbar | React Profiler; `performance.now()` in e2e-Test |
 | NF-PF-02 | Suche / Filter im Tagesplan (aktuelles Arbeitspensum ≤ 50 Termine/Tag): **< 100 ms** (p95) | Bei clientseitigem `.filter()` ist dieser Wert selbst bei 10× der typischen Last (500 Termine) auf Standard-Hardware locker erreichbar. Grundlage: Jakob Nielsen — "0,1 s: Gefühl direkter Manipulation" | Vitest-Benchmark |
-| NF-PF-03 | Termin/Fahrzeug speichern (Firestore write): **< 400 ms** (p95) ohne Latenz-Ausreißer | Firestore SLA ≥ 99,95 % für Write < 100 ms EU-Region zzgl. Netzwerk-Latenz | Chrome Network Tab; Firebase Performance Monitoring |
+| NF-PF-03 | Termin/Fahrzeug speichern (lokaler SQL-Write über PGlite): **< 250 ms** (p95) ohne Latenz-Ausreißer | Kein Netzwerk-Roundtrip; PGlite läuft lokal im Browser und persistiert in IndexedDB | Vitest/Repository-Test; Browser Performance Panel |
 | NF-PF-04 | Statistik-Aufbau: **< 500 ms** (p95) für 1 000 Termine | Recharts rendert bei < 2 k Datenpunkten unauffällig; p95-Budget großzügig gesetzt für ältere Geräte | React Profiler + Synthetik-Daten |
 
 **Lastprofil** (Begründung für die konkreten Zahlen):
@@ -122,7 +122,7 @@ gemappt.
 - Aktive Nutzer gleichzeitig: 3–5 (je ein Prüfer, plus Leitung und Empfang)
 - Datenbestand nach 1 Jahr: ~8 000 Termine, ~3 000 Fahrzeuge
 
-Diese Lasten liegen deutlich unter dem Performance-Grenzbereich von Firestore
+Diese Lasten liegen deutlich unter dem Performance-Grenzbereich von PGlite
 und client-seitigem JavaScript — die Anforderungen sind also mit Reserve
 definiert.
 
@@ -153,7 +153,7 @@ Damit ist die Anforderung sowohl **begründet** (warum 100 ms ergonomisch sinnvo
 |---|---|---|
 | NF-DI-01 | Kennzeichen-Unique | Jedes deutsche Kennzeichen darf nur einmal als aktives Fahrzeug angelegt sein (KBA-Realität) |
 | NF-DI-02 | Eingabe-Validierung am Formular | Alle Eingaben werden vor dem Speichern gegen Regex/Range-Checks geprüft (s. `utils/validators.js`); Kreis-Code wird zusätzlich gegen die KBA-Liste in `constants/kfzKreis.js` (~430 Codes) geprüft; Saison-Kennzeichen mit `MM-MM`-Suffix werden formatkonform akzeptiert |
-| NF-DI-03 | Workflow-Integrität im Store | Auch programmatische Statuswechsel werden im useStore gegen die Business-Regel "kein BESTANDEN bei HM/GM" geprüft (Defense-in-Depth) |
+| NF-DI-03 | Workflow-Integrität im Repository/useDb | Auch programmatische Statuswechsel werden gegen die Business-Regel "kein BESTANDEN bei HM/GM" geprüft (Defense-in-Depth) |
 | NF-DI-04 | Cascade bei Fahrzeug-Löschung | Löschen eines Fahrzeugs entfernt auch alle zugehörigen Termine, um verwaiste Einträge zu vermeiden |
 | NF-DI-05 | Hersteller-Modell-Typ-Konsistenz | Abhängige Dropdowns im Formular verhindern strukturell unmögliche Kombinationen (z. B. "BMW Polo"); im "Sonstiger"-Modus greift `validateHerstellerModellKonsistenz` als Sicherheitsnetz |
 | NF-DI-06 | FIN-Plausibilität (weich) | Falls die FIN-Prüfziffer nach ISO 3779 / FMVSS 115 nicht stimmt, wird ein Hinweis angezeigt — bewusst nicht blockend (Pre-1981 / Nicht-Nordamerika-Fahrzeuge tragen keine Prüfziffer) |
@@ -192,12 +192,12 @@ konzeptionelle Klarheit:
 
 | ID | Anforderung | Umsetzung Prototyp | Für Produktivbetrieb erforderlich |
 |---|---|---|---|
-| NF-DS-01 | Datenübertragung TLS 1.2+ | Firestore erzwingt TLS | ✅ bereits erfüllt |
-| NF-DS-02 | Zugriffssteuerung | Offen (Prototyp, keine Auth) | Firebase Authentication + Firestore Security Rules mit Rollen-Modell (Prüfer / Leitung / Admin) |
-| NF-DS-03 | Auftragsverarbeitungs-Vertrag DSGVO Art. 28 | Für Demo nicht relevant | AV-Vertrag mit Google Cloud (Firebase), EU-Region erzwingen |
+| NF-DS-01 | Datenübertragung TLS 1.2+ | Hosting über HTTPS; lokale DB ohne Netzwerktransport | ✅ für Hosting erfüllt |
+| NF-DS-02 | Zugriffssteuerung | Offen (Prototyp, keine Auth) | Authentifizierung und Rollen-Modell (Prüfer / Leitung / Admin) bei Mehrbenutzerbetrieb |
+| NF-DS-03 | Auftragsverarbeitungs-Vertrag DSGVO Art. 28 | Keine Cloud-Datenbank; Daten liegen lokal im Browser-IndexedDB | Bei Server-/Cloud-Betrieb AV-Vertrag mit dem Anbieter abschließen |
 | NF-DS-04 | Speicherdauer / Löschfristen | Keine | HU-Daten nach KFZ-Verordnung min. 2 Jahre aufbewahren, dann löschen |
 | NF-DS-05 | Audit-Log | Keins | Wer hat wann welchen Status gesetzt? Zwingend für echte Prüfberichte |
-| NF-DS-06 | Backup | Firebase-default | Regelmäßige Export-Backups nach GDPR Art. 32 |
+| NF-DS-06 | Backup | Kein automatisches Backup im lokalen Prototyp | Export-/Backup-Funktion nach GDPR Art. 32 |
 
 Für die Abgabe im Prototyp-Scope werden NF-DS-02 bis NF-DS-06 als *Ausblick*
 dokumentiert (s. Abschnitt 8) und sind nicht Teil des umzusetzenden Umfangs.
@@ -209,39 +209,34 @@ Details: siehe `docs/design.md`.
 - **Frontend**: React 19 + Vite 8, TailwindCSS 4, Framer Motion
 - **Desktop**: Tauri 2 mit Rust-Backend (bewusst gegen Electron gewählt: ~10×
   kleinere Binary, nativer Fenster-Prozess)
-- **Datenhaltung**: Firebase Firestore mit Echtzeit-Sync via `onSnapshot`;
-  LocalStorage als Offline-Fallback-Cache
+- **Datenhaltung**: PGlite als PostgreSQL-kompatible SQL-Datenbank im Browser,
+  Drizzle ORM als Zugriffsschicht, Persistenz in IndexedDB
 - **Datenvisualisierung**: Recharts (Area/Bar/Pie), Lucide Icons
 - **Tests**: Vitest + React Testing Library, jsdom, `@testing-library/jest-dom`
 
-### 4.1 Echtzeit-Sync statt Polling
+### 4.1 Lokale Persistenz statt Cloud-Sync
 
-Die Tagesplan-Ansicht verwendet Firestore-Listener (`onSnapshot`) statt
-zeitgesteuertem Polling, weil der kritische Arbeitsablauf aus kurzen
-Statuswechseln besteht: Empfang, Prüfer und Prüfstellenleitung sehen denselben
-Tagesplan parallel. Bei Polling alle 30 Sekunden kann ein bereits gestarteter
-oder verschobener Termin für andere Nutzer bis zum nächsten Abruf noch als frei
-oder unverändert erscheinen. Das erhöht das Risiko von Doppelvergaben und
-telefonischen Rückfragen.
+Die aktuelle App speichert Daten lokal im Browser: PGlite schreibt eine
+PostgreSQL-kompatible Datenbank nach IndexedDB (`/pglite/tuvpro-db-v2`). Nach
+Schreiboperationen lädt die Repository-Schicht die betroffenen Daten neu, sodass
+die UI konsistent bleibt. Es gibt aktuell keinen Firestore-Listener, kein
+Polling und keine automatische Synchronisation zwischen mehreren Geräten.
 
-Polling mit kürzerem Intervall (z. B. 5 Sekunden) würde dieses Risiko reduzieren,
-erzeugt aber dauerhaft Abfragen, auch wenn sich nichts ändert. Firestore liefert
-die Änderung ereignisbasiert nur dann an die Clients aus, wenn sich Dokumente in
-`fahrzeuge` oder `termine` ändern. Für den Prototyp ist das die einfachere und
-robustere Lösung: weniger eigener Synchronisationscode, weniger künstliche
-Wartezeit nach Statusänderungen und weiterhin ein LocalStorage-Fallback, falls
-Firestore beim Start nicht rechtzeitig antwortet.
+Diese Entscheidung passt zum Prototyp-Scope: Die Datenstruktur ist relational,
+die App braucht für die Abgabe keinen gemeinsamen Cloud-Datenbestand und die
+Persistenz ist ohne Backend demonstrierbar. Ein echter Mehrbenutzerbetrieb wäre
+eine spätere Erweiterung mit Server-PostgreSQL, Authentifizierung und
+Synchronisationskonzept.
 
 ## 5. Datenmodell (Kurzfassung)
 
 Details: siehe `docs/datenmodell.md`.
 
-Drei Entitäten: `Fahrzeug` (1:N `Termin`), `Termin` (1:N `Mangel`). In der
-Firestore-Umsetzung sind `Fahrzeug` und `Termin` Top-Level-Collections; `Mangel`
-ist als eingebettetes Array innerhalb des Termin-Dokuments modelliert (und nicht
-als eigene Collection). Begründung: Mängel sind immer im Kontext einer Prüfung,
-haben keine eigene Existenz, werden stets zusammen gelesen/geschrieben → Nesting
-ist Firestore-idiomatisch und spart Reads.
+Das aktuelle Modell ist normalisiert und besteht aus acht Relationen:
+`halter`, `fahrzeug`, `termin`, `mangel`, `mangel_kategorie`, `pruefer`,
+`pruefart` und `status`. Fremdschlüssel sichern die Beziehungen
+`Halter → Fahrzeug → Termin → Mangel`; Lookup-Tabellen halten Status,
+Prüfarten und Mängelkategorien konsistent.
 
 ## 6. Qualitätsmaßnahmen
 
@@ -266,14 +261,14 @@ Retros — 2-Personen-Team):
 Die folgenden Erweiterungen wären für einen Produktivbetrieb zwingend, sprengen
 aber den Rahmen einer studentischen Abgabe:
 
-1. **Firebase Authentication** + Firestore Security Rules mit Rollen (Prüfer, Leitung, Admin) (s. NF-DS-02)
+1. **Authentifizierung + Rollenmodell** (Prüfer, Leitung, Admin) (s. NF-DS-02)
 2. **PDF-Export** für rechtsverbindliche Prüfberichte (statt nur `.txt`)
-3. **Foto-Dokumentation** von Mängeln über Firebase Storage; Referenzierung als URL-Feld am Mangel
+3. **Foto-Dokumentation** von Mängeln; Referenzierung als Datei-/URL-Feld am Mangel
 4. **iCal-Export** der Terminliste für Kundenkalender
 5. **KBA-Schnittstelle** zur automatischen Stammdaten-Vorbefüllung per Kennzeichen-Abfrage
 6. **Audit-Trail** für alle Statusänderungen und Mängeländerungen (DSGVO-Konformität)
-7. **Offline-First-Architektur** statt LocalStorage-Snapshot (Service Worker + IndexedDB)
-8. **Migrationspfad RDBMS** (PostgreSQL), falls Reporting-Anforderungen wachsen — siehe Diskussion in `datenmodell.md` Abschnitt "NoSQL vs. RDBMS"
+7. **Export-/Backup-Funktion** für die lokale PGlite-Datenbank
+8. **Server-PostgreSQL + Synchronisation**, falls echter Mehrbenutzerbetrieb benötigt wird
 
 ## 9. Änderungshistorie
 
@@ -285,3 +280,4 @@ aber den Rahmen einer studentischen Abgabe:
 | 1.3 | 2026-04-27 | §3.1 explizite Begründung 100 ms vs. 50/200 ms (Nielsen-Tabelle) + konkrete Test-Methode mit Referenzgerät — beantwortet die Rückfrage aus Fuchs-Mail vom 24.04. zu NF-PF-02 |
 | 1.4 | 2026-04-27 | NF-US-04 erweitert: Mobile-Support hinzugefügt (Sidebar-Overlay, responsive Grids, Touch-Targets); Bericht-Export von .txt auf gedrucktes A4-PDF im offiziellen Layout (BerichteView buildBerichtHtml); F-TR-03 / NF-US-03 um Touch-Klick-Pfad ergänzt (kein Rechtsklick auf Phones) |
 | 1.5 | 2026-04-30 | Echtzeit-vs-Polling-Argument ergänzt; F-BR-03 auf aktuellen PDF-Export korrigiert |
+| 2.0 | 2026-05-14 | Firestore-Angaben durch aktuelle PGlite/Drizzle/IndexedDB-Architektur ersetzt |

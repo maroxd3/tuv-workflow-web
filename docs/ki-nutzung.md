@@ -160,7 +160,7 @@ Substanz kommt aus dem Team-Konsens.
 
 **Eigenleistung:** Die Entscheidung „Compat-Layer statt direktem
 View-Refactor" um Risiko zu reduzieren ist eine bewusste Migrations-
-Strategie (siehe ADR-001 und `docs/projekt_walkthrough.md` § 7).
+Strategie (siehe ADR-001 und `docs/datenmodell.md`).
 
 ### 2.7 Fehlersuche und Debugging
 

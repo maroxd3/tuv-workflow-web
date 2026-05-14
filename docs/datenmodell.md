@@ -492,18 +492,16 @@ Drei physische Optionen — wir entscheiden uns für **Defense in Depth**
 
 #### Option A — Anwendungsschicht (primäre Verteidigungslinie)
 
-In `src/hooks/useStore.js`, Funktion `updTr`:
+Im aktuellen Code wird die Regel in der Repository-/Hook-Schicht geprüft
+(`src/db/queries.ts` und `src/hooks/useDb.ts`):
 
 ```javascript
-const updTr = useCallback((id, patch) => {
-  if (
-    patch.status === STATUS.BESTANDEN &&
-    hatHauptmangel(termin.mängel)
-  ) {
-    return termin; // Schreibvorgang verweigert
+async function updateTerminStatus(id, statusCode) {
+  if (statusCode === "BESTANDEN" && await terminHatHauptmangel(id)) {
+    throw new Error("BESTANDEN nicht möglich bei Hauptmangel");
   }
-  // ...
-});
+  return updateTermin(id, { statusCode });
+}
 ```
 
 **Vorteil:** Schnell, gut testbar, direkt in der Geschäftslogik.
@@ -674,9 +672,8 @@ ORDER BY f.hu_faellig;
 ## 5. Diskussion: Warum überhaupt PostgreSQL?
 
 Die ursprüngliche Sprint-1-Wahl war Firebase Firestore (NoSQL-Document-Store).
-Im Sprint-5-Feedback hat Frau Fuchs zurecht argumentiert, dass unsere Daten
-stark strukturiert sind und sich für eine relationale Datenbank besser eignen.
-Mit Sprint 7 (geplant nach 13.05.2026) migrieren wir auf PostgreSQL.
+Nach der Review-Runde wurde die Persistenz auf PGlite umgestellt: Die App nutzt
+jetzt eine PostgreSQL-kompatible SQL-Datenbank lokal im Browser.
 
 ### 5.1 Pro PostgreSQL
 
@@ -700,26 +697,26 @@ Mit Sprint 7 (geplant nach 13.05.2026) migrieren wir auf PostgreSQL.
 ### 5.3 Bewertung im Projekt-Kontext
 
 **Akademisch:** PostgreSQL ist die saubere Wahl für strukturierte Daten mit
-relationalem Charakter. Firestore war eine Pragmatik-Entscheidung, die wir mit
-Sprint 7 korrigieren.
+relationalem Charakter. Firestore war eine Pragmatik-Entscheidung, die durch
+die PGlite-Migration korrigiert wurde.
 
 **Technisch:** Mit **PGlite** (electric-sql.com/pglite) lässt sich
 PostgreSQL als WebAssembly **lokal im Browser** ausführen — Persistenz über
-IndexedDB, Größe ~3 MB. Damit erfüllen wir Frau Fuchs's Anforderung
-„**lokale relationale Datenbank**" wörtlich und ohne Backend-Komponente.
+IndexedDB, Größe ~3 MB. Damit erfüllt die App die Anforderung
+„**lokale relationale Datenbank**" ohne Backend-Komponente.
 
 ---
 
-## 6. Migrationsplan (Sprint 7)
+## 6. Umgesetzte Migration auf PGlite
 
-| Phase | Inhalt | Aufwand |
+| Phase | Inhalt | Status |
 |---|---|---|
-| **7.1** | DDL-Skripte erstellen (`schema.sql`), Seed-Skript für Domänen-Tabellen | 0,5 d |
-| **7.2** | PGlite + Drizzle ORM in das Projekt einbinden, `useDb`-Hook ersetzt `useStore` | 1 d |
-| **7.3** | Export-Skript Firestore → PostgreSQL (einmalig) für Demo-Daten-Übernahme | 0,5 d |
-| **7.4** | Echtzeit-Update via Polling oder Event-Bus (kein `onSnapshot` mehr) | 0,5 d |
-| **7.5** | Tests aktualisieren: vorher Firestore-Mock, jetzt SQL-Asserts | 0,5 d |
-| **Gesamt** | | **3 d** |
+| **1** | Relationales Schema mit Drizzle definieren (`src/db/schema.ts`) | umgesetzt |
+| **2** | PGlite-Client einbinden und in IndexedDB persistieren (`src/db/client.ts`) | umgesetzt |
+| **3** | Repository-Abfragen für Fahrzeuge, Termine, Mängel und Statistiken erstellen (`src/db/queries.ts`) | umgesetzt |
+| **4** | React-Hook `useDb` als aktuelle Datenzugriffsschicht bereitstellen | umgesetzt |
+| **5** | Tests auf SQL-/Repository-Asserts umstellen | umgesetzt |
+| **6** | Firestore-Code und Firestore-Konfiguration aus dem aktuellen Projekt entfernen | umgesetzt |
 
 ---
 
@@ -730,4 +727,5 @@ IndexedDB, Größe ~3 MB. Damit erfüllen wir Frau Fuchs's Anforderung
 | 1.0 | 2026-04-15 | Erste Sprint-1-Skizze (eingebettetes Halter / Mangel) |
 | 1.1 | 2026-04-24 | Attribute formalisiert, Integritätsbedingungen explizit, NoSQL-vs-RDBMS-Diskussion |
 | 1.2 | 2026-04-27 | Domänen-Whitelists (KBA-Liste, Hersteller-Modell-Konsistenz) ergänzt |
-| **2.0** | **2026-05-13** | **Komplett umstrukturiert nach Feedback Frau Fuchs (13.05.):** Drei-Schichten-Modell (konzeptuell / logisch / physisch); 3NF-Normalisierung mit eigenständiger HALTER- und MANGEL-Relation; SQL-Trigger ausschließlich im physischen Kapitel diskutiert und bewusst nicht eingesetzt; PostgreSQL-Migration in Sprint 7 als Antwort auf „lokale relationale Datenbank"-Anforderung |
+| **2.0** | **2026-05-13** | **Komplett umstrukturiert nach Review:** Drei-Schichten-Modell (konzeptuell / logisch / physisch); 3NF-Normalisierung mit eigenständiger HALTER- und MANGEL-Relation; SQL-Trigger ausschließlich im physischen Kapitel diskutiert und bewusst nicht eingesetzt |
+| **2.1** | **2026-05-14** | PGlite/Drizzle-Migration als umgesetzt dokumentiert und alte Firestore-Migrationsplanung entfernt |

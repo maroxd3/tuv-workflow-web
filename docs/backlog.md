@@ -47,7 +47,7 @@ welche Anforderung in welchem Sprint umgesetzt und geprüft wurde.
 | US-07 | Als Prüfer möchte ich, dass das System ungültige Eingaben (negativer KM, Buchstaben in Telefon, kaputte Email) aktiv ablehnt | M | 5 | ✅ **Done (Sprint 5 — Fix-Sprint)** |
 | US-08 | Als Prüfer möchte ich Kennzeichen mit gültigem KBA-Kreis-Code (~430 Codes) sowie Saison-Kennzeichen (`B-TK 1234 04-10`) anlegen können — Live-Großschreibung, Autocomplete der Kreis-Codes | M | 5 | ✅ **Done (Sprint 5 — Fix-Sprint, 2026-04-27)** |
 | US-09 | Als Prüfer möchte ich beim Eintippen einer FIN einen Hinweis bekommen, wenn die ISO-3779-Prüfziffer (Position 9) nicht stimmt — als weicher Warnhinweis, weil pre-1981/Nicht-NA-Fahrzeuge keine Prüfziffer tragen | S | 3 | ✅ **Done (Sprint 5 — Fix-Sprint, 2026-04-27)** |
-| US-10b | Als Prüfer möchte ich, dass die App auch bei langsamer Firestore-Antwort nicht in "Daten werden geladen…" hängenbleibt — 3-s-Fallback auf Cache/Seed | S | 2 | ✅ **Done (Sprint 5 — Fix-Sprint, 2026-04-27)** |
+| US-10b | Als Prüfer möchte ich, dass die App beim Start nicht in "Daten werden geladen…" hängenbleibt — historischer Firestore-Fallback, inzwischen durch lokale PGlite-Initialisierung abgelöst | S | 2 | ✅ **Done (Sprint 5 — Fix-Sprint, 2026-04-27)** |
 
 ### Epic 2 — Terminverwaltung
 
@@ -103,7 +103,7 @@ welche Anforderung in welchem Sprint umgesetzt und geprüft wurde.
 | ID | Story | Prio | SP | Status |
 |---|---|---|---|---|
 | US-60 | Als Admin möchte ich mich einloggen und Nutzerrollen verwalten können (Prüfer, Leitung, Admin), um unauthorisierten Zugriff zu verhindern | C | 13 | 🔵 Backlog |
-| US-61 | Als Admin möchte ich Firestore Security Rules einrichten, damit Nutzer nur ihre eigenen Daten sehen | C | 5 | 🔵 Backlog |
+| US-61 | Als Admin möchte ich serverseitige Zugriffskontrollen einrichten, damit Nutzer nur ihre eigenen Daten sehen | C | 5 | 🔵 Backlog |
 | US-62 | Als Prüfer möchte ich Fotos zu Mängeln anhängen, um die Dokumentation zu verbessern | C | 8 | 🔵 Backlog |
 | US-63 | Als Prüfstellenleiter möchte ich Termine in mein Kalendersystem (iCal) exportieren | C | 3 | 🔵 Backlog |
 | US-64 | Als Prüfer möchte ich das Kennzeichen ins System eingeben und die Fahrzeugdaten per KBA-Abfrage vorbefüllt bekommen | W | 13 | 🔵 Backlog (externe Schnittstelle, rechtlich aufwendig) |
@@ -121,7 +121,7 @@ welche Anforderung in welchem Sprint umgesetzt und geprüft wurde.
 - Vite+React-Gerüst initialisiert
 - Tauri 2 angebunden
 - Tailwind 4 + Theme-Modul aufgesetzt
-- Firebase-Projekt registriert, Firestore aktiviert
+- Firebase Hosting eingerichtet; Datenbank später auf lokale PGlite-Persistenz migriert
 
 ### Sprint 2 (W3–4) — Epic 1: Fahrzeugverwaltung
 
@@ -159,7 +159,7 @@ ist die größte Komponente geworden (339 LOC) — ggf. extrahieren.
 - ✅ US-07 (Harte Validierung) — `validators.validateFahrzeug` mit allen Einzelprüfungen
 - ✅ US-08 (KBA-Kreis-Code + Saison) — neue `kfzKreis.js` mit ~430 Codes, Regex erweitert um `MM-MM`-Suffix, Live-Großschreibung in der UI, Autocomplete via `<datalist>`
 - ✅ US-09 (FIN-Prüfziffer ISO-3779) — `checkFinPruefziffer` (weich), Validator-Algorithmus auf 17 Zeichen, Position 9
-- ✅ US-10b (Loading-Fallback) — `useStore.js` hydratiert nach 3 s aus localStorage / Seed, falls `onSnapshot` nicht antwortet
+- ✅ US-10b (Loading-Fallback) — historisch für Firestore umgesetzt; durch lokale PGlite-Initialisierung abgelöst
 - ✅ US-23 (Workflow-Bug) — 4 Durchsetzungsstellen für Regel WF-01
 - ✅ US-50 (ESLint sauber) — neue Config, 3 unused imports entfernt
 - ✅ US-51 (PropTypes überall) — 22 Komponenten, 4 shared shapes
@@ -184,8 +184,7 @@ ist die größte Komponente geworden (339 LOC) — ggf. extrahieren.
 **Velocity:** 12 SP geliefert
 
 **Geliefert:**
-- **Security-Härtung** der Firestore-Rules: Schema-Validierung, Demo-Zeitfenster-Cutoff (1. August 2026), Catch-all `if false` für unbekannte Collections
-- **Firebase-Web-Config in Env-Variablen** (`.env`) ausgelagert, GitHub-Secret-Scanning-Alert geschlossen mit Begründung "public by design"
+- **Damals:** Security-Härtung der Cloud-Datenbank-Konfiguration; **inzwischen abgelöst** durch lokale PGlite-Persistenz ohne Firebase-Web-Client-Config
 - **Route-Level-Code-Splitting**: Statistik-, Berichte- und Fahrzeuge-Views werden lazy geladen — Hauptbundle unter 500 KB minified / 154 KB gzipped
 - **CI-Setup**: Dependabot für npm + GitHub Actions, CodeQL-Workflow für statische Analyse
 - **Doku-Erweiterung**: Use-Case-Diagramm + Aktivitätsdiagramm in `design.md`, Test-Coverage-Bericht (95.65 % Statements, 98.21 % Lines), Eigenständigkeitserklärung, KI-Nutzungserklärung, Nacharbeit-Übersicht für Frau Fuchs
@@ -217,7 +216,7 @@ Praktikum) notiert.
 
 | Risiko | Auswirkung | Mitigation |
 |---|---|---|
-| Firestore-Kosten bei Dauer-Subscription | Laufzeitkosten | Free-Tier reicht für Prototyp; Migration zu SQL dokumentiert (US-66) |
+| Fehlende Mehrbenutzer-Synchronisation im lokalen PGlite-Prototyp | Mehrere Geräte sehen nicht automatisch denselben Datenstand | Für Produktivbetrieb Server-PostgreSQL, Auth und Sync-Konzept vorsehen |
 | Teammitglied krank zur finalen Abgabe | Verzögerung | Paarprogrammierung; alle Stories am Ende von beiden reviewt |
 | ESLint-Config der Dozentin hat andere Regeln als unsere | Re-Work nötig | Wir haben `recommended`-Set von `eslint-plugin-react` aufgenommen, was die üblichen Regeln abdeckt |
 | Tauri-Build bricht plattformspezifisch | Desktop-App unbrauchbar | Regelmäßige Builds auf beiden Rechnern (Win + macOS) |
