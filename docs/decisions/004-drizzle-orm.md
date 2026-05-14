@@ -2,7 +2,7 @@
 
 * **Status:** accepted
 * **Datum:** 2026-05-13
-* **Entscheider:** Marwan Saleh
+* **Entscheider:** Marwan Saleh, Oussama Hlayhel
 
 ## Kontext und Problem
 

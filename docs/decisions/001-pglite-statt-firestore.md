@@ -3,16 +3,15 @@
 * **Status:** accepted
 * **Datum:** 2026-05-13
 * **Entscheider:** Marwan Saleh, Oussama Hlayhel
-* **Konsultiert:** Frau Fuchs (Feedback-Termin 13.05.2026)
 * **Supersedes:** (initiale Sprint-1-Entscheidung für Firestore, nirgends als ADR dokumentiert — Lessons-Learned-Punkt)
 
 ## Kontext und Problem
 
-Im Sprint-5-Feedback wurde von Frau Fuchs kritisiert, dass die Wahl von
-Firebase Firestore (Dokumenten-DB) nicht zu unserem hochstrukturierten
-Datenmodell (Fahrzeug, Termin, Mangel mit klaren Relationen) passt. Der
-13.05.2026-Termin verschärfte die Anforderung: **„lokale relationale
-Datenbank"**.
+Die ursprüngliche Persistenz über Firebase Firestore (Dokumenten-DB) passte
+nicht mehr zum überarbeiteten, hochstrukturierten Datenmodell mit klaren
+Relationen zwischen Fahrzeug, Termin, Mangel und Halter. Für die weitere
+Ausarbeitung wurde deshalb eine **lokale relationale Datenbank** als Ziel
+festgelegt.
 
 Wir mussten die Persistenz-Schicht so umstellen, dass:
 
@@ -44,7 +43,7 @@ Wir mussten die Persistenz-Schicht so umstellen, dass:
 Begründung: PGlite ist der einzige Kandidat, der **alle** Anforderungen
 erfüllt:
 
-* Es ist echtes PostgreSQL (nicht SQLite) — Frau-Fuchs-Kritik adressiert.
+* Es ist echtes PostgreSQL (nicht SQLite) und passt damit zum relationalen Modell.
 * Es läuft im Browser ohne Backend (WASM, 3.2 MB).
 * Persistiert in IndexedDB → echte Datei auf User-Gerät.
 * Unterstützt alle Postgres-Features: Foreign Keys, CHECK, partielle Indizes, Stored Procedures, Views, JSONB.
@@ -86,7 +85,7 @@ erfüllt:
 
 ### Option 5 — Bei Firestore bleiben
 * **Gut:** Status quo, kein Migrations-Aufwand
-* **Schlecht:** Frau-Fuchs-Hauptkritik nicht adressiert → Abgabe gefährdet.
+* **Schlecht:** Passt nicht mehr zum normalisierten relationalen Datenmodell.
 
 ## Verwandte Entscheidungen
 
@@ -97,5 +96,4 @@ erfüllt:
 ## Quellen
 
 * PGlite Dokumentation — https://pglite.dev
-* Frau Fuchs Feedback-Mail 24.04.2026 und Termin 13.05.2026 — kritisiert die NoSQL-Wahl
 * `docs/datenmodell.md` § 5 — ausführliche Pro/Kontra-Tabelle PostgreSQL vs. Firestore

@@ -3,7 +3,6 @@
 * **Status:** accepted
 * **Datum:** 2026-05-13
 * **Entscheider:** Marwan Saleh, Oussama Hlayhel
-* **Konsultiert:** Frau Fuchs
 
 ## Kontext und Problem
 
@@ -79,7 +78,7 @@ STATUS, PRUEFART, PRUEFER, MANGEL_KATEGORIE
 
 ### Option 3 — Status quo (embedded)
 * **Gut:** Kein Migrations-Aufwand
-* **Schlecht:** Bricht 3NF, kritisiert von Frau Fuchs, Anomalien bleiben.
+* **Schlecht:** Bricht 3NF; Update-, Insert- und Delete-Anomalien bleiben.
 
 ## Verwandte Entscheidungen
 

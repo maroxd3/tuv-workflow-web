@@ -3,7 +3,6 @@
 * **Status:** accepted
 * **Datum:** 2026-05-13
 * **Entscheider:** Marwan Saleh, Oussama Hlayhel
-* **Konsultiert:** Frau Fuchs (kritisierte den ursprünglichen Trigger-Vorschlag im SQL-Entwurf als „physische, nicht ins logische Modell gehörende Implementierungsdetail")
 
 ## Kontext und Problem
 
@@ -23,7 +22,7 @@ DBMS implementiert.
 
 * Regel muss durchgesetzt sein, auch wenn jemand die App umgeht
 * Logisches DB-Modell soll **rein deklarativ** bleiben (keine prozedurale Logik in Tabellen-Definitionen)
-* Akademische Kritik von Frau Fuchs: „Trigger sind physische Implementierung, gehören nicht ins Entwurfsdokument" — Argument akademisch korrekt akzeptiert
+* Trigger sind physische Implementierungslogik und gehören nicht in das konzeptuelle oder logische Modell
 * Defense-in-Depth: wenn eine Sicherungs-Schicht ausfällt, fangen die anderen
 
 ## Betrachtete Optionen
@@ -48,10 +47,10 @@ DBMS implementiert.
   fehlerhafte Migrations-Skripte). Der `status_code` ist von
   `REVOKE UPDATE` ausgeschlossen, Änderungen nur über
   `sp_termin_status_setzen(termin_id, neuer_status)` möglich.
-* **Trigger (C) bewusst NICHT.** Frau Fuchs's Kritik akademisch korrekt:
-  Triggers sind „Black-Box-Verhalten", erscheinen unsichtbar bei jedem
-  INSERT/UPDATE, neue Entwickler stolpern darüber. Zwei Verteidigungs-
-  Linien (A + B) reichen, drei wären Overkill.
+* **Trigger (C) bewusst NICHT.** Trigger erzeugen „Black-Box-Verhalten",
+  erscheinen unsichtbar bei jedem INSERT/UPDATE und erschweren Debugging
+  sowie Nachvollziehbarkeit. Zwei Verteidigungslinien (A + B) reichen, drei
+  wären Overkill.
 
 ### Positive Konsequenzen
 
@@ -80,7 +79,7 @@ DBMS implementiert.
 
 ### Option C — Nur Trigger
 * **Gut:** Greift bei jedem Write, egal von welcher Quelle
-* **Schlecht:** Black-Box-Verhalten (zentraler Kritikpunkt der Dozentin), schwierig zu debuggen, vermischt physische mit logischer Schicht
+* **Schlecht:** Black-Box-Verhalten, schwierig zu debuggen, vermischt physische mit logischer Schicht
 
 ### Option D — A + B (gewählt)
 * **Gut:** Zwei explizit dokumentierte Verteidigungslinien; akademisch sauber
@@ -88,7 +87,7 @@ DBMS implementiert.
 
 ### Option E — A + B + C
 * **Gut:** Maximale Redundanz
-* **Schlecht:** Overkill für eine einzelne Regel; behält Triggers Kritikpunkt bei
+* **Schlecht:** Overkill für eine einzelne Regel; behält die Nachteile von Triggern bei
 
 ## Verwandte Entscheidungen
 
@@ -99,5 +98,4 @@ DBMS implementiert.
 
 * § 29 StVZO Anlage VIII — Rechtsgrundlage der Regel
 * `docs/datenmodell.md` § 3.3 — Tabelle der drei Implementierungsoptionen und Code-Beispiele
-* Frau Fuchs Kritik im 13.05.2026 Termin: Triggers gehören nicht in
-  konzeptuelles/logisches Modell — akademisch akzeptiert
+* `docs/datenmodell.md` § 1–3 — Trennung zwischen konzeptuellem, logischem und physischem Modell
