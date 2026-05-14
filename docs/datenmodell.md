@@ -26,50 +26,129 @@ DB-System-spezifischen Datentypen.
 ### 1.1 ER-Diagramm (Chen-Notation, kompakt als Mermaid)
 
 ```mermaid
-erDiagram
-  HALTER     ||--o{ FAHRZEUG : "besitzt"
-  FAHRZEUG   ||--o{ TERMIN   : "wird geprüft in"
-  TERMIN     ||--o{ MANGEL   : "weist auf"
-  PRUEFER    ||--o{ TERMIN   : "führt durch"
-  PRUEFART   ||--o{ TERMIN   : "klassifiziert"
-  STATUS     ||--o{ TERMIN   : "beschreibt Zustand"
+flowchart LR
+  %% Chen-Notation:
+  %% Rechteck = Entität, Raute = Beziehung, Oval = Attribut
+  %% Unterstrichene Attribute sind Primärschlüssel.
 
-  HALTER {
-    string name
-    string telefon
-    string email
-    string anschrift
-  }
+  HALTER[HALTER]
+  FAHRZEUG[FAHRZEUG]
+  TERMIN[TERMIN]
+  MANGEL[MANGEL]
+  PRUEFER[PRUEFER]
+  PRUEFART[PRUEFART]
+  STATUS[STATUS]
+  MANGEL_KATEGORIE[MANGEL_KATEGORIE]
 
-  FAHRZEUG {
-    string kennzeichen
-    string fin
-    string hersteller
-    string modell
-    int    baujahr
-    string farbe
-    string typ
-    int    kilometerstand
-    date   hu_faellig
-  }
+  BESITZT{besitzt}
+  WIRD_GEPRUEFT{wird geprüft in}
+  WEIST_AUF{weist auf}
+  FUEHRT_DURCH{führt durch}
+  KLASSIFIZIERT{klassifiziert}
+  BESCHREIBT{beschreibt Zustand}
+  HAT_KATEGORIE{hat Kategorie}
 
-  TERMIN {
-    date datum
-    time uhrzeit
-    text notiz
-  }
+  HALTER -- "1" --- BESITZT
+  BESITZT -- "N" --- FAHRZEUG
 
-  MANGEL {
-    string code
-    text   beschreibung
-    string kategorie
-    bool   behoben
-  }
+  FAHRZEUG -- "1" --- WIRD_GEPRUEFT
+  WIRD_GEPRUEFT -- "N" --- TERMIN
 
-  PRUEFER   { string kuerzel string name }
-  PRUEFART  { string code    string bezeichnung }
-  STATUS    { string code    string bezeichnung }
+  TERMIN -- "1" --- WEIST_AUF
+  WEIST_AUF -- "N" --- MANGEL
+
+  PRUEFER -- "0..1" --- FUEHRT_DURCH
+  FUEHRT_DURCH -- "N" --- TERMIN
+
+  PRUEFART -- "1" --- KLASSIFIZIERT
+  KLASSIFIZIERT -- "N" --- TERMIN
+
+  STATUS -- "1" --- BESCHREIBT
+  BESCHREIBT -- "N" --- TERMIN
+
+  MANGEL_KATEGORIE -- "1" --- HAT_KATEGORIE
+  HAT_KATEGORIE -- "N" --- MANGEL
+
+  h_id(["<u>halter_id</u>"])
+  h_name(["name"])
+  h_tel(["telefon"])
+  h_email(["email"])
+  h_anschrift(["anschrift"])
+  HALTER --- h_id
+  HALTER --- h_name
+  HALTER --- h_tel
+  HALTER --- h_email
+  HALTER --- h_anschrift
+
+  f_id(["<u>fahrzeug_id</u>"])
+  f_kennzeichen(["kennzeichen"])
+  f_fin(["fin"])
+  f_hersteller(["hersteller"])
+  f_modell(["modell"])
+  f_baujahr(["baujahr"])
+  f_farbe(["farbe"])
+  f_typ(["typ"])
+  f_km(["kilometerstand"])
+  f_hu(["hu_faellig"])
+  FAHRZEUG --- f_id
+  FAHRZEUG --- f_kennzeichen
+  FAHRZEUG --- f_fin
+  FAHRZEUG --- f_hersteller
+  FAHRZEUG --- f_modell
+  FAHRZEUG --- f_baujahr
+  FAHRZEUG --- f_farbe
+  FAHRZEUG --- f_typ
+  FAHRZEUG --- f_km
+  FAHRZEUG --- f_hu
+
+  t_id(["<u>termin_id</u>"])
+  t_datum(["datum"])
+  t_uhrzeit(["uhrzeit"])
+  t_notiz(["notiz"])
+  TERMIN --- t_id
+  TERMIN --- t_datum
+  TERMIN --- t_uhrzeit
+  TERMIN --- t_notiz
+
+  m_id(["<u>mangel_id</u>"])
+  m_code(["code_stvzo"])
+  m_beschreibung(["beschreibung"])
+  m_behoben(["behoben"])
+  MANGEL --- m_id
+  MANGEL --- m_code
+  MANGEL --- m_beschreibung
+  MANGEL --- m_behoben
+
+  p_id(["<u>pruefer_kuerzel</u>"])
+  p_name(["name"])
+  p_qualifikation(["qualifikation"])
+  PRUEFER --- p_id
+  PRUEFER --- p_name
+  PRUEFER --- p_qualifikation
+
+  pa_id(["<u>prueft_code</u>"])
+  pa_bez(["bezeichnung"])
+  PRUEFART --- pa_id
+  PRUEFART --- pa_bez
+
+  s_id(["<u>status_code</u>"])
+  s_bez(["bezeichnung"])
+  s_end(["ist_endzustand"])
+  STATUS --- s_id
+  STATUS --- s_bez
+  STATUS --- s_end
+
+  mk_id(["<u>kategorie_code</u>"])
+  mk_bez(["bezeichnung"])
+  mk_block(["blockiert_bestanden"])
+  MANGEL_KATEGORIE --- mk_id
+  MANGEL_KATEGORIE --- mk_bez
+  MANGEL_KATEGORIE --- mk_block
 ```
+
+Legende: Rechteck = Entität, Raute = Beziehung, Oval = Attribut,
+unterstrichenes Attribut = Primärschlüssel. Die Kardinalitäten stehen direkt an
+den Verbindungslinien (`1` bzw. `N`).
 
 ### 1.2 Entitäten und ihre Bedeutung
 
@@ -82,6 +161,7 @@ erDiagram
 | **PRUEFER** | Sachverständiger Prüfingenieur, der den Termin durchführt |
 | **PRUEFART** | Klassifikation der Prüfung (HU, AU, HU+AU, Nachprüfung, ...) |
 | **STATUS** | Zustand eines Termins im Workflow |
+| **MANGEL_KATEGORIE** | Einstufung eines Mangels (OM, LM, EM, HM, GM) inklusive Wirkung auf das Prüfergebnis |
 
 ### 1.3 Beziehungen und Kardinalitäten
 
@@ -90,9 +170,10 @@ erDiagram
 | HALTER **besitzt** FAHRZEUG | 1 : N | Ein Halter kann mehrere Fahrzeuge besitzen; jedes Fahrzeug gehört zu genau einem Halter (zum gegebenen Zeitpunkt) |
 | FAHRZEUG **wird geprüft in** TERMIN | 1 : N | Ein Fahrzeug hat im Laufe der Zeit beliebig viele Termine; jeder Termin gilt genau einem Fahrzeug |
 | TERMIN **weist auf** MANGEL | 1 : N | Ein Termin kann mehrere Mängel haben; jeder Mangel ist genau einem Termin zugeordnet |
-| PRUEFER **führt durch** TERMIN | 1 : N | Ein Prüfer macht viele Termine; jeder Termin hat genau einen Prüfer |
+| PRUEFER **führt durch** TERMIN | 0..1 : N | Ein Prüfer kann viele Termine durchführen; ein Termin kann noch ohne zugewiesenen Prüfer geplant sein |
 | PRUEFART **klassifiziert** TERMIN | 1 : N | Jeder Termin ist genau einer Prüfart zugeordnet |
 | STATUS **beschreibt Zustand** TERMIN | 1 : N | Jeder Termin hat zu einem Zeitpunkt genau einen Status |
+| MANGEL_KATEGORIE **hat Kategorie** MANGEL | 1 : N | Jede Kategorie kann bei vielen Mängeln vorkommen; jeder Mangel hat genau eine Kategorie |
 
 ### 1.4 Geschäftsregeln auf konzeptueller Ebene
 
