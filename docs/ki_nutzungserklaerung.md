@@ -65,7 +65,7 @@ gekommen sind.
 
 ## 3. Wo wurden KI-Werkzeuge **nicht** eingesetzt?
 
-- **Architektur-Grundsatzentscheidungen:** React + Vite + Firestore,
+- **Architektur-Grundsatzentscheidungen:** React + Vite + PGlite/Drizzle,
   Tauri statt Electron, Echtzeit-Sync statt Polling, Cascading-Dropdowns
   statt freie Text-Eingabe — diese Entscheidungen haben wir selbst
   getroffen und in `docs/design.md` § 1.2 begründet.

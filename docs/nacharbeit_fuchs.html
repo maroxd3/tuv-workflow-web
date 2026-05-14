@@ -285,7 +285,7 @@
           <div class="date">28.–30. April · Sprint 6 Abgabe-Polish</div>
           <div class="what">Security, CI &amp; Performance · 12 Story Points</div>
           <div class="detail">
-            <strong>Security:</strong> Firestore-Rules mit Schema-Validierung und Demo-Zeitfenster-Cutoff (1. August 2026) · Firebase-Web-Config in <code>.env</code>-Variablen ausgelagert · damalige Security- und Config-Lücken dokumentiert.<br>
+            <strong>Security:</strong> damalige Lücken der Cloud-Datenbank-Konfiguration wurden dokumentiert; diese Schicht ist inzwischen durch lokale PGlite-Persistenz ohne Firebase-Web-Client-Config abgelöst.<br>
             <strong>CI:</strong> Dependabot für npm- und GitHub-Actions-Updates · CodeQL-Workflow für statische Code-Analyse.<br>
             <strong>Performance:</strong> Route-Level-Code-Splitting — Statistik-, Berichte- und Fahrzeuge-Views werden lazy geladen, Hauptbundle unter 500 KB minified / 154 KB gzipped.<br>
             <strong>Doku:</strong> Echtzeit-Sync-vs-Polling-Begründung im Pflichtenheft ergänzt · README auf aktuellen Stand gebracht.
@@ -427,7 +427,6 @@
           <li><strong>Lesbare DB-Daten:</strong> Dev-Konsole → <code>await tuvdb.table("fahrzeug")</code>, <code>await tuvdb.table("termin")</code></li>
           <li><strong>Doku:</strong> <code>docs/pflichtenheft.md</code> · <code>datenmodell.md</code> · <code>design.md</code> · <code>backlog.md</code> · <code>testkonzept.md</code> · <code>decisions/</code></li>
           <li><strong>Präsentation:</strong> <code>praesentation.html</code> im Repo-Root — 15 Slides, druckbar als PDF</li>
-          <li><strong>Status-Sheet:</strong> <code>docs/projekt_status.html</code> — A4-Übersicht mit erledigten und externen Tasks</li>
         </ul>
       </div>
     </div>

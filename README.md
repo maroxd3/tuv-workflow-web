@@ -212,7 +212,7 @@ Abgabe (Hochschule Hannover, IIM-211-01):
 | Datei | Inhalt | Umfang |
 |---|---|---|
 | [`pflichtenheft.md`](docs/pflichtenheft.md) | Funktionale + nicht-funktionale Anforderungen, Akzeptanzkriterien, Lastprofil, Datenschutz/Sicherheit | ~280 Zeilen |
-| [`datenmodell.md`](docs/datenmodell.md) | **3-Schichten-DB-Doku (v2.0)**: konzeptuelles ER, logisches 3NF-Schema, physisches PostgreSQL-DDL — adressiert Frau-Fuchs-Feedback | ~540 Zeilen |
+| [`datenmodell.md`](docs/datenmodell.md) | **3-Schichten-DB-Doku (v2.0)**: konzeptuelles ER, logisches 3NF-Schema, physisches PostgreSQL/PGlite-Modell | ~540 Zeilen |
 | [`design.md`](docs/design.md) | Komponentendiagramm, Klassendiagramm, Validierungs-Pipeline, Bericht-PDF-Generierung, Mobile-Strategie | ~400 Zeilen |
 | [`backlog.md`](docs/backlog.md) | Product Backlog (~25 User Stories, MoSCoW + Story Points), Definition of Done, Sprint-Historie | ~210 Zeilen |
 | [`testkonzept.md`](docs/testkonzept.md) | Testpyramide, 4 Testentwurfsverfahren mit Beispielen, manuelle Smoke-Test-Tabelle | ~210 Zeilen |
@@ -240,13 +240,11 @@ Abgabe (Hochschule Hannover, IIM-211-01):
 | [`ki_nutzungserklaerung.md`](docs/ki_nutzungserklaerung.md) | Formelle KI-Nutzungs-Erklärung mit Unterschrift |
 | [`eigenstaendigkeitserklaerung.md`](docs/eigenstaendigkeitserklaerung.md) | Eigenständigkeitserklärung mit Aufgabenverteilung |
 
-### Termin- und Status-Übersichten
+### Nacharbeit
 
 | Datei | Inhalt |
 |---|---|
-| [`projekt_walkthrough.md`](docs/projekt_walkthrough.md) | Prep-Skript für Bewertungs-Termin: Pitch, Q&A, bekannte Schwächen, Demo-Pfad |
-| [`projekt_status.html`](docs/projekt_status.html) | Status-Sheet (Done / TODO), druckbar als A4-PDF |
-| [`nacharbeit_fuchs.html`](docs/nacharbeit_fuchs.html) | Übersichtsdokument der Nacharbeit nach Sprint-5-Feedback |
+| [`nacharbeit_fuchs.html`](docs/nacharbeit_fuchs.html) | Übersichtsdokument der Nacharbeit nach dem Review-Termin vom 12. Mai |
 
 ## Sprint-Status
 
