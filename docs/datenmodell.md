@@ -30,7 +30,7 @@ Schlüsselattribute sichtbar gemacht: Primärschlüssel (`PK`) und Fremdschlüss
 flowchart TB
   %% Chen-nahe Notation:
   %% Rechteck = Entität, Raute = Beziehung, Oval = Attribut
-  %% Unterstrichene Attribute sind Schlüsselattribute (PK oder FK).
+  %% Unterstrichene Attribute sind Primärschlüssel.
 
   HALTER[HALTER]
   FAHRZEUG[FAHRZEUG]
@@ -82,7 +82,7 @@ flowchart TB
   HALTER --- h_anschrift
 
   f_id(["f̲a̲h̲r̲z̲e̲u̲g̲_̲i̲d̲"])
-  f_halter_fk(["h̲a̲l̲t̲e̲r̲_̲i̲d̲"])
+  f_halter_fk(["halter_id"])
   f_kennzeichen(["kennzeichen"])
   f_fin(["fin"])
   f_hersteller(["hersteller"])
@@ -105,10 +105,10 @@ flowchart TB
   FAHRZEUG --- f_hu
 
   t_id(["t̲e̲r̲m̲i̲n̲_̲i̲d̲"])
-  t_fahrzeug_fk(["f̲a̲h̲r̲z̲e̲u̲g̲_̲i̲d̲"])
-  t_pruefart_fk(["p̲r̲u̲e̲f̲t̲_̲c̲o̲d̲e̲"])
-  t_pruefer_fk(["p̲r̲u̲e̲f̲e̲r̲_̲k̲u̲e̲r̲z̲e̲l̲"])
-  t_status_fk(["s̲t̲a̲t̲u̲s̲_̲c̲o̲d̲e̲"])
+  t_fahrzeug_fk(["fahrzeug_id"])
+  t_pruefart_fk(["prueft_code"])
+  t_pruefer_fk(["pruefer_kuerzel"])
+  t_status_fk(["status_code"])
   t_datum(["datum"])
   t_uhrzeit(["uhrzeit"])
   t_notiz(["notiz"])
@@ -122,8 +122,8 @@ flowchart TB
   TERMIN --- t_notiz
 
   m_id(["m̲a̲n̲g̲e̲l̲_̲i̲d̲"])
-  m_termin_fk(["t̲e̲r̲m̲i̲n̲_̲i̲d̲"])
-  m_kat_fk(["k̲a̲t̲e̲g̲o̲r̲i̲e̲_̲c̲o̲d̲e̲"])
+  m_termin_fk(["termin_id"])
+  m_kat_fk(["kategorie_code"])
   m_code(["code_stvzo"])
   m_beschreibung(["beschreibung"])
   m_behoben(["behoben"])
@@ -163,9 +163,10 @@ flowchart TB
 ```
 
 Legende: Rechteck = Entität, Raute = Beziehung, Oval = Attribut,
-unterstrichenes Attribut = Schlüsselattribut. Die Primär- und Fremdschlüssel
-sind im logischen Modell darunter eindeutig ausgewiesen. Die Kardinalitäten
-stehen direkt an den Verbindungslinien (`1`, `0..1` bzw. `N`).
+unterstrichenes Attribut = Primärschlüssel. Fremdschlüssel sind als normale
+Attribute dargestellt und im logischen Modell darunter eindeutig ausgewiesen.
+Die Kardinalitäten stehen direkt an den Verbindungslinien (`1`, `0..1` bzw.
+`N`).
 
 ### 1.2 Entitäten und ihre Bedeutung
 
