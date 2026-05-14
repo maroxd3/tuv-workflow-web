@@ -214,6 +214,7 @@ Abgabe (Hochschule Hannover, IIM-211-01):
 | [`pflichtenheft.md`](docs/pflichtenheft.md) | Funktionale + nicht-funktionale Anforderungen, Akzeptanzkriterien, Lastprofil, Datenschutz/Sicherheit | ~280 Zeilen |
 | [`datenmodell.md`](docs/datenmodell.md) | **3-Schichten-DB-Doku (v2.0)**: konzeptuelles ER, logisches 3NF-Schema, physisches PostgreSQL/PGlite-Modell | ~540 Zeilen |
 | [`design.md`](docs/design.md) | Komponentendiagramm, Klassendiagramm, Validierungs-Pipeline, Bericht-PDF-Generierung, Mobile-Strategie | ~400 Zeilen |
+| [`architecture-map.html`](docs/architecture-map.html) | Interaktive Architekturkarte nach der PGlite-Migration |
 | [`backlog.md`](docs/backlog.md) | Product Backlog (~25 User Stories, MoSCoW + Story Points), Definition of Done, Sprint-Historie | ~210 Zeilen |
 | [`testkonzept.md`](docs/testkonzept.md) | Testpyramide, 4 Testentwurfsverfahren mit Beispielen, manuelle Smoke-Test-Tabelle | ~210 Zeilen |
 | [`test-coverage.md`](docs/test-coverage.md) | Coverage-Bericht mit V8-Engine | ~120 Zeilen |
