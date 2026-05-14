@@ -32,11 +32,6 @@ flowchart TB
   %% Rechteck = Entität, Raute = Beziehung, Oval = Attribut
   %% Unterstrichene Attribute sind Schlüsselattribute (PK oder FK).
 
-  classDef entity fill:#eef2ff,stroke:#6d5dfc,stroke-width:1.5px,color:#111827;
-  classDef relation fill:#fff7ed,stroke:#ea580c,stroke-width:1.5px,color:#111827;
-  classDef attr fill:#ffffff,stroke:#64748b,stroke-width:1px,color:#111827;
-  classDef key fill:#fefce8,stroke:#ca8a04,stroke-width:1.5px,color:#111827;
-
   HALTER[HALTER]
   FAHRZEUG[FAHRZEUG]
   TERMIN[TERMIN]
@@ -75,7 +70,7 @@ flowchart TB
   MANGEL_KATEGORIE -- "1" --- HAT_KATEGORIE
   HAT_KATEGORIE -- "N" --- MANGEL
 
-  h_id(["<u>halter_id</u><br/>PK"])
+  h_id(["<u>halter_id</u>"])
   h_name(["name"])
   h_tel(["telefon"])
   h_email(["email"])
@@ -86,8 +81,8 @@ flowchart TB
   HALTER --- h_email
   HALTER --- h_anschrift
 
-  f_id(["<u>fahrzeug_id</u><br/>PK"])
-  f_halter_fk(["<u>halter_id</u><br/>FK"])
+  f_id(["<u>fahrzeug_id</u>"])
+  f_halter_fk(["<u>halter_id</u>"])
   f_kennzeichen(["kennzeichen"])
   f_fin(["fin"])
   f_hersteller(["hersteller"])
@@ -109,11 +104,11 @@ flowchart TB
   FAHRZEUG --- f_km
   FAHRZEUG --- f_hu
 
-  t_id(["<u>termin_id</u><br/>PK"])
-  t_fahrzeug_fk(["<u>fahrzeug_id</u><br/>FK"])
-  t_pruefart_fk(["<u>prueft_code</u><br/>FK"])
-  t_pruefer_fk(["<u>pruefer_kuerzel</u><br/>FK"])
-  t_status_fk(["<u>status_code</u><br/>FK"])
+  t_id(["<u>termin_id</u>"])
+  t_fahrzeug_fk(["<u>fahrzeug_id</u>"])
+  t_pruefart_fk(["<u>prueft_code</u>"])
+  t_pruefer_fk(["<u>pruefer_kuerzel</u>"])
+  t_status_fk(["<u>status_code</u>"])
   t_datum(["datum"])
   t_uhrzeit(["uhrzeit"])
   t_notiz(["notiz"])
@@ -126,9 +121,9 @@ flowchart TB
   TERMIN --- t_uhrzeit
   TERMIN --- t_notiz
 
-  m_id(["<u>mangel_id</u><br/>PK"])
-  m_termin_fk(["<u>termin_id</u><br/>FK"])
-  m_kat_fk(["<u>kategorie_code</u><br/>FK"])
+  m_id(["<u>mangel_id</u>"])
+  m_termin_fk(["<u>termin_id</u>"])
+  m_kat_fk(["<u>kategorie_code</u>"])
   m_code(["code_stvzo"])
   m_beschreibung(["beschreibung"])
   m_behoben(["behoben"])
@@ -139,41 +134,37 @@ flowchart TB
   MANGEL --- m_beschreibung
   MANGEL --- m_behoben
 
-  p_id(["<u>pruefer_kuerzel</u><br/>PK"])
+  p_id(["<u>pruefer_kuerzel</u>"])
   p_name(["name"])
   p_qualifikation(["qualifikation"])
   PRUEFER --- p_id
   PRUEFER --- p_name
   PRUEFER --- p_qualifikation
 
-  pa_id(["<u>prueft_code</u><br/>PK"])
+  pa_id(["<u>prueft_code</u>"])
   pa_bez(["bezeichnung"])
   PRUEFART --- pa_id
   PRUEFART --- pa_bez
 
-  s_id(["<u>status_code</u><br/>PK"])
+  s_id(["<u>status_code</u>"])
   s_bez(["bezeichnung"])
   s_end(["ist_endzustand"])
   STATUS --- s_id
   STATUS --- s_bez
   STATUS --- s_end
 
-  mk_id(["<u>kategorie_code</u><br/>PK"])
+  mk_id(["<u>kategorie_code</u>"])
   mk_bez(["bezeichnung"])
   mk_block(["blockiert_bestanden"])
   MANGEL_KATEGORIE --- mk_id
   MANGEL_KATEGORIE --- mk_bez
   MANGEL_KATEGORIE --- mk_block
 
-  class HALTER,FAHRZEUG,TERMIN,MANGEL,PRUEFER,PRUEFART,STATUS,MANGEL_KATEGORIE entity;
-  class BESITZT,WIRD_GEPRUEFT,WEIST_AUF,FUEHRT_DURCH,KLASSIFIZIERT,BESCHREIBT,HAT_KATEGORIE relation;
-  class h_name,h_tel,h_email,h_anschrift,f_kennzeichen,f_fin,f_hersteller,f_modell,f_baujahr,f_farbe,f_typ,f_km,f_hu,t_datum,t_uhrzeit,t_notiz,m_code,m_beschreibung,m_behoben,p_name,p_qualifikation,pa_bez,s_bez,s_end,mk_bez,mk_block attr;
-  class h_id,f_id,f_halter_fk,t_id,t_fahrzeug_fk,t_pruefart_fk,t_pruefer_fk,t_status_fk,m_id,m_termin_fk,m_kat_fk,p_id,pa_id,s_id,mk_id key;
 ```
 
 Legende: Rechteck = Entität, Raute = Beziehung, Oval = Attribut,
-unterstrichenes Attribut = Schlüsselattribut. `PK` kennzeichnet den
-Primärschlüssel, `FK` kennzeichnet einen Fremdschlüssel. Die Kardinalitäten
+unterstrichenes Attribut = Schlüsselattribut. Die Primär- und Fremdschlüssel
+sind im logischen Modell darunter eindeutig ausgewiesen. Die Kardinalitäten
 stehen direkt an den Verbindungslinien (`1`, `0..1` bzw. `N`).
 
 ### 1.2 Entitäten und ihre Bedeutung
