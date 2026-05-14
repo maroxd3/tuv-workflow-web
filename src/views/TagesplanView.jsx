@@ -93,12 +93,19 @@ export function TagesplanView({ fahrzeuge, termine, addTr, updTr, delTr, addMang
   const [newTrInit, setNewTrInit] = useState(null);
   const [confirmDel, setConfirmDel] = useState(null);
   const [viewMode, setViewMode] = useState("timeline");
+  const [tableScope, setTableScope] = useState("day");
 
   const fzMap = useMemo(() => Object.fromEntries(fahrzeuge.map(f => [f.id, f])), [fahrzeuge]);
   const dayTr = useMemo(() =>
     termine.filter(t => t.datum === date).sort((a, b) => a.uhrzeit.localeCompare(b.uhrzeit)),
     [termine, date]
   );
+  const tableTr = useMemo(() => {
+    const source = tableScope === "all" ? termine : dayTr;
+    return [...source].sort((a, b) =>
+      `${a.datum || ""} ${a.uhrzeit || ""}`.localeCompare(`${b.datum || ""} ${b.uhrzeit || ""}`)
+    );
+  }, [dayTr, tableScope, termine]);
   const maengelTr = maengelId ? termine.find(t => t.id === maengelId) : null;
 
   const stats = useMemo(() => ({
@@ -300,6 +307,26 @@ export function TagesplanView({ fahrzeuge, termine, addTr, updTr, delTr, addMang
       {/* Table view */}
       {viewMode === "table" && (
         <div style={{ background: C.surfaceUp, border: `1px solid ${C.line}`, borderRadius: 14, overflow: "hidden" }}>
+          <div style={{ padding: "12px 16px", borderBottom: `1px solid ${C.line}`, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <Calendar size={12} color={C.blue} />
+              <span style={{ fontSize: 11, fontWeight: 700, color: C.t3, textTransform: "uppercase", letterSpacing: "0.1em" }}>
+                {tableScope === "all" ? `Alle Termine — ${tableTr.length}` : `Termine am ${fmtDate(date)} — ${tableTr.length}`}
+              </span>
+            </div>
+            <div style={{ display: "flex", background: C.surface, border: `1px solid ${C.line}`, borderRadius: 10, padding: 3, gap: 2 }}>
+              {[["day", "Dieser Tag"], ["all", "Alle Termine"]].map(([v, l]) => (
+                <button key={v} onClick={() => setTableScope(v)} style={{
+                  padding: "6px 12px", border: "none", borderRadius: 7, cursor: "pointer", fontSize: 12,
+                  fontWeight: tableScope === v ? 700 : 500,
+                  background: tableScope === v ? "rgba(75,140,247,0.12)" : "transparent",
+                  color: tableScope === v ? C.blueL : C.t3,
+                }}>
+                  {l}
+                </button>
+              ))}
+            </div>
+          </div>
           <div style={{ overflowX: "auto" }}>
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
@@ -310,10 +337,10 @@ export function TagesplanView({ fahrzeuge, termine, addTr, updTr, delTr, addMang
                 </tr>
               </thead>
               <tbody>
-                {dayTr.length === 0 && (
-                  <tr><td colSpan={9}><EmptyState icon={Calendar} title="Keine Termine" sub="Auf einen leeren Zeitslot oder oben rechts auf 'Termin anlegen' tippen." /></td></tr>
+                {tableTr.length === 0 && (
+                  <tr><td colSpan={9}><EmptyState icon={Calendar} title="Keine Termine" sub={tableScope === "all" ? "Es sind noch keine Termine gespeichert." : "Auf einen leeren Zeitslot oder oben rechts auf 'Termin anlegen' tippen."} /></td></tr>
                 )}
-                {dayTr.map((t, i) => {
+                {tableTr.map((t, i) => {
                   const fz = fzMap[t.fahrzeugId];
                   const art = PRUEFUNG_ARTEN.find(a => a.id === t.art);
                   const pr = PRUEFER.find(p => p.id === t.pruefer);
