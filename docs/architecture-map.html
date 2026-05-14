@@ -133,8 +133,8 @@
 <script>
 /* ════════════════════════════════════════════════════════════════════
    DATA — clusters, nodes, edges, FIXES, KNOWN_BUGS
-   Reflects master @ 63fcc3e (post-PGlite/Drizzle migration).
-   Every label / path / line number was confirmed by reading the file.
+   Reflects the cleaned post-PGlite/Drizzle project state.
+   Paths and architecture were verified against the repo; line hints may drift after edits.
    Editable by hand — preserve this shape.
    ════════════════════════════════════════════════════════════════════ */
 
@@ -241,10 +241,10 @@ const nodes = [
     tag: ['overview', 'statistik', 'all'],
   }),
   N('BerichteView', 'views', 'BerichteView.jsx', 'report search + print', 490, 385, 210, 80, 'route', {
-    role: 'Lists every inspection, lets you search/filter, renders a printable ASCII-art TÜV report in a modal.',
-    plain: 'The reports page. Searchable list of every inspection plus a one-click preview/print of a formal-looking report.',
+    role: 'Lists every inspection, lets you search/filter, shows a text preview and renders a printable HTML/PDF TÜV report.',
+    plain: 'The reports page. Searchable list of every inspection plus preview and print/PDF export of a formal report.',
     path: 'src/views/BerichteView.jsx:22',
-    notes: ['buildBericht() returns ASCII-banner report string', 'preview modal opens with generated text'],
+    notes: ['buildBericht() returns the text preview', 'buildBerichtHtml() builds the printable A4 report', 'window.print() opens the browser print/PDF workflow'],
     tag: ['overview', 'berichte', 'all'],
   }),
 
@@ -299,7 +299,7 @@ const nodes = [
     role: 'Adapter from legacy Firestore-style shape (fahrzeug.id, .besitzer, termin.mängel embedded) to the PGlite tables. Views see the OLD shape.',
     plain: 'A translator. The pages were written for the old database and use names like "besitzer". This file makes the new database talk to them in their old language so we did not have to rewrite every page.',
     path: 'src/hooks/useStoreCompat.ts:46',
-    notes: ['exposes the OLD useStore() shape: fahrzeuge / termine / addFz / addTr etc.', 'reads via useDb() under the hood', 'splits incoming form data: writes besitzer/telefon/email INTO halter table, links via halterId', 'normDateStr fixes PG\'s Date-object timezone bug (line:79)', 'roadmap: this file is temporary — Welle 1 / Schritt 4 will rewrite views directly on useDb'],
+    notes: ['exposes the OLD useStore() shape: fahrzeuge / termine / addFz / addTr etc.', 'reads via useDb() under the hood', 'splits incoming form data: writes besitzer/telefon/email INTO halter table, links via halterId', 'normDateStr fixes PG\'s Date-object timezone bug (around line 89)', 'roadmap: this file is temporary — Welle 1 / Schritt 4 will rewrite views directly on useDb'],
     tag: ['overview', 'tagesplan', 'termine', 'fahrzeuge', 'maengel', 'data', 'all'],
     critical: true,
   }),
@@ -307,7 +307,7 @@ const nodes = [
     role: 'Native PGlite-shaped React hook: runs migrations, seeds domain + demo, exposes typed CRUD, refresh()es after every mutation.',
     plain: 'The actual hand that touches the database. Runs the database setup on first load, fills in lookup tables, and re-loads everything after each change. There is no real-time push from the DB; the app pulls.',
     path: 'src/hooks/useDb.ts:53',
-    notes: ['line:90-115, mount effect: runMigrations → seedDomainTables → auto-seedDemoBestand', 'line:80, refresh() reloads halter + fahrzeuge + termine + per-termin mängel', 'NO onSnapshot equivalent — every mutation calls refresh() to keep state fresh', 'multi-tab: tab A\'s writes are invisible to tab B until B\'s next refresh()'],
+    notes: ['lines:90-115, mount effect: runMigrations → seedDomainTables → auto-seedDemoBestand', 'lines:64-78, refresh() reloads halter + fahrzeuge + termine + per-termin mängel', 'NO onSnapshot equivalent — every mutation calls refresh() to keep state fresh', 'multi-tab: tab A\'s writes are invisible to tab B until B\'s next refresh()'],
     tag: ['overview', 'data', 'tagesplan', 'fahrzeuge', 'maengel', 'all'],
     critical: true,
   }),
@@ -331,7 +331,7 @@ const nodes = [
     role: 'Initialises a singleton PGlite instance at idb://tuvpro-db-v2 and wraps it with Drizzle (typed query builder).',
     plain: 'Boots the in-browser PostgreSQL once per tab, stores it under the name tuvpro-db-v2 inside the browser\'s IndexedDB. Every other DB file goes through this.',
     path: 'src/db/client.ts:25',
-    notes: ['singleton _pglite + _db (lines:21-22)', 'line:33, idb://tuvpro-db-v2 (v2 = post status-code fix)', 'line:36, drizzle(_pglite, { schema, logger: import.meta.env.DEV })', 'resetDatabase() drops all 8 tables — for tests'],
+    notes: ['singleton _pglite + _db (around lines 21-22)', 'line:35, idb://tuvpro-db-v2 (v2 = post status-code fix)', 'line:38, drizzle(_pglite, { schema, logger: import.meta.env.DEV })', 'resetDatabase() drops all 8 tables — for tests'],
     tag: ['overview', 'data', 'all'],
     critical: true,
   }),
@@ -347,7 +347,7 @@ const nodes = [
     role: 'All SQL lives here. ~30 typed functions: CRUD per entity, getTagesplan() JOIN, getHuFaellig() view, WF-01 guard inside updTerminStatus and addMangel.',
     plain: 'The only file in the app that writes SQL. Every other file asks this one. Has business rules baked in: it refuses to mark a Termin "Bestanden" if a major defect exists, and automatically demotes a passed Termin if you later add a major defect to it.',
     path: 'src/db/queries.ts:43',
-    notes: ['line:152, updTerminStatus enforces WF-01: JOIN mangel + mangel_kategorie, blocks Bestanden when blockiertBestanden=true', 'line:204, addMangel auto-demotes Termin from Bestanden → Nicht bestanden when HM/GM added', 'line:259, getTagesplan uses Drizzle Query API (nested `with` clauses) — one SQL JOIN, not N+1', 'line:280, getHuFaellig is raw SQL (replicates v_hu_faellig view from datenmodell.md §3.5)'],
+    notes: ['line:165, updTerminStatus enforces WF-01: JOIN mangel + mangel_kategorie, blocks Bestanden when blockiertBestanden=true', 'line:204, addMangel auto-demotes Termin from Bestanden → Nicht bestanden when HM/GM added', 'line:252, getTagesplan uses Drizzle Query API (nested `with` clauses)', 'line:274, getHuFaellig is raw SQL (replicates v_hu_faellig view from datenmodell.md §3.5)'],
     tag: ['overview', 'data', 'tagesplan', 'fahrzeuge', 'maengel', 'all'],
     critical: true,
   }),
@@ -355,7 +355,7 @@ const nodes = [
     role: 'Loads SQL files from src/db/migrations/*.sql via Vite raw-import, executes pending ones, tracks applied in __drizzle_migrations table.',
     plain: 'Runs the SQL setup files on first load. Remembers what it already ran so opening another tab doesn\'t crash. Comes from drizzle-kit generate at build time.',
     path: 'src/db/migrate.ts:14',
-    notes: ['line:17, import.meta.glob("./migrations/*.sql", { query: "?raw", eager: true })', 'line:36, splits by drizzle\'s --> statement-breakpoint marker', 'invoked from useDb effect on mount'],
+    notes: ['line:17, import.meta.glob("./migrations/*.sql", { query: "?raw", eager: true })', 'line:47, splits by drizzle\'s --> statement-breakpoint marker', 'invoked from useDb effect on mount'],
     tag: ['data', 'all'],
   }),
   N('db-seed', 'db', 'db/seed.ts', 'domain + demo data', 1230, 460, 240, 72, 'db', {
@@ -520,7 +520,7 @@ const nodes = [
     role: 'Defines Toast + ToastContainer components — no file in src/ imports either.',
     plain: 'A toast-notification component that the app does not use anymore. Toasts are produced through the Sonner library via useToasts. Safe to delete.',
     path: 'src/components/Toast.jsx:7',
-    notes: ['ToastContainer iterates over `toasts` array (renamed from ToastStack in earlier code)', 'no imports from src/ found apart from internal Toast↔ToastContainer', 'survived the cleanup commit (af65884) which removed useStore.js and firebase.js'],
+    notes: ['ToastContainer iterates over `toasts` array (renamed from ToastStack in earlier code)', 'no imports from src/ found apart from internal Toast↔ToastContainer', 'survived the cleanup that removed useStore.js and firebase.js'],
     tag: ['dead', 'all'],
   }),
 
@@ -734,18 +734,18 @@ const FIXES = {
 /* ── KNOWN_BUGS (only items confirmed by reading the file) ────────── */
 const KNOWN_BUGS = {
   'Toast-dead':     [
-    { sev: 'low', t: 'Toast.jsx and ToastContainer have zero importers in src/. App uses sonner instead via useToasts. Safe to delete — survived the af65884 cleanup.' },
+    { sev: 'low', t: 'Toast.jsx and ToastContainer have zero importers in src/. App uses sonner instead via useToasts. Safe to delete in a later cleanup.' },
   ],
   'useToasts':      [
     { sev: 'low', t: 'Lines 11-12 expose toasts:[] and rm:() — leftovers from a previous custom toast implementation. No caller reads them.' },
   ],
   'useStoreCompat': [
-    { sev: 'med', t: 'Line 67 imports `* as q from "../db/queries"` but never references q — dead import that survived cleanup.' },
+    { sev: 'med', t: 'Line 37 imports `* as q from "../db/queries"` but never references q — dead import that survived cleanup.' },
     { sev: 'med', t: 'Lines 256-265: updTr with status patch calls updTerminStatus and silently returns on failure (no toast, no throw). The App-layer guard is the only barrier the user sees.' },
   ],
   'useDb':          [
     { sev: 'med', t: 'No real-time sync. Comment at line 13 acknowledges this. Two browser tabs each have an isolated PGlite instance over the SAME IndexedDB — writes from tab A are not visible to tab B until tab B reloads.' },
-    { sev: 'low', t: 'refresh() reloads halter + fahrzeuge + termine in parallel, but mängel are loaded SEQUENTIALLY per termin (line:69 Promise.all over t.map(async)). 13+ extra round-trips per refresh — fine for demo size, would need JOIN at production scale.' },
+    { sev: 'low', t: 'refresh() reloads halter + fahrzeuge + termine in parallel, then loads mängel with one extra query per termin via Promise.all (around line 72). Fine for demo size, but a joined repository query would scale better.' },
   ],
   'db-client':      [
     { sev: 'low', t: 'IndexedDB version is hard-coded in the file path string (tuvpro-db-v2). Schema-changing migrations require bumping this manually here AND adding a new migration SQL — easy to forget.' },
@@ -1009,10 +1009,10 @@ function showDefault() {
     </div>
     <h2>Notable findings from this map</h2>
     <div class="finding good"><strong>Single source of truth for SQL</strong><br>Every database operation goes through <code>src/db/queries.ts</code> (Repository pattern, ADR-007). Views talk to <code>useStoreCompat</code>, which talks to <code>useDb</code>, which talks to <code>queries.ts</code>. No SQL leaks out — the compat layer is the only file aware of both shapes.</div>
-    <div class="finding good"><strong>WF-01 enforced twice (Defense in Depth)</strong><br>UI layer (TerminModal lines 32-34) refuses to set BESTANDEN with a Hauptmangel. Repository layer (queries.ts:152) double-checks via SQL JOIN before the UPDATE. If the UI is bypassed, the DB still rejects it.</div>
+    <div class="finding good"><strong>WF-01 enforced twice (Defense in Depth)</strong><br>UI layer (TerminModal lines 32-34) refuses to set BESTANDEN with a Hauptmangel. Repository layer (queries.ts:165) double-checks via SQL JOIN before the UPDATE. If the UI is bypassed, the DB still rejects it.</div>
     <div class="finding warn"><strong>No real-time sync</strong><br><code>useDb</code> line 13 acknowledges this: Firestore's <code>onSnapshot</code> is gone. Two browser tabs each spin up their own PGlite instance over the same IndexedDB; writes in tab A do not propagate to tab B until B reloads or calls <code>refresh()</code>. For multi-workstation use a Postgres server + small backend would replace PGlite.</div>
     <div class="finding warn"><strong>Compat layer is technical debt by design</strong><br><code>useStoreCompat.ts</code> exists to keep views unchanged. Its 11-row mapping table (file header) translates field-by-field. The roadmap in its docstring: "Welle 1 / Schritt 4 will rewrite views directly on useDb". Until then every read path makes two trips through the adapter.</div>
-    <div class="finding warn"><strong>Dead code still in tree</strong><br><code>src/components/Toast.jsx</code> survived the af65884 cleanup. App uses sonner via useToasts. <code>useStoreCompat.ts:67</code> imports <code>* as q from "../db/queries"</code> but never references q.</div>
+    <div class="finding warn"><strong>Dead code still in tree</strong><br><code>src/components/Toast.jsx</code> is not imported by the app. App uses sonner via useToasts. <code>useStoreCompat.ts:37</code> imports <code>* as q from "../db/queries"</code> but never references q.</div>
     <div class="finding"><strong>Schema-code drift in MangelShape</strong><br><code>types/propTypes.js</code> says <code>kat</code> is one of <code>["OM","GM","EM","HM","GF"]</code> but DB and seed.ts use <code>["OM","LM","EM","HM","GM"]</code> (LM not GF). PropTypes warns but nothing rejects the mismatch — bug waiting for a Mangel with kat="LM" to be logged.</div>
     <h2>Filters</h2>
     <div class="finding">Click a chip to dim everything outside that feature. "Critical path" highlights only the 10 red edges of the spine. "Roadmap & bugs" highlights only nodes with green/red badges.</div>
