@@ -3,10 +3,10 @@ import PropTypes from "prop-types";
 import { ChevronDown, AlertCircle } from "lucide-react";
 import { C } from "../../styles/theme";
 
-export function Inp({ value, onChange, placeholder, type = "text", error, style = {}, mono = false, list, disabled = false }) {
+export function Inp({ value, onChange, placeholder, type = "text", error, style = {}, mono = false, list, disabled = false, ...props }) {
   const [f, setF] = useState(false);
   return (
-    <input value={value} onChange={onChange} placeholder={placeholder} type={type} list={list} disabled={disabled}
+    <input value={value} onChange={onChange} placeholder={placeholder} type={type} list={list} disabled={disabled} {...props}
       onFocus={() => setF(true)} onBlur={() => setF(false)}
       style={{
         background: C.surface, border: `1px solid ${error ? "rgba(220,38,38,0.5)" : f ? C.blue : C.line}`,

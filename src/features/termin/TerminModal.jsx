@@ -11,6 +11,7 @@ import { Inp, Sel, Fld } from "../../components/ui/inputs";
 import { BtnG, BtnP } from "../../components/ui/buttons";
 import { FahrzeugShape } from "../../types/propTypes";
 import { hatHauptmangel } from "../../utils/mangel";
+import { validateTerminDatum } from "../../utils/validators";
 
 export function TerminModal({ fahrzeuge, initial = {}, onSave, onClose }) {
   const bestanden_gesperrt = hatHauptmangel(initial.mängel);
@@ -28,7 +29,8 @@ export function TerminModal({ fahrzeuge, initial = {}, onSave, onClose }) {
   function validate() {
     const e = {};
     if (!form.fahrzeugId) e.fahrzeugId = "Bitte Fahrzeug wählen";
-    if (!form.datum) e.datum = "Pflichtfeld";
+    const eDatum = validateTerminDatum(form.datum);
+    if (eDatum) e.datum = eDatum;
     if (form.status === STATUS.BESTANDEN && bestanden_gesperrt) {
       e.status = "Bestanden nicht möglich — Hauptmangel vorhanden (§ 29 StVZO)";
     }
@@ -61,7 +63,7 @@ export function TerminModal({ fahrzeuge, initial = {}, onSave, onClose }) {
         )}
         <div className="grid-resp-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
           <Fld label="Datum *" error={err.datum}>
-            <Inp value={form.datum} onChange={f("datum")} type="date" error={err.datum} />
+            <Inp value={form.datum} onChange={f("datum")} type="date" min={isoDate()} error={err.datum} />
           </Fld>
           <Fld label="Uhrzeit">
             <Sel value={form.uhrzeit} onChange={f("uhrzeit")}>

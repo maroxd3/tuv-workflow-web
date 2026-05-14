@@ -10,6 +10,7 @@ import {
   validateEmail,
   validateFahrzeugtyp,
   validateHuDatum,
+  validateTerminDatum,
   validateFahrzeug,
   validateStatusWechsel,
   validateHerstellerModellKonsistenz,
@@ -293,6 +294,22 @@ describe("validateHuDatum", () => {
 
   it("lehnt ungültige Datumsstrings ab", () => {
     expect(validateHuDatum("blabla")).toBe("Ungültiges Datum");
+  });
+});
+
+describe("validateTerminDatum", () => {
+  it("akzeptiert heute und zukünftige Termine", () => {
+    expect(validateTerminDatum("2026-05-14", "2026-05-14")).toBeNull();
+    expect(validateTerminDatum("2026-05-15", "2026-05-14")).toBeNull();
+  });
+
+  it("blockiert Termine in der Vergangenheit", () => {
+    expect(validateTerminDatum("2026-05-13", "2026-05-14")).toMatch(/Vergangenheit/);
+  });
+
+  it("blockiert leere oder ungültige Daten", () => {
+    expect(validateTerminDatum("", "2026-05-14")).toBe("Pflichtfeld");
+    expect(validateTerminDatum("blabla", "2026-05-14")).toBe("Ungültiges Datum");
   });
 });
 
