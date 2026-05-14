@@ -15,6 +15,7 @@ import { FAHRZEUG_TYPEN } from "../constants/fahrzeug";
 import { HERSTELLER_REFERENZ, normalizeHersteller } from "../constants/kfzReferenz";
 import { isValidKreisCode } from "../constants/kfzKreis";
 import { STATUS } from "../constants/status";
+import { isoDate } from "./date";
 
 /* Normales Kennzeichen: B-TK 1234 (mit optionalem H/E-Suffix für Historisch/Elektro)
    Saison-Kennzeichen: B-TK 1234 04-10 (Saison von April bis Oktober) */
@@ -122,6 +123,13 @@ export function validateHuDatum(raw) {
   if (!raw) return null;
   const d = new Date(raw);
   if (Number.isNaN(d.getTime())) return "Ungültiges Datum";
+  return null;
+}
+
+export function validateTerminDatum(raw, today = isoDate()) {
+  if (!raw) return "Pflichtfeld";
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(raw)) return "Ungültiges Datum";
+  if (raw < today) return "Termin darf nicht in der Vergangenheit liegen";
   return null;
 }
 

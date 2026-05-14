@@ -10,7 +10,7 @@ import { C } from "../styles/theme";
 import { STATUS, STATUS_CFG } from "../constants/status";
 import { TIME_SLOTS } from "../constants/fahrzeug";
 import { PRUEFUNG_ARTEN, PRUEFER } from "../constants/pruefung";
-import { isoDate, addDays, fmtDateLong, dayName, dayShort } from "../utils/date";
+import { isoDate, addDays, fmtDate, fmtDateLong, dayName, dayShort } from "../utils/date";
 import { hatHauptmangel } from "../utils/mangel";
 import { StatusPill } from "../components/ui/StatusPill";
 import { MangelPill } from "../components/ui/MangelPill";
@@ -304,14 +304,14 @@ export function TagesplanView({ fahrzeuge, termine, addTr, updTr, delTr, addMang
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
                 <tr style={{ borderBottom: `1px solid ${C.line}`, background: C.surfaceUp }}>
-                  {["Zeit", "Kennzeichen", "Fahrzeug", "Prüfart", "Prüfer", "Status", "Mängel", "Aktionen"].map(h => (
+                  {["Datum", "Zeit", "Kennzeichen", "Fahrzeug", "Prüfart", "Prüfer", "Status", "Mängel", "Aktionen"].map(h => (
                     <th key={h} style={{ padding: "11px 14px", textAlign: "left", fontSize: 10, fontWeight: 700, color: C.t3, textTransform: "uppercase", letterSpacing: "0.1em", whiteSpace: "nowrap" }}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {dayTr.length === 0 && (
-                  <tr><td colSpan={8}><EmptyState icon={Calendar} title="Keine Termine" sub="Auf einen leeren Zeitslot oder oben rechts auf 'Termin anlegen' tippen." /></td></tr>
+                  <tr><td colSpan={9}><EmptyState icon={Calendar} title="Keine Termine" sub="Auf einen leeren Zeitslot oder oben rechts auf 'Termin anlegen' tippen." /></td></tr>
                 )}
                 {dayTr.map((t, i) => {
                   const fz = fzMap[t.fahrzeugId];
@@ -320,6 +320,7 @@ export function TagesplanView({ fahrzeuge, termine, addTr, updTr, delTr, addMang
                   const hmV = hatHauptmangel(t.mängel);
                   return (
                     <tr key={t.id} style={{ borderBottom: `1px solid ${C.line}`, background: i % 2 === 0 ? C.glass : "transparent" }}>
+                      <td style={{ padding: "10px 14px", fontFamily: C.mono, fontSize: 12, color: C.t2, whiteSpace: "nowrap" }}>{fmtDate(t.datum)}</td>
                       <td style={{ padding: "10px 14px", fontFamily: C.mono, fontSize: 12, color: C.t2, whiteSpace: "nowrap" }}>{t.uhrzeit}</td>
                       <td style={{ padding: "10px 14px", fontFamily: C.mono, fontWeight: 700, fontSize: 13, color: C.t1 }}>{fz?.kennzeichen || "—"}</td>
                       <td style={{ padding: "10px 14px", fontSize: 12, color: C.t3 }}>{fz?.hersteller} {fz?.modell}</td>
