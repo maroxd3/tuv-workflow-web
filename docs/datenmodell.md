@@ -70,7 +70,7 @@ flowchart TB
   MANGEL_KATEGORIE -- "1" --- HAT_KATEGORIE
   HAT_KATEGORIE -- "N" --- MANGEL
 
-  h_id(["<u>halter_id</u>"])
+  h_id(["h̲a̲l̲t̲e̲r̲_̲i̲d̲"])
   h_name(["name"])
   h_tel(["telefon"])
   h_email(["email"])
@@ -81,8 +81,8 @@ flowchart TB
   HALTER --- h_email
   HALTER --- h_anschrift
 
-  f_id(["<u>fahrzeug_id</u>"])
-  f_halter_fk(["<u>halter_id</u>"])
+  f_id(["f̲a̲h̲r̲z̲e̲u̲g̲_̲i̲d̲"])
+  f_halter_fk(["h̲a̲l̲t̲e̲r̲_̲i̲d̲"])
   f_kennzeichen(["kennzeichen"])
   f_fin(["fin"])
   f_hersteller(["hersteller"])
@@ -104,11 +104,11 @@ flowchart TB
   FAHRZEUG --- f_km
   FAHRZEUG --- f_hu
 
-  t_id(["<u>termin_id</u>"])
-  t_fahrzeug_fk(["<u>fahrzeug_id</u>"])
-  t_pruefart_fk(["<u>prueft_code</u>"])
-  t_pruefer_fk(["<u>pruefer_kuerzel</u>"])
-  t_status_fk(["<u>status_code</u>"])
+  t_id(["t̲e̲r̲m̲i̲n̲_̲i̲d̲"])
+  t_fahrzeug_fk(["f̲a̲h̲r̲z̲e̲u̲g̲_̲i̲d̲"])
+  t_pruefart_fk(["p̲r̲u̲e̲f̲t̲_̲c̲o̲d̲e̲"])
+  t_pruefer_fk(["p̲r̲u̲e̲f̲e̲r̲_̲k̲u̲e̲r̲z̲e̲l̲"])
+  t_status_fk(["s̲t̲a̲t̲u̲s̲_̲c̲o̲d̲e̲"])
   t_datum(["datum"])
   t_uhrzeit(["uhrzeit"])
   t_notiz(["notiz"])
@@ -121,9 +121,9 @@ flowchart TB
   TERMIN --- t_uhrzeit
   TERMIN --- t_notiz
 
-  m_id(["<u>mangel_id</u>"])
-  m_termin_fk(["<u>termin_id</u>"])
-  m_kat_fk(["<u>kategorie_code</u>"])
+  m_id(["m̲a̲n̲g̲e̲l̲_̲i̲d̲"])
+  m_termin_fk(["t̲e̲r̲m̲i̲n̲_̲i̲d̲"])
+  m_kat_fk(["k̲a̲t̲e̲g̲o̲r̲i̲e̲_̲c̲o̲d̲e̲"])
   m_code(["code_stvzo"])
   m_beschreibung(["beschreibung"])
   m_behoben(["behoben"])
@@ -134,26 +134,26 @@ flowchart TB
   MANGEL --- m_beschreibung
   MANGEL --- m_behoben
 
-  p_id(["<u>pruefer_kuerzel</u>"])
+  p_id(["p̲r̲u̲e̲f̲e̲r̲_̲k̲u̲e̲r̲z̲e̲l̲"])
   p_name(["name"])
   p_qualifikation(["qualifikation"])
   PRUEFER --- p_id
   PRUEFER --- p_name
   PRUEFER --- p_qualifikation
 
-  pa_id(["<u>prueft_code</u>"])
+  pa_id(["p̲r̲u̲e̲f̲t̲_̲c̲o̲d̲e̲"])
   pa_bez(["bezeichnung"])
   PRUEFART --- pa_id
   PRUEFART --- pa_bez
 
-  s_id(["<u>status_code</u>"])
+  s_id(["s̲t̲a̲t̲u̲s̲_̲c̲o̲d̲e̲"])
   s_bez(["bezeichnung"])
   s_end(["ist_endzustand"])
   STATUS --- s_id
   STATUS --- s_bez
   STATUS --- s_end
 
-  mk_id(["<u>kategorie_code</u>"])
+  mk_id(["k̲a̲t̲e̲g̲o̲r̲i̲e̲_̲c̲o̲d̲e̲"])
   mk_bez(["bezeichnung"])
   mk_block(["blockiert_bestanden"])
   MANGEL_KATEGORIE --- mk_id
