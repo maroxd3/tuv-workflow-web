@@ -3,7 +3,7 @@
 * **Status:** proposed | accepted | superseded by ADR-XYZ | deprecated | rejected
 * **Datum:** YYYY-MM-DD
 * **Entscheider:** Marwan Saleh, Oussama Hlayhel
-* **Konsultiert:** (z. B. Frau Fuchs, externe Quellen)
+* **Konsultiert:** (z. B. externe Quellen, Projektdokumentation)
 * **Informiert:** (Stakeholder die das Ergebnis kennen müssen)
 
 ## Kontext und Problem
@@ -14,7 +14,7 @@
 ## Entscheidungstreiber
 
 * (Driver 1 — z. B. „Performance < 200 ms")
-* (Driver 2 — z. B. „Frau-Fuchs-Anforderung: lokale relationale DB")
+* (Driver 2 — z. B. „Anforderung: lokale relationale DB")
 * (Driver 3 — z. B. „kein eigener Backend-Server")
 
 ## Betrachtete Optionen

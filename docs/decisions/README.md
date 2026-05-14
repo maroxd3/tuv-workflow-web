@@ -12,7 +12,7 @@ Konvention.
 ## Wofür ADRs?
 
 In einem akademischen oder professionellen Projekt müssen Entscheidungen
-**nachvollziehbar** sein. Ein ADR beantwortet:
+**nachvollziehbar** sein. Ein ADR dokumentiert:
 
 1. **Was** wurde entschieden?
 2. **Warum** wurde es so entschieden?
@@ -20,8 +20,8 @@ In einem akademischen oder professionellen Projekt müssen Entscheidungen
 4. **Welche Konsequenzen** ergeben sich?
 5. **Wann** wurde es entschieden? (Datum + Kontext)
 
-So kann ein neuer Entwickler — oder die Bewertungs-Dozentin — die Genese
-der Architektur verstehen, ohne den Git-Verlauf durchforsten zu müssen.
+So können neue Projektbeteiligte die Genese der Architektur verstehen, ohne
+den Git-Verlauf durchforsten zu müssen.
 
 ## Status-Lebenszyklus eines ADR
 
