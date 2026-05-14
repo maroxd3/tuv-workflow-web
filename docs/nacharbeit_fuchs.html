@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<title>TÜV Prüfstelle Pro – Nacharbeit nach Feedback vom 24. April</title>
+<title>TÜV Prüfstelle Pro – Nacharbeit nach Review-Termin vom 12. Mai</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
@@ -193,11 +193,11 @@
 
   <div class="head">
     <div>
-      <div class="title">Nacharbeit nach Feedback vom 24. April</div>
+      <div class="title">Nacharbeit nach Review-Termin vom 12. Mai</div>
       <div class="sub">TÜV Prüfstelle Pro · Software-Projekt IIM-211-01 · Hochschule Hannover · Sommersemester 2026</div>
     </div>
     <div class="meta">
-      <div><strong>Stand:</strong> 30. April 2026</div>
+      <div><strong>Stand:</strong> 14. Mai 2026</div>
       <div><strong>Team:</strong> Marwan Saleh · Oussama Hlayhel</div>
       <div><strong>Repository:</strong> github.com/maroxd3/tuv-workflow-web</div>
     </div>
@@ -205,15 +205,15 @@
 
   <!-- ───────── 1. STAND VORHER ───────── -->
   <section class="before">
-    <h2><span class="num">1</span> Stand vor Ihrem Feedback (bis 24. April)</h2>
+    <h2><span class="num">1</span> Ausgangslage vor der Nacharbeit</h2>
     <div class="body">
-      <div class="lede">Vor Ihrem Feedback war das Projekt funktional, aber an mehreren Stellen unausgereift — sowohl im Code als auch in der Dokumentation. Eine ehrliche Bestandsaufnahme:</div>
+      <div class="lede">Vor der Nacharbeit war das Projekt funktional, aber an mehreren Stellen noch nicht sauber genug begründet — sowohl im Code als auch in der Dokumentation. Eine ehrliche Bestandsaufnahme:</div>
 
       <div style="display:grid; grid-template-columns: 1fr 1fr; gap:18px; margin-top:8px">
         <div>
           <div style="font-size:9pt; font-weight:700; color:#15803d; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:6px">Was funktionierte</div>
           <div class="item have"><div class="marker">✓</div><div class="text"><strong>Web-App live deployed</strong><div class="desc">Fahrzeug-CRUD, Tagesplan, Mängelerfassung, Statistik</div></div></div>
-          <div class="item have"><div class="marker">✓</div><div class="text"><strong>Firebase Firestore mit Echtzeit-Sync</strong><div class="desc">onSnapshot, LocalStorage als Offline-Cache</div></div></div>
+          <div class="item have"><div class="marker">✓</div><div class="text"><strong>Firebase Firestore mit Echtzeit-Sync</strong><div class="desc">Ursprüngliche Persistenzschicht mit onSnapshot und LocalStorage-Cache</div></div></div>
           <div class="item have"><div class="marker">✓</div><div class="text"><strong>Tauri-Desktop-Build</strong><div class="desc">~6 MB Binary aus derselben React-Codebasis</div></div></div>
           <div class="item have"><div class="marker">✓</div><div class="text"><strong>Erste Test-Suite</strong><div class="desc">~52 Vitest-Tests, hauptsächlich Store-Logik</div></div></div>
         </div>
@@ -231,9 +231,9 @@
 
   <!-- ───────── 2. KRITIKPUNKTE ───────── -->
   <section class="feedback">
-    <h2><span class="num">2</span> Ihre Kritikpunkte aus der Mail vom 24. April</h2>
+    <h2><span class="num">2</span> Aufgenommene Kritikpunkte und Review-Punkte</h2>
     <div class="body">
-      <div class="lede">Ihre Mail enthielt acht inhaltliche Bereiche und eine Liste konkreter Bug-Beispiele aus Ihren manuellen Tests. Wir haben jeden Punkt einzeln aufgenommen:</div>
+      <div class="lede">Aus der Mail vom 24. April und dem Review-Termin am 12. Mai ergaben sich fachliche, technische und dokumentarische Punkte. Wir haben jeden Punkt einzeln aufgenommen:</div>
 
       <div class="item crit"><div class="marker">!</div><div class="text"><strong>Bug-Liste aus den manuellen Tests</strong><div class="desc">Negativer Kilometerstand · Telefon mit Buchstaben · ungültige E-Mail · doppeltes Kennzeichen · „Bestanden" trotz Hauptmangel · „BMW Polo" / „VW Golf als Motorrad"</div></div></div>
       <div class="item crit"><div class="marker">!</div><div class="text"><strong>Keine Sprint-Methodik / Definition of Done dokumentiert</strong></div></div>
@@ -244,6 +244,8 @@
       <div class="item crit"><div class="marker">!</div><div class="text"><strong>Datenschutz bei Cloud-DB</strong> — DSGVO, Auftragsverarbeitung</div></div>
       <div class="item crit"><div class="marker">!</div><div class="text"><strong>ESLint-Report</strong> — 187 Errors mit Ihrer strengeren Config</div></div>
       <div class="item crit"><div class="marker">!</div><div class="text"><strong>Echtzeit-Sync vs. Polling</strong> — Begründung warum onSnapshot statt einfachem Polling</div></div>
+      <div class="item crit"><div class="marker">!</div><div class="text"><strong>Lokale relationale Persistenz</strong> — Firestore wurde durch PGlite/PostgreSQL-kompatibles SQL im Browser ersetzt</div></div>
+      <div class="item crit"><div class="marker">!</div><div class="text"><strong>Nachvollziehbare Architekturentscheidungen</strong> — ADRs dokumentieren Datenbank-, ORM-, Hosting- und Repository-Entscheidungen neutral und prüfbar</div></div>
     </div>
   </section>
 
@@ -251,7 +253,7 @@
   <section class="timeline">
     <h2><span class="num">3</span> Zeitlicher Ablauf der Nacharbeit</h2>
     <div class="body">
-      <div class="lede">Wir haben Ihr Feedback unmittelbar als Sprint-Fokus übernommen und in zwei klar abgegrenzten Sprints abgearbeitet — Sprint 5 für die fachliche Nacharbeit, Sprint 6 für die Abgabe-Finalisierung.</div>
+      <div class="lede">Die Nacharbeit lief in mehreren klar abgegrenzten Schritten: zuerst Validierung, UX und Basisdokumentation; danach die Umstellung auf lokale relationale Persistenz, neues Datenmodell und ADR-Dokumentation nach dem Review-Termin vom 12. Mai.</div>
 
       <div class="tl">
         <div class="tl-item done">
@@ -283,7 +285,7 @@
           <div class="date">28.–30. April · Sprint 6 Abgabe-Polish</div>
           <div class="what">Security, CI &amp; Performance · 12 Story Points</div>
           <div class="detail">
-            <strong>Security:</strong> Firestore-Rules mit Schema-Validierung und Demo-Zeitfenster-Cutoff (1. August 2026) · Firebase-Web-Config in <code>.env</code>-Variablen ausgelagert · 0 npm-Vulnerabilities.<br>
+            <strong>Security:</strong> Firestore-Rules mit Schema-Validierung und Demo-Zeitfenster-Cutoff (1. August 2026) · Firebase-Web-Config in <code>.env</code>-Variablen ausgelagert · damalige Security- und Config-Lücken dokumentiert.<br>
             <strong>CI:</strong> Dependabot für npm- und GitHub-Actions-Updates · CodeQL-Workflow für statische Code-Analyse.<br>
             <strong>Performance:</strong> Route-Level-Code-Splitting — Statistik-, Berichte- und Fahrzeuge-Views werden lazy geladen, Hauptbundle unter 500 KB minified / 154 KB gzipped.<br>
             <strong>Doku:</strong> Echtzeit-Sync-vs-Polling-Begründung im Pflichtenheft ergänzt · README auf aktuellen Stand gebracht.
@@ -293,8 +295,26 @@
 
         <div class="tl-item done">
           <div class="date">30. April · Stand jetzt</div>
-          <div class="what">Abgabe-fertig</div>
-          <div class="detail">114 von 114 Vitest-Tests grün · 0 ESLint-Errors · 0 npm-Vulnerabilities · 0 offene Security-Alerts · alle 6 Bugs aus Ihrer Test-Liste hart blockiert · alle 9 Kritikpunkte adressiert und im Repository dokumentiert.</div>
+          <div class="what">Zwischenstand nach Sprint 5/6</div>
+          <div class="detail">114 von 114 Vitest-Tests grün · Validierungsfehler hart blockiert · mobile Bedienbarkeit, PDF-Bericht, Pflichtenheft, Testkonzept und erste Datenmodell-Dokumentation lagen vor.</div>
+        </div>
+
+        <div class="tl-item done">
+          <div class="date">12.–14. Mai · Review-Nacharbeit</div>
+          <div class="what">Migration auf lokale relationale SQL-Persistenz · Datenmodell v2 · ADRs</div>
+          <div class="detail">
+            <strong>Datenbank:</strong> Firestore als Datenbank entfernt; neue Persistenz über <code>PGlite</code> mit PostgreSQL-kompatibler SQL-Engine im Browser und Speicherung in <code>IndexedDB</code> (<code>/pglite/tuvpro-db-v2</code>).<br>
+            <strong>Schema:</strong> 3NF-normalisiertes Modell mit Tabellen für <code>halter</code>, <code>fahrzeug</code>, <code>termin</code>, <code>mangel</code>, <code>status</code>, <code>pruefart</code>, <code>pruefer</code> und <code>mangel_kategorie</code>.<br>
+            <strong>Dokumentation:</strong> <code>docs/datenmodell.md</code> wurde als Drei-Schichten-Modell überarbeitet; das ER-Diagramm ist im Chen-Stil dargestellt, Primärschlüssel sind unterstrichen.<br>
+            <strong>Architekturentscheidungen:</strong> <code>docs/decisions/</code> enthält acht ADRs zu PGlite, 3NF, WF-01, Drizzle, TypeScript, Hosting, Repository-Pattern und nicht-eingebetteten Arrays.
+          </div>
+          <div class="commits">commits c08bd7a · 2f8fc51 · 2e4fe00 · e25bb5e · 525e7e2 · 30182ce</div>
+        </div>
+
+        <div class="tl-item done">
+          <div class="date">14. Mai · Aktueller Stand</div>
+          <div class="what">Aktueller Projektstand verifiziert</div>
+          <div class="detail">133 von 133 Vitest-Tests grün · Produktions-Build erfolgreich · lokale SQL-Daten über Browser-Konsole lesbar (<code>tuvdb.table("fahrzeug")</code>) · GitHub-Stand auf <code>master</code> aktualisiert.</div>
         </div>
       </div>
     </div>
@@ -308,7 +328,7 @@
         <tr>
           <th style="width:20%">Kritikpunkt</th>
           <th style="width:36%">Vorher (vor 24.04.)</th>
-          <th style="width:44%">Nachher (Stand 30.04.)</th>
+          <th style="width:44%">Nachher (Stand 14.05.)</th>
         </tr>
         <tr>
           <td class="label">Bug „BMW Polo"</td>
@@ -328,7 +348,7 @@
         <tr>
           <td class="label">„Bestanden" trotz Hauptmangel</td>
           <td class="before">War möglich, kein Workflow-Schutz</td>
-          <td class="after">An vier Stellen blockiert: Button, Dropdown, Auto-Fortschritt, Store-Guard</td>
+          <td class="after">In UI und Repository-Schicht abgesichert; Statuswechsel auf „Bestanden" wird bei blockierendem Mangel verhindert</td>
         </tr>
         <tr>
           <td class="label">Pflichtenheft</td>
@@ -338,7 +358,7 @@
         <tr>
           <td class="label">Datenmodell &amp; NoSQL-vs-SQL</td>
           <td class="before">ER-Skizze ohne Begründungen</td>
-          <td class="after"><code>docs/datenmodell.md</code> mit Integritätsbedingungen (Entity, Referenz, Workflow, Wertebereich), Pro-/Kontra-Tabelle Firestore vs. Postgres, vollständigem SQL-Gegenentwurf inkl. Trigger</td>
+          <td class="after"><code>docs/datenmodell.md</code> als Drei-Schichten-Modell: Chen-ER, 3NF-Relationenschema, physisches PostgreSQL/PGlite-Schema, Integritätsbedingungen und Migrationsbegründung</td>
         </tr>
         <tr>
           <td class="label">Performance „warum 100 ms?"</td>
@@ -348,22 +368,22 @@
         <tr>
           <td class="label">DSGVO bei Cloud-DB</td>
           <td class="before">Nicht thematisiert</td>
-          <td class="after">Eigener Abschnitt im Pflichtenheft: EU-Region <code>europe-west1</code>, Auftragsverarbeitungsvertrag, offene Lücken (Auth, Audit-Log, Backup) mit Roadmap</td>
+          <td class="after">Datenbank läuft jetzt lokal im Browser über PGlite/IndexedDB; Firebase wird nur noch für statisches Hosting genutzt, nicht mehr als Datenbank</td>
         </tr>
         <tr>
           <td class="label">ESLint-Report (187 Errors)</td>
           <td class="before">Lockere Config, viele Unused Imports, keine PropTypes</td>
-          <td class="after">Strenge Config mit <code>jsx-runtime</code> + <code>prop-types: error</code>, PropTypes für alle 22 Komponenten — <strong>0 Errors</strong></td>
+          <td class="after">Strenge Config mit <code>jsx-runtime</code> + <code>prop-types: error</code>, PropTypes für alle zentralen Komponenten und dokumentierter Lint-Workflow</td>
         </tr>
         <tr>
           <td class="label">Echtzeit vs. Polling</td>
           <td class="before">Nicht begründet</td>
-          <td class="after">Im Pflichtenheft begründet: bei 3–5 parallelen Nutzern am Tagesplan müssen Statuswechsel sofort sichtbar sein, Polling würde Doppelvergaben provozieren</td>
+          <td class="after">Mit der lokalen SQL-Variante entfällt Firestore-onSnapshot; die App nutzt lokale Updates und Re-Fetch nach Schreiboperationen. Multi-User-Sync ist bewusst nicht mehr Scope des lokalen Prototyps</td>
         </tr>
         <tr>
           <td class="label">Test-Abdeckung</td>
           <td class="before">~52 Tests, hauptsächlich Store-Logik</td>
-          <td class="after"><strong>114 Tests</strong> (62 neue), explizite Regressions-Tests für jeden Ihrer Funde, Verfahren in <code>docs/testkonzept.md</code> begründet</td>
+          <td class="after"><strong>133 Tests</strong> grün, inklusive DB-/PGlite-Integrationstests und Regressions-Tests</td>
         </tr>
         <tr>
           <td class="label">Bericht-Ausgabe</td>
@@ -375,6 +395,16 @@
           <td class="before">Hardcoded Desktop, unbenutzbar &lt; 768 px</td>
           <td class="after">Voll bedienbar ab 360 px Viewport, Touch-Targets ≥ 36 px, 4 Polish-Runden auf iPhone Safari</td>
         </tr>
+        <tr>
+          <td class="label">Datenbank-Technik</td>
+          <td class="before">Firestore-Collections <code>fahrzeuge</code> und <code>termine</code>; Mängel als eingebettetes Array</td>
+          <td class="after">PGlite + Drizzle ORM; relationale SQL-Tabellen mit Fremdschlüsseln und Migrationen in <code>src/db/migrations/</code></td>
+        </tr>
+        <tr>
+          <td class="label">Architekturentscheidungen</td>
+          <td class="before">Entscheidungen waren implizit über Code und verstreute Doku erklärbar</td>
+          <td class="after"><code>docs/decisions/</code> enthält acht neutrale ADRs mit Optionen, Begründung, Konsequenzen und Quellen</td>
+        </tr>
       </table>
     </div>
   </section>
@@ -384,17 +414,18 @@
     <h2><span class="num">5</span> Stand jetzt — die Zahlen</h2>
     <div class="body">
       <div class="stats">
-        <div class="stat"><div class="num green">114</div><div class="lbl">Vitest-Tests grün</div></div>
-        <div class="stat"><div class="num">75</div><div class="lbl">Story Points (Sprint 5+6)</div></div>
-        <div class="stat"><div class="num cyan">~430</div><div class="lbl">KBA-Codes geprüft</div></div>
-        <div class="stat"><div class="num green">0</div><div class="lbl">Lint-Errors / Vulns / Alerts</div></div>
+        <div class="stat"><div class="num green">133</div><div class="lbl">Vitest-Tests grün</div></div>
+        <div class="stat"><div class="num">8</div><div class="lbl">ADR-Entscheidungen dokumentiert</div></div>
+        <div class="stat"><div class="num cyan">SQL</div><div class="lbl">PGlite + Drizzle statt Firestore</div></div>
+        <div class="stat"><div class="num green">✓</div><div class="lbl">Build erfolgreich</div></div>
       </div>
       <div style="margin-top:14px; font-size:9.5pt; color:#475569; line-height:1.6">
         <strong style="color:#0f172a">Wo Sie was finden:</strong>
         <ul style="margin-top:6px; padding-left:22px">
           <li><strong>Repository:</strong> <code>github.com/maroxd3/tuv-workflow-web</code> — Commit-Historie, jeder Commit mit ausführlicher Beschreibung</li>
-          <li><strong>Live-Demo:</strong> <code>tuv-workflow.web.app</code> — die Bug-Tests aus Ihrer Mail können Sie dort live nachvollziehen</li>
-          <li><strong>Doku:</strong> <code>docs/pflichtenheft.md</code> · <code>datenmodell.md</code> · <code>design.md</code> · <code>backlog.md</code> · <code>testkonzept.md</code></li>
+          <li><strong>Lokale Datenbank:</strong> Browser DevTools → Application → IndexedDB → <code>/pglite/tuvpro-db-v2</code></li>
+          <li><strong>Lesbare DB-Daten:</strong> Dev-Konsole → <code>await tuvdb.table("fahrzeug")</code>, <code>await tuvdb.table("termin")</code></li>
+          <li><strong>Doku:</strong> <code>docs/pflichtenheft.md</code> · <code>datenmodell.md</code> · <code>design.md</code> · <code>backlog.md</code> · <code>testkonzept.md</code> · <code>decisions/</code></li>
           <li><strong>Präsentation:</strong> <code>praesentation.html</code> im Repo-Root — 15 Slides, druckbar als PDF</li>
           <li><strong>Status-Sheet:</strong> <code>docs/projekt_status.html</code> — A4-Übersicht mit erledigten und externen Tasks</li>
         </ul>
@@ -404,7 +435,7 @@
 
   <div class="footer">
     <div>Repository: <code>github.com/maroxd3/tuv-workflow-web</code> · Live: <code>tuv-workflow.web.app</code></div>
-    <div>Stand 30.04.2026</div>
+    <div>Stand 14.05.2026</div>
   </div>
 </body>
 </html>
