@@ -18,18 +18,24 @@ Datenbank-Technologie diskutierbar sind.
 
 ## 1. Konzeptuelles Modell — Entity-Relationship-Diagramm
 
-Die konzeptuelle Sicht stellt das Universum of Discourse dar. Sie enthält
-**ausschließlich** Entitäten, ihre Attribute und Beziehungen. Keine Tabellen,
-keine Fremdschlüssel-Spalten, keine Indizes, keine Trigger, keine
-DB-System-spezifischen Datentypen.
+Die konzeptuelle Sicht stellt das Universum of Discourse dar. Das Diagramm ist
+im Chen-Stil gezeichnet: Entitäten als Rechtecke, Beziehungen als Rauten und
+Attribute als Ovale. Für die Abgabe sind zusätzlich die späteren
+Schlüsselattribute sichtbar gemacht: Primärschlüssel (`PK`) und Fremdschlüssel
+(`FK`) sind unterstrichen markiert.
 
 ### 1.1 ER-Diagramm (Chen-Notation, kompakt als Mermaid)
 
 ```mermaid
-flowchart LR
-  %% Chen-Notation:
+flowchart TB
+  %% Chen-nahe Notation:
   %% Rechteck = Entität, Raute = Beziehung, Oval = Attribut
-  %% Unterstrichene Attribute sind Primärschlüssel.
+  %% Unterstrichene Attribute sind Schlüsselattribute (PK oder FK).
+
+  classDef entity fill:#eef2ff,stroke:#6d5dfc,stroke-width:1.5px,color:#111827;
+  classDef relation fill:#fff7ed,stroke:#ea580c,stroke-width:1.5px,color:#111827;
+  classDef attr fill:#ffffff,stroke:#64748b,stroke-width:1px,color:#111827;
+  classDef key fill:#fefce8,stroke:#ca8a04,stroke-width:1.5px,color:#111827;
 
   HALTER[HALTER]
   FAHRZEUG[FAHRZEUG]
@@ -69,7 +75,7 @@ flowchart LR
   MANGEL_KATEGORIE -- "1" --- HAT_KATEGORIE
   HAT_KATEGORIE -- "N" --- MANGEL
 
-  h_id(["<u>halter_id</u>"])
+  h_id(["<u>halter_id</u><br/>PK"])
   h_name(["name"])
   h_tel(["telefon"])
   h_email(["email"])
@@ -80,7 +86,8 @@ flowchart LR
   HALTER --- h_email
   HALTER --- h_anschrift
 
-  f_id(["<u>fahrzeug_id</u>"])
+  f_id(["<u>fahrzeug_id</u><br/>PK"])
+  f_halter_fk(["<u>halter_id</u><br/>FK"])
   f_kennzeichen(["kennzeichen"])
   f_fin(["fin"])
   f_hersteller(["hersteller"])
@@ -91,6 +98,7 @@ flowchart LR
   f_km(["kilometerstand"])
   f_hu(["hu_faellig"])
   FAHRZEUG --- f_id
+  FAHRZEUG --- f_halter_fk
   FAHRZEUG --- f_kennzeichen
   FAHRZEUG --- f_fin
   FAHRZEUG --- f_hersteller
@@ -101,54 +109,72 @@ flowchart LR
   FAHRZEUG --- f_km
   FAHRZEUG --- f_hu
 
-  t_id(["<u>termin_id</u>"])
+  t_id(["<u>termin_id</u><br/>PK"])
+  t_fahrzeug_fk(["<u>fahrzeug_id</u><br/>FK"])
+  t_pruefart_fk(["<u>prueft_code</u><br/>FK"])
+  t_pruefer_fk(["<u>pruefer_kuerzel</u><br/>FK"])
+  t_status_fk(["<u>status_code</u><br/>FK"])
   t_datum(["datum"])
   t_uhrzeit(["uhrzeit"])
   t_notiz(["notiz"])
   TERMIN --- t_id
+  TERMIN --- t_fahrzeug_fk
+  TERMIN --- t_pruefart_fk
+  TERMIN --- t_pruefer_fk
+  TERMIN --- t_status_fk
   TERMIN --- t_datum
   TERMIN --- t_uhrzeit
   TERMIN --- t_notiz
 
-  m_id(["<u>mangel_id</u>"])
+  m_id(["<u>mangel_id</u><br/>PK"])
+  m_termin_fk(["<u>termin_id</u><br/>FK"])
+  m_kat_fk(["<u>kategorie_code</u><br/>FK"])
   m_code(["code_stvzo"])
   m_beschreibung(["beschreibung"])
   m_behoben(["behoben"])
   MANGEL --- m_id
+  MANGEL --- m_termin_fk
+  MANGEL --- m_kat_fk
   MANGEL --- m_code
   MANGEL --- m_beschreibung
   MANGEL --- m_behoben
 
-  p_id(["<u>pruefer_kuerzel</u>"])
+  p_id(["<u>pruefer_kuerzel</u><br/>PK"])
   p_name(["name"])
   p_qualifikation(["qualifikation"])
   PRUEFER --- p_id
   PRUEFER --- p_name
   PRUEFER --- p_qualifikation
 
-  pa_id(["<u>prueft_code</u>"])
+  pa_id(["<u>prueft_code</u><br/>PK"])
   pa_bez(["bezeichnung"])
   PRUEFART --- pa_id
   PRUEFART --- pa_bez
 
-  s_id(["<u>status_code</u>"])
+  s_id(["<u>status_code</u><br/>PK"])
   s_bez(["bezeichnung"])
   s_end(["ist_endzustand"])
   STATUS --- s_id
   STATUS --- s_bez
   STATUS --- s_end
 
-  mk_id(["<u>kategorie_code</u>"])
+  mk_id(["<u>kategorie_code</u><br/>PK"])
   mk_bez(["bezeichnung"])
   mk_block(["blockiert_bestanden"])
   MANGEL_KATEGORIE --- mk_id
   MANGEL_KATEGORIE --- mk_bez
   MANGEL_KATEGORIE --- mk_block
+
+  class HALTER,FAHRZEUG,TERMIN,MANGEL,PRUEFER,PRUEFART,STATUS,MANGEL_KATEGORIE entity;
+  class BESITZT,WIRD_GEPRUEFT,WEIST_AUF,FUEHRT_DURCH,KLASSIFIZIERT,BESCHREIBT,HAT_KATEGORIE relation;
+  class h_name,h_tel,h_email,h_anschrift,f_kennzeichen,f_fin,f_hersteller,f_modell,f_baujahr,f_farbe,f_typ,f_km,f_hu,t_datum,t_uhrzeit,t_notiz,m_code,m_beschreibung,m_behoben,p_name,p_qualifikation,pa_bez,s_bez,s_end,mk_bez,mk_block attr;
+  class h_id,f_id,f_halter_fk,t_id,t_fahrzeug_fk,t_pruefart_fk,t_pruefer_fk,t_status_fk,m_id,m_termin_fk,m_kat_fk,p_id,pa_id,s_id,mk_id key;
 ```
 
 Legende: Rechteck = Entität, Raute = Beziehung, Oval = Attribut,
-unterstrichenes Attribut = Primärschlüssel. Die Kardinalitäten stehen direkt an
-den Verbindungslinien (`1` bzw. `N`).
+unterstrichenes Attribut = Schlüsselattribut. `PK` kennzeichnet den
+Primärschlüssel, `FK` kennzeichnet einen Fremdschlüssel. Die Kardinalitäten
+stehen direkt an den Verbindungslinien (`1`, `0..1` bzw. `N`).
 
 ### 1.2 Entitäten und ihre Bedeutung
 
