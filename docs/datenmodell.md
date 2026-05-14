@@ -18,11 +18,11 @@ Datenbank-Technologie diskutierbar sind.
 
 ## 1. Konzeptuelles Modell — Entity-Relationship-Diagramm
 
-Die konzeptuelle Sicht stellt das Universum of Discourse dar. Das Diagramm ist
-im Chen-Stil gezeichnet: Entitäten als Rechtecke, Beziehungen als Rauten und
-Attribute als Ovale. Für die Abgabe sind zusätzlich die späteren
-Schlüsselattribute sichtbar gemacht: Primärschlüssel (`PK`) und Fremdschlüssel
-(`FK`) sind unterstrichen markiert.
+Das Diagramm zeigt das fachliche Modell im Chen-Stil: Entitäten sind als
+Rechtecke dargestellt, Beziehungen als Rauten und Attribute als Ovale. Die
+Primärschlüssel sind wie in der klassischen Chen-Notation unterstrichen. Die
+Fremdschlüssel werden erst im logischen Relationenschema ausgewiesen, weil sie
+aus den Beziehungen des ER-Modells abgeleitet werden.
 
 ### 1.1 ER-Diagramm (Chen-Notation, kompakt als Mermaid)
 
