@@ -3,7 +3,7 @@
 * **Status:** accepted
 * **Datum:** 2026-05-13
 * **Entscheider:** Marwan Saleh, Oussama Hlayhel
-* **Supersedes:** (initiale Sprint-1-Entscheidung für Firestore, nirgends als ADR dokumentiert — Lessons-Learned-Punkt)
+
 
 ## Kontext und Problem
 
