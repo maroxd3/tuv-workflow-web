@@ -106,15 +106,16 @@ export function TagesplanView({ fahrzeuge, termine, addTr, updTr, delTr, addMang
       `${a.datum || ""} ${a.uhrzeit || ""}`.localeCompare(`${b.datum || ""} ${b.uhrzeit || ""}`)
     );
   }, [dayTr, tableScope, termine]);
+  const statsTr = viewMode === "table" && tableScope === "all" ? tableTr : dayTr;
   const maengelTr = maengelId ? termine.find(t => t.id === maengelId) : null;
 
   const stats = useMemo(() => ({
-    total: dayTr.length,
-    bestanden: dayTr.filter(t => t.status === STATUS.BESTANDEN).length,
-    failed: dayTr.filter(t => t.status === STATUS.NICHT_BESTANDEN).length,
-    offen: dayTr.filter(t => t.status === STATUS.GEPLANT || t.status === STATUS.IN_PRUEFUNG).length,
-    hm: dayTr.filter(t => hatHauptmangel(t.mängel)).length,
-  }), [dayTr]);
+    total: statsTr.length,
+    bestanden: statsTr.filter(t => t.status === STATUS.BESTANDEN).length,
+    failed: statsTr.filter(t => t.status === STATUS.NICHT_BESTANDEN).length,
+    offen: statsTr.filter(t => t.status === STATUS.GEPLANT || t.status === STATUS.IN_PRUEFUNG).length,
+    hm: statsTr.filter(t => hatHauptmangel(t.mängel)).length,
+  }), [statsTr]);
   const passRate = (stats.bestanden + stats.failed) > 0 ? Math.round(stats.bestanden / (stats.bestanden + stats.failed) * 100) : null;
 
   function openCtx(e, slot, termin = null) {
