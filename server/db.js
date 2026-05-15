@@ -113,7 +113,7 @@ async function migrate() {
           FOREIGN KEY (halter_id) REFERENCES halter(halter_id)
           ON DELETE RESTRICT ON UPDATE CASCADE,
         CONSTRAINT fahrzeug_baujahr_check
-          CHECK (baujahr IS NULL OR (baujahr BETWEEN 1885 AND YEAR(CURRENT_DATE()) + 1)),
+          CHECK (baujahr IS NULL OR (baujahr BETWEEN 1885 AND 2100)),
         CONSTRAINT fahrzeug_km_check
           CHECK (kilometerstand IS NULL OR (kilometerstand BETWEEN 0 AND 3000000))
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
