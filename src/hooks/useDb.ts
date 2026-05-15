@@ -132,38 +132,147 @@ export function useDb(): UseDbResult {
 
   // ── Halter ──────────────────────────────────────────────
   const addHalter = useCallback(async (h: NeuerHalter) => {
-    const r = await q.addHalter(h);
-    await refresh();
-    return r;
+    const optimisticHalter = {
+      ...h,
+      halterId: h.halterId ?? crypto.randomUUID(),
+      telefon: h.telefon ?? null,
+      email: h.email ?? null,
+      anschrift: h.anschrift ?? null,
+      erfasstAm: new Date(),
+    } as Halter;
+
+    setHalterList((current) => [optimisticHalter, ...current]);
+
+    try {
+      const r = await q.addHalter({ ...h, halterId: optimisticHalter.halterId });
+      setHalterList((current) =>
+        current.map((item) => item.halterId === optimisticHalter.halterId ? r : item),
+      );
+      return r;
+    } catch (e) {
+      setHalterList((current) =>
+        current.filter((item) => item.halterId !== optimisticHalter.halterId),
+      );
+      throw e;
+    }
   }, [refresh]);
 
   const updHalter = useCallback(async (id: string, p: Partial<NeuerHalter>) => {
-    const r = await q.updHalter(id, p);
-    await refresh();
-    return r;
+    let previous: Halter[] | null = null;
+    setHalterList((current) => {
+      previous = current;
+      return current.map((item) => item.halterId === id ? { ...item, ...p } : item);
+    });
+
+    try {
+      const r = await q.updHalter(id, p);
+      if (!r) {
+        if (previous) setHalterList(previous);
+        else await refresh();
+        return r;
+      }
+      setHalterList((current) =>
+        current.map((item) => item.halterId === id ? r : item),
+      );
+      return r;
+    } catch (e) {
+      if (previous) setHalterList(previous);
+      else await refresh();
+      throw e;
+    }
   }, [refresh]);
 
   const delHalter = useCallback(async (id: string) => {
-    await q.delHalter(id);
-    await refresh();
+    let removed: Halter | null = null;
+    setHalterList((current) => {
+      removed = current.find((item) => item.halterId === id) ?? null;
+      return current.filter((item) => item.halterId !== id);
+    });
+
+    try {
+      await q.delHalter(id);
+    } catch (e) {
+      if (removed) setHalterList((current) => [removed!, ...current]);
+      else await refresh();
+      throw e;
+    }
   }, [refresh]);
 
   // ── Fahrzeug ────────────────────────────────────────────
   const addFahrzeug = useCallback(async (f: NeuesFahrzeug) => {
-    const r = await q.addFahrzeug(f);
-    await refresh();
-    return r;
+    const optimisticFahrzeug = {
+      ...f,
+      fahrzeugId: f.fahrzeugId ?? crypto.randomUUID(),
+      fin: f.fin ?? null,
+      baujahr: f.baujahr ?? null,
+      farbe: f.farbe ?? null,
+      kilometerstand: f.kilometerstand ?? null,
+      huFaellig: f.huFaellig ?? null,
+      erfasstAm: new Date(),
+    } as Fahrzeug;
+
+    setFahrzeuge((current) => [optimisticFahrzeug, ...current]);
+
+    try {
+      const r = await q.addFahrzeug({ ...f, fahrzeugId: optimisticFahrzeug.fahrzeugId });
+      setFahrzeuge((current) =>
+        current.map((item) => item.fahrzeugId === optimisticFahrzeug.fahrzeugId ? r : item),
+      );
+      return r;
+    } catch (e) {
+      setFahrzeuge((current) =>
+        current.filter((item) => item.fahrzeugId !== optimisticFahrzeug.fahrzeugId),
+      );
+      throw e;
+    }
   }, [refresh]);
 
   const updFahrzeug = useCallback(async (id: string, p: Partial<NeuesFahrzeug>) => {
-    const r = await q.updFahrzeug(id, p);
-    await refresh();
-    return r;
+    let previous: Fahrzeug[] | null = null;
+    setFahrzeuge((current) => {
+      previous = current;
+      return current.map((item) => item.fahrzeugId === id ? { ...item, ...p } : item);
+    });
+
+    try {
+      const r = await q.updFahrzeug(id, p);
+      if (!r) {
+        if (previous) setFahrzeuge(previous);
+        else await refresh();
+        return r;
+      }
+      setFahrzeuge((current) =>
+        current.map((item) => item.fahrzeugId === id ? r : item),
+      );
+      return r;
+    } catch (e) {
+      if (previous) setFahrzeuge(previous);
+      else await refresh();
+      throw e;
+    }
   }, [refresh]);
 
   const delFahrzeug = useCallback(async (id: string) => {
-    await q.delFahrzeug(id);
-    await refresh();
+    let previousFahrzeuge: Fahrzeug[] | null = null;
+    let previousTermine: UseDbResult["termine"] | null = null;
+
+    setFahrzeuge((current) => {
+      previousFahrzeuge = current;
+      return current.filter((item) => item.fahrzeugId !== id);
+    });
+    setTermine((current) => {
+      previousTermine = current;
+      return current.filter((tr) => tr.fahrzeugId !== id);
+    });
+
+    try {
+      await q.delFahrzeug(id);
+    } catch (e) {
+      if (previousFahrzeuge) setFahrzeuge(previousFahrzeuge);
+      if (previousTermine) setTermine(previousTermine);
+      if (!previousFahrzeuge || !previousTermine) await refresh();
+      throw e;
+    }
   }, [refresh]);
 
   // ── Termin ──────────────────────────────────────────────
@@ -198,9 +307,28 @@ export function useDb(): UseDbResult {
   }, [refresh]);
 
   const updTermin = useCallback(async (id: string, p: Partial<NeuerTermin>) => {
-    const r = await q.updTermin(id, p);
-    await refresh();
-    return r;
+    let previous: UseDbResult["termine"] | null = null;
+    setTermine((current) => {
+      previous = current;
+      return current.map((tr) => tr.terminId === id ? { ...tr, ...p } : tr);
+    });
+
+    try {
+      const r = await q.updTermin(id, p);
+      if (!r) {
+        if (previous) setTermine(previous);
+        else await refresh();
+        return r;
+      }
+      setTermine((current) =>
+        current.map((tr) => tr.terminId === id ? { ...tr, ...r } : tr),
+      );
+      return r;
+    } catch (e) {
+      if (previous) setTermine(previous);
+      else await refresh();
+      throw e;
+    }
   }, [refresh]);
 
   const delTermin = useCallback(async (id: string) => {
