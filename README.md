@@ -1,5 +1,7 @@
 # TÜV Prüfstelle Pro
 
+> Hinweis Branch `mariadb-backend`: Diese Variante nutzt eine zentrale MariaDB-Datenbank ueber `server/index.js` (Express API). Setup siehe [`docs/mariadb-setup.md`](docs/mariadb-setup.md).
+
 Verwaltungssystem für TÜV-Prüfstellen — Hauptuntersuchung-Workflow von der
 Terminplanung bis zum amtlichen Prüfbericht. Web-App und native Desktop-App
 aus einer Codebasis. Lokale PostgreSQL-Persistenz im Browser ohne Backend-Server.

@@ -1,0 +1,360 @@
+import express from "express";
+import cors from "cors";
+import { randomUUID } from "node:crypto";
+import { db, ensureDatabase } from "./db.js";
+
+const app = express();
+const port = Number(process.env.API_PORT || 8787);
+
+app.use(cors());
+app.use(express.json({ limit: "1mb" }));
+
+const bool = (v) => Boolean(Number(v));
+const clean = (obj) => Object.fromEntries(Object.entries(obj).filter(([, v]) => v !== undefined));
+
+function toHalter(r) {
+  return {
+    halterId: r.halter_id,
+    name: r.name,
+    telefon: r.telefon,
+    email: r.email,
+    anschrift: r.anschrift,
+    erfasstAm: r.erfasst_am,
+  };
+}
+
+function toFahrzeug(r) {
+  return {
+    fahrzeugId: r.fahrzeug_id,
+    kennzeichen: r.kennzeichen,
+    fin: r.fin,
+    hersteller: r.hersteller,
+    modell: r.modell,
+    baujahr: r.baujahr,
+    farbe: r.farbe,
+    typ: r.typ,
+    kilometerstand: r.kilometerstand,
+    huFaellig: r.hu_faellig,
+    halterId: r.halter_id,
+    erfasstAm: r.erfasst_am,
+  };
+}
+
+function toTermin(r) {
+  return {
+    terminId: r.termin_id,
+    fahrzeugId: r.fahrzeug_id,
+    datum: r.datum,
+    uhrzeit: r.uhrzeit,
+    prueftCode: r.prueft_code,
+    prueferKuerzel: r.pruefer_kuerzel,
+    statusCode: r.status_code,
+    notiz: r.notiz,
+    erfasstAm: r.erfasst_am,
+  };
+}
+
+function toMangel(r) {
+  return {
+    mangelId: r.mangel_id,
+    terminId: r.termin_id,
+    codeStvzo: r.code_stvzo,
+    beschreibung: r.beschreibung,
+    kategorieCode: r.kategorie_code,
+    behoben: bool(r.behoben),
+    erfasstAm: r.erfasst_am,
+  };
+}
+
+async function one(sql, params = []) {
+  const rows = await db().query(sql, params);
+  return rows[0] ?? null;
+}
+
+function asyncRoute(fn) {
+  return (req, res, next) => Promise.resolve(fn(req, res)).catch(next);
+}
+
+app.get("/api/health", (_req, res) => res.json({ ok: true }));
+
+app.get("/api/halter", asyncRoute(async (_req, res) => {
+  const rows = await db().query("SELECT * FROM halter ORDER BY name");
+  res.json(rows.map(toHalter));
+}));
+
+app.post("/api/halter", asyncRoute(async (req, res) => {
+  const id = req.body.halterId || randomUUID();
+  await db().query(
+    "INSERT INTO halter (halter_id, name, telefon, email, anschrift) VALUES (?, ?, ?, ?, ?)",
+    [id, req.body.name, req.body.telefon ?? null, req.body.email ?? null, req.body.anschrift ?? null],
+  );
+  res.status(201).json(toHalter(await one("SELECT * FROM halter WHERE halter_id = ?", [id])));
+}));
+
+app.patch("/api/halter/:id", asyncRoute(async (req, res) => {
+  const patch = clean({
+    name: req.body.name,
+    telefon: req.body.telefon,
+    email: req.body.email,
+    anschrift: req.body.anschrift,
+  });
+  const entries = Object.entries(patch);
+  if (entries.length) {
+    await db().query(
+      `UPDATE halter SET ${entries.map(([k]) => `${k} = ?`).join(", ")} WHERE halter_id = ?`,
+      [...entries.map(([, v]) => v), req.params.id],
+    );
+  }
+  const row = await one("SELECT * FROM halter WHERE halter_id = ?", [req.params.id]);
+  res.json(row ? toHalter(row) : null);
+}));
+
+app.delete("/api/halter/:id", asyncRoute(async (req, res) => {
+  await db().query("DELETE FROM halter WHERE halter_id = ?", [req.params.id]);
+  res.status(204).end();
+}));
+
+app.get("/api/fahrzeuge", asyncRoute(async (_req, res) => {
+  const rows = await db().query("SELECT * FROM fahrzeug ORDER BY kennzeichen");
+  res.json(rows.map(toFahrzeug));
+}));
+
+app.post("/api/fahrzeuge", asyncRoute(async (req, res) => {
+  const id = req.body.fahrzeugId || randomUUID();
+  await db().query(
+    `INSERT INTO fahrzeug
+     (fahrzeug_id, kennzeichen, fin, hersteller, modell, baujahr, farbe, typ, kilometerstand, hu_faellig, halter_id)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      id,
+      req.body.kennzeichen,
+      req.body.fin ?? null,
+      req.body.hersteller,
+      req.body.modell,
+      req.body.baujahr ?? null,
+      req.body.farbe ?? null,
+      req.body.typ,
+      req.body.kilometerstand ?? null,
+      req.body.huFaellig ?? null,
+      req.body.halterId,
+    ],
+  );
+  res.status(201).json(toFahrzeug(await one("SELECT * FROM fahrzeug WHERE fahrzeug_id = ?", [id])));
+}));
+
+app.patch("/api/fahrzeuge/:id", asyncRoute(async (req, res) => {
+  const map = {
+    kennzeichen: "kennzeichen",
+    fin: "fin",
+    hersteller: "hersteller",
+    modell: "modell",
+    baujahr: "baujahr",
+    farbe: "farbe",
+    typ: "typ",
+    kilometerstand: "kilometerstand",
+    huFaellig: "hu_faellig",
+    halterId: "halter_id",
+  };
+  const entries = Object.entries(map)
+    .filter(([key]) => req.body[key] !== undefined)
+    .map(([key, col]) => [col, req.body[key]]);
+  if (entries.length) {
+    await db().query(
+      `UPDATE fahrzeug SET ${entries.map(([col]) => `${col} = ?`).join(", ")} WHERE fahrzeug_id = ?`,
+      [...entries.map(([, v]) => v), req.params.id],
+    );
+  }
+  const row = await one("SELECT * FROM fahrzeug WHERE fahrzeug_id = ?", [req.params.id]);
+  res.json(row ? toFahrzeug(row) : null);
+}));
+
+app.delete("/api/fahrzeuge/:id", asyncRoute(async (req, res) => {
+  await db().query("DELETE FROM fahrzeug WHERE fahrzeug_id = ?", [req.params.id]);
+  res.status(204).end();
+}));
+
+app.get("/api/termine", asyncRoute(async (_req, res) => {
+  const rows = await db().query("SELECT * FROM termin ORDER BY datum DESC, uhrzeit ASC");
+  res.json(rows.map(toTermin));
+}));
+
+app.post("/api/termine", asyncRoute(async (req, res) => {
+  const id = req.body.terminId || randomUUID();
+  await db().query(
+    `INSERT INTO termin
+     (termin_id, fahrzeug_id, datum, uhrzeit, prueft_code, pruefer_kuerzel, status_code, notiz)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      id,
+      req.body.fahrzeugId,
+      req.body.datum,
+      req.body.uhrzeit ?? null,
+      req.body.prueftCode,
+      req.body.prueferKuerzel ?? null,
+      req.body.statusCode ?? "Geplant",
+      req.body.notiz ?? null,
+    ],
+  );
+  res.status(201).json(toTermin(await one("SELECT * FROM termin WHERE termin_id = ?", [id])));
+}));
+
+app.patch("/api/termine/:id", asyncRoute(async (req, res) => {
+  const map = {
+    fahrzeugId: "fahrzeug_id",
+    datum: "datum",
+    uhrzeit: "uhrzeit",
+    prueftCode: "prueft_code",
+    prueferKuerzel: "pruefer_kuerzel",
+    statusCode: "status_code",
+    notiz: "notiz",
+  };
+  const entries = Object.entries(map)
+    .filter(([key]) => req.body[key] !== undefined)
+    .map(([key, col]) => [col, req.body[key]]);
+  if (entries.length) {
+    await db().query(
+      `UPDATE termin SET ${entries.map(([col]) => `${col} = ?`).join(", ")} WHERE termin_id = ?`,
+      [...entries.map(([, v]) => v), req.params.id],
+    );
+  }
+  const row = await one("SELECT * FROM termin WHERE termin_id = ?", [req.params.id]);
+  res.json(row ? toTermin(row) : null);
+}));
+
+app.patch("/api/termine/:id/status", asyncRoute(async (req, res) => {
+  const neuerStatus = req.body.statusCode;
+  if (neuerStatus === "Bestanden") {
+    const blocker = await one(
+      `SELECT COUNT(*) AS count
+       FROM mangel m
+       JOIN mangel_kategorie mk ON mk.kategorie_code = m.kategorie_code
+       WHERE m.termin_id = ? AND mk.blockiert_bestanden = TRUE`,
+      [req.params.id],
+    );
+    if (Number(blocker?.count ?? 0) > 0) {
+      res.json({ ok: false, reason: "BESTANDEN nicht möglich bei Hauptmangel oder gefährlichem Mangel (§29 StVZO)" });
+      return;
+    }
+  }
+
+  await db().query("UPDATE termin SET status_code = ? WHERE termin_id = ?", [neuerStatus, req.params.id]);
+  const row = await one("SELECT * FROM termin WHERE termin_id = ?", [req.params.id]);
+  res.json({ ok: true, termin: toTermin(row) });
+}));
+
+app.delete("/api/termine/:id", asyncRoute(async (req, res) => {
+  await db().query("DELETE FROM termin WHERE termin_id = ?", [req.params.id]);
+  res.status(204).end();
+}));
+
+app.get("/api/termine/:id/maengel", asyncRoute(async (req, res) => {
+  const rows = await db().query("SELECT * FROM mangel WHERE termin_id = ?", [req.params.id]);
+  res.json(rows.map(toMangel));
+}));
+
+app.post("/api/maengel", asyncRoute(async (req, res) => {
+  const id = req.body.mangelId || randomUUID();
+  await db().query(
+    `INSERT INTO mangel (mangel_id, termin_id, code_stvzo, beschreibung, kategorie_code, behoben)
+     VALUES (?, ?, ?, ?, ?, ?)`,
+    [
+      id,
+      req.body.terminId,
+      req.body.codeStvzo ?? null,
+      req.body.beschreibung,
+      req.body.kategorieCode,
+      req.body.behoben ?? false,
+    ],
+  );
+
+  let terminDemoted = false;
+  const kat = await one("SELECT blockiert_bestanden FROM mangel_kategorie WHERE kategorie_code = ?", [req.body.kategorieCode]);
+  if (bool(kat?.blockiert_bestanden)) {
+    const t = await one("SELECT status_code FROM termin WHERE termin_id = ?", [req.body.terminId]);
+    if (t?.status_code === "Bestanden") {
+      await db().query("UPDATE termin SET status_code = 'Nicht bestanden' WHERE termin_id = ?", [req.body.terminId]);
+      terminDemoted = true;
+    }
+  }
+
+  res.status(201).json({
+    mangel: toMangel(await one("SELECT * FROM mangel WHERE mangel_id = ?", [id])),
+    terminDemoted,
+  });
+}));
+
+app.delete("/api/maengel/:id", asyncRoute(async (req, res) => {
+  await db().query("DELETE FROM mangel WHERE mangel_id = ?", [req.params.id]);
+  res.status(204).end();
+}));
+
+app.get("/api/count/fahrzeuge", asyncRoute(async (_req, res) => {
+  const row = await one("SELECT COUNT(*) AS count FROM fahrzeug");
+  res.json({ count: Number(row?.count ?? 0) });
+}));
+
+app.post("/api/admin/reset", asyncRoute(async (_req, res) => {
+  await db().query("DELETE FROM mangel");
+  await db().query("DELETE FROM termin");
+  await db().query("DELETE FROM fahrzeug");
+  await db().query("DELETE FROM halter");
+  res.json({ ok: true });
+}));
+
+app.post("/api/admin/demo", asyncRoute(async (_req, res) => {
+  await db().query("DELETE FROM mangel");
+  await db().query("DELETE FROM termin");
+  await db().query("DELETE FROM fahrzeug");
+  await db().query("DELETE FROM halter");
+
+  const h1 = randomUUID();
+  const h2 = randomUUID();
+  const f1 = randomUUID();
+  const f2 = randomUUID();
+  const t1 = randomUUID();
+  const t2 = randomUUID();
+  const today = new Date().toISOString().slice(0, 10);
+
+  await db().batch(
+    "INSERT INTO halter (halter_id, name, telefon, email) VALUES (?, ?, ?, ?)",
+    [
+      [h1, "Klaus Müller", "0176 1234567", "k.mueller@mail.de"],
+      [h2, "Bau GmbH Lehmann", "089 55443322", "info@lehmann-bau.de"],
+    ],
+  );
+  await db().batch(
+    `INSERT INTO fahrzeug
+     (fahrzeug_id, kennzeichen, fin, hersteller, modell, baujahr, farbe, typ, kilometerstand, hu_faellig, halter_id)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      [f1, "B-TK 1234", "WBA3A5C50CF256985", "BMW", "320d xDrive", 2018, "Sophistograu", "PKW", 87420, today, h1],
+      [f2, "M-XZ 9900", "3FADP4BJ1EM198765", "Ford", "Transit L3H2", 2016, "Arktikweiß", "Transporter", 196300, today, h2],
+    ],
+  );
+  await db().batch(
+    `INSERT INTO termin
+     (termin_id, fahrzeug_id, datum, uhrzeit, prueft_code, pruefer_kuerzel, status_code, notiz)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      [t1, f1, today, "08:00:00", "HU_AU", "MW", "Geplant", "Demo-Termin"],
+      [t2, f2, today, "10:30:00", "HU", "SK", "Nicht bestanden", "Hauptmangel vorhanden"],
+    ],
+  );
+  await db().query(
+    `INSERT INTO mangel (mangel_id, termin_id, code_stvzo, beschreibung, kategorie_code)
+     VALUES (?, ?, ?, ?, ?)`,
+    [randomUUID(), t2, "2.1.1", "Betriebsbremse: Ungleichmäßige Bremswirkung", "HM"],
+  );
+
+  res.json({ ok: true });
+}));
+
+app.use((err, _req, res, _next) => {
+  console.error(err);
+  res.status(500).json({ error: err.message || "Server error" });
+});
+
+await ensureDatabase();
+app.listen(port, () => {
+  console.log(`TUV workflow API listening on http://127.0.0.1:${port}`);
+});
