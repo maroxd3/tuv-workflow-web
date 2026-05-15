@@ -13,9 +13,7 @@
  */
 
 import { useCallback, useEffect, useState } from "react";
-import { runMigrations } from "../db/migrate";
-import { seedDomainTables, seedDemoBestand, clearAllDataTables } from "../db/seed";
-import * as q from "../db/queries";
+import * as api from "../db/apiClient";
 import type {
   Fahrzeug,
   NeuesFahrzeug,
@@ -24,6 +22,7 @@ import type {
   NeuerMangel,
   Halter,
   NeuerHalter,
+  Mangel,
 } from "../db/schema";
 
 export interface UseDbResult {
@@ -31,7 +30,7 @@ export interface UseDbResult {
   error: string | null;
   halter: Halter[];
   fahrzeuge: Fahrzeug[];
-  termine: (Termin & { mängel: Awaited<ReturnType<typeof q.listMangelByTermin>> })[];
+  termine: (Termin & { mängel: Mangel[] })[];
   refresh: () => Promise<void>;
   // Halter
   addHalter: (h: NeuerHalter) => Promise<Halter>;
@@ -45,9 +44,9 @@ export interface UseDbResult {
   addTermin: (t: NeuerTermin) => Promise<Termin>;
   updTermin: (id: string, p: Partial<NeuerTermin>) => Promise<Termin | null>;
   delTermin: (id: string) => Promise<void>;
-  updTerminStatus: (id: string, status: string) => ReturnType<typeof q.updTerminStatus>;
+  updTerminStatus: (id: string, status: string) => ReturnType<typeof api.updTerminStatus>;
   // Mangel
-  addMangel: (m: NeuerMangel) => ReturnType<typeof q.addMangel>;
+  addMangel: (m: NeuerMangel) => ReturnType<typeof api.addMangel>;
   delMangel: (id: string) => Promise<void>;
   // Daten-Management
   resetAllData: () => Promise<void>;
@@ -64,15 +63,15 @@ export function useDb(): UseDbResult {
   const refresh = useCallback(async () => {
     try {
       const [h, f, t] = await Promise.all([
-        q.listHalter(),
-        q.listFahrzeuge(),
-        q.listTermine(),
+        api.listHalter(),
+        api.listFahrzeuge(),
+        api.listTermine(),
       ]);
       // Mängel pro Termin nachladen (1 zusätzlicher Roundtrip, akzeptabel)
       const termineWithMangel = await Promise.all(
         t.map(async (tr) => ({
           ...tr,
-          mängel: await q.listMangelByTermin(tr.terminId),
+          mängel: await api.listMangelByTermin(tr.terminId),
         })),
       );
       setHalterList(h);
@@ -87,19 +86,9 @@ export function useDb(): UseDbResult {
     let cancelled = false;
     (async () => {
       try {
-        await runMigrations();
-        await seedDomainTables();
+        await api.initDatabase();
+        
         if (cancelled) return;
-
-        // Auto-Seed bei leerer DB — außer der User hat explizit "Alle Daten löschen" geklickt
-        const cleared = (() => {
-          try { return localStorage.getItem("tuvpro_user_cleared") === "1"; }
-          catch { return false; }
-        })();
-        const fzCount = await q.countFahrzeuge();
-        if (fzCount === 0 && !cleared) {
-          await seedDemoBestand();
-        }
 
         if (cancelled) return;
         await refresh();
@@ -118,15 +107,12 @@ export function useDb(): UseDbResult {
 
   // ── Daten-Management (Sidebar-Buttons) ──
   const resetAllData = useCallback(async () => {
-    await clearAllDataTables();
-    try { localStorage.setItem("tuvpro_user_cleared", "1"); } catch { /* ignore */ }
+    await api.clearAllDataTables();
     await refresh();
   }, [refresh]);
 
   const loadDemoData = useCallback(async () => {
-    try { localStorage.removeItem("tuvpro_user_cleared"); } catch { /* ignore */ }
-    await clearAllDataTables();
-    await seedDemoBestand();
+    await api.loadDemoData();
     await refresh();
   }, [refresh]);
 
@@ -144,7 +130,7 @@ export function useDb(): UseDbResult {
     setHalterList((current) => [optimisticHalter, ...current]);
 
     try {
-      const r = await q.addHalter({ ...h, halterId: optimisticHalter.halterId });
+      const r = await api.addHalter({ ...h, halterId: optimisticHalter.halterId });
       setHalterList((current) =>
         current.map((item) => item.halterId === optimisticHalter.halterId ? r : item),
       );
@@ -165,7 +151,7 @@ export function useDb(): UseDbResult {
     });
 
     try {
-      const r = await q.updHalter(id, p);
+      const r = await api.updHalter(id, p);
       if (!r) {
         if (previous) setHalterList(previous);
         else await refresh();
@@ -190,7 +176,7 @@ export function useDb(): UseDbResult {
     });
 
     try {
-      await q.delHalter(id);
+      await api.delHalter(id);
     } catch (e) {
       if (removed) setHalterList((current) => [removed!, ...current]);
       else await refresh();
@@ -214,7 +200,7 @@ export function useDb(): UseDbResult {
     setFahrzeuge((current) => [optimisticFahrzeug, ...current]);
 
     try {
-      const r = await q.addFahrzeug({ ...f, fahrzeugId: optimisticFahrzeug.fahrzeugId });
+      const r = await api.addFahrzeug({ ...f, fahrzeugId: optimisticFahrzeug.fahrzeugId });
       setFahrzeuge((current) =>
         current.map((item) => item.fahrzeugId === optimisticFahrzeug.fahrzeugId ? r : item),
       );
@@ -235,7 +221,7 @@ export function useDb(): UseDbResult {
     });
 
     try {
-      const r = await q.updFahrzeug(id, p);
+      const r = await api.updFahrzeug(id, p);
       if (!r) {
         if (previous) setFahrzeuge(previous);
         else await refresh();
@@ -266,7 +252,7 @@ export function useDb(): UseDbResult {
     });
 
     try {
-      await q.delFahrzeug(id);
+      await api.delFahrzeug(id);
     } catch (e) {
       if (previousFahrzeuge) setFahrzeuge(previousFahrzeuge);
       if (previousTermine) setTermine(previousTermine);
@@ -291,7 +277,7 @@ export function useDb(): UseDbResult {
     setTermine((current) => [optimisticTermin, ...current]);
 
     try {
-      const r = await q.addTermin({ ...t, terminId: optimisticTermin.terminId });
+      const r = await api.addTermin({ ...t, terminId: optimisticTermin.terminId });
       setTermine((current) =>
         current.map((tr) =>
           tr.terminId === optimisticTermin.terminId ? { ...r, mängel: [] } : tr,
@@ -314,7 +300,7 @@ export function useDb(): UseDbResult {
     });
 
     try {
-      const r = await q.updTermin(id, p);
+      const r = await api.updTermin(id, p);
       if (!r) {
         if (previous) setTermine(previous);
         else await refresh();
@@ -340,7 +326,7 @@ export function useDb(): UseDbResult {
     });
 
     try {
-      await q.delTermin(id);
+      await api.delTermin(id);
     } catch (e) {
       if (removed) setTermine((current) => [removed!, ...current]);
       else await refresh();
@@ -359,7 +345,7 @@ export function useDb(): UseDbResult {
     });
 
     try {
-      const r = await q.updTerminStatus(id, status);
+      const r = await api.updTerminStatus(id, status);
       if (!r.ok) {
         if (previous) setTermine(previous);
         else await refresh();
@@ -400,7 +386,7 @@ export function useDb(): UseDbResult {
     });
 
     try {
-      const r = await q.addMangel({ ...m, mangelId: optimisticMangel.mangelId });
+      const r = await api.addMangel({ ...m, mangelId: optimisticMangel.mangelId });
       setTermine((current) =>
         current.map((tr) => {
           if (tr.terminId !== optimisticMangel.terminId) return tr;
@@ -432,7 +418,7 @@ export function useDb(): UseDbResult {
     });
 
     try {
-      await q.delMangel(id);
+      await api.delMangel(id);
     } catch (e) {
       if (previous) setTermine(previous);
       else await refresh();
