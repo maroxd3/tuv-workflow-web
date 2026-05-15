@@ -253,14 +253,63 @@ export function useDb(): UseDbResult {
 
   // ── Mangel ──────────────────────────────────────────────
   const addMangel = useCallback(async (m: NeuerMangel) => {
-    const r = await q.addMangel(m);
-    await refresh();
-    return r;
+    const optimisticMangel = {
+      ...m,
+      mangelId: m.mangelId ?? crypto.randomUUID(),
+      codeStvzo: m.codeStvzo ?? null,
+      behoben: m.behoben ?? false,
+      erfasstAm: new Date(),
+    };
+
+    let previous: UseDbResult["termine"] | null = null;
+    setTermine((current) => {
+      previous = current;
+      return current.map((tr) =>
+        tr.terminId === optimisticMangel.terminId
+          ? { ...tr, mängel: [...tr.mängel, optimisticMangel] }
+          : tr,
+      );
+    });
+
+    try {
+      const r = await q.addMangel({ ...m, mangelId: optimisticMangel.mangelId });
+      setTermine((current) =>
+        current.map((tr) => {
+          if (tr.terminId !== optimisticMangel.terminId) return tr;
+          return {
+            ...tr,
+            statusCode: r.terminDemoted ? "Nicht bestanden" : tr.statusCode,
+            mängel: tr.mängel.map((item) =>
+              item.mangelId === optimisticMangel.mangelId ? r.mangel : item,
+            ),
+          };
+        }),
+      );
+      return r;
+    } catch (e) {
+      if (previous) setTermine(previous);
+      else await refresh();
+      throw e;
+    }
   }, [refresh]);
 
   const delMangel = useCallback(async (id: string) => {
-    await q.delMangel(id);
-    await refresh();
+    let previous: UseDbResult["termine"] | null = null;
+    setTermine((current) => {
+      previous = current;
+      return current.map((tr) => ({
+        ...tr,
+        mängel: tr.mängel.filter((m) => m.mangelId !== id),
+      }));
+    });
+
+    try {
+      await q.delMangel(id);
+    } catch (e) {
+      if (previous) setTermine(previous);
+      else await refresh();
+      throw e;
+    }
   }, [refresh]);
 
   return {
