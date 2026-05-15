@@ -168,9 +168,33 @@ export function useDb(): UseDbResult {
 
   // ── Termin ──────────────────────────────────────────────
   const addTermin = useCallback(async (t: NeuerTermin) => {
-    const r = await q.addTermin(t);
-    await refresh();
-    return r;
+    const optimisticTermin = {
+      ...t,
+      terminId: t.terminId ?? crypto.randomUUID(),
+      uhrzeit: t.uhrzeit ?? null,
+      prueferKuerzel: t.prueferKuerzel ?? null,
+      statusCode: t.statusCode ?? "Geplant",
+      notiz: t.notiz ?? null,
+      erfasstAm: new Date(),
+      mängel: [],
+    } as UseDbResult["termine"][number];
+
+    setTermine((current) => [optimisticTermin, ...current]);
+
+    try {
+      const r = await q.addTermin({ ...t, terminId: optimisticTermin.terminId });
+      setTermine((current) =>
+        current.map((tr) =>
+          tr.terminId === optimisticTermin.terminId ? { ...r, mängel: [] } : tr,
+        ),
+      );
+      return r;
+    } catch (e) {
+      setTermine((current) =>
+        current.filter((tr) => tr.terminId !== optimisticTermin.terminId),
+      );
+      throw e;
+    }
   }, [refresh]);
 
   const updTermin = useCallback(async (id: string, p: Partial<NeuerTermin>) => {
@@ -180,14 +204,51 @@ export function useDb(): UseDbResult {
   }, [refresh]);
 
   const delTermin = useCallback(async (id: string) => {
-    await q.delTermin(id);
-    await refresh();
+    let removed: UseDbResult["termine"][number] | null = null;
+
+    setTermine((current) => {
+      removed = current.find((tr) => tr.terminId === id) ?? null;
+      return current.filter((tr) => tr.terminId !== id);
+    });
+
+    try {
+      await q.delTermin(id);
+    } catch (e) {
+      if (removed) setTermine((current) => [removed!, ...current]);
+      else await refresh();
+      throw e;
+    }
   }, [refresh]);
 
   const updTerminStatus = useCallback(async (id: string, status: string) => {
-    const r = await q.updTerminStatus(id, status);
-    await refresh();
-    return r;
+    let previous: UseDbResult["termine"] | null = null;
+
+    setTermine((current) => {
+      previous = current;
+      return current.map((tr) =>
+        tr.terminId === id ? { ...tr, statusCode: status } : tr,
+      );
+    });
+
+    try {
+      const r = await q.updTerminStatus(id, status);
+      if (!r.ok) {
+        if (previous) setTermine(previous);
+        else await refresh();
+        return r;
+      }
+
+      setTermine((current) =>
+        current.map((tr) =>
+          tr.terminId === id ? { ...tr, ...r.termin } : tr,
+        ),
+      );
+      return r;
+    } catch (e) {
+      if (previous) setTermine(previous);
+      else await refresh();
+      throw e;
+    }
   }, [refresh]);
 
   // ── Mangel ──────────────────────────────────────────────
