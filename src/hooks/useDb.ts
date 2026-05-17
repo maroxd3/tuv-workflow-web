@@ -1,15 +1,12 @@
 /**
- * Neuer State-Hook auf Basis von PGlite + Drizzle.
+ * State-Hook fuer die zentrale MariaDB-API.
  *
- * Ersatz für `useStore.js` (Firestore) — verwendet PostgreSQL lokal im
- * Browser via PGlite. Die App-API bleibt soweit möglich gleich, damit
- * Views minimal angepasst werden müssen.
+ * Ersatz fuer den alten View-Store: Daten werden ueber die Express-API aus
+ * MariaDB geladen. Die App-API bleibt soweit moeglich gleich, damit Views
+ * minimal angepasst werden muessen.
  *
- * Real-time-Sync war bei Firestore via onSnapshot gratis. Bei PGlite
- * gibt es das nicht — wir nutzen:
- *   - Optimistische lokale Updates (sofort sichtbar)
- *   - Re-fetch nach jedem Write (für Konsistenz)
- *   - Optionales Polling (für mehrere Tabs, hier vorerst nicht aktiv)
+ * Nach Schreiboperationen aktualisiert der Hook den lokalen React-State und
+ * laedt bei Bedarf erneut von der API.
  */
 
 import { useCallback, useEffect, useState } from "react";
@@ -23,7 +20,7 @@ import type {
   Halter,
   NeuerHalter,
   Mangel,
-} from "../db/schema";
+} from "../db/types";
 
 export interface UseDbResult {
   ready: boolean;

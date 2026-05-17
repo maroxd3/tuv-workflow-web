@@ -5,14 +5,15 @@ Datum: 2026-05-17
 
 ## Kontext
 
-Die Anwendung braucht relationale Datenhaltung fuer Halter, Fahrzeuge, Termine
-und Maengel. Ein rein lokaler Browser-Speicher ist fuer mehrere Arbeitsplaetze
-nicht ausreichend, weil Daten dann pro Browser getrennt bleiben.
+Die Anwendung verwaltet Halter, Fahrzeuge, Prueftermine und Maengel. Diese
+Daten haben klare Beziehungen und muessen von mehreren Benutzern gemeinsam
+gesehen werden koennen. Ein lokaler Browser-Speicher waere dafuer falsch, weil
+jeder Browser seinen eigenen Datenstand haette.
 
 ## Entscheidung
 
-Wir nutzen MariaDB als zentrale relationale Datenbank. Das Frontend greift nicht
-direkt auf MariaDB zu, sondern ueber eine Express-API.
+Wir nutzen MariaDB als zentrale relationale Datenbank. Das Frontend greift nur
+ueber die Express-API auf die Daten zu.
 
 ## Begruendung
 
@@ -24,7 +25,7 @@ direkt auf MariaDB zu, sondern ueber eine Express-API.
 
 ## Konsequenzen
 
-- Die App benoetigt eine laufende API und MariaDB-Instanz.
+- Lokal muessen MariaDB und die API laufen.
 - Offline-only ohne Backend ist nicht mehr Zielarchitektur.
 - Produktivbetrieb braucht Backup, Authentifizierung und Betriebskonzept.
 - Schema-Aenderungen sollten kuenftig versioniert migriert werden.

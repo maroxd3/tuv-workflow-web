@@ -5,14 +5,15 @@ Datum: 2026-05-17
 
 ## Kontext
 
-Die Views sollen keine HTTP-Details und keine Datenbankdetails kennen. Gleichzeitig
-muessen alte View-Datenformen weiter unterstuetzt werden.
+Die Views sollen keine HTTP-Details und keine Datenbankdetails kennen.
+Gleichzeitig nutzt ein Teil der UI noch die alte View-Datenform mit Feldern wie
+`fahrzeug.id`, `fahrzeug.besitzer` und `termin.maengel`.
 
 ## Entscheidung
 
 Das Frontend nutzt `src/db/apiClient.ts` als zentrale HTTP-Schicht. `useDb.ts`
-verwaltet React-State und ruft den API-Client auf. `useStoreCompat.ts` bleibt als
-Adapter fuer Legacy-Views erhalten.
+verwaltet React-State und ruft den API-Client auf. `useStoreCompat.ts` bildet
+die MariaDB/API-Daten auf die bestehende View-Datenform ab.
 
 ## Begruendung
 
@@ -25,4 +26,4 @@ Adapter fuer Legacy-Views erhalten.
 
 - Neue Datenoperationen brauchen API-Endpunkt plus API-Client-Funktion.
 - Das Frontend kann leichter gemockt getestet werden.
-- SQL darf nicht in Views oder Hooks eingefuehrt werden.
+- SQL bleibt im Backend. Views und Hooks sprechen nur mit dem API-Client.

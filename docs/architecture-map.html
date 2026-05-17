@@ -514,7 +514,7 @@ const nodes = [
     role: 'Defines Toast + ToastContainer components — no file in src/ imports either.',
     plain: 'A toast-notification component that the app does not use anymore. Toasts are produced through the Sonner library via useToasts. Safe to delete.',
     path: 'src/components/Toast.jsx:7',
-    notes: ['ToastContainer iterates over `toasts` array (renamed from ToastStack in earlier code)', 'no imports from src/ found apart from internal Toast↔ToastContainer', 'survived the cleanup that removed useStore.js and firebase.js'],
+    notes: ['ToastContainer iterates over `toasts` array (renamed from ToastStack in earlier code)', 'no imports from src/ found apart from internal Toast↔ToastContainer', 'keine direkte Datenbankabhaengigkeit im Toast-Modul'],
     tag: ['dead', 'all'],
   }),
 
