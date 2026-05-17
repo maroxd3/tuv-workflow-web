@@ -1,0 +1,63 @@
+# TÜV Prüfstelle Pro — Lokaler Stack für eine Prüfstelle
+#
+# Ein Befehl startet alles:
+#   docker compose up -d
+#
+# Architektur: jede Prüfstelle betreibt diese Compose-Datei auf einem Server-PC
+# im lokalen Netzwerk. Mitarbeiter (Empfang, Prüfer, Chef) verbinden sich über
+# WLAN/LAN mit http://<server-ip>:8787 (API) bzw. http://<server-ip>:5173 (Web).
+#
+# Daten verlassen die Werkstatt nie. Backup-Strategie: siehe docs/backup.md.
+
+services:
+  db:
+    image: mariadb:11.4
+    container_name: tuv-mariadb
+    restart: unless-stopped
+    environment:
+      MARIADB_DATABASE: ${MARIADB_DATABASE:-tuv_workflow}
+      MARIADB_USER: ${MARIADB_USER:-tuv_app}
+      MARIADB_PASSWORD: ${MARIADB_PASSWORD:-tuv_app_pw}
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD:-please_change_me_in_production}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mariadb_data:/var/lib/mysql
+      - ./docker/mariadb/my.cnf:/etc/mysql/conf.d/tuv.cnf:ro
+      - ./backups:/backups
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  api:
+    image: node:20-alpine
+    container_name: tuv-api
+    restart: unless-stopped
+    working_dir: /app
+    command: sh -c "npm ci --omit=dev --silent && node server/index.js"
+    environment:
+      MARIADB_HOST: db
+      MARIADB_PORT: 3306
+      MARIADB_USER: ${MARIADB_USER:-tuv_app}
+      MARIADB_PASSWORD: ${MARIADB_PASSWORD:-tuv_app_pw}
+      MARIADB_DATABASE: ${MARIADB_DATABASE:-tuv_workflow}
+      API_PORT: 8787
+    ports:
+      - "8787:8787"
+    volumes:
+      - ./server:/app/server:ro
+      - ./package.json:/app/package.json:ro
+      - ./package-lock.json:/app/package-lock.json:ro
+      - api_node_modules:/app/node_modules
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  mariadb_data:
+    name: tuv_mariadb_data
+  api_node_modules:
+    name: tuv_api_node_modules
