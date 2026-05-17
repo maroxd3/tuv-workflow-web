@@ -7,10 +7,11 @@ Diese Variante nutzt eine zentrale **MariaDB-Datenbank** ueber eine
 **Express-API** in `server/index.js`. Die Browser-App spricht nicht direkt mit
 der Datenbank, sondern ausschliesslich ueber HTTP-Endpunkte unter `/api`.
 
-[![Tests](https://img.shields.io/badge/tests-133%20passing-brightgreen)](#testing)
+[![Tests](https://img.shields.io/badge/tests-124%20passing-brightgreen)](#testing)
 [![Lint](https://img.shields.io/badge/eslint-0%20errors-brightgreen)](#testing)
-[![TypeScript](https://img.shields.io/badge/typescript-strict-blue)](#tech-stack)
+[![TypeScript](https://img.shields.io/badge/typescript-graduell-blue)](#tech-stack)
 [![Database](https://img.shields.io/badge/db-MariaDB-003545)](#tech-stack)
+[![Deployment](https://img.shields.io/badge/deployment-on--premise-blueviolet)](#deployment)
 [![License](https://img.shields.io/badge/license-MIT-blue)](#lizenz)
 
 ## Features
@@ -28,26 +29,30 @@ der Datenbank, sondern ausschliesslich ueber HTTP-Endpunkte unter `/api`.
 - **Mobile-tauglich**: Bedienbar ab 360 px Viewport mit Sidebar-Overlay und
   Touch-tauglichen Controls.
 - **Zentrale Persistenz**: MariaDB speichert Daten serverseitig, mehrere
-  Browser/Clients arbeiten auf demselben Datenbestand.
+  Browser/Clients in der Pruefstelle arbeiten auf demselben Datenbestand.
+- **On-Premise pro Kunde**: Jede Pruefstelle betreibt einen eigenen lokalen
+  Server. Kundendaten verlassen die Werkstatt nie.
 
 ## Architektur in 30 Sekunden
 
 ```text
-React / Vite Frontend
-  src/hooks/useDb.ts
-  src/db/apiClient.ts
-        |
-        | HTTP / JSON (/api)
-        v
-Express API
-  server/index.js
-  server/db.js
-        |
-        | mariadb Node.js driver
-        v
-MariaDB
-  halter, fahrzeug, termin, mangel
-  status, pruefart, pruefer, mangel_kategorie
+                Pruefstelle (lokales Netzwerk, ohne Internet betreibbar)
+
+                ┌─────────────────────────────────────────┐
+                │ Server-PC                               │
+                │   docker compose up                     │
+                │   ├── MariaDB           (Port 3306)     │
+                │   └── Express-API       (Port 8787)     │
+                └─────────────────────────────────────────┘
+                              ▲
+                              │ HTTP/JSON (/api)
+                              │
+              ┌───────────────┼───────────────┐
+              │               │               │
+        ┌─────┴────┐   ┌──────┴───┐   ┌──────┴───┐
+        │ Empfang  │   │ Pruefer  │   │  Chef    │
+        │ Browser  │   │ Browser  │   │ Browser  │
+        └──────────┘   └──────────┘   └──────────┘
 ```
 
 Die UI bleibt von SQL entkoppelt. `useDb` verwaltet React-State und ruft
@@ -68,17 +73,58 @@ SQL gegen MariaDB aus und erstellt Tabellen sowie Stammdaten beim Start.
 | Charts | Recharts | Statistikdiagramme |
 | Tests | Vitest 4, React Testing Library | Unit-, Component-, Hook- und DB-Tests |
 | Linting | ESLint 9 | Statische Codequalitaet |
-| Hosting | Firebase Hosting | Optionales Hosting der statischen Frontend-Dateien |
+| Container | Docker Compose | On-Premise-Deployment (MariaDB + API in einem Befehl) |
+| Hosting | Firebase Hosting | Optionales statisches Hosting des Frontends; Datenhaltung liegt nie in der Cloud |
 
 ## Getting Started
 
-### Voraussetzungen
+Es gibt zwei Wege das Projekt zu starten. **Docker Compose ist der empfohlene
+Weg** — ein Befehl startet MariaDB und Express-API mit Binary-Logging fuer
+Backups. Der manuelle Weg ist nur fuer Setups gedacht, in denen kein Docker
+verfuegbar ist.
+
+### Variante A — Docker Compose (empfohlen)
+
+#### Voraussetzungen
+
+- Docker Desktop (Windows/Mac) oder Docker Engine (Linux)
+- Node.js v18+ (nur fuer das Vite-Frontend)
+
+#### Setup
+
+```powershell
+copy .env.example .env
+docker compose up -d
+```
+
+Das startet MariaDB (Port 3306) und die Express-API (Port 8787). Tabellen und
+Stammdaten werden beim ersten Start angelegt.
+
+Frontend dazu starten:
+
+```powershell
+npm install
+npm run dev
+```
+
+Die App ist unter `http://localhost:5173` erreichbar. Vite proxyt `/api` an
+`http://127.0.0.1:8787`.
+
+Demo-Daten laden:
+
+```powershell
+Invoke-RestMethod -Method Post http://localhost:8787/api/admin/demo
+```
+
+### Variante B — Manuelles Setup ohne Docker
+
+#### Voraussetzungen
 
 - Node.js v18+
 - Laufender MariaDB-Server auf `127.0.0.1:3306`
 - Optional: Rust fuer den Tauri-Desktop-Build
 
-### MariaDB einrichten
+#### MariaDB einrichten
 
 ```sql
 CREATE DATABASE IF NOT EXISTS tuv_workflow
@@ -91,48 +137,43 @@ GRANT ALL PRIVILEGES ON tuv_workflow.* TO 'tuv_app'@'localhost';
 FLUSH PRIVILEGES;
 ```
 
-`.env`:
+`.env` erstellen (siehe `.env.example`), dann:
 
-```text
-MARIADB_HOST=127.0.0.1
-MARIADB_PORT=3306
-MARIADB_USER=tuv_app
-MARIADB_PASSWORD=tuv_app_pw
-MARIADB_DATABASE=tuv_workflow
-API_PORT=8787
-VITE_API_BASE_URL=/api
+```powershell
+npm install
+npm run dev:api    # Terminal 1
+npm run dev        # Terminal 2
 ```
 
 Details stehen in [docs/mariadb-setup.md](docs/mariadb-setup.md).
 
-### Lokal starten
-
-Terminal 1:
-
-```powershell
-npm install
-npm run dev:api
-```
-
-Terminal 2:
-
-```powershell
-npm run dev
-```
-
-Alternativ kann die API auch mit `npm run api` gestartet werden.
-
-Vite oeffnet die App unter `http://localhost:5173` und proxyt `/api` an
-`http://127.0.0.1:8787`. Die API legt Tabellen und Stammdaten automatisch an.
-
-### Production-Build
+### Production-Build (Frontend statisch)
 
 ```powershell
 npm run build
 ```
 
-Fuer den produktiven Webbetrieb muss die Express-API separat laufen und das
-Frontend muss mit passender `VITE_API_BASE_URL` ausgeliefert werden.
+Im On-Premise-Modell laeuft die gesamte Anwendung (MariaDB, API, Frontend) in
+der Pruefstelle. Das statische Frontend kann ueber einen Webserver oder direkt
+ueber die API ausgeliefert werden; `VITE_API_BASE_URL` muss zur erreichbaren
+API zeigen.
+
+## Deployment
+
+Die Anwendung ist als **On-Premise-Loesung pro Pruefstelle** konzipiert. Jede
+Werkstatt betreibt einen eigenen Server-PC im internen Netzwerk; Mitarbeiter
+verbinden sich vom Empfang, von Pruefer-Geraeten oder Chef-PCs ueber das LAN
+mit der zentralen Instanz.
+
+Vorteile dieses Modells:
+
+- **Datenschutz**: Kundendaten verlassen die Werkstatt nicht.
+- **Keine Cloud-Kosten** fuer den Betrieb.
+- **Volle Kontrolle ueber Backups** (siehe [docs/backup.md](docs/backup.md)).
+- **Internetausfall** beeintraechtigt den Betrieb nicht.
+
+Auslieferung an einen Kunden: `docker-compose.yml`, `.env`-Vorlage und
+`docs/backup.md` werden uebergeben, ein Server-PC bekommt Docker installiert.
 
 ## Datenbank
 
@@ -204,7 +245,8 @@ Die aktive Persistenz liegt in `server/db.js` und MariaDB.
 
 | Datei | Inhalt |
 |---|---|
-| [docs/mariadb-setup.md](docs/mariadb-setup.md) | Lokales MariaDB-Setup und Startbefehle |
+| [docs/mariadb-setup.md](docs/mariadb-setup.md) | Lokales MariaDB-Setup (Docker und manuell) |
+| [docs/backup.md](docs/backup.md) | 3-Tier-Backup-Strategie fuer On-Premise-Betrieb |
 | [docs/design.md](docs/design.md) | Architektur, Schichten, Datenfluss und Deployment |
 | [docs/datenmodell.md](docs/datenmodell.md) | ER-Modell, 3NF-Schema und physisches MariaDB-Modell |
 | [docs/pflichtenheft.md](docs/pflichtenheft.md) | Anforderungen, Akzeptanzkriterien und Rahmenbedingungen |

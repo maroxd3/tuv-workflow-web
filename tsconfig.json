@@ -23,6 +23,6 @@
       "@/*": ["src/*"]
     }
   },
-  "include": ["src/**/*", "vite.config.*", "drizzle.config.ts"],
+  "include": ["src/**/*", "vite.config.*", "server/**/*"],
   "exclude": ["node_modules", "dist", "src-tauri/target"]
 }
