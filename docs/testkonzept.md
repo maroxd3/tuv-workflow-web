@@ -1,231 +1,120 @@
-# Test-Konzept — TÜV Prüfstelle Pro
+# Testkonzept
 
-**Zweck dieses Dokuments:** Begründung der Teststrategie, Herleitung der Testfälle
-nach etablierten Testentwurfsverfahren, Abdeckungsziele und Grenzen.
+Stand: 2026-05-17  
+Zielarchitektur: React/Vite + Express API + MariaDB.
 
----
+## 1. Testziele
 
-## 1. Teststrategie — Grundlagen
+Die Tests sollen fachliche Regeln, UI-Verhalten, API-Erreichbarkeit und
+Datenkonsistenz absichern.
 
-### 1.1 Testpyramide
+Schwerpunkte:
 
-Wir folgen der klassischen **Testpyramide** nach Mike Cohn:
+- Validatoren fuer Kennzeichen, FIN, Baujahr und Kilometerstand
+- Komponenten- und Hook-Verhalten
+- Workflow-Regel WF-01
+- MariaDB-API-Start und Healthcheck
+- Build- und TypeScript-Pruefung
 
-```
-         ╱ e2e  ╲   (wenige, langsame, teure Tests)
-        ╱────────╲
-       ╱ Component╲  (mittel — testen Rendering + Interaktion)
-      ╱────────────╲
-     ╱   Unit Tests ╲  (viele, schnell, günstig)
-    ╱────────────────╲
-```
+## 2. Testpyramide
 
-**Warum diese Form?** Unit-Tests sind schnell und isoliert, fangen die meisten
-Logik-Fehler ab. Component-Tests validieren UI-Bausteine als Ganzes.
-End-to-End-Tests sind teuer in Wartung und Laufzeit — wir verzichten im
-Prototyp-Scope komplett darauf, dokumentieren aber, wie sie einzuführen wären
-(s. Abschnitt 6).
-
-### 1.2 Was wir NICHT testen und warum
-
-| Nicht getestet | Grund |
-|---|---|
-| Framer-Motion-Animationen | Visuelles Verhalten, nicht funktional relevant |
-| Browser-Persistenz in IndexedDB direkt | PGlite wird über Repository-Tests geprüft; interne IndexedDB-Dateien testen wir nicht separat |
-| Statistik-Charts (Recharts-Rendering) | Visual-Regression wäre ein Test-Framework für sich; nur Aggregations-Funktionen werden getestet |
-| Tauri-spezifische APIs | In der SPA-Code-Pfad nicht genutzt |
-
-## 2. Testentwurfsverfahren
-
-Jeder Testfall in `src/tests/` ist nach einem der folgenden Verfahren hergeleitet.
-Die Wahl des Verfahrens hängt vom Typ der zu testenden Einheit ab.
-
-Damit sind die Testfälle nicht zufällig ausgewählt: einfache Eingabevalidierungen
-werden über Äquivalenzklassen und Grenzwerte abgesichert, kombinierte
-Workflow-Regeln über Entscheidungstabellen, und gemeldete Fehler über
-Regressionstests. Vitest ist dabei nur das Ausführungswerkzeug; die eigentliche
-Begründung der Testfälle liegt in diesen Testentwurfsverfahren.
-
-### 2.1 Äquivalenzklassenbildung (bei allen Validatoren)
-
-**Vorgehen:** Eingaben werden in Klassen partitioniert, innerhalb derer sich der
-Code identisch verhält. Pro Klasse wird mindestens **ein repräsentativer
-Eingabe-Wert** getestet.
-
-**Beispiel `validateKmStand`:**
-
-| Klasse | Wert(e) | Erwartetes Ergebnis |
+| Ebene | Beispiele | Werkzeug |
 |---|---|---|
-| gültig – typisch | `87420`, `"87420"` | null (ok) |
-| gültig – leer (optional) | `""`, `null` | null (ok) |
-| ungültig – negativ | `-1`, `-500` | Fehlermeldung "nicht negativ" |
-| ungültig – kein Integer | `123.5` | Fehlermeldung "ganze Zahl" |
-| ungültig – zu groß | `10_000_000` | Fehlermeldung "Plausibilitätsgrenze" |
+| Unit | Validatoren, Datumsfunktionen, reine Hilfsfunktionen | Vitest |
+| Component | Modale, Buttons, Views mit Testdaten | React Testing Library |
+| Hook | `useDb`, optimistische Updates, Fehlerpfade | Vitest |
+| API-Smoke | `/api/health`, `/api/fahrzeuge` gegen MariaDB | PowerShell/HTTP |
+| Manuell | Tagesplan, PDF, mobile Ansicht | Browser |
 
-→ 5 Klassen × mind. 1 Wert = mind. 5 Testfälle.
+## 3. Testentwurfsverfahren
 
-### 2.2 Grenzwertanalyse (bei allen numerischen Validatoren)
+### Aequivalenzklassen
 
-**Vorgehen:** An den Rändern zulässiger Bereiche werden jeweils die Werte
-*gerade innerhalb*, *am Rand* und *gerade außerhalb* getestet.
+Beispiel Kennzeichen:
 
-**Beispiel `validateBaujahr` mit Bereich [1885, aktuelles Jahr + 1]:**
+- gueltige Standardkennzeichen
+- ungueltige Kreiskennzeichen
+- zu lange Eingaben
+- Sonderzeichen
+- Saisonkennzeichen
 
-| Wert | Position | Erwartung |
-|---|---|---|
-| `1884` | gerade unterhalb | Fehler |
-| `1885` | untere Grenze | ok |
-| `1886` | gerade innerhalb | ok |
-| `aktuellesJahr + 1` | obere Grenze | ok |
-| `aktuellesJahr + 2` | gerade oberhalb | Fehler |
+### Grenzwertanalyse
 
-→ 5 Randwerte = 5 Testfälle mindestens.
+Beispiele:
 
-Analog bei `validateKmStand` mit `0`, `1`, `KM_STAND_MAX`, `KM_STAND_MAX + 1`.
+- Baujahr an den Grenzen 1885 und 2100
+- Kilometerstand 0 und 3.000.000
+- Mindestlaengen fuer Pflichtfelder
 
-### 2.3 Spezielle Regressions-Tests aus der Feedback-Runde 1 (24.04.2026)
+### Entscheidungstabelle
 
-Zusätzlich zu Äquivalenzklassen und Grenzwerten haben wir **alle konkreten
-Fehleingaben aus dem Dozentinnen-Feedback** als dedizierte Regressions-Testfälle
-in die Suite aufgenommen, damit ein Wiederauftreten dieser Bugs durch jeden
-zukünftigen Test-Lauf erkannt wird:
+WF-01:
 
-| Regression | Testfall | Wo im Test-File |
-|---|---|---|
-| Negativer KM-Stand | `validateKmStand(-1)` | `validators.test.js` → `describe('validateKmStand')` |
-| Buchstaben in Telefon | `validateTelefon("ABC123")` | `describe('validateTelefon')` |
-| Ungültiges E-Mail-Format | `validateEmail("notanemail")` | `describe('validateEmail')` |
-| Bestanden trotz 2 Hauptmängel | `validateStatusWechsel(BESTANDEN, [{kat:'HM'}, {kat:'HM'}])` | `describe('validateStatusWechsel')` |
-| Doppelte Kennzeichen | `validateKennzeichenUnique("B-TK 1234", [...existing])` | `describe('validateKennzeichenUnique')` |
-| VW Golf als Motorrad (hart, ab 27.04.) | `validateHerstellerModellKonsistenz("VW", "Golf", "Motorrad")` → `{typ: ...}` | `describe('validateHerstellerModellKonsistenz')` |
-| BMW Polo (hart, ab 27.04.) | `validateHerstellerModellKonsistenz("BMW", "Polo", "PKW")` → `{modell: ...}` | `describe('validateHerstellerModellKonsistenz')` |
-| Bogus-FIN aus Fuchs-Bericht | `checkFinPruefziffer("BLABLUBB123435666")` → Warnung | `describe('checkFinPruefziffer')` |
-| Unbekannter Kreis-Code (KBA) | `validateKennzeichen("QWE-RT 1234")` → Fehler | `describe('validateKennzeichen')` |
-| Saison-Kennzeichen | `validateKennzeichen("B-TK 1234 04-10")` → null | `describe('validateKennzeichen')` |
-
-### 2.4 Entscheidungstabelle (bei Workflow-Regel WF-01)
-
-`validateStatusWechsel` hat zwei Eingaben (Ziel-Status × Mängelliste) — eine
-Entscheidungstabelle erzwingt die systematische Abdeckung aller Kombinationen:
-
-| Ziel-Status | Mängel | Erwartetes Ergebnis | Testfall |
+| Maengel vorhanden | Blockierende Kategorie | Zielstatus | Erwartung |
 |---|---|---|---|
-| `BESTANDEN` | leer | ok | Happy-Path |
-| `BESTANDEN` | nur `LM` / `EM` | ok | keine Hauptmängel |
-| `BESTANDEN` | enthält `HM` | Fehler | Regression Fuchs |
-| `BESTANDEN` | enthält `GM` | Fehler | Gefährlicher Mangel blockt ebenfalls |
-| `BESTANDEN` | mix + mind. 1 HM | Fehler | Auch bei gemischtem Set reicht 1 HM |
-| `NICHT_BESTANDEN` | mit HM | ok | Korrekte Zielrichtung |
-| `NACHPRUEFUNG` | mit HM | ok | Auch hier kein Blocker |
-| `GEPLANT` | leer | ok | Nicht-BESTANDEN-Fälle immer durch |
+| nein | nein | Bestanden | erlaubt |
+| ja | LM/EM | Bestanden | erlaubt |
+| ja | HM/GM | Bestanden | blockiert |
+| ja | HM/GM | Nicht bestanden | erlaubt |
 
-→ 8 Zeilen = 8 Testfälle, vollständige Kombinations-Abdeckung.
+### Zustandsbasierter Test
 
-### 2.5 State-based-Test (bei Komponenten mit State)
+Terminstatus:
 
-Für State-halte Komponenten (z. B. `Inp` mit Fokus-State, `BtnP` mit
-disabled/danger) testen wir die beiden relevanten Zustände jeweils.
+```text
+Geplant -> In Pruefung -> Bestanden
+Geplant -> In Pruefung -> Nicht bestanden -> Nachpruefung
+```
 
-**Beispiel `BtnP`:**
+## 4. Automatisierte Befehle
 
-| State | Test |
-|---|---|
-| default | Rendert "Speichern", `onClick` wird bei Click aufgerufen |
-| `disabled = true` | `onClick` wird **nicht** aufgerufen, CSS zeigt niedrige Opacity |
-| `danger = true` | Rendert in roter Farbe |
-| `icon = Shield` | Icon-Element wird vor Children gerendert |
+```powershell
+npm test
+npm run lint
+npm run typecheck
+npm run build
+```
 
-## 3. Testbereiche & aktuelle Abdeckung
+Aktuell in dieser Arbeitskopie verifiziert:
 
-Das Repo enthält Tests in `src/tests/`:
+- `npm run build`: erfolgreich
+- `npm run typecheck`: erfolgreich
+- API-Job mit `GET /api/health`: erfolgreich
+- `GET /api/fahrzeuge`: Daten aus MariaDB gelesen
 
-### 3.1 Unit-Tests (reine Funktionen)
+## 5. API-Smoke-Test
 
-| Datei | Test-Gegenstand | Abdeckung |
+Voraussetzung: MariaDB laeuft und `.env` ist gesetzt.
+
+```powershell
+npm run api
+Invoke-RestMethod http://127.0.0.1:8787/api/health
+Invoke-RestMethod http://127.0.0.1:8787/api/fahrzeuge
+```
+
+Erwartung:
+
+- Healthcheck liefert `ok = true`
+- Fahrzeug-Endpunkt liefert ein JSON-Array
+- Bei fehlender Datenbankverbindung startet die API nicht erfolgreich
+
+## 6. Manuelle Smoke-Tests
+
+| Bereich | Schritte | Erwartung |
 |---|---|---|
-| `utils/date.test.js` | `isoDate`, `addDays`, `fmtDate`, `dayName`, `dayShort` | 13 Testfälle, alle Zeitzonen-kritischen Pfade |
-| `utils/mangel.test.js` | `hatHauptmangel`, Katalogstruktur | 9 Testfälle, Äquivalenzklassen für Mängelkategorien plus Strukturtests für eindeutige Katalogcodes |
-| `utils/validators.test.js` | Alle Validatoren (neu in Sprint 5) | 50+ Testfälle, Äquivalenzklassen + Grenzwerte + Regression Fuchs |
+| Start | API und Frontend starten | App laedt ohne Endlos-Spinner |
+| Demo | Demo-Daten laden | Fahrzeuge und Termine erscheinen |
+| Fahrzeug | Fahrzeug anlegen, bearbeiten, loeschen | Aenderungen bleiben nach Reload sichtbar |
+| Termin | Termin anlegen und Status aendern | Tagesplan aktualisiert sich |
+| Mangel | HM/GM hinzufuegen | `Bestanden` wird verhindert |
+| Bericht | Bericht oeffnen und drucken | A4-Ansicht ist nutzbar |
+| Mobile | 360 px Viewport pruefen | Navigation und Modale bleiben bedienbar |
 
-### 3.2 Component-Tests (React Testing Library)
+## 7. Nicht automatisiert
 
-| Datei | Test-Gegenstand | Abdeckung |
-|---|---|---|
-| `components/StatusPill.test.jsx` | `StatusPill` | 4 Testfälle: Rendering aller Statuswerte + Größenvarianten |
-| `components/buttons.test.jsx` | `BtnP`, `BtnG`, `IconBtn` | 13 Testfälle: Rendering, Click, disabled, danger |
-| `components/inputs.test.jsx` | `Inp`, `Sel`, `Fld` | Testfälle: Default-Wert, onChange, Error-State, placeholder |
+- echte Mehrbenutzer-Konflikte
+- Lasttests mit vielen parallelen Clients
+- produktive Backup-/Restore-Prozesse
+- visuelle Regressionstests ueber alle Viewports
 
-### 3.3 Hook-Tests
-
-| Datei | Test-Gegenstand | Abdeckung |
-|---|---|---|
-| `hooks/useToasts.test.js` | `useToasts` | 6 Testfälle: Sonner-Integration (success/error/info/warn) |
-
-### 3.4 Datenbank-/Repository-Tests
-
-| Datei | Test-Gegenstand | Abdeckung |
-|---|---|---|
-| `db/db.test.ts` | PGlite/Drizzle-Schema, Seed-Daten, Repository-Operationen | SQL-Persistenz, Joins und zentrale Geschäftsregeln gegen eine echte lokale Test-Datenbank |
-
-### 3.5 Absichtlich **nicht** abgedeckt
-
-- Interne PGlite/IndexedDB-Implementierung: Wir testen unsere Repository-Schicht, nicht die Storage-Engine selbst.
-- Views (FahrzeugeView, TagesplanView, StatistikView, BerichteView): Zu viel Aggregation, würde hauptsächlich Mock-Daten testen. Business-Logik wurde in Utilities ausgelagert, die separat getestet werden.
-- Modals (FahrzeugModal, TerminModal, MaengelModal): Form-Logik ruft Utilities auf, diese sind getestet. Rendering ist mit PropTypes dokumentiert.
-- **PDF-Bericht-Layout** (`buildBerichtHtml`): visuelle Korrektheit — wird per Manual-Test gegen Referenz-Datensatz geprüft (Demo-Fahrzeug B-TK 1234, BESTANDEN-Fall + NICHT_BESTANDEN-Fall mit 5 HM). Visual-Regression-Framework (Percy/Chromatic) wäre eigener Aufbau, im Prototyp-Scope nicht aufgesetzt.
-- **Mobile-Responsive-Layout**: Manual-Tests auf realen Geräten (iPhone Safari, Android Chrome) sowie Browser-DevTools-Geräte-Emulation. Keine automatisierten Visual-Tests für unterschiedliche Viewports.
-
-### 3.6 Manuelle Test-Szenarien (Smoke-Tests vor jeder Abgabe)
-
-Pflicht-Durchläufe, die nicht automatisiert sind, aber vor jedem Sprint-Ende manuell ausgeführt werden:
-
-| Szenario | Erwartetes Verhalten |
-|---|---|
-| Fahrzeug-Anlage „BMW Polo" | Modell-Dropdown enthält „Polo" nicht; Eingabe nur über Sonstiger-Modus möglich |
-| Kennzeichen „QWE-RT 1234" eintragen | Save liefert Fehler „QWE ist kein gültiger Kreis-Code (KBA-Liste)" |
-| Saison-Kennzeichen „B-TK 1234 04-10" | Wird akzeptiert |
-| FIN „BLABLUBB123435666" eintragen | Gelber Hinweis „FIN-Prüfziffer (Position 9) ist 'B', erwartet '0'" |
-| Bestanden-Termin: HM-Mangel hinzufügen | Status wird automatisch auf NICHT_BESTANDEN demotiert |
-| Bericht aus Demo-Termin als PDF exportieren | Neuer Tab öffnet, Druckdialog erscheint, „Als PDF speichern" liefert A4-konformes Layout |
-| App auf iPhone Safari öffnen, alle 4 Views durchklicken | Sidebar als Overlay, KPIs als 2x2-Grid, kein horizontaler Scroll, Touch-Targets gut tappable |
-| Tagesplan-Slot tippen | Termin-Modal öffnet mit Uhrzeit vorausgefüllt (Touch-Pfad statt Rechtsklick) |
-
-## 4. Abdeckungs-Ziele
-
-| Ebene | Ziel | Aktuell |
-|---|---|---|
-| `src/utils/` | > 90 % Statement-Coverage | nicht gemessen; alle Funktionen mit > 5 Testfällen |
-| `src/components/ui/` | > 70 % Statement-Coverage | StatusPill, buttons, inputs getestet |
-| Gesamt | > 70 % | geschätzt ~60–70 % (ohne Coverage-Lauf) |
-
-**Messung:** Vitest kann `--coverage` via `@vitest/coverage-v8`; wird bei
-Bedarf in CI aktiviert. Für den Prototyp-Scope ist manuelle Zählung der
-Testfälle pro Einheit ausreichend.
-
-Ein Coverage-Report beantwortet dabei eine andere Frage als der normale
-Testlauf: `npm run test` zeigt, ob die erwarteten Ergebnisse stimmen; ein Lauf
-mit `npm run test -- --coverage` zeigt zusätzlich, welche Zeilen, Funktionen und
-Verzweigungen während der Tests tatsächlich ausgeführt wurden.
-
-## 5. Testprozess im Team
-
-- Jeder Pull Request läuft lokal `npm run test` grün, bevor Review startet
-- Neue Business-Logik = neue Testfälle (Definition of Done Punkt 6)
-- Bei Bug-Reports wird zuerst ein fehlschlagender Regression-Test geschrieben, dann der Fix — so wie bei den Fuchs-Regressionen vorgegangen wurde
-
-## 6. Ausblick
-
-- **Persistenz-Reload-Test:** Automatisiert prüfen, dass PGlite-Daten nach Browser-Reload weiterhin aus IndexedDB geladen werden.
-- **E2E-Tests:** Playwright oder Cypress könnten den Kernflow "Fahrzeug → Termin → Mängel → Bericht" abdecken. Aufwand ~2 Sprints, daher nicht im Prototyp-Scope.
-- **Visual-Regression:** Percy oder Chromatic für Chart-Darstellungen.
-- **Last-Tests:** k6 oder Artillery, relevant erst ab realem Nutzerstamm.
-
-## 7. Glossar
-
-| Begriff | Bedeutung |
-|---|---|
-| Äquivalenzklasse | Menge von Eingaben, die vom Code gleich behandelt werden — 1 Testfall pro Klasse reicht für funktionale Abdeckung |
-| Grenzwertanalyse | Testet an den Rändern von Bereichen (häufige Bug-Quelle) |
-| Regression | Wiederherstellen eines bereits gefixten Bugs; Regression-Tests dagegen sichern permanent ab |
-| DoD (Definition of Done) | Team-weite Liste von Kriterien, die jede Story erfüllen muss |
-| SUT | System Under Test — der Code, der gerade getestet wird |
+Diese Punkte sind fuer den lokalen Prototyp dokumentierte Restrisiken.

@@ -33,7 +33,7 @@
 
 ### Negative Konsequenzen
 
-* (z. B. „Bundle wird größer durch das WASM-Modul (+3 MB)")
+* (z. B. "API braucht zusaetzlichen Betriebsprozess")
 
 ## Bewertete Optionen im Detail
 
