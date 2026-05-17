@@ -111,7 +111,7 @@ Terminal 1:
 
 ```powershell
 npm install
-npm run api
+npm run dev:api
 ```
 
 Terminal 2:
@@ -119,6 +119,8 @@ Terminal 2:
 ```powershell
 npm run dev
 ```
+
+Alternativ kann die API auch mit `npm run api` gestartet werden.
 
 Vite oeffnet die App unter `http://localhost:5173` und proxyt `/api` an
 `http://127.0.0.1:8787`. Die API legt Tabellen und Stammdaten automatisch an.
