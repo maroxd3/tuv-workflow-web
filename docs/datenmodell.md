@@ -20,7 +20,100 @@ MANGEL n -- 1 MANGEL_KATEGORIE
 Die physische Umsetzung liegt in `server/db.js`. Beim Start der Express-API
 werden Datenbank, Tabellen und Stammdaten angelegt, falls sie fehlen.
 
-## 2. Relationen
+## 2. ER-Diagramm
+
+```mermaid
+erDiagram
+  HALTER ||--o{ FAHRZEUG : besitzt
+  FAHRZEUG ||--o{ TERMIN : hat
+  TERMIN ||--o{ MANGEL : enthaelt
+  STATUS ||--o{ TERMIN : klassifiziert
+  PRUEFART ||--o{ TERMIN : typisiert
+  PRUEFER ||--o{ TERMIN : prueft
+  MANGEL_KATEGORIE ||--o{ MANGEL : bewertet
+
+  HALTER {
+    char36 halter_id PK
+    varchar name
+    varchar telefon
+    varchar email UK
+    text anschrift
+    datetime erfasst_am
+  }
+
+  FAHRZEUG {
+    char36 fahrzeug_id PK
+    varchar kennzeichen UK
+    varchar fin UK
+    varchar hersteller
+    varchar modell
+    int baujahr
+    varchar farbe
+    varchar typ
+    int kilometerstand
+    date hu_faellig
+    char36 halter_id FK
+    datetime erfasst_am
+  }
+
+  TERMIN {
+    char36 termin_id PK
+    char36 fahrzeug_id FK
+    date datum
+    time uhrzeit
+    varchar prueft_code FK
+    varchar pruefer_kuerzel FK
+    varchar status_code FK
+    text notiz
+    datetime erfasst_am
+  }
+
+  MANGEL {
+    char36 mangel_id PK
+    char36 termin_id FK
+    varchar code_stvzo
+    text beschreibung
+    varchar kategorie_code FK
+    boolean behoben
+    datetime erfasst_am
+  }
+
+  STATUS {
+    varchar status_code PK
+    varchar bezeichnung
+    boolean ist_endzustand
+  }
+
+  PRUEFART {
+    varchar prueft_code PK
+    varchar bezeichnung
+  }
+
+  PRUEFER {
+    varchar pruefer_kuerzel PK
+    varchar name
+    varchar qualifikation
+  }
+
+  MANGEL_KATEGORIE {
+    varchar kategorie_code PK
+    varchar bezeichnung
+    boolean blockiert_bestanden
+  }
+```
+
+Kardinalitaeten:
+
+- Ein Halter kann mehrere Fahrzeuge besitzen; ein Fahrzeug gehoert genau zu
+  einem Halter.
+- Ein Fahrzeug kann mehrere Termine haben; ein Termin gehoert genau zu einem
+  Fahrzeug.
+- Ein Termin kann mehrere Maengel enthalten; ein Mangel gehoert genau zu einem
+  Termin.
+- Status, Pruefart und Mangelkategorie sind Stammdaten.
+- Ein Termin kann optional einem Pruefer zugeordnet sein.
+
+## 3. Relationen
 
 ### halter
 
@@ -114,7 +207,7 @@ Stammdaten: `Geplant`, `In Pruefung`, `Bestanden`, `Nicht bestanden`,
 
 Stammdaten: OM, LM, EM, HM, GM. HM und GM blockieren `Bestanden`.
 
-## 3. Normalisierung
+## 4. Normalisierung
 
 Das Modell ist in 3NF:
 
@@ -127,7 +220,7 @@ Das Modell ist in 3NF:
 Damit werden Update-Anomalien vermieden und MariaDB kann referenzielle
 Integritaet erzwingen.
 
-## 4. Integritaetsregeln
+## 5. Integritaetsregeln
 
 | Regel | Umsetzung |
 |---|---|
@@ -142,7 +235,7 @@ Integritaet erzwingen.
 | Plausibles Baujahr | CHECK |
 | Plausibler Kilometerstand | CHECK |
 
-## 5. API-Mapping
+## 6. API-Mapping
 
 Die Datenbank nutzt `snake_case`, das Frontend `camelCase`.
 `server/index.js` mappt zwischen beiden Formen:
@@ -158,7 +251,7 @@ Die Datenbank nutzt `snake_case`, das Frontend `camelCase`.
 | `kategorie_code` | `kategorieCode` |
 | `erfasst_am` | `erfasstAm` |
 
-## 6. Aktueller Stand
+## 7. Aktueller Stand
 
 - MariaDB ist die einzige produktive Datenbank.
 - Express ist die einzige Laufzeit-Schnittstelle zur Datenbank.
