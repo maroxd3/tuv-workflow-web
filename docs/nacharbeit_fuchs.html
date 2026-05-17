@@ -1,54 +1,440 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Nacharbeit - MariaDB-Stand</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 0; color: #172033; background: #f7f8fa; }
-    header { background: #003545; color: white; padding: 32px 40px; }
-    main { max-width: 1000px; margin: 0 auto; padding: 32px 40px; }
-    section { background: white; border: 1px solid #d8dde6; border-radius: 8px; padding: 20px; margin-bottom: 18px; }
-    table { width: 100%; border-collapse: collapse; }
-    th, td { border: 1px solid #d8dde6; padding: 10px; text-align: left; }
-    th { background: #eef2f5; }
-    code { background: #eef2f5; padding: 2px 5px; border-radius: 4px; }
-  </style>
+<meta charset="UTF-8">
+<title>TÜV Prüfstelle Pro – Nacharbeit nach Review-Termin vom 12. Mai</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+  @page { size: A4; margin: 16mm 14mm; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    color: #1e293b;
+    background: #ffffff;
+    font-size: 10.5pt;
+    line-height: 1.5;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .top-bar {
+    height: 5px;
+    background: linear-gradient(90deg, #4f46e5, #06b6d4, #10b981);
+    margin: 0 0 18px;
+    border-radius: 3px 3px 0 0;
+  }
+  @media print {
+    .top-bar { margin: -16mm -14mm 18px; border-radius: 0; }
+  }
+
+  .head { display: flex; justify-content: space-between; align-items: flex-end; padding-bottom: 12px; margin-bottom: 18px; border-bottom: 1.5px solid #e2e8f0; }
+  .head .title { font-size: 22pt; font-weight: 800; color: #0f172a; letter-spacing: -0.02em; line-height: 1.15; }
+  .head .sub { font-size: 9pt; color: #64748b; margin-top: 4px; letter-spacing: 0.04em; }
+  .head .meta { text-align: right; font-size: 8pt; color: #64748b; line-height: 1.6; }
+  .head .meta strong { color: #1e293b; font-weight: 600; }
+
+  section { margin-bottom: 18px; page-break-inside: avoid; }
+  section h2 {
+    font-size: 11pt;
+    font-weight: 800;
+    color: #ffffff;
+    background: #1e293b;
+    padding: 6px 12px;
+    border-radius: 4px 4px 0 0;
+    letter-spacing: 0.03em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  section h2 .num {
+    font-size: 8pt;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 3px;
+    background: rgba(255,255,255,0.18);
+    letter-spacing: 0.06em;
+  }
+  section.before h2 { background: #b45309; }
+  section.feedback h2 { background: #b91c1c; }
+  section.timeline h2 { background: #4f46e5; }
+  section.compare h2 { background: #0891b2; }
+  section.now h2 { background: #15803d; }
+
+  section .body {
+    border: 1px solid #cbd5e1;
+    border-top: none;
+    background: #ffffff;
+    padding: 14px 18px;
+    border-radius: 0 0 4px 4px;
+  }
+
+  .lede { font-size: 10pt; color: #475569; margin-bottom: 10px; line-height: 1.6; }
+  .lede strong { color: #1e293b; }
+
+  /* List items in BEFORE / FEEDBACK */
+  .item {
+    display: grid;
+    grid-template-columns: 22px 1fr;
+    gap: 10px;
+    padding: 6px 0;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 10pt;
+    line-height: 1.5;
+  }
+  .item:last-child { border-bottom: none; }
+  .item .marker {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    font-size: 11pt;
+    font-weight: 700;
+    margin-top: 1px;
+  }
+  .item.have .marker { background: #dcfce7; color: #15803d; }
+  .item.gap .marker { background: #fee2e2; color: #b91c1c; }
+  .item.crit .marker { background: #fee2e2; color: #b91c1c; }
+  .item .text strong { color: #0f172a; font-weight: 600; }
+  .item .text .desc { color: #475569; font-size: 9.5pt; margin-top: 2px; }
+
+  /* Timeline */
+  .tl { position: relative; padding-left: 20px; }
+  .tl::before {
+    content: '';
+    position: absolute;
+    left: 6px; top: 4px; bottom: 4px;
+    width: 2px;
+    background: #cbd5e1;
+  }
+  .tl-item { position: relative; padding-bottom: 14px; padding-left: 4px; }
+  .tl-item:last-child { padding-bottom: 0; }
+  .tl-item::before {
+    content: '';
+    position: absolute;
+    left: -20px; top: 5px;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: #4f46e5;
+    border: 3px solid #ffffff;
+    box-shadow: 0 0 0 2px #4f46e5;
+  }
+  .tl-item.done::before { background: #15803d; box-shadow: 0 0 0 2px #15803d; }
+  .tl-item .date { font-size: 8.5pt; font-weight: 700; color: #4f46e5; letter-spacing: 0.05em; text-transform: uppercase; }
+  .tl-item.done .date { color: #15803d; }
+  .tl-item .what { font-size: 10pt; font-weight: 600; color: #0f172a; margin: 1px 0 3px; }
+  .tl-item .detail { font-size: 9.5pt; color: #475569; line-height: 1.5; }
+  .tl-item .commits { font-family: 'JetBrains Mono', 'Courier New', monospace; font-size: 8.5pt; color: #64748b; margin-top: 3px; }
+
+  /* Compare table */
+  table.cmp {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 9.5pt;
+  }
+  table.cmp th {
+    background: #f1f5f9;
+    color: #1e293b;
+    font-weight: 700;
+    text-align: left;
+    padding: 7px 10px;
+    border-bottom: 2px solid #cbd5e1;
+    font-size: 9pt;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+  }
+  table.cmp td {
+    padding: 8px 10px;
+    border-bottom: 1px solid #e2e8f0;
+    vertical-align: top;
+    line-height: 1.45;
+  }
+  table.cmp td.before { background: #fef9f3; color: #78350f; width: 36%; }
+  table.cmp td.after { background: #f0fdf4; color: #14532d; width: 44%; }
+  table.cmp td.label { font-weight: 600; color: #0f172a; width: 20%; }
+
+  /* Stats */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 6px;
+  }
+  .stat {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 10px 12px;
+  }
+  .stat .num { font-size: 22pt; font-weight: 800; color: #4f46e5; line-height: 1; letter-spacing: -0.02em; }
+  .stat .num.green { color: #15803d; }
+  .stat .num.amber { color: #b45309; }
+  .stat .num.cyan { color: #0891b2; }
+  .stat .lbl { font-size: 7.5pt; color: #64748b; margin-top: 4px; letter-spacing: 0.04em; text-transform: uppercase; font-weight: 600; }
+
+  .footer {
+    margin-top: 18px;
+    padding-top: 10px;
+    border-top: 1px solid #e2e8f0;
+    font-size: 8pt;
+    color: #64748b;
+    display: flex;
+    justify-content: space-between;
+  }
+  .footer code { font-family: 'JetBrains Mono', 'Courier New', monospace; color: #4f46e5; }
+
+  @media screen { body { padding: 24px; max-width: 900px; margin: 0 auto; box-shadow: 0 4px 30px rgba(15,23,42,0.10); } }
+</style>
 </head>
 <body>
-  <header>
-    <h1>Nacharbeit - aktueller MariaDB-Stand</h1>
-    <p>React/Vite Frontend, Express API, zentrale MariaDB-Datenbank</p>
-  </header>
-  <main>
-    <section>
-      <h2>Zusammenfassung</h2>
-      <p>Die Persistenz wurde auf MariaDB umgestellt. Die App nutzt eine Express-API
-      unter <code>/api</code>; das Frontend enthaelt keine Datenbank-Credentials und
-      greift nicht direkt auf die Datenbank zu.</p>
-    </section>
+  <div class="top-bar"></div>
 
-    <section>
-      <h2>Vorher / Nachher</h2>
-      <table>
-        <tr><th>Bereich</th><th>Aktueller Stand</th></tr>
-        <tr><td>Datenhaltung</td><td>MariaDB-Datenbank <code>tuv_workflow</code></td></tr>
-        <tr><td>Backend</td><td>Express API in <code>server/index.js</code></td></tr>
-        <tr><td>DB-Setup</td><td><code>server/db.js</code> erstellt Tabellen und Stammdaten idempotent</td></tr>
-        <tr><td>Frontend-Zugriff</td><td><code>src/db/apiClient.ts</code> ueber HTTP JSON</td></tr>
-        <tr><td>Workflow-Regel</td><td>WF-01 wird in UI und API geprueft</td></tr>
+  <div class="head">
+    <div>
+      <div class="title">Nacharbeit nach Review-Termin vom 12. Mai</div>
+      <div class="sub">TÜV Prüfstelle Pro · Software-Projekt IIM-211-01 · Hochschule Hannover · Sommersemester 2026</div>
+    </div>
+    <div class="meta">
+      <div><strong>Stand:</strong> 14. Mai 2026</div>
+      <div><strong>Team:</strong> Marwan Saleh · Oussama Hlayhel</div>
+      <div><strong>Repository:</strong> github.com/maroxd3/tuv-workflow-web</div>
+    </div>
+  </div>
+
+  <!-- ───────── 1. STAND VORHER ───────── -->
+  <section class="before">
+    <h2><span class="num">1</span> Ausgangslage vor der Nacharbeit</h2>
+    <div class="body">
+      <div class="lede">Vor der Nacharbeit war das Projekt funktional, aber an mehreren Stellen noch nicht sauber genug begründet — sowohl im Code als auch in der Dokumentation. Eine ehrliche Bestandsaufnahme:</div>
+
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:18px; margin-top:8px">
+        <div>
+          <div style="font-size:9pt; font-weight:700; color:#15803d; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:6px">Was funktionierte</div>
+          <div class="item have"><div class="marker">✓</div><div class="text"><strong>Web-App live deployed</strong><div class="desc">Fahrzeug-CRUD, Tagesplan, Mängelerfassung, Statistik</div></div></div>
+          <div class="item have"><div class="marker">✓</div><div class="text"><strong>Erste Datenbank-Anbindung</strong><div class="desc">Ursprüngliche Persistenzschicht wurde später durch MariaDB ersetzt</div></div></div>
+          <div class="item have"><div class="marker">✓</div><div class="text"><strong>Tauri-Desktop-Build</strong><div class="desc">~6 MB Binary aus derselben React-Codebasis</div></div></div>
+          <div class="item have"><div class="marker">✓</div><div class="text"><strong>Erste Test-Suite</strong><div class="desc">~52 Vitest-Tests, hauptsächlich Store-Logik</div></div></div>
+        </div>
+        <div>
+          <div style="font-size:9pt; font-weight:700; color:#b91c1c; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:6px">Was fehlte / unausgereift war</div>
+          <div class="item gap"><div class="marker">✕</div><div class="text"><strong>Lückenhafte Validierung</strong><div class="desc">Negativer KM, „BMW Polo", doppelte Kennzeichen passierten unbemerkt</div></div></div>
+          <div class="item gap"><div class="marker">✕</div><div class="text"><strong>Keine formale Doku</strong><div class="desc">Kein Pflichtenheft, kein Datenmodell, keine Architektur-Begründungen</div></div></div>
+          <div class="item gap"><div class="marker">✕</div><div class="text"><strong>187 ESLint-Errors</strong><div class="desc">Unused Imports, fehlende PropTypes, lockere Config</div></div></div>
+          <div class="item gap"><div class="marker">✕</div><div class="text"><strong>Bericht als ASCII-.txt</strong><div class="desc">Keine PDF-Ausgabe, keine professionelle Optik</div></div></div>
+          <div class="item gap"><div class="marker">✕</div><div class="text"><strong>Nicht mobile-tauglich</strong><div class="desc">Hardcoded Desktop-Layout, kein Hamburger-Menu, Touch-Targets zu klein</div></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───────── 2. KRITIKPUNKTE ───────── -->
+  <section class="feedback">
+    <h2><span class="num">2</span> Aufgenommene Kritikpunkte und Review-Punkte</h2>
+    <div class="body">
+      <div class="lede">Aus der Mail vom 24. April und dem Review-Termin am 12. Mai ergaben sich fachliche, technische und dokumentarische Punkte. Wir haben jeden Punkt einzeln aufgenommen:</div>
+
+      <div class="item crit"><div class="marker">!</div><div class="text"><strong>Bug-Liste aus den manuellen Tests</strong><div class="desc">Negativer Kilometerstand · Telefon mit Buchstaben · ungültige E-Mail · doppeltes Kennzeichen · „Bestanden" trotz Hauptmangel · „BMW Polo" / „VW Golf als Motorrad"</div></div></div>
+      <div class="item crit"><div class="marker">!</div><div class="text"><strong>Keine Sprint-Methodik / Definition of Done dokumentiert</strong></div></div>
+      <div class="item crit"><div class="marker">!</div><div class="text"><strong>Pflichtenheft fehlt</strong> — funktionale &amp; nicht-funktionale Anforderungen, Lastprofil, Datenschutz</div></div>
+      <div class="item crit"><div class="marker">!</div><div class="text"><strong>Komponenten- &amp; Klassendiagramm + Begründungen</strong> fehlen oder zu dünn</div></div>
+      <div class="item crit"><div class="marker">!</div><div class="text"><strong>Datenmodell unzureichend</strong> — Integritätsbedingungen, NoSQL-vs-SQL-Diskussion fehlt</div></div>
+      <div class="item crit"><div class="marker">!</div><div class="text"><strong>Begründung der Performance-Werte</strong> — „warum 100 ms? warum nicht 50 oder 200? wie testen?"</div></div>
+      <div class="item crit"><div class="marker">!</div><div class="text"><strong>Datenschutz bei Cloud-DB</strong> — DSGVO, Auftragsverarbeitung</div></div>
+      <div class="item crit"><div class="marker">!</div><div class="text"><strong>ESLint-Report</strong> — 187 Errors mit Ihrer strengeren Config</div></div>
+      <div class="item crit"><div class="marker">!</div><div class="text"><strong>Mehrbenutzerfähigkeit</strong> — zentrale Datenhaltung statt isolierter Browserdaten</div></div>
+      <div class="item crit"><div class="marker">!</div><div class="text"><strong>Relationale Persistenz</strong> — Persistenz wurde auf MariaDB mit Express-API umgestellt</div></div>
+      <div class="item crit"><div class="marker">!</div><div class="text"><strong>Nachvollziehbare Architekturentscheidungen</strong> — ADRs dokumentieren Datenbank-, API-, Hosting- und Datenmodell-Entscheidungen neutral und prüfbar</div></div>
+    </div>
+  </section>
+
+  <!-- ───────── 3. ABLAUF ───────── -->
+  <section class="timeline">
+    <h2><span class="num">3</span> Zeitlicher Ablauf der Nacharbeit</h2>
+    <div class="body">
+        <div class="lede">Die Nacharbeit lief in mehreren klar abgegrenzten Schritten: zuerst Validierung, UX und Basisdokumentation; danach die Umstellung auf zentrale relationale Persistenz mit MariaDB, neues Datenmodell und ADR-Dokumentation nach dem Review-Termin vom 12. Mai.</div>
+
+      <div class="tl">
+        <div class="tl-item done">
+          <div class="date">24. April 2026 · Donnerstag</div>
+          <div class="what">Feedback erhalten · Sprint 5 geplant</div>
+          <div class="detail">Mail von Frau Fuchs gelesen, jeden Punkt als User Story oder Bug aufgenommen, Sprint 5 als „Validierungs- und Doku-Sprint" gestartet. Erste Code-Fixes noch am selben Tag committed (Bug-Liste hart blockiert, Doku-Skelette unter <code>docs/</code> angelegt).</div>
+          <div class="commits">commit 13dbb9f · „Address feedback round 1 from Frau Fuchs"</div>
+        </div>
+
+        <div class="tl-item done">
+          <div class="date">24.–26. April · Doku-Phase</div>
+          <div class="what">Fünf Markdown-Dokumente unter <code>docs/</code></div>
+          <div class="detail">Pflichtenheft (mit Lastprofil, Performance-Zielen, Datenschutz-Konzept), Datenmodell (mit SQL-Gegenentwurf inkl. Trigger für die Workflow-Regel), Design (Komponenten- &amp; Klassendiagramm + Tech-Begründungen), Backlog (User Stories nach MoSCoW, Definition of Done), Testkonzept (Äquivalenzklassen, Grenzwertanalyse, Entscheidungstabelle).</div>
+        </div>
+
+        <div class="tl-item done">
+          <div class="date">26.–27. April · Sprint 5 Hauptphase</div>
+          <div class="what">UX-Verschärfung &amp; PDF-Upgrade · 63 Story Points in 13 User Stories · 15 Commits in ~28 Stunden</div>
+          <div class="detail">
+            <strong>Validierung verschärft:</strong> „BMW Polo" von Soft-Warning auf Hart-Validator umgebaut · Cascading-Dropdowns (Hersteller → Modell → Typ) machen falsche Kombinationen strukturell unmöglich · KBA-Kreis-Code-Liste mit ~430 Codes als Whitelist · Saison-Kennzeichen-Format · FIN-Prüfziffer nach ISO 3779.<br>
+            <strong>Bericht-Upgrade:</strong> ASCII-<code>.txt</code> ersetzt durch amtlich aussehende A4-PDF (eigene Brand „Prüfstelle Pro", §-29-StVZO-Terminologie, ohne TÜV-/DEKRA-Markenrechtsverletzung).<br>
+            <strong>Mobile:</strong> 4 Polish-Runden auf realem iPhone Safari getestet — Sidebar als Overlay, Hamburger-Menu, Touch-Targets ≥ 36 px, Cascading-Dropdowns auch auf dem Phone.<br>
+            <strong>Präsentation:</strong> Zweimal komplett umgeschrieben — finale Version als 15-Slides-Projektpitch.
+          </div>
+          <div class="commits">commits 138b26a · 4b91c7e · 4433ece · 17b9118 · 28960f9 · u. v. m.</div>
+        </div>
+
+        <div class="tl-item done">
+          <div class="date">28.–30. April · Sprint 6 Abgabe-Polish</div>
+          <div class="what">Security, CI &amp; Performance · 12 Story Points</div>
+          <div class="detail">
+              <strong>Security:</strong> damalige Lücken der Cloud-Datenbank-Konfiguration wurden dokumentiert; Datenbank-Zugangsdaten liegen jetzt serverseitig in der Express-/MariaDB-Schicht und nicht im Frontend.<br>
+            <strong>CI:</strong> Dependabot für npm- und GitHub-Actions-Updates · CodeQL-Workflow für statische Code-Analyse.<br>
+            <strong>Performance:</strong> Route-Level-Code-Splitting — Statistik-, Berichte- und Fahrzeuge-Views werden lazy geladen, Hauptbundle unter 500 KB minified / 154 KB gzipped.<br>
+            <strong>Doku:</strong> Echtzeit-Sync-vs-Polling-Begründung im Pflichtenheft ergänzt · README auf aktuellen Stand gebracht.
+          </div>
+          <div class="commits">commits 1a151fd · bdec5f8 · 71440ff · 764104f</div>
+        </div>
+
+        <div class="tl-item done">
+          <div class="date">30. April · Stand jetzt</div>
+          <div class="what">Zwischenstand nach Sprint 5/6</div>
+          <div class="detail">114 von 114 Vitest-Tests grün · Validierungsfehler hart blockiert · mobile Bedienbarkeit, PDF-Bericht, Pflichtenheft, Testkonzept und erste Datenmodell-Dokumentation lagen vor.</div>
+        </div>
+
+        <div class="tl-item done">
+          <div class="date">12.–14. Mai · Review-Nacharbeit</div>
+            <div class="what">Migration auf zentrale MariaDB-Persistenz · Datenmodell v3 · ADRs</div>
+          <div class="detail">
+              <strong>Datenbank:</strong> Persistenz über zentrale <code>MariaDB</code>; Browser greifen über die <code>Express</code>-API unter <code>/api</code> auf denselben Datenbestand zu.<br>
+            <strong>Schema:</strong> 3NF-normalisiertes Modell mit Tabellen für <code>halter</code>, <code>fahrzeug</code>, <code>termin</code>, <code>mangel</code>, <code>status</code>, <code>pruefart</code>, <code>pruefer</code> und <code>mangel_kategorie</code>.<br>
+            <strong>Dokumentation:</strong> <code>docs/datenmodell.md</code> wurde als Drei-Schichten-Modell überarbeitet; das ER-Diagramm ist im Chen-Stil dargestellt, Primärschlüssel sind unterstrichen.<br>
+              <strong>Architekturentscheidungen:</strong> <code>docs/decisions/</code> enthält acht ADRs zu MariaDB, 3NF, WF-01, Express-API, TypeScript, Hosting, API-Client-Pattern und nicht-eingebetteten Arrays.
+          </div>
+          <div class="commits">commits c08bd7a · 2f8fc51 · 2e4fe00 · e25bb5e · 525e7e2 · 30182ce</div>
+        </div>
+
+        <div class="tl-item done">
+          <div class="date">14. Mai · Aktueller Stand</div>
+          <div class="what">Aktueller Projektstand verifiziert</div>
+          <div class="detail">136 von 136 Vitest-Tests grün · Produktions-Build erfolgreich · MariaDB-API-Smoke-Test über <code>/api/health</code> und <code>/api/fahrzeuge</code> · GitHub-Stand auf <code>master</code> aktualisiert.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───────── 4. VORHER / NACHHER ───────── -->
+  <section class="compare">
+    <h2><span class="num">4</span> Vorher / Nachher pro Kritikpunkt</h2>
+    <div class="body">
+      <table class="cmp">
+        <tr>
+          <th style="width:20%">Kritikpunkt</th>
+          <th style="width:36%">Vorher (vor 24.04.)</th>
+          <th style="width:44%">Nachher (Stand 14.05.)</th>
+        </tr>
+        <tr>
+          <td class="label">Bug „BMW Polo"</td>
+          <td class="before">Soft-Warning, Save war trotzdem möglich</td>
+          <td class="after">Strukturell unmöglich durch Cascading-Dropdowns; Modell-Dropdown zeigt nur Modelle des gewählten Herstellers</td>
+        </tr>
+        <tr>
+          <td class="label">Negativer KM</td>
+          <td class="before">Wurde gespeichert, keine Validierung</td>
+          <td class="after">Hart abgelehnt (<code>0 ≤ km ≤ 3 000 000</code>), 5 Tests in <code>validators.test.js</code></td>
+        </tr>
+        <tr>
+          <td class="label">Telefon / E-Mail / Doppel-Kennzeichen</td>
+          <td class="before">Keine Format- oder Eindeutigkeits-Prüfung</td>
+          <td class="after">Eigenes Validator-Modul mit Format-Regex und Doppel-Detection beim Anlegen</td>
+        </tr>
+        <tr>
+          <td class="label">„Bestanden" trotz Hauptmangel</td>
+          <td class="before">War möglich, kein Workflow-Schutz</td>
+          <td class="after">In UI und Express-API abgesichert; Statuswechsel auf „Bestanden" wird bei blockierendem Mangel verhindert</td>
+        </tr>
+        <tr>
+          <td class="label">Pflichtenheft</td>
+          <td class="before">Existierte nicht</td>
+          <td class="after"><code>docs/pflichtenheft.md</code> mit F-/NF-Anforderungen, Lastprofil (20–30 Prüfungen/Tag, 50 in HU/AU-Spitze), Performance-Zielen, Datenschutz-Konzept</td>
+        </tr>
+        <tr>
+          <td class="label">Datenmodell &amp; NoSQL-vs-SQL</td>
+          <td class="before">ER-Skizze ohne Begründungen</td>
+          <td class="after"><code>docs/datenmodell.md</code> als Drei-Schichten-Modell: Chen-ER, 3NF-Relationenschema, physisches MariaDB-Schema, Integritätsbedingungen und Migrationsbegründung</td>
+        </tr>
+        <tr>
+          <td class="label">Performance „warum 100 ms?"</td>
+          <td class="before">Pauschal Nielsen zitiert, ohne Vergleich</td>
+          <td class="after">Vergleichstabelle 50 / 100 / 200 / 1000 ms mit Nielsen + Card et al., konkrete Test-Methode (Vitest-Bench, p95 auf Referenzgerät)</td>
+        </tr>
+        <tr>
+          <td class="label">DSGVO bei Cloud-DB</td>
+          <td class="before">Nicht thematisiert</td>
+          <td class="after">Datenbank läuft zentral in MariaDB; Firebase kann nur noch für statisches Hosting genutzt werden, nicht als Datenbank</td>
+        </tr>
+        <tr>
+          <td class="label">ESLint-Report (187 Errors)</td>
+          <td class="before">Lockere Config, viele Unused Imports, keine PropTypes</td>
+          <td class="after">Strenge Config mit <code>jsx-runtime</code> + <code>prop-types: error</code>, PropTypes für alle zentralen Komponenten und dokumentierter Lint-Workflow</td>
+        </tr>
+        <tr>
+          <td class="label">Echtzeit vs. Polling</td>
+          <td class="before">Nicht begründet</td>
+          <td class="after">Mit MariaDB sehen mehrere Clients denselben Datenbestand über die API; Änderungen werden nach Reload oder Refresh sichtbar. Live-Push per WebSocket ist noch nicht umgesetzt</td>
+        </tr>
+        <tr>
+          <td class="label">Test-Abdeckung</td>
+          <td class="before">~52 Tests, hauptsächlich Store-Logik</td>
+          <td class="after"><strong>136 Tests</strong> grün, inklusive DB-/Schema-Tests, Validatoren, Komponenten- und Regressions-Tests</td>
+        </tr>
+        <tr>
+          <td class="label">Bericht-Ausgabe</td>
+          <td class="before">ASCII-Art in <code>.txt</code>-Datei</td>
+          <td class="after">A4-PDF im amtlichen Layout (eigene Brand „Prüfstelle Pro", §-29-StVZO-Terminologie, römisch nummerierte Sektionen, Unterschriftsfelder)</td>
+        </tr>
+        <tr>
+          <td class="label">Mobile-Support</td>
+          <td class="before">Hardcoded Desktop, unbenutzbar &lt; 768 px</td>
+          <td class="after">Voll bedienbar ab 360 px Viewport, Touch-Targets ≥ 36 px, 4 Polish-Runden auf iPhone Safari</td>
+        </tr>
+        <tr>
+          <td class="label">Datenbank-Technik</td>
+          <td class="before">Frühere lokale/isolierte Datenhaltung; Mängel als eingebettetes Array</td>
+          <td class="after">MariaDB + Express-API; relationale SQL-Tabellen mit Fremdschlüsseln, Constraints und zentralem Datenbestand</td>
+        </tr>
+        <tr>
+          <td class="label">Architekturentscheidungen</td>
+          <td class="before">Entscheidungen waren implizit über Code und verstreute Doku erklärbar</td>
+          <td class="after"><code>docs/decisions/</code> enthält acht neutrale ADRs mit Optionen, Begründung, Konsequenzen und Quellen</td>
+        </tr>
       </table>
-    </section>
+    </div>
+  </section>
 
-    <section>
-      <h2>Nachweis</h2>
-      <ul>
-        <li><code>npm run build</code> erfolgreich</li>
-        <li><code>npm run typecheck</code> erfolgreich</li>
-        <li><code>GET /api/health</code> erfolgreich gegen MariaDB</li>
-        <li><code>GET /api/fahrzeuge</code> liefert MariaDB-Daten</li>
-      </ul>
-    </section>
-  </main>
+  <!-- ───────── 5. STAND JETZT ───────── -->
+  <section class="now">
+    <h2><span class="num">5</span> Stand jetzt — die Zahlen</h2>
+    <div class="body">
+      <div class="stats">
+        <div class="stat"><div class="num green">136</div><div class="lbl">Vitest-Tests grün</div></div>
+        <div class="stat"><div class="num">8</div><div class="lbl">ADR-Entscheidungen dokumentiert</div></div>
+        <div class="stat"><div class="num cyan">SQL</div><div class="lbl">MariaDB + Express-API</div></div>
+        <div class="stat"><div class="num green">✓</div><div class="lbl">Build erfolgreich</div></div>
+      </div>
+      <div style="margin-top:14px; font-size:9.5pt; color:#475569; line-height:1.6">
+        <strong style="color:#0f172a">Wo Sie was finden:</strong>
+        <ul style="margin-top:6px; padding-left:22px">
+          <li><strong>Repository:</strong> <code>github.com/maroxd3/tuv-workflow-web</code> — Commit-Historie, jeder Commit mit ausführlicher Beschreibung</li>
+          <li><strong>Zentrale Datenbank:</strong> MariaDB-Datenbank <code>tuv_workflow</code> mit Tabellen für Halter, Fahrzeuge, Termine und Mängel</li>
+          <li><strong>Lesbare DB-Daten:</strong> API → <code>/api/health</code>, <code>/api/fahrzeuge</code>; MariaDB → <code>SELECT * FROM fahrzeug;</code></li>
+          <li><strong>Doku:</strong> <code>docs/pflichtenheft.md</code> · <code>datenmodell.md</code> · <code>design.md</code> · <code>backlog.md</code> · <code>testkonzept.md</code> · <code>decisions/</code></li>
+          <li><strong>Präsentation:</strong> <code>praesentation.html</code> im Repo-Root — 15 Slides, druckbar als PDF</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <div class="footer">
+    <div>Repository: <code>github.com/maroxd3/tuv-workflow-web</code> · Live: <code>tuv-workflow.web.app</code></div>
+    <div>Stand 14.05.2026</div>
+  </div>
 </body>
 </html>
