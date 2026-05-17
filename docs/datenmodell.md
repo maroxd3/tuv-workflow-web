@@ -1,34 +1,30 @@
-# Datenmodell
+# Datenmodell - TÜV Prüfstelle Pro
 
-Stand: 2026-05-17  
-Zielsystem: MariaDB-Datenbank `tuv_workflow`.
+**Vollständiger Drei-Schichten-Entwurf** nach klassischer Datenbank-Methodik
+(Codd 1970, Chen 1976, Date 2003):
 
-## 1. Ueberblick
+1. **Konzeptuelles Modell** - Entity-Relationship-Diagramm, frei von
+   Implementierungsdetails
+2. **Logisches Modell** - Relationenschema in 3. Normalform (3NF), Schlüssel
+   und referentielle Integrität, aber ohne Indizes oder API-Code
+3. **Physisches Modell** - konkrete MariaDB-Umsetzung mit Datentypen, Indizes,
+   Constraints und initialen Stammdaten
 
-Die Anwendung verwaltet TUEV-Pruefprozesse relational. Das Modell trennt
-Stammdaten, Bewegungsdaten und Maengel:
+Diese Trennung stellt sicher, dass Geschäftsanforderungen unabhängig von der
+konkreten Implementierung diskutierbar bleiben. Die aktuelle Implementierung
+nutzt MariaDB über die Express-API in `server/index.js`.
 
-```text
-HALTER 1 -- n FAHRZEUG 1 -- n TERMIN 1 -- n MANGEL
+---
 
-TERMIN n -- 1 STATUS
-TERMIN n -- 1 PRUEFART
-TERMIN n -- 0..1 PRUEFER
-MANGEL n -- 1 MANGEL_KATEGORIE
-```
+## 1. Konzeptuelles Modell - Entity-Relationship-Diagramm
 
-Die physische Umsetzung liegt in `server/db.js`. Beim Start der Express-API
-werden Datenbank, Tabellen und Stammdaten angelegt, falls sie fehlen.
-
-## 2. Konzeptuelles Modell - Entity-Relationship-Diagramm
-
-Das Diagramm zeigt das fachliche Modell im Chen-Stil: Entitaeten sind als
+Das Diagramm zeigt das fachliche Modell im Chen-Stil: Entitäten sind als
 Rechtecke dargestellt, Beziehungen als Rauten und Attribute als Ovale. Die
-Primaerschluessel sind wie in der klassischen Chen-Notation unterstrichen. Die
-Fremdschluessel werden erst im logischen Relationenschema ausgewiesen, weil sie
-aus den Beziehungen des ER-Modells abgeleitet werden.
+Primärschlüssel sind wie in der klassischen Chen-Notation unterstrichen. Die
+Fremdschlüssel werden erst im logischen Relationenschema eindeutig ausgewiesen,
+weil sie aus den Beziehungen des ER-Modells abgeleitet werden.
 
-### 2.1 ER-Diagramm (Chen-Notation, kompakt als Mermaid)
+### 1.1 ER-Diagramm (Chen-Notation, kompakt als Mermaid)
 
 ```mermaid
 flowchart TB
@@ -163,180 +159,425 @@ flowchart TB
   MANGEL_KATEGORIE --- mk_id
   MANGEL_KATEGORIE --- mk_bez
   MANGEL_KATEGORIE --- mk_block
-
 ```
 
-Legende: Rechteck = Entitaet, Raute = Beziehung, Oval = Attribut,
-unterstrichenes Attribut = Primaerschluessel. Fremdschluessel sind als normale
+Legende: Rechteck = Entität, Raute = Beziehung, Oval = Attribut,
+unterstrichenes Attribut = Primärschlüssel. Fremdschlüssel sind als normale
 Attribute dargestellt und im logischen Modell darunter eindeutig ausgewiesen.
-Die Kardinalitaeten stehen direkt an den Verbindungslinien (`1`, `0..1` bzw.
+Die Kardinalitäten stehen direkt an den Verbindungslinien (`1`, `0..1` bzw.
 `N`).
 
-### 2.2 Entitaeten und ihre Bedeutung
+### 1.2 Entitäten und ihre Bedeutung
 
-| Entitaet | Reale Bedeutung |
+| Entität | Reale Bedeutung |
 |---|---|
-| **HALTER** | Eigentuemer eines oder mehrerer Fahrzeuge - natuerliche oder juristische Person |
+| **HALTER** | Eigentümer eines oder mehrerer Fahrzeuge - natürliche oder juristische Person |
 | **FAHRZEUG** | Eindeutiges Kraftfahrzeug, identifiziert durch Kennzeichen und/oder FIN |
-| **TERMIN** | Konkreter Pruefungs-Termin eines Fahrzeugs zu einem Zeitpunkt |
-| **MANGEL** | Festgestellte Beanstandung bei einer Pruefung gemaess StVZO Anlage VIII |
-| **PRUEFER** | Sachverstaendiger Pruefingenieur, der den Termin durchfuehrt |
-| **PRUEFART** | Klassifikation der Pruefung (HU, AU, HU+AU, Nachpruefung, ...) |
+| **TERMIN** | Konkreter Prüfungs-Termin eines Fahrzeugs zu einem Zeitpunkt |
+| **MANGEL** | Festgestellte Beanstandung bei einer Prüfung gemäß StVZO Anlage VIII |
+| **PRUEFER** | Sachverständiger Prüfingenieur, der den Termin durchführt |
+| **PRUEFART** | Klassifikation der Prüfung (HU, AU, HU+AU, Nachprüfung, ...) |
 | **STATUS** | Zustand eines Termins im Workflow |
-| **MANGEL_KATEGORIE** | Einstufung eines Mangels (OM, LM, EM, HM, GM) inklusive Wirkung auf das Pruefergebnis |
+| **MANGEL_KATEGORIE** | Einstufung eines Mangels (OM, LM, EM, HM, GM) inklusive Wirkung auf das Prüfergebnis |
 
-### 2.3 Beziehungen und Kardinalitaeten
+### 1.3 Beziehungen und Kardinalitäten
 
-| Beziehung | Kardinalitaet | Erlaeuterung |
+| Beziehung | Kardinalität | Erläuterung |
 |---|---|---|
-| HALTER **besitzt** FAHRZEUG | 1 : N | Ein Halter kann mehrere Fahrzeuge besitzen; jedes Fahrzeug gehoert zu genau einem Halter |
-| FAHRZEUG **wird geprueft in** TERMIN | 1 : N | Ein Fahrzeug hat im Laufe der Zeit beliebig viele Termine; jeder Termin gilt genau einem Fahrzeug |
-| TERMIN **weist auf** MANGEL | 1 : N | Ein Termin kann mehrere Maengel haben; jeder Mangel ist genau einem Termin zugeordnet |
-| PRUEFER **fuehrt durch** TERMIN | 0..1 : N | Ein Pruefer kann viele Termine durchfuehren; ein Termin kann noch ohne zugewiesenen Pruefer geplant sein |
-| PRUEFART **klassifiziert** TERMIN | 1 : N | Jeder Termin ist genau einer Pruefart zugeordnet |
+| HALTER **besitzt** FAHRZEUG | 1 : N | Ein Halter kann mehrere Fahrzeuge besitzen; jedes Fahrzeug gehört zu genau einem Halter |
+| FAHRZEUG **wird geprüft in** TERMIN | 1 : N | Ein Fahrzeug hat im Laufe der Zeit beliebig viele Termine; jeder Termin gilt genau einem Fahrzeug |
+| TERMIN **weist auf** MANGEL | 1 : N | Ein Termin kann mehrere Mängel haben; jeder Mangel ist genau einem Termin zugeordnet |
+| PRUEFER **führt durch** TERMIN | 0..1 : N | Ein Prüfer kann viele Termine durchführen; ein Termin kann noch ohne zugewiesenen Prüfer geplant sein |
+| PRUEFART **klassifiziert** TERMIN | 1 : N | Jeder Termin ist genau einer Prüfart zugeordnet |
 | STATUS **beschreibt Zustand** TERMIN | 1 : N | Jeder Termin hat zu einem Zeitpunkt genau einen Status |
-| MANGEL_KATEGORIE **hat Kategorie** MANGEL | 1 : N | Jede Kategorie kann bei vielen Maengeln vorkommen; jeder Mangel hat genau eine Kategorie |
+| MANGEL_KATEGORIE **hat Kategorie** MANGEL | 1 : N | Jede Kategorie kann bei vielen Mängeln vorkommen; jeder Mangel hat genau eine Kategorie |
 
-## 3. Relationen
+### 1.4 Geschäftsregeln auf konzeptueller Ebene
 
-### halter
+Diese Regeln stellen das Geschäftswissen dar, unabhängig davon, wie sie später
+technisch erzwungen werden.
 
-| Spalte | Typ | Regel |
+| ID | Regel | Quelle |
 |---|---|---|
-| `halter_id` | CHAR(36) | Primary Key |
-| `name` | VARCHAR(160) | Pflichtfeld |
-| `telefon` | VARCHAR(80) | optional |
-| `email` | VARCHAR(160) | optional, eindeutig |
-| `anschrift` | TEXT | optional |
-| `erfasst_am` | DATETIME | Default `CURRENT_TIMESTAMP` |
+| GR-01 | Jedes Fahrzeug ist über sein Kennzeichen eindeutig identifizierbar | KBA / StVZO |
+| GR-02 | Wenn eine Fahrgestellnummer (FIN) angegeben ist, ist sie weltweit eindeutig | ISO 3779 |
+| GR-03 | Ein Termin mit Hauptmangel oder gefährlichem Mangel darf nicht den Status `Bestanden` haben | § 29 StVZO |
+| GR-04 | Baujahr eines Fahrzeugs liegt zwischen 1885 und 2100 | Plausibilität / MariaDB-Constraint |
+| GR-05 | Kilometerstand ist nichtnegativ und unter einer Plausibilitätsgrenze von 3.000.000 km | Plausibilität |
+| GR-06 | Beim Löschen eines Fahrzeugs werden alle zugehörigen Termine und Mängel kaskadierend entfernt | Domänen-Konsistenz |
 
-### fahrzeug
+---
 
-| Spalte | Typ | Regel |
+## 2. Logisches Modell - Relationenschema in 3NF
+
+Das logische Modell überführt das konzeptuelle ER-Diagramm in normalisierte
+Relationen. Ziel ist die dritte Normalform (3NF), damit Insert-, Update- und
+Delete-Anomalien vermieden werden.
+
+### 2.1 Schritte der Normalisierung
+
+Aus dem konzeptuellen Modell ergibt sich zunächst eine naive Fahrzeugstruktur:
+
+```text
+FAHRZEUG_KONZEPT = { kennzeichen, fin, hersteller, modell, baujahr,
+                    farbe, typ, kilometerstand, hu_faellig,
+                    halter_name, halter_telefon, halter_email,
+                    halter_anschrift }
+```
+
+**1NF:** Alle Attribute sind atomar. Mehrwertige Mängel-Arrays werden nicht im
+Termin gespeichert, sondern in eine eigene Relation `MANGEL` ausgelagert.
+
+**2NF:** Keine partielle funktionale Abhängigkeit vom Schlüssel. Die Relationen
+nutzen einspaltige Primärschlüssel.
+
+**3NF:** Keine transitiven Abhängigkeiten. Halterdaten werden aus `FAHRZEUG`
+entfernt und in `HALTER` gespeichert:
+
+```text
+HALTER = { halter_id, name, telefon, email, anschrift }
+FAHRZEUG = { fahrzeug_id, kennzeichen, fin, hersteller, modell, baujahr,
+            farbe, typ, kilometerstand, hu_faellig, halter_id }
+```
+
+Analog wird `MANGEL` als eigene Relation mit Fremdschlüssel auf `TERMIN`
+modelliert.
+
+### 2.2 Endgültiges Relationenschema (3NF)
+
+Notation: `RELATION(Primärschlüssel, Attribute, fremdschlüssel↗ZIEL)`
+
+```text
+HALTER(halter_id, name, telefon, email, anschrift, erfasst_am)
+
+FAHRZEUG(fahrzeug_id, kennzeichen, fin?, hersteller, modell, baujahr?, farbe?,
+        typ, kilometerstand?, hu_faellig?, halter_id↗HALTER, erfasst_am)
+
+PRUEFART(prueft_code, bezeichnung)
+
+PRUEFER(pruefer_kuerzel, name, qualifikation?)
+
+STATUS(status_code, bezeichnung, ist_endzustand)
+
+TERMIN(termin_id, fahrzeug_id↗FAHRZEUG, datum, uhrzeit?, prueft_code↗PRUEFART,
+      pruefer_kuerzel?↗PRUEFER, status_code↗STATUS, notiz?, erfasst_am)
+
+MANGEL_KATEGORIE(kategorie_code, bezeichnung, blockiert_bestanden)
+
+MANGEL(mangel_id, termin_id↗TERMIN, code_stvzo?, beschreibung,
+      kategorie_code↗MANGEL_KATEGORIE, behoben, erfasst_am)
+```
+
+**Legende:**
+
+- `?` = nullable
+- `↗ZIEL` = Fremdschlüssel referenziert Zielrelation
+- `STATUS.ist_endzustand` markiert terminale Status
+- `MANGEL_KATEGORIE.blockiert_bestanden` löst WF-01 aus, wenn `true`
+
+### 2.3 Schlüssel und Eindeutigkeitsbedingungen
+
+| Relation | Primärschlüssel | Unique-Constraints |
 |---|---|---|
-| `fahrzeug_id` | CHAR(36) | Primary Key |
-| `kennzeichen` | VARCHAR(32) | Pflichtfeld, eindeutig |
-| `fin` | VARCHAR(32) | optional, eindeutig |
-| `hersteller` | VARCHAR(120) | Pflichtfeld |
-| `modell` | VARCHAR(120) | Pflichtfeld |
-| `baujahr` | INT | optional, CHECK 1885..2100 |
-| `farbe` | VARCHAR(80) | optional |
-| `typ` | VARCHAR(80) | Pflichtfeld |
-| `kilometerstand` | INT | optional, CHECK 0..3000000 |
-| `hu_faellig` | DATE | optional |
-| `halter_id` | CHAR(36) | FK auf `halter` |
-| `erfasst_am` | DATETIME | Default `CURRENT_TIMESTAMP` |
+| HALTER | `halter_id` | `email`, falls vorhanden |
+| FAHRZEUG | `fahrzeug_id` | `kennzeichen`; `fin`, falls vorhanden |
+| PRUEFART | `prueft_code` | - |
+| PRUEFER | `pruefer_kuerzel` | - |
+| STATUS | `status_code` | - |
+| TERMIN | `termin_id` | `(fahrzeug_id, datum, uhrzeit)` |
+| MANGEL_KATEGORIE | `kategorie_code` | - |
+| MANGEL | `mangel_id` | - |
 
-### termin
+### 2.4 Referentielle Integrität
 
-| Spalte | Typ | Regel |
+| Fremdschlüssel | Referenziert | ON DELETE | ON UPDATE | Begründung |
+|---|---|---|---|---|
+| `FAHRZEUG.halter_id` | `HALTER.halter_id` | RESTRICT | CASCADE | Ein Halter mit Fahrzeugen darf nicht gelöscht werden |
+| `TERMIN.fahrzeug_id` | `FAHRZEUG.fahrzeug_id` | CASCADE | CASCADE | Wird ein Fahrzeug gelöscht, gehen alle Termine mit |
+| `TERMIN.prueft_code` | `PRUEFART.prueft_code` | RESTRICT | CASCADE | Prüfarten dürfen nicht gelöscht werden, solange sie referenziert werden |
+| `TERMIN.pruefer_kuerzel` | `PRUEFER.pruefer_kuerzel` | SET NULL | CASCADE | Termine bleiben bestehen, wenn ein Prüfer entfernt wird |
+| `TERMIN.status_code` | `STATUS.status_code` | RESTRICT | CASCADE | Statuswerte sind Domänenkonstanten |
+| `MANGEL.termin_id` | `TERMIN.termin_id` | CASCADE | CASCADE | Wird ein Termin gelöscht, gehen die Mängel mit |
+| `MANGEL.kategorie_code` | `MANGEL_KATEGORIE.kategorie_code` | RESTRICT | CASCADE | Kategorien sind Domänenkonstanten |
+
+### 2.5 Geschäftsregeln im logischen Modell
+
+| Regel | Logische Ausdrucksform | Erzwingung |
 |---|---|---|
-| `termin_id` | CHAR(36) | Primary Key |
-| `fahrzeug_id` | CHAR(36) | FK auf `fahrzeug`, CASCADE bei Fahrzeugloeschung |
-| `datum` | DATE | Pflichtfeld |
-| `uhrzeit` | TIME | optional |
-| `prueft_code` | VARCHAR(40) | FK auf `pruefart` |
-| `pruefer_kuerzel` | VARCHAR(20) | optionaler FK auf `pruefer`, SET NULL bei Loeschung |
-| `status_code` | VARCHAR(40) | FK auf `status`, Default `Geplant` |
-| `notiz` | TEXT | optional |
-| `erfasst_am` | DATETIME | Default `CURRENT_TIMESTAMP` |
+| GR-01 Kennzeichen-Eindeutigkeit | `UNIQUE(kennzeichen)` auf FAHRZEUG | deklarativ |
+| GR-02 FIN-Eindeutigkeit | `UNIQUE(fin)`; mehrere `NULL` sind in MariaDB erlaubt | deklarativ |
+| GR-03 WF-01 - Bestanden trotz HM/GM verhindern | relationsübergreifend, nicht als einfacher CHECK ausdrückbar | UI + Express-API |
+| GR-04 Baujahr-Plausibilität | `CHECK (baujahr IS NULL OR baujahr BETWEEN 1885 AND 2100)` | deklarativ |
+| GR-05 Kilometerstand-Plausibilität | `CHECK (kilometerstand IS NULL OR kilometerstand BETWEEN 0 AND 3000000)` | deklarativ |
+| GR-06 Cascade beim Fahrzeug-Löschen | `ON DELETE CASCADE` an `TERMIN.fahrzeug_id` und `MANGEL.termin_id` | deklarativ |
 
-Eindeutigkeit: `(fahrzeug_id, datum, uhrzeit)`.
+---
 
-### mangel
+## 3. Physisches Modell - MariaDB-Implementierung
 
-| Spalte | Typ | Regel |
+Dieses Kapitel beschreibt die konkrete Realisierung in MariaDB. Die technische
+Quelle ist `server/db.js`; die Express-API ruft beim Start `ensureDatabase()`
+auf und erstellt Datenbank, Tabellen und Stammdaten idempotent.
+
+### 3.1 DDL - Tabellen-Definitionen
+
+```sql
+CREATE TABLE halter (
+  halter_id   CHAR(36) PRIMARY KEY,
+  name        VARCHAR(160) NOT NULL,
+  telefon     VARCHAR(80),
+  email       VARCHAR(160),
+  anschrift   TEXT,
+  erfasst_am  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY halter_email_unique (email),
+  KEY halter_name_idx (name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE fahrzeug (
+  fahrzeug_id     CHAR(36) PRIMARY KEY,
+  kennzeichen     VARCHAR(32) NOT NULL,
+  fin             VARCHAR(32),
+  hersteller      VARCHAR(120) NOT NULL,
+  modell          VARCHAR(120) NOT NULL,
+  baujahr         INT,
+  farbe           VARCHAR(80),
+  typ             VARCHAR(80) NOT NULL,
+  kilometerstand  INT,
+  hu_faellig      DATE,
+  halter_id       CHAR(36) NOT NULL,
+  erfasst_am      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY fahrzeug_kennzeichen_unique (kennzeichen),
+  UNIQUE KEY fahrzeug_fin_unique (fin),
+  KEY fahrzeug_hu_idx (hu_faellig),
+  KEY fahrzeug_halter_idx (halter_id),
+  CONSTRAINT fahrzeug_halter_fk
+    FOREIGN KEY (halter_id) REFERENCES halter(halter_id)
+    ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT fahrzeug_baujahr_check
+    CHECK (baujahr IS NULL OR (baujahr BETWEEN 1885 AND 2100)),
+  CONSTRAINT fahrzeug_km_check
+    CHECK (kilometerstand IS NULL OR (kilometerstand BETWEEN 0 AND 3000000))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE pruefart (
+  prueft_code VARCHAR(40) PRIMARY KEY,
+  bezeichnung VARCHAR(120) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE pruefer (
+  pruefer_kuerzel VARCHAR(20) PRIMARY KEY,
+  name            VARCHAR(120) NOT NULL,
+  qualifikation   VARCHAR(120)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE status (
+  status_code     VARCHAR(40) PRIMARY KEY,
+  bezeichnung     VARCHAR(80) NOT NULL,
+  ist_endzustand  BOOLEAN NOT NULL DEFAULT FALSE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE termin (
+  termin_id       CHAR(36) PRIMARY KEY,
+  fahrzeug_id     CHAR(36) NOT NULL,
+  datum           DATE NOT NULL,
+  uhrzeit         TIME,
+  prueft_code     VARCHAR(40) NOT NULL,
+  pruefer_kuerzel VARCHAR(20),
+  status_code     VARCHAR(40) NOT NULL DEFAULT 'Geplant',
+  notiz           TEXT,
+  erfasst_am      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY termin_zeit_unique (fahrzeug_id, datum, uhrzeit),
+  KEY termin_datum_idx (datum, uhrzeit),
+  KEY termin_fahrzeug_idx (fahrzeug_id, datum),
+  CONSTRAINT termin_fahrzeug_fk
+    FOREIGN KEY (fahrzeug_id) REFERENCES fahrzeug(fahrzeug_id)
+    ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT termin_pruefart_fk
+    FOREIGN KEY (prueft_code) REFERENCES pruefart(prueft_code)
+    ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT termin_pruefer_fk
+    FOREIGN KEY (pruefer_kuerzel) REFERENCES pruefer(pruefer_kuerzel)
+    ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT termin_status_fk
+    FOREIGN KEY (status_code) REFERENCES status(status_code)
+    ON DELETE RESTRICT ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE mangel_kategorie (
+  kategorie_code      VARCHAR(20) PRIMARY KEY,
+  bezeichnung         VARCHAR(120) NOT NULL,
+  blockiert_bestanden BOOLEAN NOT NULL DEFAULT FALSE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE mangel (
+  mangel_id      CHAR(36) PRIMARY KEY,
+  termin_id      CHAR(36) NOT NULL,
+  code_stvzo     VARCHAR(40),
+  beschreibung   TEXT NOT NULL,
+  kategorie_code VARCHAR(20) NOT NULL,
+  behoben        BOOLEAN NOT NULL DEFAULT FALSE,
+  erfasst_am     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  KEY mangel_termin_idx (termin_id),
+  KEY mangel_kategorie_idx (kategorie_code),
+  CONSTRAINT mangel_termin_fk
+    FOREIGN KEY (termin_id) REFERENCES termin(termin_id)
+    ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT mangel_kategorie_fk
+    FOREIGN KEY (kategorie_code) REFERENCES mangel_kategorie(kategorie_code)
+    ON DELETE RESTRICT ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+```
+
+### 3.2 Indizes
+
+| Index | Tabelle | Zweck |
 |---|---|---|
-| `mangel_id` | CHAR(36) | Primary Key |
-| `termin_id` | CHAR(36) | FK auf `termin`, CASCADE bei Terminloeschung |
-| `code_stvzo` | VARCHAR(40) | optional |
-| `beschreibung` | TEXT | Pflichtfeld |
-| `kategorie_code` | VARCHAR(20) | FK auf `mangel_kategorie` |
-| `behoben` | BOOLEAN | Default `FALSE` |
-| `erfasst_am` | DATETIME | Default `CURRENT_TIMESTAMP` |
+| `halter_name_idx` | `halter` | Halter-Suche und Sortierung |
+| `fahrzeug_hu_idx` | `fahrzeug` | HU-Fälligkeitsauswertung |
+| `fahrzeug_halter_idx` | `fahrzeug` | Fahrzeuge eines Halters |
+| `termin_datum_idx` | `termin` | Tagesplan nach Datum und Uhrzeit |
+| `termin_fahrzeug_idx` | `termin` | Prüfhistorie eines Fahrzeugs |
+| `mangel_termin_idx` | `mangel` | Mängel eines Termins |
+| `mangel_kategorie_idx` | `mangel` | Statistik nach Mangelkategorie |
 
-### status
+### 3.3 WF-01 in der MariaDB-Architektur
 
-| Spalte | Typ | Regel |
-|---|---|---|
-| `status_code` | VARCHAR(40) | Primary Key |
-| `bezeichnung` | VARCHAR(80) | Pflichtfeld |
-| `ist_endzustand` | BOOLEAN | Default `FALSE` |
+Die Regel "kein `Bestanden` bei HM/GM" wird in der aktuellen Umsetzung nicht
+über Trigger oder Stored Procedures gelöst, sondern in zwei Anwendungsschichten:
 
-Stammdaten: `Geplant`, `In Pruefung`, `Bestanden`, `Nicht bestanden`,
-`Nachpruefung`, `Nicht erschienen`, `Abgebrochen`.
+1. **Frontend-Guard:** Status-Controls verhindern die Auswahl, wenn ein
+   blockierender Mangel bekannt ist.
+2. **Express-API-Guard:** `PATCH /api/termine/:id/status` prüft in MariaDB per
+   JOIN gegen `mangel_kategorie.blockiert_bestanden`.
 
-### pruefart
+Der zentrale API-Ausdruck ist:
 
-| Spalte | Typ | Regel |
-|---|---|---|
-| `prueft_code` | VARCHAR(40) | Primary Key |
-| `bezeichnung` | VARCHAR(120) | Pflichtfeld |
+```sql
+SELECT COUNT(*) AS count
+FROM mangel m
+JOIN mangel_kategorie mk ON mk.kategorie_code = m.kategorie_code
+WHERE m.termin_id = ?
+  AND mk.blockiert_bestanden = TRUE;
+```
 
-### pruefer
+Wenn ein blockierender Mangel zu einem bereits bestandenen Termin angelegt wird,
+setzt die API den Termin automatisch auf `Nicht bestanden` zurück.
 
-| Spalte | Typ | Regel |
-|---|---|---|
-| `pruefer_kuerzel` | VARCHAR(20) | Primary Key |
-| `name` | VARCHAR(120) | Pflichtfeld |
-| `qualifikation` | VARCHAR(120) | optional |
+### 3.4 Initial-Daten
 
-### mangel_kategorie
+Die API lädt Stammdaten idempotent mit `INSERT IGNORE`.
 
-| Spalte | Typ | Regel |
-|---|---|---|
-| `kategorie_code` | VARCHAR(20) | Primary Key |
-| `bezeichnung` | VARCHAR(120) | Pflichtfeld |
-| `blockiert_bestanden` | BOOLEAN | steuert WF-01 |
+```sql
+INSERT IGNORE INTO status (status_code, bezeichnung, ist_endzustand) VALUES
+  ('Geplant', 'Geplant', false),
+  ('In Prüfung', 'In Prüfung', false),
+  ('Bestanden', 'Bestanden', true),
+  ('Nicht bestanden', 'Nicht bestanden', true),
+  ('Nachprüfung', 'Nachprüfung', false),
+  ('Nicht erschienen', 'Nicht erschienen', true),
+  ('Abgebrochen', 'Abgebrochen', true);
 
-Stammdaten: OM, LM, EM, HM, GM. HM und GM blockieren `Bestanden`.
+INSERT IGNORE INTO mangel_kategorie
+  (kategorie_code, bezeichnung, blockiert_bestanden)
+VALUES
+  ('OM', 'Ohne Mangel', false),
+  ('LM', 'Leichter Mangel', false),
+  ('EM', 'Erheblicher Mangel', false),
+  ('HM', 'Hauptmangel', true),
+  ('GM', 'Gefährlicher Mangel', true);
+```
 
-## 4. Normalisierung
+### 3.5 Beispielabfragen
 
-Das Modell ist in 3NF:
+Tagesplan mit Fahrzeug und Halter:
 
-- Halterdaten stehen nicht redundant im Fahrzeug.
-- Fahrzeuge stehen nicht redundant im Termin.
-- Maengel sind eigene Zeilen und keine eingebetteten Arrays.
-- Status, Pruefarten, Pruefer und Mangelkategorien sind Stammdatentabellen.
-- Nicht-Schluesselattribute haengen jeweils vom ganzen Primaerschluessel ab.
+```sql
+SELECT
+  t.datum,
+  t.uhrzeit,
+  f.kennzeichen,
+  f.hersteller,
+  f.modell,
+  h.name AS halter,
+  t.status_code
+FROM termin t
+JOIN fahrzeug f ON f.fahrzeug_id = t.fahrzeug_id
+JOIN halter h ON h.halter_id = f.halter_id
+WHERE t.datum = ?
+ORDER BY t.uhrzeit;
+```
 
-Damit werden Update-Anomalien vermieden und MariaDB kann referenzielle
-Integritaet erzwingen.
+Mängelstatistik:
 
-## 5. Integritaetsregeln
+```sql
+SELECT
+  mk.kategorie_code,
+  mk.bezeichnung,
+  COUNT(*) AS anzahl
+FROM mangel m
+JOIN mangel_kategorie mk ON mk.kategorie_code = m.kategorie_code
+GROUP BY mk.kategorie_code, mk.bezeichnung
+ORDER BY anzahl DESC;
+```
 
-| Regel | Umsetzung |
+---
+
+## 4. Vergleich: konzeptuell vs. logisch vs. physisch
+
+| Aspekt | Konzeptuell | Logisch | Physisch |
+|---|---|---|---|
+| Entitäten / Beziehungen | ja | - | - |
+| Attribute fachlich | ja | - | - |
+| Geschäftsregeln textuell | ja | ja | ja |
+| Relationen / Schlüssel | - | ja | ja |
+| Normalisierung 3NF | - | ja | - |
+| Referentielle Integrität | - | ja | ja |
+| CHECK-Constraints | - | ja | ja |
+| MariaDB-Datentypen | - | teilweise | ja |
+| Indizes | - | - | ja |
+| API-Endpunkte | - | - | ja |
+| Tabellen-Engine / Charset | - | - | ja |
+
+---
+
+## 5. Warum MariaDB?
+
+| Aspekt | Vorteil im Projekt |
 |---|---|
-| Fahrzeug braucht Halter | FK `fahrzeug_halter_fk` mit RESTRICT |
-| Termin braucht Fahrzeug | FK `termin_fahrzeug_fk` mit CASCADE |
-| Mangel braucht Termin | FK `mangel_termin_fk` mit CASCADE |
-| Terminstatus muss bekannt sein | FK auf `status` |
-| Pruefart muss bekannt sein | FK auf `pruefart` |
-| Mangelkategorie muss bekannt sein | FK auf `mangel_kategorie` |
-| Kennzeichen eindeutig | UNIQUE KEY |
-| FIN eindeutig, wenn gesetzt | UNIQUE KEY |
-| Plausibles Baujahr | CHECK |
-| Plausibler Kilometerstand | CHECK |
+| Relationale Daten | passt zu Halter, Fahrzeug, Termin und Mangel |
+| Referentielle Integrität | MariaDB erzwingt Fremdschlüssel und Cascades |
+| Zentrale Persistenz | mehrere Browser/Clients nutzen denselben Datenbestand |
+| SQL-Auswertungen | Statistiken und Berichte lassen sich direkt aus Tabellen ableiten |
+| Betrieb | lokal oder serverseitig ohne Cloud-Datenbank möglich |
+| Sicherheit | Zugangsdaten bleiben im Backend und nicht im Frontend |
 
-## 6. API-Mapping
+Die Browser-App spricht MariaDB nicht direkt an. Der Zugriff läuft über:
 
-Die Datenbank nutzt `snake_case`, das Frontend `camelCase`.
-`server/index.js` mappt zwischen beiden Formen:
+```text
+React/Vite -> src/db/apiClient.ts -> Express API -> server/db.js -> MariaDB
+```
 
-| DB | Frontend |
-|---|---|
-| `halter_id` | `halterId` |
-| `fahrzeug_id` | `fahrzeugId` |
-| `hu_faellig` | `huFaellig` |
-| `prueft_code` | `prueftCode` |
-| `pruefer_kuerzel` | `prueferKuerzel` |
-| `status_code` | `statusCode` |
-| `kategorie_code` | `kategorieCode` |
-| `erfasst_am` | `erfasstAm` |
+---
 
-## 7. Aktueller Stand
+## 6. Umgesetzte Migration auf MariaDB
 
-- MariaDB ist die einzige produktive Datenbank.
-- Express ist die einzige Laufzeit-Schnittstelle zur Datenbank.
-- Das Frontend nutzt HTTP ueber `src/db/apiClient.ts`.
+| Phase | Inhalt | Status |
+|---|---|---|
+| 1 | MariaDB-Verbindung mit `mariadb` Node.js Driver | umgesetzt |
+| 2 | Express-API unter `/api` | umgesetzt |
+| 3 | Tabellen-Setup in `server/db.js` | umgesetzt |
+| 4 | Stammdaten-Seed für Status, Prüfarten, Prüfer und Mangelkategorien | umgesetzt |
+| 5 | Frontend-Zugriff über `src/db/apiClient.ts` | umgesetzt |
+| 6 | `useDb.ts` auf API-Aufrufe umgestellt | umgesetzt |
+| 7 | Dokumentation auf MariaDB aktualisiert | umgesetzt |
+
+---
+
+## 7. Änderungshistorie
+
+| Version | Datum | Änderung |
+|---|---|---|
+| 1.0 | 2026-04-15 | Erste Sprint-1-Skizze |
+| 2.0 | 2026-05-13 | Drei-Schichten-Modell mit ER, 3NF und physischem SQL-Modell |
+| 3.0 | 2026-05-17 | Persistenz-Dokumentation auf MariaDB/Express umgestellt |
+| 3.1 | 2026-05-17 | Entfernte Modelltabellen und Chen-ER-Diagramm wiederhergestellt |
