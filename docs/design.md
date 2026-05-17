@@ -1,166 +1,140 @@
-# Design — TÜV Prüfstelle Pro
+# Design-Dokumentation
 
-Dieses Dokument beschreibt den aktuellen Architekturstand nach der Migration von
-Firestore zu lokaler relationaler Persistenz mit PGlite und Drizzle ORM.
+Stand: 2026-05-17  
+Aktuelle Architektur: React/Vite Frontend + Express API + MariaDB.
 
-## 1. Architekturüberblick
+## 1. Zielbild
+
+Die Anwendung trennt Benutzeroberflaeche, API und relationale Persistenz klar:
 
 ```mermaid
-flowchart TB
+flowchart LR
   user[Browser / Tauri WebView]
-  app[React App]
-  views[Views: Tagesplan, Fahrzeuge, Statistik, Berichte]
-  hooks[Hooks: useDb, useStoreCompat, useToasts]
-  repo[Repository: src/db/queries.ts]
-  orm[Drizzle ORM]
-  db[(PGlite PostgreSQL<br/>idb://tuvpro-db-v2)]
-  idb[(IndexedDB)]
+  ui[React Views]
+  hook[useDb / useStoreCompat]
+  apiClient[apiClient.ts]
+  api[Express API server/index.js]
+  dbmod[MariaDB-Modul server/db.js]
+  maria[(MariaDB tuv_workflow)]
 
-  user --> app
-  app --> views
-  views --> hooks
-  hooks --> repo
-  repo --> orm
-  orm --> db
-  db --> idb
+  user --> ui --> hook --> apiClient
+  apiClient -->|HTTP JSON /api| api
+  api --> dbmod --> maria
 ```
 
-Die App ist eine React/Vite-SPA. Es gibt keinen eigenen Backend-Server. Die
-Datenbank läuft lokal im Browser über PGlite; PGlite persistiert die
-PostgreSQL-kompatible Datenbank in IndexedDB. Firebase wird nur noch für
-statisches Hosting verwendet.
+Der Browser enthaelt keine Datenbank-Engine. Alle dauerhaften Daten liegen in
+MariaDB. Das Frontend bleibt dadurch leichtgewichtig und mehrere Clients koennen
+denselben Datenstand nutzen.
 
-## 2. Technologieentscheidungen
+## 2. Schichten
 
-| Entscheidung | Alternative(n) | Begründung |
+| Schicht | Dateien | Verantwortung |
 |---|---|---|
-| React 19 + Vite | Next.js, Remix | SPA reicht aus; Vite liefert schnellen Entwicklungs-Workflow |
-| PGlite | Firestore, SQLite, PostgreSQL-Server | Lokale relationale SQL-Datenbank ohne Backend |
-| Drizzle ORM | Raw SQL, Prisma, Kysely | Typsichere Queries, PostgreSQL-Schema in TypeScript, SQL-Migrationen |
-| Tauri 2 | Electron, reine Web-App | Kleine Desktop-Binary und späterer Pfad für lokale Geräteintegration |
-| Recharts | Chart.js, D3 | React-nativ und ausreichend für die benötigten Diagramme |
-| Repository-Pattern | Direct-Drizzle in Views | DB-Zugriff zentral testbar und refactor-sicher |
+| Praesentation | `src/views`, `src/features`, `src/components` | UI, Formulare, Tabellen, Modale, Charts |
+| State/API-Client | `src/hooks/useDb.ts`, `src/hooks/useStoreCompat.ts`, `src/db/apiClient.ts` | React-State, optimistische Updates, HTTP-Aufrufe |
+| Backend-API | `server/index.js` | REST-Endpunkte, Mapping camelCase/snake_case, Workflow-Regeln |
+| Datenbank | `server/db.js`, MariaDB | Tabellen, Fremdschluessel, Constraints, Stammdaten |
 
-Die detaillierten Architekturentscheidungen stehen in `docs/decisions/`.
+## 3. Datenfluss
 
-## 3. Modulstruktur
-
-```txt
-src/
-  db/
-    client.ts        PGlite- und Drizzle-Singleton
-    schema.ts        Tabellen, Relationen und TypeScript-Typen
-    migrate.ts       führt SQL-Migrationen beim App-Start aus
-    seed.ts          Domänen- und Demo-Daten
-    queries.ts       Repository-Schicht für CRUD und Aggregationen
-    migrations/      SQL-Migrationsdateien
-  hooks/
-    useDb.ts         React-Hook für Datenbankzustand
-    useStoreCompat.ts Adapter für bestehende View-API
-  views/             fachliche Screens
-  features/          Modals für Fahrzeug, Termin, Mangel
-  components/        UI-Bausteine
-  utils/             reine Hilfsfunktionen und Validatoren
-```
-
-Views greifen nicht direkt auf Drizzle oder PGlite zu. Der Zugriff läuft über
-`useStoreCompat` beziehungsweise `useDb`, danach über `src/db/queries.ts`.
-
-## 4. Datenfluss
+Beispiel: Termin anlegen.
 
 ```mermaid
 sequenceDiagram
-  participant UI as View / Modal
-  participant Compat as useStoreCompat
+  participant View as TerminModal
   participant Hook as useDb
-  participant Repo as queries.ts
-  participant DB as PGlite
+  participant Client as apiClient.ts
+  participant API as Express /api/termine
+  participant DB as MariaDB
 
-  UI->>Compat: addFz(data)
-  Compat->>Hook: addFahrzeug(...)
-  Hook->>Repo: addFahrzeug(row)
-  Repo->>DB: INSERT INTO fahrzeug ...
-  DB-->>Repo: created row
-  Repo-->>Hook: Fahrzeug
-  Hook->>Repo: listFahrzeuge(), listTermine()
-  Repo-->>Hook: aktueller Datenstand
-  Hook-->>Compat: State aktualisiert
-  Compat-->>UI: View rendert neu
+  View->>Hook: addTermin(daten)
+  Hook->>Hook: optimistisches UI-Update
+  Hook->>Client: POST /termine
+  Client->>API: JSON Request
+  API->>DB: INSERT INTO termin (...)
+  DB-->>API: gespeicherte Zeile
+  API-->>Client: Termin JSON
+  Client-->>Hook: gespeicherter Termin
+  Hook-->>View: State aktualisiert
 ```
 
-Nach Schreiboperationen wird der relevante Datenbestand neu geladen. Damit
-bleibt die UI konsistent, ohne Firestore-`onSnapshot` oder eigenen WebSocket.
+Nach Schreiboperationen aktualisiert `useDb` bei Bedarf die Listen erneut. Damit
+bleibt die UI konsistent, ohne dass die Views SQL oder Datenbankdetails kennen.
 
-## 5. Datenmodell
+## 4. API-Schnittstelle
 
-Das fachliche Datenmodell ist 3NF-normalisiert:
+Die API liegt unter `/api`:
 
-```txt
-halter 1 -- N fahrzeug
-fahrzeug 1 -- N termin
-termin 1 -- N mangel
-pruefart 1 -- N termin
-pruefer 0..1 -- N termin
-status 1 -- N termin
-mangel_kategorie 1 -- N mangel
+| Methode | Pfad | Zweck |
+|---|---|---|
+| GET | `/api/health` | API-/DB-Verfuegbarkeit pruefen |
+| GET/POST/PATCH/DELETE | `/api/halter` | Halter verwalten |
+| GET/POST/PATCH/DELETE | `/api/fahrzeuge` | Fahrzeuge verwalten |
+| GET/POST/PATCH/DELETE | `/api/termine` | Termine verwalten |
+| PATCH | `/api/termine/:id/status` | Status mit WF-01-Pruefung setzen |
+| GET | `/api/termine/:id/maengel` | Maengel eines Termins laden |
+| POST/DELETE | `/api/maengel` | Maengel anlegen und loeschen |
+| POST | `/api/admin/reset` | Bewegungsdaten loeschen |
+| POST | `/api/admin/demo` | Demo-Daten neu laden |
+
+`vite.config.js` proxyt lokale Frontend-Aufrufe von `/api` an
+`http://127.0.0.1:8787`.
+
+## 5. Datenbankdesign
+
+MariaDB speichert acht Tabellen:
+
+- `halter`
+- `fahrzeug`
+- `termin`
+- `mangel`
+- `status`
+- `pruefart`
+- `pruefer`
+- `mangel_kategorie`
+
+Die Tabellen sind in 3NF modelliert. Maengel sind nicht als Array im Termin
+eingebettet, sondern eigene Zeilen mit Fremdschluessel auf `termin`.
+
+Wichtige Constraints:
+
+- `fahrzeug.halter_id -> halter.halter_id`
+- `termin.fahrzeug_id -> fahrzeug.fahrzeug_id` mit `ON DELETE CASCADE`
+- `mangel.termin_id -> termin.termin_id` mit `ON DELETE CASCADE`
+- eindeutiges Kennzeichen
+- eindeutige FIN, sofern gesetzt
+- CHECK auf Baujahr und Kilometerstand
+- Stammdaten-FKs fuer Status, Pruefart, Pruefer und Mangelkategorie
+
+## 6. Workflow-Regel WF-01
+
+Ein Termin darf nicht auf `Bestanden` gesetzt werden, wenn ein blockierender
+Mangel vorhanden ist. Die Regel wird doppelt abgesichert:
+
+1. UI: Status-Controls verhindern die Auswahl, wenn ein HM/GM bekannt ist.
+2. API: `/api/termine/:id/status` prueft in MariaDB per JOIN gegen
+   `mangel_kategorie.blockiert_bestanden`.
+
+Wenn ein blockierender Mangel zu einem bereits bestandenen Termin angelegt wird,
+setzt die API den Termin automatisch auf `Nicht bestanden` zurueck.
+
+## 7. Deployment
+
+Das Frontend kann statisch gebaut und gehostet werden. Die Express-API und
+MariaDB muessen separat erreichbar sein.
+
+Lokal:
+
+```powershell
+npm run api
+npm run dev
 ```
 
-Das vollständige ER-Diagramm, Relationenschema, DDL und die
-Integritätsbedingungen stehen in `docs/datenmodell.md`.
+Produktion:
 
-## 6. Business-Regeln
+- Frontend: `npm run build`, Auslieferung von `dist/`
+- API: Node-Prozess fuer `server/index.js`
+- Datenbank: MariaDB-Instanz mit Zugangsdaten aus `.env`
 
-Die wichtigste Regel ist WF-01:
-
-```txt
-Ein Termin mit Hauptmangel oder gefährlichem Mangel darf nicht den Status
-"Bestanden" erhalten.
-```
-
-Diese Regel wird auf mehreren Ebenen abgesichert:
-
-- UI verhindert ungültige Statusauswahl.
-- `useStoreCompat` erhält die Legacy-View-API und normalisiert Datenformen.
-- `queries.ts` prüft Statuswechsel und Mangeländerungen zentral.
-- Das relationale Schema verhindert verwaiste Datensätze per Foreign Keys.
-
-## 7. Migrationen und Seed-Daten
-
-Beim App-Start ruft `useDb` zuerst `runMigrations()` auf. Der Migrationsrunner
-führt die SQL-Dateien aus `src/db/migrations/` genau einmal aus und protokolliert
-dies in `__drizzle_migrations`.
-
-Danach werden Domänentabellen idempotent befüllt:
-
-```txt
-status
-pruefart
-pruefer
-mangel_kategorie
-```
-
-Wenn die Datenbank leer ist, lädt `seedDemoBestand()` Demo-Daten für Halter,
-Fahrzeuge, Termine und Mängel.
-
-## 8. Debugging
-
-Im Dev-Modus installiert `src/db/debug.ts` einen kleinen Debug-Helfer:
-
-```js
-await tuvdb.table("fahrzeug")
-await tuvdb.table("termin")
-await tuvdb.sql("SELECT * FROM fahrzeug")
-```
-
-Die physische PGlite-Datenbank ist in Chrome unter folgendem Pfad sichtbar:
-
-```txt
-DevTools -> Application -> IndexedDB -> /pglite/tuvpro-db-v2
-```
-
-## 9. Deployment
-
-Das Deployment baut statische Dateien in `dist/` und veröffentlicht sie über
-Firebase Hosting. Firebase Hosting ist nur CDN/Static-File-Delivery; Firestore
-wird nicht mehr als Datenbank verwendet.
-
+Statisches Hosting kann fuer die Frontend-Dateien genutzt werden. Die Datenbank
+bleibt MariaDB hinter der Express-API.

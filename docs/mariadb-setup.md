@@ -1,32 +1,25 @@
 # MariaDB-Setup
 
-Dieser Branch stellt die Persistenz von lokaler PGlite/IndexedDB auf eine zentrale MariaDB-Datenbank um.
+Diese Projektvariante nutzt MariaDB als zentrale Datenbank. Das Frontend greift
+nur ueber die Express-API auf Daten zu.
 
 ## Architektur
 
 ```text
 React/Vite Frontend
+-> src/db/apiClient.ts
 -> Express API (server/index.js)
--> MariaDB Server
+-> MariaDB Driver (server/db.js)
+-> MariaDB Datenbank tuv_workflow
 ```
 
-Die fachlichen Tabellen bleiben gleich:
+## Voraussetzungen
 
-```text
-halter
-fahrzeug
-termin
-mangel
-status
-pruefart
-pruefer
-mangel_kategorie
-```
+- Node.js v18+
+- MariaDB Server
+- npm-Abhaengigkeiten aus `package-lock.json`
 
-## Lokaler Start
-
-1. MariaDB starten.
-2. Einen App-User in MariaDB anlegen.
+## Datenbank und Benutzer anlegen
 
 ```sql
 CREATE DATABASE IF NOT EXISTS tuv_workflow
@@ -39,46 +32,66 @@ GRANT ALL PRIVILEGES ON tuv_workflow.* TO 'tuv_app'@'localhost';
 FLUSH PRIVILEGES;
 ```
 
-3. `.env.example` nach `.env` kopieren und Zugangsdaten anpassen.
+## .env
 
 ```text
+MARIADB_HOST=127.0.0.1
+MARIADB_PORT=3306
 MARIADB_USER=tuv_app
 MARIADB_PASSWORD=tuv_app_pw
 MARIADB_DATABASE=tuv_workflow
+API_PORT=8787
+VITE_API_BASE_URL=/api
 ```
 
-4. API starten:
+`.env` darf nicht committet werden. Eine Vorlage liegt in `.env.example`.
+
+## Start
+
+Terminal 1:
 
 ```powershell
 npm run api
 ```
 
-5. In zweitem Terminal Frontend starten:
+Terminal 2:
 
 ```powershell
 npm run dev
 ```
 
-Die API erstellt die Tabellen automatisch. Der Windows-`root`-User von MariaDB kann per `auth_gssapi_client` konfiguriert sein; dieser Auth-Mechanismus wird vom Node-Treiber nicht unterstuetzt. Deshalb ist ein normaler App-User mit Passwort empfohlen.
+Die API erstellt Tabellen und Stammdaten automatisch. Der Vite-Dev-Server
+proxyt `/api` an `http://127.0.0.1:8787`.
 
-## Daten Ansehen
+## Pruefen
+
+```powershell
+Invoke-RestMethod http://127.0.0.1:8787/api/health
+Invoke-RestMethod http://127.0.0.1:8787/api/fahrzeuge
+```
+
+In MariaDB:
 
 ```sql
-SHOW DATABASES;
 USE tuv_workflow;
 SHOW TABLES;
+SELECT * FROM fahrzeug;
 SELECT * FROM termin;
 ```
 
-```sql
-SELECT
-  t.datum,
-  t.uhrzeit,
-  f.kennzeichen,
-  h.name AS halter,
-  t.status_code
-FROM termin t
-JOIN fahrzeug f ON f.fahrzeug_id = t.fahrzeug_id
-JOIN halter h ON h.halter_id = f.halter_id
-ORDER BY t.datum, t.uhrzeit;
-```
+## Tabellen
+
+- `halter`
+- `fahrzeug`
+- `termin`
+- `mangel`
+- `status`
+- `pruefart`
+- `pruefer`
+- `mangel_kategorie`
+
+## Hinweis zu Windows/MariaDB
+
+Der Windows-`root`-User kann mit einem Authentifizierungsmechanismus
+konfiguriert sein, den der Node-Treiber nicht unterstuetzt. Deshalb ist ein
+normaler App-User mit Passwort empfohlen.

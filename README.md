@@ -1,266 +1,217 @@
-# TÜV Prüfstelle Pro
+# TUEV Pruefstelle Pro
 
-> Hinweis Branch `mariadb-backend`: Diese Variante nutzt eine zentrale MariaDB-Datenbank ueber `server/index.js` (Express API). Setup siehe [`docs/mariadb-setup.md`](docs/mariadb-setup.md).
+Verwaltungssystem fuer TUEV-Pruefstellen: Terminplanung, Fahrzeugverwaltung,
+Maengelerfassung, Statistik und Pruefberichte aus einer React/Vite-Codebasis.
 
-Verwaltungssystem für TÜV-Prüfstellen — Hauptuntersuchung-Workflow von der
-Terminplanung bis zum amtlichen Prüfbericht. Web-App und native Desktop-App
-aus einer Codebasis. Lokale PostgreSQL-Persistenz im Browser ohne Backend-Server.
+Diese Variante nutzt eine zentrale **MariaDB-Datenbank** ueber eine
+**Express-API** in `server/index.js`. Die Browser-App spricht nicht direkt mit
+der Datenbank, sondern ausschliesslich ueber HTTP-Endpunkte unter `/api`.
 
 [![Tests](https://img.shields.io/badge/tests-133%20passing-brightgreen)](#testing)
 [![Lint](https://img.shields.io/badge/eslint-0%20errors-brightgreen)](#testing)
 [![TypeScript](https://img.shields.io/badge/typescript-strict-blue)](#tech-stack)
-[![Database](https://img.shields.io/badge/db-PostgreSQL%20%28PGlite%29-336791)](#tech-stack)
+[![Database](https://img.shields.io/badge/db-MariaDB-003545)](#tech-stack)
 [![License](https://img.shields.io/badge/license-MIT-blue)](#lizenz)
-
-**Live-Demo:** [tuv-workflow.web.app](https://tuv-workflow.web.app)
-
----
 
 ## Features
 
-- **Tagesplan** — Timeline- oder Tabellenansicht mit Echtzeit-Status, Termin-Anlage per Klick auf einen Zeitslot, Auto-Workflow „Starten / Fertig"
-- **Fahrzeuge** — Vollständige CRUD-Verwaltung mit abhängigen Dropdowns für Hersteller / Modell / Typ, Suche, Filter, HU-Fälligkeits-Anzeige farbcodiert
-- **Mängelerfassung** — StVZO-Anlage-VIII-Katalog mit ~100 Einträgen, plus Freitext-Modus für Sonderfälle, mit mehrstufiger Bestanden-bei-Hauptmangel-Sperre (WF-01)
-- **Statistik** — Bestandsquoten-Trend, Prüfer-Leistungs-Vergleich, Mängel-nach-Kategorie-Pie, Top-10-Mängel, Zeitraumfilter (7/30/90/365 d)
-- **Berichte** — Suchbare Liste aller Prüfungen mit Filtern, Vorschau-Modal, **Export als amtlich aussehendes A4-PDF** (Browser-Druck-Engine, keine externe Library)
-- **Mobile-tauglich** — vollständig bedienbar ab 360 px Viewport, Sidebar als Overlay mit Hamburger-Menu, Touch-Targets ≥ 36 px
-- **Offline-first** — komplette Daten-Schicht im Browser via PGlite (PostgreSQL als WebAssembly), Persistenz in IndexedDB, keine Cloud nötig
+- **Tagesplan**: Timeline- und Tabellenansicht, Termin-Anlage, Statuswechsel
+  und Workflow-Guard fuer "Bestanden".
+- **Fahrzeuge**: CRUD-Verwaltung mit Hersteller-, Modell- und Typ-Auswahl,
+  Suche, Filter und HU-Faelligkeitsanzeige.
+- **Maengelerfassung**: StVZO-Katalog plus Freitextmodus, Kategorien
+  OM/LM/EM/HM/GM und Sperre fuer "Bestanden" bei blockierenden Maengeln.
+- **Statistik**: Bestandsquoten, Pruefervergleich, Maengel nach Kategorie,
+  Top-Maengel und Zeitraumfilter.
+- **Berichte**: Suchbare Pruefliste mit Vorschau und A4-PDF-Export ueber den
+  Browser-Print-Dialog.
+- **Mobile-tauglich**: Bedienbar ab 360 px Viewport mit Sidebar-Overlay und
+  Touch-tauglichen Controls.
+- **Zentrale Persistenz**: MariaDB speichert Daten serverseitig, mehrere
+  Browser/Clients arbeiten auf demselben Datenbestand.
 
 ## Architektur in 30 Sekunden
 
-```
-┌─────────── PRÄSENTATION ──────────┐
-│  TagesplanView · FahrzeugeView    │
-│  StatistikView · BerichteView     │
-└────────────┬──────────────────────┘
-             │ React-Hooks (useDb, useStoreCompat)
-             ▼
-┌─────────── DOMÄNE ────────────────┐
-│  queries.ts (Repository-Pattern)  │
-│  validators.js (3-Linien-Modell)  │
-│  WF-01 Defense-in-Depth           │
-└────────────┬──────────────────────┘
-             │ Drizzle ORM (type-safe SQL)
-             ▼
-┌─────────── PERSISTENZ ────────────┐
-│  PGlite — Postgres als WASM       │
-│  IndexedDB (browser-lokal)        │
-│  3NF-Schema mit FK-Constraints    │
-└───────────────────────────────────┘
+```text
+React / Vite Frontend
+  src/hooks/useDb.ts
+  src/db/apiClient.ts
+        |
+        | HTTP / JSON (/api)
+        v
+Express API
+  server/index.js
+  server/db.js
+        |
+        | mariadb Node.js driver
+        v
+MariaDB
+  halter, fahrzeug, termin, mangel
+  status, pruefart, pruefer, mangel_kategorie
 ```
 
-**Drei sauber getrennte Schichten** — Präsentation, Domäne, Persistenz.
-Die Begründung jeder Tech-Wahl liegt als eigenes Architecture-Decision-Record
-unter `docs/decisions/` (siehe [Dokumentation](#dokumentation)).
+Die UI bleibt von SQL entkoppelt. `useDb` verwaltet React-State und ruft
+`apiClient.ts` auf. Die Express-API validiert zentrale Workflow-Regeln, fuehrt
+SQL gegen MariaDB aus und erstellt Tabellen sowie Stammdaten beim Start.
 
 ## Tech Stack
 
-| Layer | Technologie | Warum |
+| Layer | Technologie | Zweck |
 |---|---|---|
-| Frontend | React 19 · Vite 8 | Moderne Hooks-API, schnelles Dev-Tooling |
-| Sprache | TypeScript (strict) für neue Module, JSX für Legacy | Type-Safety wo es zählt (siehe ADR-005) |
-| Persistenz | **PGlite 0.4** (PostgreSQL als WebAssembly) + IndexedDB | Echte relationale DB ohne Backend (siehe ADR-001) |
-| ORM | **Drizzle ORM 0.45** | Type-safe SQL, Migration-Tooling (siehe ADR-004) |
-| Desktop-Wrapper | Tauri 2 (Rust) | Cross-Platform-Desktop aus selber Codebasis |
-| Styling | Tailwind CSS 4 | Utility-First, keine globalen CSS-Konflikte |
-| Animation | Framer Motion | Komponenten-basierte Transitions |
-| Charts | Recharts | Deklaratives Charting für React |
-| Tests | **Vitest 4** · React Testing Library | 133 Tests, 95%+ Coverage |
-| Linting | ESLint 9 (flat config) | `react/prop-types: error` |
-| CI/CD | GitHub Actions | Lint + Test + Build auf jeden PR (siehe `.github/workflows/`) |
-| Hosting | Firebase Hosting | Statische Dateien — nicht Firestore (siehe ADR-006) |
-
-## Validierung in drei Verteidigungslinien
-
-1. **UX-Strukturierung** — Cascading Dropdowns verhindern Tippfehler strukturell
-   („BMW Polo" oder „VW Golf als Motorrad" sind nicht auswählbar)
-2. **Hard-Validation (App-Layer)** — `validators.js` prüft Format und Wertebereich,
-   KBA-Kreis-Code-Liste mit ~430 deutschen Codes, Saison-Kennzeichen-Format,
-   Kennzeichen-Eindeutigkeit, FIN-Eindeutigkeit (partial UNIQUE), Workflow-Regeln
-   nach § 29 StVZO
-3. **DB-Layer Constraints** — FK-Constraints (CASCADE / RESTRICT), partielle
-   UNIQUE-Indizes, CHECK-Constraints für Wertebereiche (`baujahr >= 1900`,
-   `kilometerstand >= 0`)
-
-Plus **Soft-Warnings** — ISO-3779-FIN-Prüfziffer als Hinweis (blockt nicht, weil
-pre-1981 / nicht-Nordamerika-Fahrzeuge keine Prüfziffer tragen).
+| Frontend | React 19, Vite 8 | SPA und Entwicklungsserver |
+| Sprache | TypeScript fuer neue Module, JSX fuer Legacy-Views | Typsicherheit dort, wo Datenformen wichtig sind |
+| API | Express 5, CORS, dotenv | HTTP-Schnittstelle zwischen Browser und DB |
+| Persistenz | MariaDB, `mariadb` Node.js Driver | Zentrale relationale Datenhaltung |
+| Desktop-Wrapper | Tauri 2 | Desktop-Build aus derselben Frontend-Codebasis |
+| Styling | Tailwind CSS 4 | Utility-first Styling |
+| Animation | Framer Motion | UI-Transitions |
+| Charts | Recharts | Statistikdiagramme |
+| Tests | Vitest 4, React Testing Library | Unit-, Component-, Hook- und DB-Tests |
+| Linting | ESLint 9 | Statische Codequalitaet |
+| Hosting | Firebase Hosting | Optionales Hosting der statischen Frontend-Dateien |
 
 ## Getting Started
 
 ### Voraussetzungen
 
-- [Node.js](https://nodejs.org/) v18+
-- [Rust](https://www.rust-lang.org/tools/install) (nur für Tauri-Desktop-Build)
+- Node.js v18+
+- Laufender MariaDB-Server auf `127.0.0.1:3306`
+- Optional: Rust fuer den Tauri-Desktop-Build
 
-### Im Browser starten
+### MariaDB einrichten
 
-```bash
+```sql
+CREATE DATABASE IF NOT EXISTS tuv_workflow
+  CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+CREATE USER IF NOT EXISTS 'tuv_app'@'localhost'
+  IDENTIFIED BY 'tuv_app_pw';
+
+GRANT ALL PRIVILEGES ON tuv_workflow.* TO 'tuv_app'@'localhost';
+FLUSH PRIVILEGES;
+```
+
+`.env`:
+
+```text
+MARIADB_HOST=127.0.0.1
+MARIADB_PORT=3306
+MARIADB_USER=tuv_app
+MARIADB_PASSWORD=tuv_app_pw
+MARIADB_DATABASE=tuv_workflow
+API_PORT=8787
+VITE_API_BASE_URL=/api
+```
+
+Details stehen in [docs/mariadb-setup.md](docs/mariadb-setup.md).
+
+### Lokal starten
+
+Terminal 1:
+
+```powershell
 npm install
+npm run api
+```
+
+Terminal 2:
+
+```powershell
 npm run dev
 ```
 
-Öffnet auf [http://localhost:5173](http://localhost:5173). Beim ersten Start wird
-automatisch eine lokale PostgreSQL-Datenbank in der IndexedDB des Browsers angelegt
-und mit Beispieldaten gefüllt.
+Vite oeffnet die App unter `http://localhost:5173` und proxyt `/api` an
+`http://127.0.0.1:8787`. Die API legt Tabellen und Stammdaten automatisch an.
 
-### Als Desktop-App starten
+### Production-Build
 
-```bash
-npm install
-npm run tauri dev
+```powershell
+npm run build
 ```
 
-### Production-Builds
+Fuer den produktiven Webbetrieb muss die Express-API separat laufen und das
+Frontend muss mit passender `VITE_API_BASE_URL` ausgeliefert werden.
 
-```bash
-npm run build          # Web-Build (dist/)
-npm run tauri build    # Desktop-Installer (Win/Mac/Linux)
-```
+## Datenbank
 
-### Datenbank-Workflow
+Die physische MariaDB-Struktur wird in `server/db.js` erstellt:
 
-```bash
-npm run db:generate    # Schema-Änderungen → neue SQL-Migration
-npm run db:studio      # Drizzle-Studio (visuelle DB-Inspektion)
-```
+- `halter`
+- `fahrzeug`
+- `termin`
+- `mangel`
+- `status`
+- `pruefart`
+- `pruefer`
+- `mangel_kategorie`
 
-### Auf Firebase Hosting deployen
+Die wichtigsten Integritaetsregeln liegen in MariaDB:
 
-```bash
-firebase deploy --only hosting --project tuv-prufstelle-pro
-```
-
-Live-URL: `https://tuv-workflow.web.app`
-
-GitHub Actions deployt automatisch bei Push auf `master` — siehe
-`.github/workflows/deploy.yml`.
+- Fremdschluessel zwischen Halter, Fahrzeug, Termin und Mangel
+- `ON DELETE CASCADE` fuer abhaengige Termine und Maengel
+- eindeutiges Kennzeichen und eindeutige FIN, soweit FIN gesetzt ist
+- CHECK-Constraints fuer Baujahr und Kilometerstand
+- Stammdatentabellen fuer Status, Pruefarten, Pruefer und Mangelkategorien
 
 ## Testing
 
-```bash
-npm test               # Vitest run, alle Tests
-npm run test:watch     # Watch-Mode für Entwicklung
-npm run lint           # ESLint-Check (muss 0 Errors zeigen)
-npm run typecheck      # TypeScript strict mode (muss 0 Errors zeigen)
+```powershell
+npm test
+npm run test:watch
+npm run lint
+npm run typecheck
+npm run build
 ```
 
-**Aktuelle Bilanz:** 133 Tests grün (Unit + Component + Hook + DB-Integration),
-0 Lint-Errors, 0 TypeScript-Errors.
+Aktueller Stand dieser Arbeitskopie:
 
-Test-Verfahren (siehe [`docs/testkonzept.md`](docs/testkonzept.md) für Details):
-- Äquivalenzklassenbildung bei allen Validatoren
-- Grenzwertanalyse bei numerischen Feldern
-- Entscheidungstabelle bei Workflow-Regeln
-- DB-Integrations-Tests gegen In-Memory-PGlite (FK, CASCADE, UNIQUE, CHECK)
-- Regression-Tests aus Bug-Reports
-- Manuelle Smoke-Tests vor jeder Abgabe (mobile, PDF-Export)
+- `npm run build` erfolgreich
+- `npm run typecheck` erfolgreich
+- API-Healthcheck gegen MariaDB erfolgreich
+- `/api/fahrzeuge` konnte Daten aus MariaDB lesen
 
 ## Projekt-Struktur
 
-```
+```text
+server/
+  db.js                 MariaDB-Konfiguration, Migration und Stammdaten
+  index.js              Express-API mit CRUD- und Admin-Endpunkten
+
 src/
-  views/                Page-Level-Komponenten
-    TagesplanView.jsx   Timeline + Tabellenansicht der Tages-Termine
-    FahrzeugeView.jsx   Fahrzeug-CRUD mit Detail-Slide-In
-    StatistikView.jsx   KPIs + Recharts-Diagramme
-    BerichteView.jsx    Listen-View + buildBerichtHtml für PDF-Export
-  components/
-    ui/                 Wiederverwendbare UI-Bausteine (Inp, Sel, BtnP, Kpi, Pills)
-    modal/              Modal + ConfirmModal
-  features/
-    fahrzeug/           FahrzeugModal mit Cascading-Dropdowns
-    termin/             TerminModal mit Status-Workflow-Guard
-    mangel/             MaengelModal mit StVZO-Katalog-Browser
-  db/                   Datenbank-Schicht (TypeScript strict)
-    schema.ts           Drizzle-Schema mit Relations
-    client.ts           PGlite + Drizzle Singleton
-    queries.ts          Repository-Pattern, 30+ typsichere Funktionen
-    seed.ts             Domain- und Demo-Daten
-    migrate.ts          SQL-Migrations-Runner
-    migrations/         Auto-generierte SQL-Migrations-Files
-    db.test.ts          12 DB-Integrations-Tests
+  db/
+    apiClient.ts        HTTP-Client fuer /api
+    schema.ts           TypeScript-Datentypen fuer die Frontend-Schicht
   hooks/
-    useDb.ts            Native React-Hook über queries.ts
-    useStoreCompat.ts   Adapter für Legacy-View-Shape
-    useToasts.js        Sonner-Wrapper
-    useIsMobile.js      Viewport-Detection für responsive Layout
-  constants/
-    fahrzeug.js         FAHRZEUG_TYPEN-Enum
-    status.js           STATUS-Enum + STATUS_CFG (Farben, Labels)
-    pruefung.js         PRÜFUNG_ARTEN, PRÜFER
-    mangel.js           MANGEL_KATEGORIEN (OM/LM/EM/HM/GM)
-    kfzReferenz.js      ~25 Hersteller mit Modellen + Typen
-    kfzKreis.js         ~430 deutsche KBA-Kreis-Codes
-    nav.js              Sidebar-Navigationseinträge
-  utils/
-    validators.js       Hard- und Soft-Validatoren
-    date.js             Date-Formatter (de-DE)
-  styles/
-    theme.js            Color-Palette, Fonts, GLOBAL_CSS mit Mobile-Klassen
+    useDb.ts            React-State-Hook ueber apiClient.ts
+    useStoreCompat.ts   Adapter fuer Legacy-View-Shape
+  views/                Tagesplan, Fahrzeuge, Statistik, Berichte
+  features/             Modale fuer Fahrzeug, Termin und Mangel
+  constants/            Status, Pruefarten, Maengelkatalog, KFZ-Referenzen
+  utils/                Validatoren und Datumsfunktionen
   tests/                Vitest-Tests
-docs/                   Vollständige Projekt-Dokumentation (siehe unten)
-docs/decisions/         Architecture Decision Records (8 ADRs)
+
+docs/                   Projekt- und Abgabedokumentation
+docs/decisions/         Architecture Decision Records
 src-tauri/              Tauri/Rust-Desktop-Shell
-.github/workflows/      CI/CD-Pipelines (ci.yml, deploy.yml)
+.github/workflows/      CI/CD-Pipelines
 ```
+
+Die aktive Persistenz liegt in `server/db.js` und MariaDB.
 
 ## Dokumentation
 
-Vollständige Doku im `docs/`-Ordner — geschrieben für die Software-Projekt-
-Abgabe (Hochschule Hannover, IIM-211-01):
-
-### Pflicht-Dokumente
-
-| Datei | Inhalt | Umfang |
-|---|---|---|
-| [`pflichtenheft.md`](docs/pflichtenheft.md) | Funktionale + nicht-funktionale Anforderungen, Akzeptanzkriterien, Lastprofil, Datenschutz/Sicherheit | ~280 Zeilen |
-| [`datenmodell.md`](docs/datenmodell.md) | **3-Schichten-DB-Doku (v2.0)**: konzeptuelles ER, logisches 3NF-Schema, physisches PostgreSQL/PGlite-Modell | ~540 Zeilen |
-| [`design.md`](docs/design.md) | Komponentendiagramm, Klassendiagramm, Validierungs-Pipeline, Bericht-PDF-Generierung, Mobile-Strategie | ~400 Zeilen |
-| [`architecture-map.html`](docs/architecture-map.html) | Interaktive Architekturkarte nach der PGlite-Migration |
-| [`backlog.md`](docs/backlog.md) | Product Backlog (~25 User Stories, MoSCoW + Story Points), Definition of Done, Sprint-Historie | ~210 Zeilen |
-| [`testkonzept.md`](docs/testkonzept.md) | Testpyramide, 4 Testentwurfsverfahren mit Beispielen, manuelle Smoke-Test-Tabelle | ~210 Zeilen |
-| [`test-coverage.md`](docs/test-coverage.md) | Coverage-Bericht mit V8-Engine | ~120 Zeilen |
-
-### Architektur-Entscheidungen (ADRs)
-
-| Datei | Entscheidung |
-|---|---|
-| [`decisions/001-pglite-statt-firestore.md`](docs/decisions/001-pglite-statt-firestore.md) | PGlite statt Firestore — lokale relationale DB |
-| [`decisions/002-3nf-normalisierung.md`](docs/decisions/002-3nf-normalisierung.md) | 3NF-Schema mit eigenen Relationen für Halter und Mangel |
-| [`decisions/003-wf01-enforcement.md`](docs/decisions/003-wf01-enforcement.md) | Defense-in-Depth: App + Stored Procedure, kein Trigger |
-| [`decisions/004-drizzle-orm.md`](docs/decisions/004-drizzle-orm.md) | Drizzle ORM als typsichere SQL-Abstraktion |
-| [`decisions/005-typescript-graduell.md`](docs/decisions/005-typescript-graduell.md) | TypeScript-Einführung graduell, neue Module zuerst |
-| [`decisions/006-firebase-hosting.md`](docs/decisions/006-firebase-hosting.md) | Firebase Hosting (nicht Firestore) für statische Dateien |
-| [`decisions/007-repository-pattern.md`](docs/decisions/007-repository-pattern.md) | Repository-Pattern: SQL zentral in `queries.ts` |
-| [`decisions/008-keine-eingebetteten-arrays.md`](docs/decisions/008-keine-eingebetteten-arrays.md) | Mangel und Halter als separate Tabellen, nicht JSONB |
-
-### Quellen und KI-Transparenz
-
 | Datei | Inhalt |
 |---|---|
-| [`quellen.md`](docs/quellen.md) | **Literaturverzeichnis** — Kemper/Eickler, Codd, Chen, Fowler, Evans, Scrum-Guide, StVZO, VdTÜV-916, mit Zitier-Konvention |
-| [`ki-nutzung.md`](docs/ki-nutzung.md) | Methodik der KI-Nutzung — verwendete Tools, Beispiel-Prompts, 3-Linien-Validierungs-Strategie, Domänen-Experte-Argument |
-| [`ki_nutzungserklaerung.md`](docs/ki_nutzungserklaerung.md) | Formelle KI-Nutzungs-Erklärung mit Unterschrift |
-| [`eigenstaendigkeitserklaerung.md`](docs/eigenstaendigkeitserklaerung.md) | Eigenständigkeitserklärung mit Aufgabenverteilung |
-
-### Nacharbeit
-
-| Datei | Inhalt |
-|---|---|
-| [`nacharbeit_fuchs.html`](docs/nacharbeit_fuchs.html) | Übersichtsdokument der Nacharbeit nach dem Review-Termin vom 12. Mai |
-
-## Sprint-Status
-
-| Sprint | Fokus | Status |
-|---|---|---|
-| 1 | Setup, Tooling | ✅ |
-| 2 | Fahrzeug-CRUD | ✅ |
-| 3 | Tagesplan & Termine | ✅ |
-| 4 | Mängel, Berichte, Statistik | ✅ |
-| 5 | Validierung, UX, Doku, PDF, Mobile (Sprint-5-Feedback Frau Fuchs) | ✅ |
-| 6 | Feinschliff, Security, Code-Splitting, Abgabe-Doku | ✅ |
-| 7 | **PGlite-Migration, 3NF-Schema, ADRs, CI/CD, Doku-Refactor** | ✅ |
+| [docs/mariadb-setup.md](docs/mariadb-setup.md) | Lokales MariaDB-Setup und Startbefehle |
+| [docs/design.md](docs/design.md) | Architektur, Schichten, Datenfluss und Deployment |
+| [docs/datenmodell.md](docs/datenmodell.md) | ER-Modell, 3NF-Schema und physisches MariaDB-Modell |
+| [docs/pflichtenheft.md](docs/pflichtenheft.md) | Anforderungen, Akzeptanzkriterien und Rahmenbedingungen |
+| [docs/testkonzept.md](docs/testkonzept.md) | Teststrategie und manuelle Smoke-Tests |
+| [docs/test-coverage.md](docs/test-coverage.md) | Coverage- und Restrisiko-Uebersicht |
+| [docs/backlog.md](docs/backlog.md) | Product Backlog und Sprint-Historie |
+| [docs/quellen.md](docs/quellen.md) | Quellenverzeichnis |
+| [docs/decisions/README.md](docs/decisions/README.md) | Architekturentscheidungen |
 
 ## Lizenz
 
-MIT — Marwan Saleh, Oussama Hlayhel
+MIT - Marwan Saleh, Oussama Hlayhel
