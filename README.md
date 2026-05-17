@@ -182,7 +182,7 @@ server/
 src/
   db/
     apiClient.ts        HTTP-Client fuer /api
-    schema.ts           TypeScript-Datentypen fuer die Frontend-Schicht
+    types.ts            TypeScript-Datentypen fuer die Frontend-Schicht
   hooks/
     useDb.ts            React-State-Hook ueber apiClient.ts
     useStoreCompat.ts   Adapter fuer Legacy-View-Shape
