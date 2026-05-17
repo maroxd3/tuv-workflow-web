@@ -1,20 +1,16 @@
 /**
- * Kompatibilitäts-Adapter zwischen der neuen PGlite-Schicht (useDb)
- * und der alten Firestore-API-Form (useStore).
+ * Kompatibilitaets-Adapter zwischen der MariaDB-API-Schicht (useDb)
+ * und der alten View-Datenform.
  *
  * **Zweck:** Migration des Daten-Layers ohne gleichzeitig alle Views
  * umzuschreiben. Die Views erhalten weiterhin die alte Datenform
  * (`fahrzeug.id`, `fahrzeug.besitzer`, `termin.status`, embedded
  * `termin.mängel`-Array, etc.), unter der Haube liefert / persistiert
- * jedoch echte PostgreSQL.
- *
- * **Aufräum-Roadmap:** Dieser Adapter ist temporär. In Welle 1 / Schritt
- * 4 werden die Views einzeln auf die native useDb-API umgestellt und der
- * Adapter wird entfernt.
+ * jedoch die zentrale Express/MariaDB-API.
  *
  * **Mapping-Tabelle:**
  *
- * | Alte (Firestore) Form     | Neue (PGlite) Form                       |
+ * | Alte View-Form            | MariaDB/API-Form                         |
  * |---------------------------|------------------------------------------|
  * | `fahrzeug.id`             | `fahrzeug.fahrzeugId`                    |
  * | `fahrzeug.besitzer`       | `halter.name` (per `fahrzeug.halterId`)  |
@@ -34,7 +30,6 @@
 
 import { useCallback, useMemo } from "react";
 import { useDb } from "./useDb";
-import * as q from "../db/queries";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -79,11 +74,11 @@ interface LegacyTermin {
 
 /**
  * Liefert ein Objekt mit der Form des alten `useStore()`-Rückgabewerts,
- * intern aber via PGlite.
+ * intern aber via Express/MariaDB-API.
  */
 // Defensive Normalisierung:
-// PGlite/Drizzle liefert date/time-Spalten teils als String, teils als
-// Date-Objekt zurück. Die alten Firestore-basierten Views vergleichen
+// API/Browser-Code liefert date/time-Werte je nach Quelle als String oder
+// Date-Objekt zurueck. Die bestehenden Views vergleichen
 // stets gegen `"yyyy-mm-dd"`-Strings (datum) und `"HH:MM"`-Strings
 // (uhrzeit) — also normalisieren wir hier einmal zentral.
 function normDateStr(d: unknown): string {

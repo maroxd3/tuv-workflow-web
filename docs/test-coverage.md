@@ -1,29 +1,29 @@
 # Test Coverage
 
 Stand: 2026-05-17  
-Ausgeführt mit: `npm test` und `npx vitest run --coverage`
+Ausgefuehrt mit: `npm test` und `npx vitest run --coverage`
 
-## 1. Ergebnis der aktuellen Testausführung
+## 1. Ergebnis der aktuellen Testausfuehrung
 
 ```text
-Test Files  8 passed (8)
-Tests       136 passed (136)
+Test Files  7 passed (7)
+Tests       124 passed (124)
 ```
 
 Coverage mit V8:
 
 | Kennzahl | Abdeckung |
 |---|---:|
-| Statements | 93,61 % |
+| Statements | 95,68 % |
 | Branches | 87,07 % |
-| Functions | 80,59 % |
-| Lines | 95,19 % |
+| Functions | 88,46 % |
+| Lines | 98,37 % |
 
 ```text
-Statements   : 93.61% (264/282)
+Statements   : 95.68% (244/255)
 Branches     : 87.07% (229/263)
-Functions    : 80.59% (54/67)
-Lines        : 95.19% (198/208)
+Functions    : 88.46% (46/52)
+Lines        : 98.37% (182/185)
 ```
 
 ## 2. Testdateien
@@ -31,25 +31,23 @@ Lines        : 95.19% (198/208)
 | Datei | Schwerpunkt |
 |---|---|
 | `src/tests/utils/validators.test.js` | Kennzeichen, FIN, Baujahr, Kilometerstand, Telefon, E-Mail, HU-/Termin-Datum, Statuswechsel |
-| `src/tests/utils/mangel.test.js` | HM/GM-Erkennung und Mängelkatalog-Konsistenz |
+| `src/tests/utils/mangel.test.js` | HM/GM-Erkennung und Maengelkatalog-Konsistenz |
 | `src/tests/utils/date.test.js` | Datumsformatierung und lokale Datumskonvertierung |
-| `src/tests/components/buttons.test.jsx` | UI-Buttons, Varianten, Zustände |
+| `src/tests/components/buttons.test.jsx` | UI-Buttons, Varianten, Zustaende |
 | `src/tests/components/inputs.test.jsx` | Eingabekomponenten |
 | `src/tests/components/StatusPill.test.jsx` | Statusanzeige |
 | `src/tests/hooks/useToasts.test.js` | Toast-Hook |
-| `src/db/db.test.ts` | Relationales Schema, Fremdschlüssel, UNIQUE, CHECK und Cascades gegen eine isolierte SQL-Testdatenbank |
 
 ## 3. Was wird gut abgedeckt?
 
-- Eingabevalidierung für Fahrzeug- und Terminformulare
-- Äquivalenzklassen und Grenzwerte bei Kennzeichen, FIN, Baujahr und Kilometerstand
+- Eingabevalidierung fuer Fahrzeug- und Terminformulare
+- Aequivalenzklassen und Grenzwerte bei Kennzeichen, FIN, Baujahr und Kilometerstand
 - Workflow-Regel auf UI-/Hilfsfunktions-Ebene: HM/GM blockiert `Bestanden`
-- Mängelkatalog: Einträge, eindeutige Codes, bekannte Kategorien
+- Maengelkatalog: Eintraege, eindeutige Codes, bekannte Kategorien
 - Wiederverwendbare UI-Komponenten
-- Hilfsfunktionen für Datum und Toasts
-- Relationale Integrität im Schema-Test: FK, CASCADE, UNIQUE und CHECK
+- Hilfsfunktionen fuer Datum und Toasts
 
-## 4. MariaDB-spezifische Prüfung
+## 4. MariaDB-spezifische Pruefung
 
 Die aktive Laufzeitarchitektur ist:
 
@@ -57,7 +55,7 @@ Die aktive Laufzeitarchitektur ist:
 React Hook -> apiClient.ts -> Express API -> MariaDB
 ```
 
-Für diesen Pfad wurde ein Smoke-Test gegen die lokale MariaDB ausgeführt:
+Fuer diesen Pfad wurde ein Smoke-Test gegen die lokale MariaDB ausgefuehrt:
 
 ```powershell
 Invoke-RestMethod http://127.0.0.1:8787/api/health
@@ -71,10 +69,9 @@ Ergebnis:
 - `/api/health` liefert `ok = true`
 - `/api/fahrzeuge` liefert Daten aus MariaDB
 
-Wichtig: Die automatisierten DB-Tests in `src/db/db.test.ts` prüfen aktuell noch
-das relationale Schema in einer isolierten SQL-Testumgebung. Sie sind nützlich
-für Modellregeln, ersetzen aber noch keine vollständigen Express/MariaDB-
-Integrationstests.
+Alte Browserdatenbank- und Schema-Tests wurden entfernt, weil sie nicht mehr zur
+aktuellen MariaDB-Architektur gehoeren. Automatisierte
+Express/MariaDB-Integrationstests sind der naechste sinnvolle Schritt.
 
 ## 5. Coverage nach Bereichen
 
@@ -82,7 +79,6 @@ Integrationstests.
 |---|---:|---:|---:|---:|
 | `components/ui` | 89,47 % | 68,42 % | 77,77 % | 94,44 % |
 | `constants` | 86,36 % | 50,00 % | 70,00 % | 88,23 % |
-| `db` | 74,07 % | 100,00 % | 53,33 % | 69,56 % |
 | `hooks` | 100,00 % | 100,00 % | 66,66 % | 100,00 % |
 | `utils` | 97,05 % | 95,45 % | 100,00 % | 100,00 % |
 
@@ -100,7 +96,7 @@ Coverage:
 npx vitest run --coverage
 ```
 
-Weitere Qualitätschecks:
+Weitere Qualitaetschecks:
 
 ```powershell
 npm run typecheck
@@ -110,16 +106,17 @@ npm run lint
 
 ## 7. Was fehlt noch?
 
-- Vollständige automatisierte Integrationstests gegen eine echte MariaDB-Testdatenbank
-- API-Tests für alle Express-Endpunkte (`/api/halter`, `/api/fahrzeuge`, `/api/termine`, `/api/maengel`)
-- Fehlerpfad-Tests für MariaDB-Fehler: UNIQUE, FK, CHECK
-- Direkter Test für `PATCH /api/termine/:id/status` mit HM/GM in MariaDB
-- Mehrbenutzer-/Parallelitäts-Tests
+- Vollstaendige automatisierte Integrationstests gegen eine echte MariaDB-Testdatenbank
+- API-Tests fuer alle Express-Endpunkte (`/api/halter`, `/api/fahrzeuge`, `/api/termine`, `/api/maengel`)
+- Fehlerpfad-Tests fuer MariaDB-Fehler: UNIQUE, FK, CHECK
+- Direkter Test fuer `PATCH /api/termine/:id/status` mit HM/GM in MariaDB
+- Mehrbenutzer-/Parallelitaets-Tests
 - Automatisierte E2E-Tests im Browser
 
 ## 8. Bewertung
 
-Die Testabdeckung ist für Validatoren, Hilfsfunktionen und zentrale UI-Bausteine
-hoch. Für die neue MariaDB-Architektur ist der wichtigste nächste Schritt,
-automatisierte Express/MariaDB-Integrationstests aufzubauen. Aktuell ist dieser
-Teil per Smoke-Test geprüft, aber noch nicht vollständig automatisiert.
+Die Testabdeckung ist fuer Validatoren, Hilfsfunktionen und zentrale
+UI-Bausteine hoch. Fuer die MariaDB-Architektur ist der wichtigste naechste
+Schritt, automatisierte Express/MariaDB-Integrationstests aufzubauen. Aktuell
+ist dieser Teil per Smoke-Test geprueft, aber noch nicht vollstaendig
+automatisiert.

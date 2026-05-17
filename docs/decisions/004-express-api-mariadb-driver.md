@@ -11,7 +11,7 @@ Backend-Schicht.
 
 ## Entscheidung
 
-Wir nutzen Express als HTTP-API und den offiziellen `mariadb` Node.js Driver fuer
+Wir nutzen Express als HTTP-API und den `mariadb` Node.js Driver fuer
 SQL-Zugriffe.
 
 ## Begruendung
@@ -20,11 +20,12 @@ SQL-Zugriffe.
 - Der `mariadb` Driver unterstuetzt Connection Pools und parametrisierte Queries.
 - API-Endpunkte koennen Frontend-Feldnamen auf Datenbankspalten mappen.
 - Workflow-Regeln koennen serverseitig durchgesetzt werden.
-- Die API ist lokal einfach per `npm run api` startbar.
+- Die API ist lokal per `npm run dev:api` oder `npm run api` startbar.
 
 ## Konsequenzen
 
-- SQL liegt zentral in `server/index.js` und Schema-Setup in `server/db.js`.
+- SQL liegt zentral in `server/index.js`; Schema-Setup und Stammdaten liegen in
+  `server/db.js`.
 - Frontend-Tests koennen ohne echte DB laufen, API-Tests brauchen MariaDB.
 - Fuer Produktion muss die API separat deployt und ueber HTTPS abgesichert
   werden.

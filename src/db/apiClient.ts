@@ -7,7 +7,7 @@ import type {
   NeuerTermin,
   Mangel,
   NeuerMangel,
-} from "./schema";
+} from "./types";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "/api";
 
