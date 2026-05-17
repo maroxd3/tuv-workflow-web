@@ -20,98 +20,182 @@ MANGEL n -- 1 MANGEL_KATEGORIE
 Die physische Umsetzung liegt in `server/db.js`. Beim Start der Express-API
 werden Datenbank, Tabellen und Stammdaten angelegt, falls sie fehlen.
 
-## 2. ER-Diagramm
+## 2. Konzeptuelles Modell - Entity-Relationship-Diagramm
+
+Das Diagramm zeigt das fachliche Modell im Chen-Stil: Entitaeten sind als
+Rechtecke dargestellt, Beziehungen als Rauten und Attribute als Ovale. Die
+Primaerschluessel sind wie in der klassischen Chen-Notation unterstrichen. Die
+Fremdschluessel werden erst im logischen Relationenschema ausgewiesen, weil sie
+aus den Beziehungen des ER-Modells abgeleitet werden.
+
+### 2.1 ER-Diagramm (Chen-Notation, kompakt als Mermaid)
 
 ```mermaid
-erDiagram
-  HALTER ||--o{ FAHRZEUG : besitzt
-  FAHRZEUG ||--o{ TERMIN : hat
-  TERMIN ||--o{ MANGEL : enthaelt
-  STATUS ||--o{ TERMIN : klassifiziert
-  PRUEFART ||--o{ TERMIN : typisiert
-  PRUEFER ||--o{ TERMIN : prueft
-  MANGEL_KATEGORIE ||--o{ MANGEL : bewertet
+flowchart TB
+  %% Chen-nahe Notation:
+  %% Rechteck = Entität, Raute = Beziehung, Oval = Attribut
+  %% Unterstrichene Attribute sind Primärschlüssel.
 
-  HALTER {
-    char36 halter_id PK
-    varchar name
-    varchar telefon
-    varchar email UK
-    text anschrift
-    datetime erfasst_am
-  }
+  HALTER[HALTER]
+  FAHRZEUG[FAHRZEUG]
+  TERMIN[TERMIN]
+  MANGEL[MANGEL]
+  PRUEFER[PRUEFER]
+  PRUEFART[PRUEFART]
+  STATUS[STATUS]
+  MANGEL_KATEGORIE[MANGEL_KATEGORIE]
 
-  FAHRZEUG {
-    char36 fahrzeug_id PK
-    varchar kennzeichen UK
-    varchar fin UK
-    varchar hersteller
-    varchar modell
-    int baujahr
-    varchar farbe
-    varchar typ
-    int kilometerstand
-    date hu_faellig
-    char36 halter_id FK
-    datetime erfasst_am
-  }
+  BESITZT{besitzt}
+  WIRD_GEPRUEFT{wird geprüft in}
+  WEIST_AUF{weist auf}
+  FUEHRT_DURCH{führt durch}
+  KLASSIFIZIERT{klassifiziert}
+  BESCHREIBT{beschreibt Zustand}
+  HAT_KATEGORIE{hat Kategorie}
 
-  TERMIN {
-    char36 termin_id PK
-    char36 fahrzeug_id FK
-    date datum
-    time uhrzeit
-    varchar prueft_code FK
-    varchar pruefer_kuerzel FK
-    varchar status_code FK
-    text notiz
-    datetime erfasst_am
-  }
+  HALTER -- "1" --- BESITZT
+  BESITZT -- "N" --- FAHRZEUG
 
-  MANGEL {
-    char36 mangel_id PK
-    char36 termin_id FK
-    varchar code_stvzo
-    text beschreibung
-    varchar kategorie_code FK
-    boolean behoben
-    datetime erfasst_am
-  }
+  FAHRZEUG -- "1" --- WIRD_GEPRUEFT
+  WIRD_GEPRUEFT -- "N" --- TERMIN
 
-  STATUS {
-    varchar status_code PK
-    varchar bezeichnung
-    boolean ist_endzustand
-  }
+  TERMIN -- "1" --- WEIST_AUF
+  WEIST_AUF -- "N" --- MANGEL
 
-  PRUEFART {
-    varchar prueft_code PK
-    varchar bezeichnung
-  }
+  PRUEFER -- "0..1" --- FUEHRT_DURCH
+  FUEHRT_DURCH -- "N" --- TERMIN
 
-  PRUEFER {
-    varchar pruefer_kuerzel PK
-    varchar name
-    varchar qualifikation
-  }
+  PRUEFART -- "1" --- KLASSIFIZIERT
+  KLASSIFIZIERT -- "N" --- TERMIN
 
-  MANGEL_KATEGORIE {
-    varchar kategorie_code PK
-    varchar bezeichnung
-    boolean blockiert_bestanden
-  }
+  STATUS -- "1" --- BESCHREIBT
+  BESCHREIBT -- "N" --- TERMIN
+
+  MANGEL_KATEGORIE -- "1" --- HAT_KATEGORIE
+  HAT_KATEGORIE -- "N" --- MANGEL
+
+  h_id(["h̲a̲l̲t̲e̲r̲_̲i̲d̲"])
+  h_name(["name"])
+  h_tel(["telefon"])
+  h_email(["email"])
+  h_anschrift(["anschrift"])
+  HALTER --- h_id
+  HALTER --- h_name
+  HALTER --- h_tel
+  HALTER --- h_email
+  HALTER --- h_anschrift
+
+  f_id(["f̲a̲h̲r̲z̲e̲u̲g̲_̲i̲d̲"])
+  f_halter_fk(["halter_id"])
+  f_kennzeichen(["kennzeichen"])
+  f_fin(["fin"])
+  f_hersteller(["hersteller"])
+  f_modell(["modell"])
+  f_baujahr(["baujahr"])
+  f_farbe(["farbe"])
+  f_typ(["typ"])
+  f_km(["kilometerstand"])
+  f_hu(["hu_faellig"])
+  FAHRZEUG --- f_id
+  FAHRZEUG --- f_halter_fk
+  FAHRZEUG --- f_kennzeichen
+  FAHRZEUG --- f_fin
+  FAHRZEUG --- f_hersteller
+  FAHRZEUG --- f_modell
+  FAHRZEUG --- f_baujahr
+  FAHRZEUG --- f_farbe
+  FAHRZEUG --- f_typ
+  FAHRZEUG --- f_km
+  FAHRZEUG --- f_hu
+
+  t_id(["t̲e̲r̲m̲i̲n̲_̲i̲d̲"])
+  t_fahrzeug_fk(["fahrzeug_id"])
+  t_pruefart_fk(["prueft_code"])
+  t_pruefer_fk(["pruefer_kuerzel"])
+  t_status_fk(["status_code"])
+  t_datum(["datum"])
+  t_uhrzeit(["uhrzeit"])
+  t_notiz(["notiz"])
+  TERMIN --- t_id
+  TERMIN --- t_fahrzeug_fk
+  TERMIN --- t_pruefart_fk
+  TERMIN --- t_pruefer_fk
+  TERMIN --- t_status_fk
+  TERMIN --- t_datum
+  TERMIN --- t_uhrzeit
+  TERMIN --- t_notiz
+
+  m_id(["m̲a̲n̲g̲e̲l̲_̲i̲d̲"])
+  m_termin_fk(["termin_id"])
+  m_kat_fk(["kategorie_code"])
+  m_code(["code_stvzo"])
+  m_beschreibung(["beschreibung"])
+  m_behoben(["behoben"])
+  MANGEL --- m_id
+  MANGEL --- m_termin_fk
+  MANGEL --- m_kat_fk
+  MANGEL --- m_code
+  MANGEL --- m_beschreibung
+  MANGEL --- m_behoben
+
+  p_id(["p̲r̲u̲e̲f̲e̲r̲_̲k̲u̲e̲r̲z̲e̲l̲"])
+  p_name(["name"])
+  p_qualifikation(["qualifikation"])
+  PRUEFER --- p_id
+  PRUEFER --- p_name
+  PRUEFER --- p_qualifikation
+
+  pa_id(["p̲r̲u̲e̲f̲t̲_̲c̲o̲d̲e̲"])
+  pa_bez(["bezeichnung"])
+  PRUEFART --- pa_id
+  PRUEFART --- pa_bez
+
+  s_id(["s̲t̲a̲t̲u̲s̲_̲c̲o̲d̲e̲"])
+  s_bez(["bezeichnung"])
+  s_end(["ist_endzustand"])
+  STATUS --- s_id
+  STATUS --- s_bez
+  STATUS --- s_end
+
+  mk_id(["k̲a̲t̲e̲g̲o̲r̲i̲e̲_̲c̲o̲d̲e̲"])
+  mk_bez(["bezeichnung"])
+  mk_block(["blockiert_bestanden"])
+  MANGEL_KATEGORIE --- mk_id
+  MANGEL_KATEGORIE --- mk_bez
+  MANGEL_KATEGORIE --- mk_block
+
 ```
 
-Kardinalitaeten:
+Legende: Rechteck = Entitaet, Raute = Beziehung, Oval = Attribut,
+unterstrichenes Attribut = Primaerschluessel. Fremdschluessel sind als normale
+Attribute dargestellt und im logischen Modell darunter eindeutig ausgewiesen.
+Die Kardinalitaeten stehen direkt an den Verbindungslinien (`1`, `0..1` bzw.
+`N`).
 
-- Ein Halter kann mehrere Fahrzeuge besitzen; ein Fahrzeug gehoert genau zu
-  einem Halter.
-- Ein Fahrzeug kann mehrere Termine haben; ein Termin gehoert genau zu einem
-  Fahrzeug.
-- Ein Termin kann mehrere Maengel enthalten; ein Mangel gehoert genau zu einem
-  Termin.
-- Status, Pruefart und Mangelkategorie sind Stammdaten.
-- Ein Termin kann optional einem Pruefer zugeordnet sein.
+### 2.2 Entitaeten und ihre Bedeutung
+
+| Entitaet | Reale Bedeutung |
+|---|---|
+| **HALTER** | Eigentuemer eines oder mehrerer Fahrzeuge - natuerliche oder juristische Person |
+| **FAHRZEUG** | Eindeutiges Kraftfahrzeug, identifiziert durch Kennzeichen und/oder FIN |
+| **TERMIN** | Konkreter Pruefungs-Termin eines Fahrzeugs zu einem Zeitpunkt |
+| **MANGEL** | Festgestellte Beanstandung bei einer Pruefung gemaess StVZO Anlage VIII |
+| **PRUEFER** | Sachverstaendiger Pruefingenieur, der den Termin durchfuehrt |
+| **PRUEFART** | Klassifikation der Pruefung (HU, AU, HU+AU, Nachpruefung, ...) |
+| **STATUS** | Zustand eines Termins im Workflow |
+| **MANGEL_KATEGORIE** | Einstufung eines Mangels (OM, LM, EM, HM, GM) inklusive Wirkung auf das Pruefergebnis |
+
+### 2.3 Beziehungen und Kardinalitaeten
+
+| Beziehung | Kardinalitaet | Erlaeuterung |
+|---|---|---|
+| HALTER **besitzt** FAHRZEUG | 1 : N | Ein Halter kann mehrere Fahrzeuge besitzen; jedes Fahrzeug gehoert zu genau einem Halter |
+| FAHRZEUG **wird geprueft in** TERMIN | 1 : N | Ein Fahrzeug hat im Laufe der Zeit beliebig viele Termine; jeder Termin gilt genau einem Fahrzeug |
+| TERMIN **weist auf** MANGEL | 1 : N | Ein Termin kann mehrere Maengel haben; jeder Mangel ist genau einem Termin zugeordnet |
+| PRUEFER **fuehrt durch** TERMIN | 0..1 : N | Ein Pruefer kann viele Termine durchfuehren; ein Termin kann noch ohne zugewiesenen Pruefer geplant sein |
+| PRUEFART **klassifiziert** TERMIN | 1 : N | Jeder Termin ist genau einer Pruefart zugeordnet |
+| STATUS **beschreibt Zustand** TERMIN | 1 : N | Jeder Termin hat zu einem Zeitpunkt genau einen Status |
+| MANGEL_KATEGORIE **hat Kategorie** MANGEL | 1 : N | Jede Kategorie kann bei vielen Maengeln vorkommen; jeder Mangel hat genau eine Kategorie |
 
 ## 3. Relationen
 
