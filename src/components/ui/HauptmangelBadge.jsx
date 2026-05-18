@@ -9,7 +9,7 @@ export function HauptmangelBadge() {
       borderRadius: 4, padding: "2px 7px",
       fontFamily: C.mono, whiteSpace: "nowrap",
     }}>
-      HAUPTMANGEL
+      NICHT VERKEHRSSICHER
     </span>
   );
 }

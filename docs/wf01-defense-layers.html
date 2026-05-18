@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8" />
+<title>So funktioniert die Pruefstelle - mit Bildern</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  :root {
+    --bg: #0F0F0F;
+    --panel: #1a1a1a;
+    --panel-2: #222;
+    --border: #2a2a2a;
+    --text: #f0f0f0;
+    --muted: #999;
+    --tablet: #4ea1ff;
+    --empfang: #c792ea;
+    --akten: #ffb86b;
+    --good: #7bd389;
+    --bad: #ff3860;
+    --accent: #f5b942;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 15px; line-height: 1.6;
+  }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 40px 24px 80px; }
+
+  h1 { font-size: 28px; margin: 0 0 6px; letter-spacing: -0.01em; font-weight: 800; }
+  h1 .sub { color: var(--muted); font-weight: 400; font-size: 15px; display: block; margin-top: 6px; }
+  h2 { font-size: 22px; margin: 50px 0 8px; font-weight: 800; }
+  h2 .num { color: var(--accent); margin-right: 10px; font-family: ui-monospace, monospace; font-size: 18px; }
+  .lead { color: #c8c8c8; font-size: 15px; max-width: 720px; margin-top: 4px; }
+
+  /* WERKSTATT-MAP */
+  .werkstatt {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 20px;
+    margin: 24px 0;
+  }
+  @media (max-width: 880px) { .werkstatt { grid-template-columns: 1fr; } }
+  .station {
+    background: var(--panel);
+    border: 2px solid var(--border);
+    border-radius: 16px;
+    padding: 22px 20px 24px;
+    position: relative;
+    overflow: hidden;
+  }
+  .station .emoji { font-size: 48px; line-height: 1; margin-bottom: 10px; }
+  .station h3 { margin: 0 0 6px; font-size: 19px; font-weight: 800; }
+  .station .who { font-size: 13px; color: var(--muted); margin-bottom: 14px; }
+  .station .does { font-size: 14px; color: #d8d8d8; }
+  .station .codename { margin-top: 16px; padding-top: 12px; border-top: 1px dashed var(--border); font-size: 11.5px; color: var(--muted); }
+  .station .codename b { color: var(--accent); font-family: ui-monospace, monospace; font-weight: 400; }
+  .station.tablet  { border-color: rgba(78,161,255,0.5); background: linear-gradient(160deg, rgba(78,161,255,0.08), var(--panel) 40%); }
+  .station.tablet h3 { color: var(--tablet); }
+  .station.empfang { border-color: rgba(199,146,234,0.5); background: linear-gradient(160deg, rgba(199,146,234,0.08), var(--panel) 40%); }
+  .station.empfang h3 { color: var(--empfang); }
+  .station.akten   { border-color: rgba(255,184,107,0.5); background: linear-gradient(160deg, rgba(255,184,107,0.08), var(--panel) 40%); }
+  .station.akten h3 { color: var(--akten); }
+
+  .arrow-row { display: flex; justify-content: center; gap: 30%; margin: -4px 0 4px; color: var(--muted); font-size: 28px; }
+  @media (max-width: 880px) { .arrow-row { display: none; } }
+
+  .guard-pill {
+    position: absolute;
+    top: 14px; right: 14px;
+    background: var(--bad);
+    color: #fff;
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    padding: 4px 9px;
+    border-radius: 100px;
+    text-transform: uppercase;
+  }
+  .guard-pill.new { background: var(--good); color: #0a0a0a; }
+  .guard-pill::before { content: "🛡 "; }
+
+  /* SCHUMMEL-SZENARIEN */
+  .scams { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin: 24px 0; }
+  @media (max-width: 880px) { .scams { grid-template-columns: 1fr; } }
+  .scam { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+  .scam .h { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .scam .h .e { font-size: 32px; }
+  .scam .h .t { font-size: 14px; font-weight: 800; }
+  .scam .story { font-size: 13.5px; color: #d8d8d8; }
+  .scam .stopper { margin-top: 12px; padding: 9px 11px; border-radius: 8px; background: rgba(123,211,137,0.1); border: 1px solid rgba(123,211,137,0.35); font-size: 13px; }
+  .scam .stopper b { color: var(--good); }
+  .scam .badge-new { display: inline-block; background: var(--good); color: #0a0a0a; font-size: 10px; font-weight: 800; padding: 1px 6px; border-radius: 4px; margin-left: 6px; vertical-align: middle; letter-spacing: 0.04em; }
+
+  /* DOCKER */
+  .docker-row { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin: 16px 0; }
+  @media (max-width: 880px) { .docker-row { grid-template-columns: 1fr; } }
+  .docker-card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+  .docker-card.before { border-color: rgba(255,56,96,0.3); }
+  .docker-card.after  { border-color: rgba(123,211,137,0.4); background: linear-gradient(160deg, rgba(123,211,137,0.06), var(--panel) 40%);}
+  .docker-card h4 { margin: 0 0 8px; font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; }
+  .docker-card.before h4 { color: var(--bad); }
+  .docker-card.after  h4 { color: var(--good); }
+  .docker-card ol { margin: 0; padding-left: 22px; font-size: 13.5px; color: #d8d8d8; }
+  .docker-card ol li { margin: 5px 0; }
+  .docker-card .cmd { display: inline-block; background: #0a0a0a; border: 1px solid var(--border); border-radius: 6px; padding: 8px 14px; font-family: ui-monospace, monospace; font-size: 13px; color: var(--accent); margin-top: 8px; }
+
+  /* FUCHS-NOTE */
+  .fuchs { background: linear-gradient(160deg, rgba(245,185,66,0.08), var(--panel) 50%); border: 1px solid rgba(245,185,66,0.3); border-radius: 12px; padding: 22px 24px; margin-top: 16px; }
+  .fuchs h3 { margin: 0 0 8px; color: var(--accent); font-size: 17px; }
+  .fuchs ul { margin: 8px 0 0; padding-left: 22px; }
+  .fuchs li { margin: 6px 0; font-size: 14px; color: #d8d8d8; }
+  .fuchs .magic { color: var(--good); font-weight: 700; }
+
+  /* Helper */
+  .footer { color: var(--muted); font-size: 12px; margin-top: 50px; padding-top: 20px; border-top: 1px solid var(--border); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>So funktioniert deine Pruefstelle
+    <span class="sub">Stell dir das System wie eine echte Werkstatt vor &mdash; mit drei Stationen und drei Waechtern.</span>
+  </h1>
+
+  <!-- === BIG PICTURE: WERKSTATT === -->
+  <h2><span class="num">1</span>Die drei Stationen</h2>
+  <p class="lead">
+    Jeder Klick im Pruefstellen-System geht den gleichen Weg: vom <b>Tablet des Pruefers</b> &rarr;
+    zum <b>Empfangs-Mitarbeiter</b> &rarr; zum <b>Aktenschrank</b>. Wie in einer echten Werkstatt.
+  </p>
+
+  <div class="werkstatt">
+
+    <div class="station tablet">
+      <div class="emoji">📱</div>
+      <h3>Das Tablet</h3>
+      <div class="who">Was der Pruefer in der Hand haelt</div>
+      <div class="does">
+        Zeigt die Termine fuer heute, die Fahrzeuge, die Maengel. Hat Buttons wie "Bestanden", "Mangel hinzufuegen", "Speichern".
+      </div>
+      <div class="codename">Im Code heisst das: <b>Frontend (React)</b></div>
+    </div>
+
+    <div class="station empfang">
+      <div class="emoji">💁</div>
+      <h3>Der Empfang</h3>
+      <div class="who">Nimmt jede Anfrage entgegen, leitet sie weiter</div>
+      <div class="does">
+        Wenn der Pruefer auf "Bestanden" tippt, ruft das Tablet beim Empfang an. Der Empfang prueft, ob die Anfrage Sinn macht, und gibt sie an den Aktenschrank weiter.
+      </div>
+      <div class="codename">Im Code heisst das: <b>Express-API</b> (Container 1)</div>
+    </div>
+
+    <div class="station akten">
+      <div class="emoji">🗄</div>
+      <h3>Der Aktenschrank</h3>
+      <div class="who">Speichert ALLES, was die Pruefstelle weiss</div>
+      <div class="does">
+        Halter, Fahrzeuge, Termine, Maengel &mdash; alle Eintraege in sauberen Ordnern (Tabellen). Wer was wann gespeichert hat, wird mitgeschrieben.
+      </div>
+      <div class="codename">Im Code heisst das: <b>MariaDB</b> (Container 2)</div>
+    </div>
+  </div>
+
+  <div class="arrow-row">
+    <span>&rarr;</span>
+    <span>&rarr;</span>
+  </div>
+
+  <!-- === DIE 3 WAECHTER === -->
+  <h2><span class="num">2</span>Die drei Waechter (gegen Schummel-Eintraege)</h2>
+  <p class="lead">
+    Die <b>wichtigste Regel</b> in deiner Pruefstelle: <i>"Ein Termin darf NICHT auf 'Bestanden' gesetzt werden, wenn das Auto noch einen Hauptmangel oder gefaehrlichen Mangel hat."</i>
+    Damit das auf KEINEM Weg passieren kann, gibt es jetzt <b>drei Waechter</b> &mdash; einen an jeder Station.
+  </p>
+
+  <div class="werkstatt">
+
+    <div class="station tablet">
+      <span class="guard-pill">Waechter 1</span>
+      <div class="emoji">🚫</div>
+      <h3>Tablet-Waechter</h3>
+      <div class="who">Schon im Tablet</div>
+      <div class="does">
+        Wenn das Auto Hauptmaengel hat, ist der "Bestanden"-Button <b>ausgegraut</b> &mdash; der Pruefer kann ihn gar nicht erst druecken.
+      </div>
+      <div class="codename">Im Code: <b>UI-Guard</b> in den Views</div>
+    </div>
+
+    <div class="station empfang">
+      <span class="guard-pill">Waechter 2</span>
+      <div class="emoji">✋</div>
+      <h3>Empfangs-Waechter</h3>
+      <div class="who">Im Empfangs-Mitarbeiter</div>
+      <div class="does">
+        Selbst wenn jemand das Tablet austrickst und direkt eine "Bestanden"-Anfrage schickt: Der Empfang schaut nochmal in den Aktenschrank, sieht den Hauptmangel und sagt <b>"Nein, geht nicht."</b>
+      </div>
+      <div class="codename">Im Code: <b>API-Guard</b> in <code style="color: var(--accent)">/api/termine/:id/status</code></div>
+    </div>
+
+    <div class="station akten">
+      <span class="guard-pill new">Waechter 3 - NEU</span>
+      <div class="emoji">🔒</div>
+      <h3>Akten-Waechter</h3>
+      <div class="who">Im Aktenschrank selbst</div>
+      <div class="does">
+        Selbst wenn jemand AM Empfang vorbei direkt zum Schrank rennt und versucht eine "Bestanden"-Akte reinzulegen: <b>Der Schrank selbst lehnt ab</b> und wirft die Akte raus.
+      </div>
+      <div class="codename">Im Code: <b>MariaDB-Trigger</b> <code style="color: var(--accent)">trg_termin_wf01_update</code> &mdash; <b>heute eingebaut</b></div>
+    </div>
+  </div>
+
+  <!-- === SCHUMMEL-SZENARIEN === -->
+  <h2><span class="num">3</span>Drei Schummel-Versuche &mdash; alle scheitern</h2>
+  <p class="lead">
+    Stell dir vor, jemand will einen Termin <b>faelschlich</b> auf "Bestanden" setzen, obwohl 5 Hauptmaengel drin sind. Was passiert?
+  </p>
+
+  <div class="scams">
+
+    <div class="scam">
+      <div class="h"><span class="e">🤥</span><span class="t">Schummel A &mdash; ueber das Tablet</span></div>
+      <div class="story">
+        Pruefer oeffnet das Tablet, sieht das Auto mit 5 Hauptmaengeln, will trotzdem auf "Bestanden" tippen.
+      </div>
+      <div class="stopper">
+        Der Button ist <b>ausgegraut</b>. Pruefer kann nicht mal druecken.
+        <div style="margin-top:6px; font-size:12px; color: var(--muted);">Gestoppt von: <b style="color: var(--tablet);">Waechter 1 (Tablet)</b></div>
+      </div>
+    </div>
+
+    <div class="scam">
+      <div class="h"><span class="e">🥷</span><span class="t">Schummel B &mdash; mit einem Trick-Befehl</span></div>
+      <div class="story">
+        Jemand kennt die App und schickt direkt einen Trick-Befehl an den Empfang ("setz das einfach auf Bestanden, kein Zucken").
+      </div>
+      <div class="stopper">
+        Der Empfang prueft, sieht 5 Hauptmaengel, antwortet <b>"Verboten."</b>
+        <div style="margin-top:6px; font-size:12px; color: var(--muted);">Gestoppt von: <b style="color: var(--empfang);">Waechter 2 (Empfang)</b></div>
+      </div>
+    </div>
+
+    <div class="scam">
+      <div class="h"><span class="e">🦹</span><span class="t">Schummel C &mdash; direkt zum Schrank<span class="badge-new">NEU</span></span></div>
+      <div class="story">
+        Jemand schleicht sich am Empfang vorbei (Hacker, IT-Mensch, jemand mit Adminzugriff) und will <b>direkt</b> in den Aktenschrank greifen.
+      </div>
+      <div class="stopper">
+        Der Schrank selbst sagt <b>"STOPP &mdash; §29 StVZO."</b> und wirft die Akte zurueck.
+        <div style="margin-top:6px; font-size:12px; color: var(--muted);">Gestoppt von: <b style="color: var(--akten);">Waechter 3 (Akten)</b></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- === DOCKER === -->
+  <h2><span class="num">4</span>Was Docker damit zu tun hat (vorher vs. heute)</h2>
+  <p class="lead">
+    Docker = <b>fertig gepackte Umzugskartons</b>. Du musst nicht mehr 100 Sachen einzeln installieren und konfigurieren.
+    Ein Karton hat den Empfang drin, der andere hat den Aktenschrank drin. Du sagst "auspacken", beide stehen einsatzbereit.
+  </p>
+
+  <div class="docker-row">
+    <div class="docker-card before">
+      <h4>Vorher (umstaendlich)</h4>
+      <ol>
+        <li>MariaDB auf dem PC installieren (eine halbe Stunde)</li>
+        <li>Passwort setzen, Nutzer anlegen, Datenbank anlegen</li>
+        <li>Node.js installieren</li>
+        <li>npm install (alle Bibliotheken laden)</li>
+        <li>Server-Datei starten</li>
+        <li>Wehe was kollidiert mit anderen Sachen auf dem PC</li>
+      </ol>
+    </div>
+    <div class="docker-card after">
+      <h4>Heute (1 Befehl)</h4>
+      <ol>
+        <li>Docker installieren (einmalig)</li>
+        <li>In den Ordner gehen und Befehl tippen:</li>
+      </ol>
+      <div class="cmd">docker compose up -d</div>
+      <p style="margin: 10px 0 0; color: #c8c8c8; font-size: 13px;">
+        Beide Kartons werden ausgepackt, beide Container laufen, App ist erreichbar unter <b style="color: var(--accent);">localhost:8787</b>.
+        Auf jedem Kunden-PC genau gleich &mdash; <b>kein Konfigurations-Chaos</b>.
+      </p>
+    </div>
+  </div>
+
+  <!-- === FUCHS === -->
+  <h2><span class="num">5</span>Warum das Frau Fuchs gefallen wird</h2>
+  <div class="fuchs">
+    <h3>Frau Fuchs ist Datenbank-Frau. Sie schaut zuerst auf den Aktenschrank.</h3>
+    <ul>
+      <li><b>"Wir haben einen sauberen Aktenschrank"</b> (3NF-Schema mit FK-Constraints) &mdash; das erwartet sie.</li>
+      <li><b>"Unsere Aktenschrank-Tueren haben Pruef-Mechanik"</b> (CHECK, UNIQUE, FOREIGN KEY) &mdash; gut.</li>
+      <li><b class="magic">"Unser Aktenschrank wirft falsche Akten von SELBST raus"</b> (BEFORE-UPDATE-Trigger mit SIGNAL SQLSTATE) &mdash; <span class="magic">DAS</span> ueberrascht sie. Das hebt deine Note Richtung 1,7.</li>
+      <li><b>"Wir schreiben jede Aenderung mit"</b> (Binary Logging fuer Point-in-Time-Recovery) &mdash; Betriebskonzept, nicht nur "wir machen Backup".</li>
+      <li><b>"Selbst wenn jemand Empfang umgeht, halten Akten-Regeln die Daten sauber"</b> (Defense-in-Depth-Argument) &mdash; genau die Sprache, die sie hoeren will.</li>
+    </ul>
+  </div>
+
+  <div class="footer">
+    Datei: <code style="color: var(--accent);">docs/wf01-defense-layers.html</code> &mdash;
+    Werkstatt-Analogie, geschrieben 2026-05-18.
+    Wenn du irgendein Wort hier nicht verstehst, frag &mdash; ich erklaer das nochmal anders.
+  </div>
+
+</div>
+</body>
+</html>

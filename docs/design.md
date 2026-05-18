@@ -120,21 +120,46 @@ setzt die API den Termin automatisch auf `Nicht bestanden` zurueck.
 
 ## 7. Deployment
 
-Das Frontend kann statisch gebaut und gehostet werden. Die Express-API und
-MariaDB muessen separat erreichbar sein.
+### Zielmodell: On-Premise pro Pruefstelle
 
-Lokal:
+Jede Pruefstelle betreibt einen eigenen Server-PC im internen Netzwerk.
+Mitarbeiter (Empfang, Pruefer, Chef) verbinden sich vom jeweiligen Geraet
+ueber das LAN/WLAN. Kundendaten verlassen die Werkstatt nicht.
 
-```powershell
-npm run api
-npm run dev
+```mermaid
+flowchart TB
+  subgraph Werkstatt[Pruefstelle - lokales Netzwerk]
+    server[Server-PC<br/>docker compose up<br/>MariaDB + Express-API]
+    empfang[Empfang<br/>Tablet/Laptop]
+    pruefer1[Pruefer 1<br/>Laptop]
+    pruefer2[Pruefer 2<br/>Laptop]
+    chef[Chef<br/>Desktop]
+  end
+
+  empfang -->|HTTP /api| server
+  pruefer1 -->|HTTP /api| server
+  pruefer2 -->|HTTP /api| server
+  chef -->|HTTP /api| server
 ```
 
-Produktion:
+### Drei Betriebsarten
 
-- Frontend: `npm run build`, Auslieferung von `dist/`
-- API: Node-Prozess fuer `server/index.js`
-- Datenbank: MariaDB-Instanz mit Zugangsdaten aus `.env`
+| Modus | Zweck | Befehle |
+|---|---|---|
+| Entwicklung | Lokale Iteration | `docker compose up -d db`, `npm run dev:api`, `npm run dev` |
+| Demo / Pilot | Voller Stack lokal | `docker compose up -d`, `npm run dev` |
+| Produktion beim Kunden | On-Premise-Auslieferung | `docker compose up -d` plus statisch ausgeliefertes Frontend |
 
-Statisches Hosting kann fuer die Frontend-Dateien genutzt werden. Die Datenbank
-bleibt MariaDB hinter der Express-API.
+### Auslieferungs-Paket pro Kunde
+
+- `docker-compose.yml`
+- `.env`-Vorlage mit Kunden-spezifischen Werten
+- `docs/backup.md` und Setup-Anleitung fuer Hetzner Storage Box
+- Server-PC mit Docker und einer dedizierten zweiten Festplatte fuer Tier-2-Backups
+
+### Sicherheitsgrenzen
+
+- Keine Authentifizierung im Prototyp - das LAN gilt als vertrauenswuerdige Zone.
+- Auth, HTTPS und Rollen kommen in einer Phase 2 (siehe Backlog US-12).
+- MariaDB-Zugangsdaten liegen ausschliesslich in `.env` auf dem Server.
+- Frontend-Bundle enthaelt keine Datenbank-Credentials.

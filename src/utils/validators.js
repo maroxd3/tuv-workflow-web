@@ -262,16 +262,17 @@ export function checkFinPruefziffer(raw) {
 
 /**
  * Prüft, ob der gewünschte Ziel-Status bei gegebener Mängel-Liste zulässig ist.
- * Rechtsgrundlage: HU nach § 29 StVZO — bei Hauptmängeln (HM) oder gefährlichen
- * Mängeln (GM-Key / GF-Anzeige) kann die Prüfung nicht bestanden werden.
+ * Rechtsgrundlage: HU nach § 29 StVZO — bei erheblichen (EM) oder gefährlichen
+ * Mängeln (GfM) kann die Prüfung nicht bestanden werden. Behobene Mängel zählen
+ * nicht mehr.
  *
  * Rückgabe: Fehlertext (String) bei Blockade, sonst null.
  */
 export function validateStatusWechsel(zielStatus, maengel = []) {
   if (zielStatus !== STATUS.BESTANDEN) return null;
-  const hasHm = maengel.some(m => m.kat === "HM" || m.kat === "GM");
-  if (hasHm) {
-    return "Bestanden nicht möglich — Hauptmangel oder gefährlicher Mangel vorhanden";
+  const hasBlocker = maengel.some(m => !m.behoben && (m.kat === "EM" || m.kat === "GfM"));
+  if (hasBlocker) {
+    return "Bestanden nicht möglich — erheblicher oder gefährlicher Mangel vorhanden";
   }
   return null;
 }

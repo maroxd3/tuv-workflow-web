@@ -39,11 +39,13 @@ Eine Story gilt als erledigt, wenn:
 | US-08 | Als Team moechten wir zentrale MariaDB-Persistenz | Must | done |
 | US-09 | Als Team moechten wir API-Healthchecks | Should | done |
 | US-10 | Als Betreiber moechte ich Zugangsdaten per `.env` setzen | Must | done |
-| US-11 | Als Betreiber moechte ich Backups dokumentieren | Should | open |
+| US-11 | Als Betreiber moechte ich eine 3-Tier-Backup-Strategie | Should | in Arbeit (Konzept + Binlog: done; Skripte: open) |
 | US-12 | Als Betreiber moechte ich Authentifizierung und Rollen | Could | open |
 | US-13 | Als Team moechten wir API-Integrationstests mit Testdatenbank | Should | open |
 | US-14 | Als Team moechten wir versionierte DB-Migrationen | Should | open |
-| US-15 | Als Betreiber moechte ich ein Deployment-Konzept fuer API + DB | Should | open |
+| US-15 | Als Betreiber moechte ich Docker-Compose-Deployment fuer Kunden | Must | in Arbeit (docker-compose.yml angelegt, Doku ergaenzt) |
+| US-16 | Als Pruefer moechte ich Aenderungen anderer Mitarbeiter live sehen | Should | open (Polling-Sync geplant) |
+| US-17 | Als Werkstatt-Inhaber moechte ich, dass Kundendaten on-premise bleiben | Must | done (kein Cloud-DB-Zugriff, alles im LAN) |
 
 ## 4. Sprint-Historie
 
@@ -57,11 +59,15 @@ Eine Story gilt als erledigt, wenn:
 | 6 | Abgabe-Dokumentation und Stabilisierung | erledigt |
 | 7 | Relationales Datenmodell und Tests | erledigt |
 | 8 | MariaDB-Backend und Doku-Umstellung | erledigt |
+| 9 | On-Premise-Deployment-Modell, Docker-Compose, Backup-Konzept | in Arbeit |
 
 ## 5. Technische Schulden
 
-- Historische Browserdatenbank-Dateien liegen noch im Repository, sind aber
-  nicht mehr aktive Laufzeitarchitektur.
-- API-Integrationstests sollten gegen eine isolierte MariaDB laufen.
+- API-Integrationstests sollten gegen eine isolierte MariaDB laufen
+  (insbesondere `PATCH /api/termine/:id/status` mit HM/GM-Maengeln).
 - Schema-Aenderungen sollten mittelfristig versioniert werden.
-- Produktiver Betrieb braucht Auth, HTTPS, Backups und Rollen.
+- WF-01 ist nur in UI und API durchgesetzt, nicht in MariaDB (Trigger oder
+  Stored Procedure als zusaetzliche Defense-in-Depth offen).
+- Backup-Tier-2-Cron-Skript und Tier-3-Offsite-Sync sind als Konzept
+  dokumentiert (`docs/backup.md`), die Skripte stehen aus.
+- Produktiver Betrieb braucht zusaetzlich Auth, HTTPS und Rollen.

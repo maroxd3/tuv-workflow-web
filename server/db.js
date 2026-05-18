@@ -36,7 +36,9 @@ export async function ensureDatabase() {
   });
 
   await migrate();
+  await migrateCategories();
   await seedDomainTables();
+  await migrateTriggers();
 }
 
 export function db() {
@@ -205,13 +207,110 @@ const PRUEFER_SEED = [
   ["LN", "Lena Neumann", "Sachverständige"],
 ];
 
+// Mangel-Kategorien nach HU-Richtlinie (§29 StVZO, Anlage VIII Nr. 3).
+// Konsistent in DB, Backend, Frontend — keine Doppel-Sprache.
+// blockiert_bestanden = TRUE: Termin darf nicht auf "Bestanden" gesetzt werden.
 const MANGEL_KATEGORIE_SEED = [
-  ["OM", "Ohne Mangel", false],
-  ["LM", "Leichter Mangel", false],
-  ["EM", "Erheblicher Mangel", false],
-  ["HM", "Hauptmangel", true],
-  ["GM", "Gefährlicher Mangel", true],
+  ["OM",  "Ohne Mangel",          false],
+  ["GM",  "Geringer Mangel",      false],
+  ["EM",  "Erheblicher Mangel",   true],
+  ["GfM", "Gefährlicher Mangel",  true],
 ];
+
+// Einmal-Migration vom alten Kategorie-Schema (OM/LM/EM/HM/GM mit
+// GM=Gefaehrlich) auf die HU-Richtlinie (OM/GM/EM/GfM mit GM=Gering).
+// Nutzt ON UPDATE CASCADE auf der FK mangel.kategorie_code, damit
+// mangel-Zeilen automatisch mitumbenannt werden. Idempotent — laeuft auf
+// einer schon migrierten DB ohne Effekt.
+async function migrateCategories() {
+  const conn = await db().getConnection();
+  try {
+    // Schritt 1: Alte 'GM'-Zeile bedeutete "Gefaehrlicher Mangel". Heute
+    // heisst 'GM' "Geringer Mangel". Erst umbenennen in 'GfM', damit der
+    // Code 'GM' fuer die neue Bedeutung frei wird.
+    const oldGmAsGefaehrlich = await conn.query(
+      `SELECT 1 FROM mangel_kategorie
+       WHERE kategorie_code = 'GM' AND bezeichnung LIKE '%Gefährlich%' LIMIT 1`,
+    );
+    if (oldGmAsGefaehrlich.length > 0) {
+      await conn.query(
+        `UPDATE mangel_kategorie
+         SET kategorie_code = 'GfM', bezeichnung = 'Gefährlicher Mangel', blockiert_bestanden = TRUE
+         WHERE kategorie_code = 'GM'`,
+      );
+    }
+
+    // Schritt 2: 'LM' (Leichter Mangel) heisst nach HU-Richtlinie 'GM'
+    // (Geringer Mangel). Umbenennen — FK cascadet auf mangel-Zeilen.
+    const oldLm = await conn.query(
+      `SELECT 1 FROM mangel_kategorie WHERE kategorie_code = 'LM' LIMIT 1`,
+    );
+    if (oldLm.length > 0) {
+      await conn.query(
+        `UPDATE mangel_kategorie
+         SET kategorie_code = 'GM', bezeichnung = 'Geringer Mangel', blockiert_bestanden = FALSE
+         WHERE kategorie_code = 'LM'`,
+      );
+    }
+
+    // Schritt 3: 'HM' (Hauptmangel, veraltete Sprache) ist in der modernen
+    // HU-Richtlinie ein Synonym fuer 'EM' (Erheblicher Mangel). Mangel-Zeilen
+    // direkt umrouten (nicht via PK-Update, weil 'EM' bereits existiert),
+    // dann alte Kategorie-Zeile loeschen.
+    const oldHm = await conn.query(
+      `SELECT 1 FROM mangel_kategorie WHERE kategorie_code = 'HM' LIMIT 1`,
+    );
+    if (oldHm.length > 0) {
+      await conn.query(
+        `UPDATE mangel SET kategorie_code = 'EM' WHERE kategorie_code = 'HM'`,
+      );
+      await conn.query(
+        `DELETE FROM mangel_kategorie WHERE kategorie_code = 'HM'`,
+      );
+    }
+
+    // Schritt 4: 'EM' war im alten Schema NICHT blockierend (Bug — laut
+    // HU-Richtlinie verhindert ein Erheblicher Mangel die Plakette). Korrigieren.
+    await conn.query(
+      `UPDATE mangel_kategorie SET blockiert_bestanden = TRUE WHERE kategorie_code = 'EM'`,
+    );
+  } finally {
+    conn.release();
+  }
+}
+
+// WF-01 als 3. Defense-Layer: blockiert in MariaDB selbst, dass ein Termin
+// auf 'Bestanden' gesetzt wird, solange er einen Hauptmangel (HM) oder
+// gefaehrlichen Mangel (GM) hat. Der UI-Guard und der API-Guard koennen
+// umgangen werden (direkter SQL-Zugriff, generischer PATCH-Endpoint) — der
+// Trigger nicht. Idempotent dank CREATE OR REPLACE.
+async function migrateTriggers() {
+  const conn = await db().getConnection();
+  try {
+    await conn.query(`
+      CREATE OR REPLACE TRIGGER trg_termin_wf01_update
+      BEFORE UPDATE ON termin
+      FOR EACH ROW
+      BEGIN
+        IF NEW.status_code = 'Bestanden' AND OLD.status_code <> 'Bestanden' THEN
+          IF EXISTS (
+            SELECT 1
+            FROM mangel m
+            JOIN mangel_kategorie mk ON mk.kategorie_code = m.kategorie_code
+            WHERE m.termin_id = NEW.termin_id
+              AND mk.blockiert_bestanden = TRUE
+              AND m.behoben = FALSE
+          ) THEN
+            SIGNAL SQLSTATE '45000'
+              SET MESSAGE_TEXT = 'WF-01: BESTANDEN nicht moeglich bei erheblichem oder gefaehrlichem Mangel (§29 StVZO)';
+          END IF;
+        END IF;
+      END
+    `);
+  } finally {
+    conn.release();
+  }
+}
 
 async function seedDomainTables() {
   const conn = await db().getConnection();

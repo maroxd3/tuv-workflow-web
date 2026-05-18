@@ -24,6 +24,9 @@ praesentation_standalone.html
 # Firebase deploy cache
 .firebase/
 
+# Lokale Backups — niemals committen (enthalten Kundendaten!)
+/backups/
+
 # Claude Code
 .claude
 

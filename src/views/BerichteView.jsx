@@ -82,9 +82,9 @@ FAHRZEUGHALTER
 
 ══════════════════════════════════════════════════════════════════════════
 
-MÄNGELKATEGORIEN
-  OM = Ohne Mangel | GM = Geringer Mangel | EM = Erheblicher Mangel
-  HM = Hauptmangel (nicht bestanden) | GF = Gefährlicher Mangel
+MÄNGELKATEGORIEN (nach §29 StVZO / HU-Richtlinie)
+  OM = Ohne Mangel | GM = Geringer Mangel
+  EM = Erheblicher Mangel (nicht bestanden) | GfM = Gefährlicher Mangel
 
 FESTGESTELLTE MÄNGEL (${t.mängel?.length || 0})
 ${mangelText}
@@ -110,7 +110,7 @@ RECHTLICHER HINWEIS
     const fz = fzMap[t.fahrzeugId];
     const art = PRUEFUNG_ARTEN.find(a => a.id === t.art);
     const pr = PRUEFER.find(p => p.id === t.pruefer);
-    const hatHm = (t.mängel || []).some(m => m.kat === "HM" || m.kat === "GM");
+    const hatHm = (t.mängel || []).some(m => !m.behoben && (m.kat === "EM" || m.kat === "GfM"));
     const isPassed = t.status === STATUS.BESTANDEN;
     const isFailed = t.status === STATUS.NICHT_BESTANDEN;
     const isNachp = t.status === STATUS.NACHPRUEFUNG;
@@ -131,7 +131,7 @@ RECHTLICHER HINWEIS
     const maengelRows = t.mängel?.length > 0
       ? t.mängel.map((m, i) => {
           const kat = MANGEL_KATEGORIEN[m.kat] || { kurz: m.kat, label: "Unbekannt" };
-          const isHm = m.kat === "HM" || m.kat === "GM";
+          const isHm = !m.behoben && (m.kat === "EM" || m.kat === "GfM");
           return `<tr>
             <td class="num">${i + 1}.</td>
             <td class="kat ${isHm ? "kat-hm" : ""}"><strong>${escape(kat.kurz)}</strong></td>
@@ -584,10 +584,10 @@ RECHTLICHER HINWEIS
         <tbody>${maengelRows}</tbody>
       </table>
       <div class="legend">
-        <strong>Mangel-Kategorien gemäß Anlage VIII StVZO:</strong>
-        OM = Ohne Mangel · LM = Leichter Mangel · EM = Erheblicher Mangel ·
-        <span class="hm">HM = Hauptmangel</span> (verkehrsunsicher) ·
-        <span class="hm">GM = Gefährlicher Mangel</span> (sofortige Stilllegung)
+        <strong>Mangel-Kategorien gemäß Anlage VIII StVZO (HU-Richtlinie):</strong>
+        OM = Ohne Mangel · GM = Geringer Mangel ·
+        <span class="hm">EM = Erheblicher Mangel</span> (verkehrsunsicher) ·
+        <span class="hm">GfM = Gefährlicher Mangel</span> (sofortige Stilllegung)
       </div>
     </div>
   </section>
