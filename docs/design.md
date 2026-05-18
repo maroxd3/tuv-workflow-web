@@ -108,15 +108,22 @@ Wichtige Constraints:
 
 ## 6. Workflow-Regel WF-01
 
-Ein Termin darf nicht auf `Bestanden` gesetzt werden, wenn ein blockierender
-Mangel vorhanden ist. Die Regel wird doppelt abgesichert:
+Ein Termin darf nicht auf `Bestanden` gesetzt werden, wenn ein nicht behobener
+erheblicher Mangel (EM) oder gefährlicher Mangel (GfM) vorhanden ist (§ 29
+StVZO). Die Regel wird dreifach abgesichert (Defense in Depth — siehe ADR-003):
 
-1. UI: Status-Controls verhindern die Auswahl, wenn ein HM/GM bekannt ist.
-2. API: `/api/termine/:id/status` prüft in MariaDB per JOIN gegen
-   `mangel_kategorie.blockiert_bestanden`.
+1. **UI-Guard:** Status-Controls verhindern die Auswahl, wenn ein EM/GfM
+   bekannt ist (`hatBlockierendenMangel()` in `src/utils/mangel.js`).
+2. **API-Guard:** `/api/termine/:id/status` prüft in MariaDB per JOIN gegen
+   `mangel_kategorie.blockiert_bestanden` und `mangel.behoben`.
+3. **DB-Trigger:** `trg_termin_wf01_update` (`BEFORE UPDATE ON termin`) wirft
+   `SIGNAL SQLSTATE '45000'`, falls die ersten zwei Schichten umgangen werden
+   (z. B. direkter SQL-Client-Zugriff). Der zentrale Error-Handler in der
+   Express-API mappt SQLSTATE 45000 auf HTTP 422 `{ok:false, reason}`.
 
-Wenn ein blockierender Mangel zu einem bereits bestandenen Termin angelegt wird,
-setzt die API den Termin automatisch auf `Nicht bestanden` zurück.
+Wenn ein nicht behobener blockierender Mangel zu einem bereits bestandenen
+Termin angelegt wird, setzt die API den Termin automatisch auf
+`Nicht bestanden` zurück.
 
 ## 7. Deployment
 

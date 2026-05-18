@@ -268,7 +268,7 @@ const nodes = [
     role: 'Two-pane modal: recorded defects + StVZO catalog search; status switcher blocks BESTANDEN if a Hauptmangel exists.',
     plain: 'Popup for recording defects. Search the official catalog or type a free-text defect; system stops "passed" if a major defect is in the list.',
     path: 'src/features/mangel/MaengelModal.jsx:16',
-    notes: ['addVorlage adds catalog entry via onAdd', 'status buttons disable BESTANDEN when hasHM', 'kategorieCode HM/GM trigger API-level auto-demotion in server/index.js'],
+    notes: ['addVorlage adds catalog entry via onAdd', 'status buttons disable BESTANDEN when hasHM', 'kategorieCode EM/GfM trigger API-level auto-demotion in server/index.js'],
     tag: ['overview', 'tagesplan', 'maengel', 'all'],
     critical: true,
   }),
@@ -390,7 +390,7 @@ const nodes = [
     tag: ['overview', 'all'],
   }),
   N('utils-mangel', 'domain', 'utils/mangel.js', '1-liner', 1510, 256, 220, 52, 'service', {
-    role: 'One-liner: hatHauptmangel(maengel) → boolean (HM or GM in list).',
+    role: 'One-liner: hatHauptmangel(maengel) → boolean (EM or GfM in list).',
     plain: 'A single check: does this defect list contain anything severe enough to fail the inspection?',
     path: 'src/utils/mangel.js:1',
     notes: ['central to §29 StVZO "no pass with main defect" rule', 'mirrored at DB level via mangel_kategorie.blockiertBestanden'],
@@ -418,10 +418,10 @@ const nodes = [
     tag: ['overview', 'fahrzeuge', 'termine', 'all'],
   }),
   N('const-mangel', 'domain', 'constants/mangel.js', 'defect catalog', 1510, 542, 220, 56, 'service', {
-    role: 'MANGEL_KATALOG (StVZO defect entries grouped by system) + MANGEL_KATEGORIEN (5 severity tiers).',
-    plain: 'The official defect catalog: codes, descriptions, severity. The 5 categories also exist in the DB as mangel_kategorie.',
+    role: 'MANGEL_KATALOG (StVZO defect entries grouped by system) + MANGEL_KATEGORIEN (4 severity tiers nach HU-Richtlinie).',
+    plain: 'The official defect catalog: codes, descriptions, severity. The 4 categories also exist in the DB as mangel_kategorie.',
     path: 'src/constants/mangel.js',
-    notes: ['used by MaengelModal catalog tab', 'MANGEL_KATALOG_BY_CODE for lookups in StatistikView', '5 categories (OM/LM/EM/HM/GM) match db.mangelKategorie.kategorieCode'],
+    notes: ['used by MaengelModal catalog tab', 'MANGEL_KATALOG_BY_CODE for lookups in StatistikView', '4 categories (OM/GM/EM/GfM nach HU-Richtlinie §29 StVZO Anlage VIII Nr. 3) match db.mangelKategorie.kategorieCode'],
     tag: ['overview', 'maengel', 'all'],
   }),
   N('const-kfzReferenz', 'domain', 'constants/kfzReferenz.js', 'manufacturer→models', 1510, 614, 220, 56, 'service', {
@@ -442,7 +442,7 @@ const nodes = [
     role: 'FahrzeugShape, TerminShape, MangelShape, ToastShape — runtime PropTypes for component contracts.',
     plain: 'Definitions of what a Vehicle/Appointment/Defect/Toast object looks like. Lets React warn when something is missing.',
     path: 'src/types/propTypes.js',
-    notes: ['describes the LEGACY useStore shape — matches what useStoreCompat outputs', 'kat is one-of OM/GM/EM/HM/GF (older 5-letter set, while MariaDB uses OM/LM/EM/HM/GM)', 'ToastShape unused except by dead Toast.jsx'],
+    notes: ['describes the LEGACY useStore shape — matches what useStoreCompat outputs', 'kat is one-of OM/GM/EM/GfM (aligned with DB and HU-Richtlinie as of 2026-05-19)', 'ToastShape unused except by dead Toast.jsx'],
     tag: ['overview', 'all'],
   }),
   N('fetch-api', 'domain', 'Fetch API', 'HTTP JSON', 1510, 850, 220, 60, 'service', {
@@ -706,13 +706,16 @@ const FIXES = {
   'api-client':      [
     { n: 1, t: 'Frontend data access now goes through /api instead of direct browser-side persistence.' },
   ],
+  'server-index':     [
+    { n: 1, t: 'PATCH /api/termine/:id/status enforces WF-01 by joining mangel with mangel_kategorie (with m.behoben = FALSE).' },
+    { n: 2, t: 'POST /api/maengel auto-demotes Termin from Bestanden → Nicht bestanden if added defect is unbehoben EM/GfM.' },
+    { n: 3, t: 'Zentraler Error-Handler mappt SQLSTATE 45000 (vom DB-Trigger trg_termin_wf01_update) auf HTTP 422 mit {ok:false, reason}.' },
+  ],
   'server-db':        [
     { n: 1, t: 'server/db.js creates the MariaDB database, all 8 tables and lookup-table seed data idempotently.' },
     { n: 2, t: 'MARIADB_* settings are loaded from .env; credentials stay out of the frontend bundle.' },
-  ],
-  'server-index':     [
-    { n: 1, t: 'PATCH /api/termine/:id/status enforces WF-01 by joining mangel with mangel_kategorie.' },
-    { n: 2, t: 'POST /api/maengel auto-demotes Termin from Bestanden → Nicht bestanden if added defect is HM/GM.' },
+    { n: 3, t: 'migrateCategories() migriert altes Schema (OM/LM/EM/HM/GM) auf HU-Richtlinie (OM/GM/EM/GfM) per ON UPDATE CASCADE — idempotent.' },
+    { n: 4, t: 'migrateTriggers() legt trg_termin_wf01_update BEFORE UPDATE ON termin per CREATE OR REPLACE an. SIGNAL SQLSTATE 45000 bei Verstoss.' },
   ],
   'useStoreCompat': [
     { n: 1, t: 'normDateStr fixes timezone bug — formats Date objects via local Y/M/D (was using toISOString → UTC shift past midnight made Termin invisible in TagesplanView)' },
@@ -739,9 +742,8 @@ const KNOWN_BUGS = {
     { sev: 'med', t: 'No live push yet. Other users see MariaDB changes after reload/refresh, but WebSocket/SSE realtime updates are not implemented.' },
     { sev: 'low', t: 'refresh() reloads halter + fahrzeuge + termine in parallel, then loads mängel with one extra request per termin. Fine for demo size, but a joined API endpoint would scale better.' },
   ],
-  'types-propTypes': [
-    { sev: 'low', t: 'MangelShape.kat oneOf is ["OM","GM","EM","HM","GF"] but MariaDB lookup table uses ["OM","LM","EM","HM","GM"] (LM not GF). Inconsistency between legacy PropTypes and current DB schema.' },
-  ],
+  // 'types-propTypes': MangelShape.kat oneOf-Inkonsistenz wurde am 2026-05-19
+  // mit der HU-Richtlinie-Migration aufgeloest. Eintrag entfernt.
 };
 
 /* ════════════════════════════════════════════════════════════════════
@@ -990,19 +992,20 @@ let selectedId = null;
 
 function showDefault() {
   sideEl.innerHTML = `
-    <h1>Architecture map · MariaDB backend</h1>
-    <div class="role">React 19 + Vite frontend with an Express API and central MariaDB database. The browser never talks to MariaDB directly; all data flows through /api.</div>
+    <h1>Architecture map · MariaDB backend (Stand 2026-05-19)</h1>
+    <div class="role">React 19 + Vite frontend with an Express API and central MariaDB database, running as a 3-container Docker stack (DB + API + Adminer). The browser never talks to MariaDB directly; all data flows through /api. On-Premise pro Pruefstelle.</div>
     <h2>How to read this</h2>
     <div class="finding">
       Red edges are the 10-hop spine from app boot to a row landing in MariaDB. Click any node to pin it; hover any node to peek. Use the chips at the top to dim everything outside one feature.
     </div>
     <h2>Notable findings from this map</h2>
     <div class="finding good"><strong>Single backend gateway</strong><br>Every persistent operation goes through <code>src/db/apiClient.ts</code> and the Express routes in <code>server/index.js</code>. SQL stays server-side in the API/MariaDB layer; database credentials never enter the frontend bundle.</div>
-    <div class="finding good"><strong>WF-01 enforced twice (Defense in Depth)</strong><br>UI layer refuses to set BESTANDEN with a Hauptmangel. API layer double-checks via MariaDB JOIN before the UPDATE. If the UI is bypassed, the backend still rejects it.</div>
+    <div class="finding good"><strong>WF-01 enforced thrice (Defense in Depth)</strong><br>UI layer refuses to set BESTANDEN when an unbehoben EM or GfM exists. API layer double-checks via MariaDB JOIN before the UPDATE. DB-Trigger <code>trg_termin_wf01_update</code> wirft <code>SIGNAL SQLSTATE '45000'</code>, falls jemand UI und API umgeht (direkter SQL-Zugriff). Alle drei Layer respektieren <code>mangel.behoben = TRUE</code>.</div>
     <div class="finding warn"><strong>No live push yet</strong><br>Multiple clients share the same MariaDB data through the API. User B sees user A's changes after reload/refresh; WebSocket/SSE realtime updates are not implemented yet.</div>
     <div class="finding warn"><strong>Compat layer is technical debt by design</strong><br><code>useStoreCompat.ts</code> exists to keep the existing views unchanged while <code>useDb.ts</code> talks to the Express/MariaDB API. The adapter translates field-by-field between the old view shape and the current API shape.</div>
     <div class="finding warn"><strong>Dead code still in tree</strong><br><code>src/components/Toast.jsx</code> is not imported by the app. App uses sonner via useToasts.</div>
-    <div class="finding"><strong>Schema-code drift in MangelShape</strong><br><code>types/propTypes.js</code> says <code>kat</code> is one of <code>["OM","GM","EM","HM","GF"]</code> but MariaDB uses <code>["OM","LM","EM","HM","GM"]</code> (LM not GF). PropTypes warns but nothing rejects the mismatch.</div>
+    <div class="finding good"><strong>HU-Richtlinie-Konformitaet</strong><br>Frontend, API und DB nutzen dasselbe 4-Kategorien-Schema <code>OM/GM/EM/GfM</code> nach §29 StVZO Anlage VIII Nr. 3. Frueheres Drift zwischen PropTypes (<code>OM/GM/EM/HM/GF</code>) und DB (<code>OM/LM/EM/HM/GM</code>) ist mit der Migration am 2026-05-19 aufgeloest.</div>
+    <div class="finding good"><strong>Docker-Stack fuer On-Premise</strong><br>Drei Container per <code>docker compose up -d</code>: <code>tuv-mariadb</code> (DB + Binlog), <code>tuv-api</code> (Express), <code>tuv-adminer</code> (Web-DB-Browser auf Port 8080). Jeder Kunde bekommt einen eigenen Stack im LAN.</div>
     <h2>Filters</h2>
     <div class="finding">Click a chip to dim everything outside that feature. "Critical path" highlights only the 10 red edges of the spine. "Roadmap & bugs" highlights only nodes with green/red badges.</div>
   `;

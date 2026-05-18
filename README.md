@@ -7,7 +7,7 @@ Diese Variante nutzt eine zentrale **MariaDB-Datenbank** über eine
 **Express-API** in `server/index.js`. Die Browser-App spricht nicht direkt mit
 der Datenbank, sondern ausschließlich über HTTP-Endpunkte unter `/api`.
 
-[![Tests](https://img.shields.io/badge/tests-124%20passing-brightgreen)](#testing)
+[![Tests](https://img.shields.io/badge/tests-136%20passing-brightgreen)](#testing)
 [![Lint](https://img.shields.io/badge/eslint-0%20errors-brightgreen)](#testing)
 [![TypeScript](https://img.shields.io/badge/typescript-graduell-blue)](#tech-stack)
 [![Database](https://img.shields.io/badge/db-MariaDB-003545)](#tech-stack)
