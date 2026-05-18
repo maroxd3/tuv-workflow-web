@@ -33,7 +33,7 @@ Eine Story gilt als erledigt, wenn:
 | US-02 | Als Mitarbeiter moechte ich Halter verwalten | Must | done |
 | US-03 | Als Prüfer moechte ich Termine planen | Must | done |
 | US-04 | Als Prüfer moechte ich Mängel dokumentieren | Must | done |
-| US-05 | Als Prüfer moechte ich `Bestanden` bei HM/GM verhindern | Must | done |
+| US-05 | Als Prüfer möchte ich `Bestanden` bei EM/GfM verhindern | Must | done (3-Layer: UI + API + DB-Trigger) |
 | US-06 | Als Leitung moechte ich Statistiken sehen | Should | done |
 | US-07 | Als Mitarbeiter moechte ich Prüfberichte drucken | Should | done |
 | US-08 | Als Team moechten wir zentrale MariaDB-Persistenz | Must | done |
@@ -63,11 +63,10 @@ Eine Story gilt als erledigt, wenn:
 
 ## 5. Technische Schulden
 
-- API-Integrationstests sollten gegen eine isolierte MariaDB laufen
-  (insbesondere `PATCH /api/termine/:id/status` mit HM/GM-Mängeln).
+- API-Integrationstests gegen die Docker-MariaDB sind angelegt
+  (`server/tests/wf01.test.js`, 7 Cases für alle drei WF-01-Layer + behoben-
+  Semantik). Weitere Endpunkte (Halter, Fahrzeug, Termin-CRUD) sind offen.
 - Schema-Änderungen sollten mittelfristig versioniert werden.
-- WF-01 ist nur in UI und API durchgesetzt, nicht in MariaDB (Trigger oder
-  Stored Procedure als zusaetzliche Defense-in-Depth offen).
 - Backup-Tier-2-Cron-Skript und Tier-3-Offsite-Sync sind als Konzept
   dokumentiert (`docs/backup.md`), die Skripte stehen aus.
 - Produktiver Betrieb braucht zusaetzlich Auth, HTTPS und Rollen.

@@ -201,7 +201,7 @@ technisch erzwungen werden.
 |---|---|---|
 | GR-01 | Jedes Fahrzeug ist über sein Kennzeichen eindeutig identifizierbar | KBA / StVZO |
 | GR-02 | Wenn eine Fahrgestellnummer (FIN) angegeben ist, ist sie weltweit eindeutig | ISO 3779 |
-| GR-03 | Ein Termin mit Hauptmangel oder gefährlichem Mangel darf nicht den Status `Bestanden` haben | § 29 StVZO |
+| GR-03 | Ein Termin mit erheblichem oder gefährlichem Mangel darf nicht den Status `Bestanden` haben | § 29 StVZO |
 | GR-04 | Baujahr eines Fahrzeugs liegt zwischen 1885 und 2100 | Plausibilität / MariaDB-Constraint |
 | GR-05 | Kilometerstand ist nichtnegativ und unter einer Plausibilitätsgrenze von 3.000.000 km | Plausibilität |
 | GR-06 | Beim Löschen eines Fahrzeugs werden alle zugehörigen Termine und Mängel kaskadierend entfernt | Domänen-Konsistenz |
@@ -306,7 +306,7 @@ MANGEL(mangel_id, termin_id↗TERMIN, code_stvzo?, beschreibung,
 |---|---|---|
 | GR-01 Kennzeichen-Eindeutigkeit | `UNIQUE(kennzeichen)` auf FAHRZEUG | deklarativ |
 | GR-02 FIN-Eindeutigkeit | `UNIQUE(fin)`; mehrere `NULL` sind in MariaDB erlaubt | deklarativ |
-| GR-03 WF-01 - Bestanden trotz HM/GM verhindern | relationsübergreifend, nicht als einfacher CHECK ausdrückbar | UI + Express-API |
+| GR-03 WF-01 - Bestanden trotz EM/GfM verhindern | relationsübergreifend, nicht als einfacher CHECK ausdrückbar | UI + Express-API + MariaDB-Trigger (`trg_termin_wf01_update`) |
 | GR-04 Baujahr-Plausibilität | `CHECK (baujahr IS NULL OR baujahr BETWEEN 1885 AND 2100)` | deklarativ |
 | GR-05 Kilometerstand-Plausibilität | `CHECK (kilometerstand IS NULL OR kilometerstand BETWEEN 0 AND 3000000)` | deklarativ |
 | GR-06 Cascade beim Fahrzeug-Löschen | `ON DELETE CASCADE` an `TERMIN.fahrzeug_id` und `MANGEL.termin_id` | deklarativ |
@@ -442,13 +442,16 @@ CREATE TABLE mangel (
 
 ### 3.3 WF-01 in der MariaDB-Architektur
 
-Die Regel "kein `Bestanden` bei HM/GM" wird in der aktuellen Umsetzung nicht
-über Trigger oder Stored Procedures gelöst, sondern in zwei Anwendungsschichten:
+Die Regel "kein `Bestanden` bei erheblichem oder gefährlichem Mangel" (§ 29
+StVZO) ist in drei Schichten implementiert (Defense in Depth, siehe ADR-003):
 
 1. **Frontend-Guard:** Status-Controls verhindern die Auswahl, wenn ein
    blockierender Mangel bekannt ist.
 2. **Express-API-Guard:** `PATCH /api/termine/:id/status` prüft in MariaDB per
-   JOIN gegen `mangel_kategorie.blockiert_bestanden`.
+   JOIN gegen `mangel_kategorie.blockiert_bestanden` (mit `m.behoben = FALSE`).
+3. **DB-Trigger:** `trg_termin_wf01_update BEFORE UPDATE ON termin` wirft
+   `SIGNAL SQLSTATE '45000'`, falls jemand die ersten zwei Schichten umgeht
+   und direkt per SQL versucht, den Status auf `Bestanden` zu setzen.
 
 Der zentrale API-Ausdruck ist:
 
@@ -457,11 +460,13 @@ SELECT COUNT(*) AS count
 FROM mangel m
 JOIN mangel_kategorie mk ON mk.kategorie_code = m.kategorie_code
 WHERE m.termin_id = ?
-  AND mk.blockiert_bestanden = TRUE;
+  AND mk.blockiert_bestanden = TRUE
+  AND m.behoben = FALSE;
 ```
 
 Wenn ein blockierender Mangel zu einem bereits bestandenen Termin angelegt wird,
-setzt die API den Termin automatisch auf `Nicht bestanden` zurück.
+setzt die API den Termin automatisch auf `Nicht bestanden` zurück. Behobene
+Mängel (`behoben = TRUE`) zählen nicht.
 
 ### 3.4 Initial-Daten
 
@@ -480,12 +485,17 @@ INSERT IGNORE INTO status (status_code, bezeichnung, ist_endzustand) VALUES
 INSERT IGNORE INTO mangel_kategorie
   (kategorie_code, bezeichnung, blockiert_bestanden)
 VALUES
-  ('OM', 'Ohne Mangel', false),
-  ('LM', 'Leichter Mangel', false),
-  ('EM', 'Erheblicher Mangel', false),
-  ('HM', 'Hauptmangel', true),
-  ('GM', 'Gefährlicher Mangel', true);
+  ('OM',  'Ohne Mangel',         false),
+  ('GM',  'Geringer Mangel',     false),
+  ('EM',  'Erheblicher Mangel',  true),
+  ('GfM', 'Gefährlicher Mangel', true);
 ```
+
+Die Kategorien folgen der **HU-Richtlinie nach § 29 StVZO Anlage VIII Nr. 3**.
+Frühere Versionen des Schemas verwendeten zusätzliche Codes (`LM`, `HM`) mit
+abweichender `blockiert_bestanden`-Belegung; diese sind durch
+`migrateCategories()` in `server/db.js` per `ON UPDATE CASCADE` migriert worden
+(siehe ADR-003).
 
 ### 3.5 Beispielabfragen
 

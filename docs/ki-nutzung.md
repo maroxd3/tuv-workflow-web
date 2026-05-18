@@ -79,7 +79,7 @@ und Konstantenmodule. Diese Entscheidungen stammen aus der Domänenanalyse.
 CASCADE vs. RESTRICT stammen aus der Domänenanalyse. KI half bei Formulierung
 und technischer Ausarbeitung, nicht bei der fachlichen Entscheidung.
 
-### 2.3 Geschäftsregel WF-01 (Hauptmangel-Blocker)
+### 2.3 Geschäftsregel WF-01 (Blockierender-Mangel-Schutz)
 
 **Beispiel-Prompt:**
 > „Implementiere in einer Express-API eine Statusänderung
@@ -92,10 +92,10 @@ und technischer Ausarbeitung, nicht bei der fachlichen Entscheidung.
 **Validierungs-Schritt:**
 
 1. Code-Review: Ist der JOIN `mangel` zu `mangel_kategorie` korrekt?
-2. API manuell getestet: Termin mit HM/GM darf nicht auf `Bestanden`.
-3. App-Test im Browser: HM hinzufügen, Statusänderung versuchen,
+2. API manuell getestet: Termin mit EM/GfM darf nicht auf `Bestanden`.
+3. App-Test im Browser: EM hinzufügen, Statusänderung versuchen,
    Fehlermeldung prüfen.
-4. Regression prüfen: Termin ohne HM/GM darf weiter auf `Bestanden`.
+4. Regression prüfen: Termin ohne EM/GfM darf weiter auf `Bestanden`.
 
 **Eigenleistung:** Die Regel selbst stammt aus § 29 StVZO Anlage VIII. Marwan
 hat die Regel formuliert und ihre fachliche Grundlage recherchiert. KI hat nur
