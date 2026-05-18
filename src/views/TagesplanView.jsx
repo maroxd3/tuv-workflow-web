@@ -359,7 +359,7 @@ export function TagesplanView({ fahrzeuge, termine, addTr, updTr, delTr, addMang
                         {t.mängel?.length > 0 ? (
                           <div style={{ display: "flex", gap: 3, flexWrap: "wrap" }}>
                             {t.mängel.map(m => <MangelPill key={m.id} kat={m.kat} />)}
-                            {hmV && <span style={{ fontSize: 9, color: C.redL, fontWeight: 700 }}>HM</span>}
+                            {hmV && <span style={{ fontSize: 9, color: C.redL, fontWeight: 700 }}>EM/GfM</span>}
                           </div>
                         ) : <span style={{ fontSize: 11, color: C.t4 }}>—</span>}
                       </td>

@@ -16,5 +16,5 @@ export function MangelPill({ kat }) {
 }
 
 MangelPill.propTypes = {
-  kat: PropTypes.oneOf(["OM", "GM", "EM", "HM", "GF"]).isRequired,
+  kat: PropTypes.oneOf(["OM", "GM", "EM", "GfM"]).isRequired,
 };
