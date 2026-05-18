@@ -44,7 +44,7 @@ Eine Story gilt als erledigt, wenn:
 | US-13 | Als Team moechten wir API-Integrationstests mit Testdatenbank | Should | open |
 | US-14 | Als Team moechten wir versionierte DB-Migrationen | Should | open |
 | US-15 | Als Betreiber moechte ich Docker-Compose-Deployment für Kunden | Must | in Arbeit (docker-compose.yml angelegt, Doku ergaenzt) |
-| US-16 | Als Prüfer moechte ich Änderungen anderer Mitarbeiter live sehen | Should | open (Polling-Sync geplant) |
+| US-16 | Als Prüfer möchte ich Änderungen anderer Mitarbeiter live sehen | Should | done (5-Sek-Polling in `useDb.ts`, pausiert bei Tab-Hintergrund) |
 | US-17 | Als Werkstatt-Inhaber moechte ich, dass Kundendaten on-premise bleiben | Must | done (kein Cloud-DB-Zugriff, alles im LAN) |
 
 ## 4. Sprint-Historie
