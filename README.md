@@ -50,7 +50,7 @@ der Datenbank, sondern ausschließlich über HTTP-Endpunkte unter `/api`.
               ┌───────────────┼───────────────┐
               │               │               │
         ┌─────┴────┐   ┌──────┴───┐   ┌──────┴───┐
-        │ Empfang  │   │ Prüfer  │   │  Chef    │
+        │ Empfang  │   │ Prüfer   │   │  Chef     │
         │ Browser  │   │ Browser  │   │ Browser  │
         └──────────┘   └──────────┘   └──────────┘
 ```
