@@ -47,8 +47,8 @@ der Datenbank, sondern ausschließlich über HTTP-Endpunkte unter `/api`.
                               ▲
                               │ HTTP/JSON (/api)
                               │
-              ┌───────────────┼───────────────┐
-              │               │               │
+              ┌───────────────┼──────────────┐
+              │               │              │
         ┌─────┴────┐   ┌──────┴───┐   ┌──────┴───┐
         │ Empfang  │   │ Prüfer   │   │  Chef    │
         │ Browser  │   │ Browser  │   │ Browser  │
