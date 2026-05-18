@@ -56,6 +56,25 @@ services:
       db:
         condition: service_healthy
 
+  # Adminer: Web-UI zum direkten Anschauen/Filtern/Bearbeiten der MariaDB.
+  # Erreichbar unter http://localhost:8080 sobald der Stack laeuft.
+  # Login-Server: "db" (interner Hostname im Docker-Netz), Nutzer/Passwort
+  # aus .env (MARIADB_USER / MARIADB_PASSWORD), Datenbank: tuv_workflow.
+  # Nicht fuer Produktion gedacht — vor Auslieferung an eine Pruefstelle
+  # entweder den Service entfernen oder ueber Compose-Profile gaten.
+  adminer:
+    image: adminer:5.4.0
+    container_name: tuv-adminer
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      ADMINER_DEFAULT_SERVER: db
+      ADMINER_DESIGN: nette
+    depends_on:
+      db:
+        condition: service_healthy
+
 volumes:
   mariadb_data:
     name: tuv_mariadb_data
