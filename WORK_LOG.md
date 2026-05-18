@@ -6,6 +6,126 @@ steht in `CLAUDE.md` Abschnitt 8.
 
 ---
 
+## 2026-05-18 (abends) — WF-01 DB-Trigger + Adminer + HU-Richtlinie-Refactor
+
+### **Was wurde gemacht**
+
+**1. Docker-Stack getestet (Step 2 aus dem Morgen-Eintrag):**
+- `docker compose up -d` laeuft, beide Container healthy.
+- Demo-Daten geseedet (8/8/13/12), Binlog aktiv (`mysql-bin.000001` etc.).
+- Alle drei WF-01-Szenarien gruen.
+
+**2. WF-01 als DB-Trigger (3. Defense-Layer) — Branch `feat/wf01-trigger`:**
+- `server/db.js`: `migrateTriggers()` mit
+  `trg_termin_wf01_update BEFORE UPDATE ON termin`. Wirft `SIGNAL SQLSTATE
+  '45000'` bei blockierendem Mangel.
+- `server/index.js`: Error-Handler mappt SQLSTATE 45000 auf HTTP 422 mit
+  `{ok:false, reason}`. Vorher kam ein 500.
+- `docker/mariadb/my.cnf`: `log_bin_trust_function_creators = 1` ergaenzt,
+  damit `tuv_app`-Nutzer Trigger anlegen darf bei aktivem Binlog.
+- ADR-003 auf 3-Layer-Modell aktualisiert.
+
+**3. Adminer als 3. Container im Stack:**
+- `docker-compose.yml`: Service `adminer` (`adminer:5.4.0`) auf Port 8080,
+  Design "nette", `ADMINER_DEFAULT_SERVER=db`.
+- Erreichbar unter `http://localhost:8080`, Login `tuv_app` / `tuv_app_pw`
+  auf DB `tuv_workflow`.
+
+**4. HU-Richtlinie-Refactor (Marwan hat als Kfz-Gutachter den
+Modellierungs-Fehler entdeckt):**
+- **Alt:** 5 Kategorien OM/LM/EM/HM/GM, dabei GM = "Gefaehrlich", HM blockt,
+  EM blockt NICHT — falsch nach §29 StVZO.
+- **Neu:** 4 Kategorien OM/GM/EM/GfM nach HU-Richtlinie. EM und GfM
+  blockieren. GM heisst jetzt "Geringer Mangel" (vorher LM).
+- `migrateCategories()` in `server/db.js` migriert bestehende Daten via
+  `ON UPDATE CASCADE` der FK `mangel.kategorie_code`: GM(alt) → GfM, LM → GM,
+  HM → EM (per UPDATE auf `mangel`, dann DELETE der HM-Zeile aus
+  `mangel_kategorie`). EM auf `blockiert_bestanden=TRUE` gesetzt.
+- Idempotent — laeuft auf migrierter DB ohne Effekt.
+
+**5. `behoben=TRUE`-Check ueberall:**
+- Trigger ignoriert behobene Maengel (`AND m.behoben = FALSE`).
+- API-Guard in `/status` und Auto-Demotion in `POST /api/maengel` analog.
+- Frontend `hatBlockierendenMangel` und `validateStatusWechsel` analog.
+
+**6. Frontend-Refactor:**
+- `src/constants/mangel.js`: `MANGEL_KATEGORIEN` umgebaut auf 4 Codes mit
+  `blockiert:true/false` Flag. Katalog (180 Eintraege) auf neue Codes
+  migriert (`HM`→`EM`, `LM`→`GM`, `GM`→`GfM`).
+- `src/utils/mangel.js`: `hatBlockierendenMangel` neu (mit behoben-Check),
+  `hatHauptmangel` als Alias.
+- `src/utils/validators.js`: `validateStatusWechsel` auf EM/GfM + behoben.
+- Views (`TagesplanView`, `BerichteView`), Components (`MangelPill`,
+  `HauptmangelBadge`), Types (`propTypes`) auf neue Codes.
+- Tests (`mangel.test.js`, `validators.test.js`) angepasst, 5 neue Cases.
+
+**7. Erklaer-Seite fuer Marwan:**
+- `docs/wf01-defense-layers.html` — Werkstatt-Analogie (Tablet/Empfang/
+  Aktenschrank) mit 3 Waechtern und 3 Schummel-Szenarien.
+
+### **Stand jetzt**
+
+- **Branch:** `feat/wf01-trigger` (lokal, **nicht gepusht**)
+- **Last Commits:** noch ungepusht — alle Aenderungen liegen im Working Tree.
+- **Tests:** 129/129 gruen (vorher 124 — 5 neue Cases dazu).
+- **Typecheck:** sauber.
+- **Docker-Stack:** alle 3 Container Up (`tuv-mariadb` healthy, `tuv-api`,
+  `tuv-adminer`).
+- **DB-Inhalt:** 4 Kategorien (OM/GM/EM/GfM), 12 Demo-Maengel verteilt
+  (10×EM, 1×GfM, 1×GM).
+- **3 Defense-Layer verifiziert:**
+  - SQL-Bypass: `ERROR 1644 (45000): WF-01: BESTANDEN nicht moeglich bei
+    erheblichem oder gefaehrlichem Mangel`
+  - Generic PATCH: HTTP 422 mit gleichem Reason
+  - Status-Endpoint: API-Layer-Antwort (200 + `ok:false`)
+- **Regression:** Termin mit `EM behoben=TRUE` bleibt auf "Bestanden".
+
+### **Naechste Schritte (Reihenfolge)**
+
+1. **Commit + Push** der `feat/wf01-trigger`-Aenderungen (Marwan-Entscheidung
+   ob ein oder mehrere Commits).
+2. **API-Tests schreiben** (ADR-003 fordert das explizit) — supertest gegen
+   die Docker-MariaDB, alle 3 Layer.
+3. **Mail an Frau Fuchs** mit Update (in `docs/antwort_mail_fuchs.md`).
+4. **Doku-Sweep:** README, design.md, pflichtenheft, testkonzept, datenmodell,
+   ki-nutzung.md auf neue Kategorie-Codes pruefen.
+5. **`backups/`-Skripte** (`server/backup.js`, `scripts/sync-offsite.sh`).
+
+### **Offene Fragen / Blockers**
+
+- **Doku-Drift:** README/design/pflichtenheft erwaehnen noch HM/LM. Sind aber
+  nicht kritisch fuer den naechsten Fuchs-Termin — DB+Code sind sauber.
+- **`praesentation.html`** noch nicht aktualisiert (alte 5-Kategorien-Tabelle
+  in der DB-Schema-Folie). Entscheidung: Banner einfuegen, archivieren,
+  oder Folie neu? Steht weiter offen.
+
+### **Zum Wiedereinsteigen**
+
+```powershell
+cd C:\Users\Marwan\tuv-workflow-web
+git status                       # zeigt geaenderte Files in feat/wf01-trigger
+git diff --stat                  # ueberblick
+docker compose ps                # alle 3 Container Up?
+Invoke-RestMethod http://localhost:8787/api/health
+Start-Process http://localhost:8080   # Adminer
+
+# Falls Stack down ist:
+docker compose up -d
+```
+
+### **Memory-Kontext fuer kuenftige Sessions**
+
+- Marwan ist Kfz-Gutachter — seine Domain-Expertise ist Gold wert, hat heute
+  den HM/EM/GM-Modellierungs-Fehler aufgedeckt. Bei zukuenftigen
+  Modellierungs-Fragen ihn aktiv fragen ("ist das nach §29 StVZO so
+  korrekt?").
+- Adminer (`localhost:8080`) ist Marwans Fenster in die DB. Wenn er etwas
+  fragt wie "wie sieht das aus in der DB", zuerst auf Adminer verweisen.
+- "Werkstatt-Analogie" funktioniert fuer DB-Erklaerungen: Tablet/Empfang/
+  Aktenschrank/Waechter. Wird auf Wunsch wieder benutzen.
+
+---
+
 ## 2026-05-18 — Docker-Compose-Foundation + On-Premise-Doku
 
 > **Update am Ende der Session:** Branch `feat/docker-compose` ist nach

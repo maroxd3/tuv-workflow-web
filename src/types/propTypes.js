@@ -4,7 +4,7 @@ export const MangelShape = PropTypes.shape({
   id: PropTypes.string.isRequired,
   code: PropTypes.string.isRequired,
   text: PropTypes.string.isRequired,
-  kat: PropTypes.oneOf(["OM", "GM", "EM", "HM", "GF"]).isRequired,
+  kat: PropTypes.oneOf(["OM", "GM", "EM", "GfM"]).isRequired,
   behoben: PropTypes.bool,
 });
 
