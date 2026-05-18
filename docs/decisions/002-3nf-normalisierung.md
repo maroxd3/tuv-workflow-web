@@ -19,7 +19,7 @@ Zerlegung des Schemas, die mindestens 3. Normalform erreicht.
 Das Schema ist auf 3NF (in den meisten Faellen sogar BCNF) gebracht. Alle
 Wertebereiche sind atomar (1NF). Halter, Fahrzeug, Termin und Mangel sind
 eigene Relationen mit referentieller Integrität über Fremdschlüssel. Die vier
-Stamm-Relationen (`status`, `prüfart`, `prüfer`, `mangel_kategorie`) sind
+Stamm-Relationen (`status`, `pruefart`, `pruefer`, `mangel_kategorie`) sind
 ebenfalls eigene Relationen — keine Enums in den Hauptrelationen, damit
 Bezeichnungen und Geschäftslogik (z. B. `blockiert_bestanden`) als Daten
 gepflegt werden koennen.
@@ -42,8 +42,8 @@ weiterer Schlüsselkandidaten.
 | Relation         | Schlüsselkandidaten                                        |
 | ---------------- | ----------------------------------------------------------- |
 | status           | **status_code**                                             |
-| prüfart         | **prueft_code**                                             |
-| prüfer          | **pruefer_kuerzel**                                         |
+| pruefart         | **prueft_code**                                             |
+| pruefer          | **pruefer_kuerzel**                                         |
 | mangel_kategorie | **kategorie_code**                                          |
 | halter           | **halter_id**, *email* (UNIQUE)                             |
 | fahrzeug         | **fahrzeug_id**, *kennzeichen* (UNIQUE), *fin* (UNIQUE)     |
@@ -56,7 +56,7 @@ Pro Relation wird jede nicht-triviale funktionale Abhängigkeit notiert
 (Schreibweise: Determinante → abhängiges Attribut). Triviale FDs (A → A,
 M → A mit A ∈ M) sind ausgelassen.
 
-**status**, **prüfart**, **prüfer**, **mangel_kategorie**:
+**status**, **pruefart**, **pruefer**, **mangel_kategorie**:
 - Jeweils nur eine FD vom Primaerschlüssel auf alle Nicht-Schlüssel-Attribute.
 - Z. B. `kategorie_code → bezeichnung, blockiert_bestanden`.
 - Einzige Determinante ist der Primaerschlüssel → trivial 2NF und 3NF.
@@ -114,8 +114,8 @@ UPDATE`-Verhalten umgesetzt (`server/db.js`):
 
 - `fahrzeug.halter_id` → `halter.halter_id`  (RESTRICT / CASCADE)
 - `termin.fahrzeug_id` → `fahrzeug.fahrzeug_id`  (CASCADE / CASCADE)
-- `termin.prueft_code` → `prüfart.prueft_code`  (RESTRICT / CASCADE)
-- `termin.pruefer_kuerzel` → `prüfer.pruefer_kuerzel`  (SET NULL / CASCADE)
+- `termin.prueft_code` → `pruefart.prueft_code`  (RESTRICT / CASCADE)
+- `termin.pruefer_kuerzel` → `pruefer.pruefer_kuerzel`  (SET NULL / CASCADE)
 - `termin.status_code` → `status.status_code`  (RESTRICT / CASCADE)
 - `mangel.termin_id` → `termin.termin_id`  (CASCADE / CASCADE)
 - `mangel.kategorie_code` → `mangel_kategorie.kategorie_code`  (RESTRICT / CASCADE)

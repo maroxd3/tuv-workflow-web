@@ -89,8 +89,8 @@ MariaDB speichert acht Tabellen:
 - `termin`
 - `mangel`
 - `status`
-- `prüfart`
-- `prüfer`
+- `pruefart`
+- `pruefer`
 - `mangel_kategorie`
 
 Die Tabellen sind in 3NF modelliert. Mängel sind nicht als Array im Termin
