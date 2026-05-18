@@ -8,6 +8,12 @@ steht in `CLAUDE.md` Abschnitt 8.
 
 ## 2026-05-18 — Docker-Compose-Foundation + On-Premise-Doku
 
+> **Update am Ende der Session:** Branch `feat/docker-compose` ist nach
+> GitHub gepusht (3 Commits). Marwan startet jetzt den PC neu, damit Docker
+> Desktop nach der Installation lauffaehig ist. Naechster Schritt nach
+> Neustart: `docker compose up -d` testen (Anleitung unten unter "Zum
+> Wiedereinsteigen"). Wenn das laeuft, weiter mit Step 2 (WF-01-Trigger).
+
 ### **Was wurde gemacht**
 
 - **`docker-compose.yml`** neu angelegt: 2 Services (`db` = MariaDB 11.4 mit
