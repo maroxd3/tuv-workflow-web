@@ -718,7 +718,7 @@
   kennzeichen <span class="g">UK</span>              fahrzeugId <span class="g">FK</span>
   fin                          datum, uhrzeit
   hersteller* modell*          art (HU, AU, …)
-  baujahr [1885..year+1]       pruefer
+  baujahr [1885..year+1]       prüfer
   typ <span class="g">FK→FAHRZEUG_TYPEN</span>        status <span class="g">FK→STATUS</span>
   kmStand [0..3 000 000]       notiz
   besitzer telefon email       <span class="a">mängel: Mangel[]</span>
@@ -786,7 +786,7 @@
 ─────────────────────────
 + code : string           <span class="g">«StVZO Anlage VIII»</span>
 + text : string
-+ kat : <span class="g">{OM, LM, EM, HM, GM}</span>
++ kat : <span class="g">{OM, GM, EM, GfM}</span>
 + behoben : bool</div>
     </div>
     <div>
@@ -801,7 +801,7 @@
       </div>
       <div class="card tone-purple pad-sm" style="margin-top:6px; padding:10px 14px">
         <h4 style="margin-bottom:2px">STATUS &amp; MANGEL_KATEGORIE als Enums</h4>
-        <p style="font-size:11.5px; line-height:1.45">Endliche, nicht änderbare Mengen — STATUS hat 7 Werte, MANGEL_KATEGORIE 5 (OM/LM/EM/HM/GM).</p>
+        <p style="font-size:11.5px; line-height:1.45">Endliche, nicht änderbare Mengen — STATUS hat 7 Werte, MANGEL_KATEGORIE 5 (OM/GM/EM/GfM).</p>
       </div>
       <div class="card tone-green pad-sm" style="margin-top:6px; padding:10px 14px">
         <h4 style="margin-bottom:2px">Halter eingebettet, nicht eigene Entität</h4>
@@ -959,7 +959,7 @@
 <span class="c">[5]</span> Mängel?  ──nein──→ <span class="g">BESTANDEN</span>  ────────┐
    │ ja                                          │
    ▼                                             │
-<span class="c">[6]</span> Erfassen:  Code + Kat <span class="a">OM/LM/EM/HM/GM</span>      │
+<span class="c">[6]</span> Erfassen:  Code + Kat <span class="a">OM/GM/EM/GfM</span>      │
    ↓                                             │
 <span class="c">[7]</span> ≥1 HM/GM?  ──ja──→ <span style="color:var(--red)">NICHT_BESTANDEN</span> ──┐  │
    │ nein                                     │  │
@@ -1163,7 +1163,7 @@
     </div>
     <div style="border:1px solid var(--line); border-radius:8px; overflow:hidden; background:rgba(11,16,32,0.7)">
       <div style="padding:8px 12px; font-size:10.5px; color:var(--amber); font-family:'JetBrains Mono', monospace; border-bottom:1px solid var(--line); letter-spacing:0.04em; text-transform:uppercase">Mängelerfassung</div>
-      <img src="public/screenshots/maengel.png" alt="Mängelerfassung-Modal" style="width:100%; display:block; min-height:220px; max-height:240px; object-fit:cover; object-position:top" onerror="this.style.display='none';this.parentNode.innerHTML+='<div style=\'padding:60px 20px; text-align:center; color:var(--t4); font-size:11px\'>Screenshot wird automatisch generiert oder manuell ergänzt</div>'">
+      <img src="public/screenshots/mängel.png" alt="Mängelerfassung-Modal" style="width:100%; display:block; min-height:220px; max-height:240px; object-fit:cover; object-position:top" onerror="this.style.display='none';this.parentNode.innerHTML+='<div style=\'padding:60px 20px; text-align:center; color:var(--t4); font-size:11px\'>Screenshot wird automatisch generiert oder manuell ergänzt</div>'">
       <div style="padding:8px 12px; font-size:11.5px; color:var(--t2); line-height:1.45">StVZO-Anlage-VIII-Katalog mit Schweregrad-Pills, Live-Validierung der "Bestanden"-Sperre.</div>
     </div>
     <div style="border:1px solid var(--line); border-radius:8px; overflow:hidden; background:rgba(11,16,32,0.7)">

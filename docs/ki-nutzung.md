@@ -148,7 +148,7 @@ keine Architekturentscheidung.
 > „Hier ist der aktuelle React-Hook `useDb.ts`. Stelle die Datenzugriffe so um,
 > dass sie nicht direkt auf eine lokale Datenbank gehen, sondern über
 > `src/db/apiClient.ts` die Express-Endpunkte `/api/halter`, `/api/fahrzeuge`,
-> `/api/termine` und `/api/maengel` verwenden. Behalte die bestehende Hook-API
+> `/api/termine` und `/api/mängel` verwenden. Behalte die bestehende Hook-API
 > für die Views bei und mappe camelCase im Frontend auf die API-Formate."
 
 **Validierungs-Schritt:**

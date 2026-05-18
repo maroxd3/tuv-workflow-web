@@ -32,5 +32,5 @@ Stand: 2026-05-17
 
 ## Domaene
 
-- Strassenverkehrs-Zulassungs-Ordnung (StVZO), insbesondere Paragraf 29.
+- Straßenverkehrs-Zulassungs-Ordnung (StVZO), insbesondere Paragraf 29.
 - VdTUEV-Merkblaetter und einschlaegige Pruefpraxis als fachlicher Kontext.

@@ -31,7 +31,7 @@ Lines        : 98.37% (182/185)
 | Datei | Schwerpunkt |
 |---|---|
 | `src/tests/utils/validators.test.js` | Kennzeichen, FIN, Baujahr, Kilometerstand, Telefon, E-Mail, HU-/Termin-Datum, Statuswechsel |
-| `src/tests/utils/mangel.test.js` | HM/GM-Erkennung und Maengelkatalog-Konsistenz |
+| `src/tests/utils/mangel.test.js` | HM/GM-Erkennung und Mängelkatalog-Konsistenz |
 | `src/tests/utils/date.test.js` | Datumsformatierung und lokale Datumskonvertierung |
 | `src/tests/components/buttons.test.jsx` | UI-Buttons, Varianten, Zustaende |
 | `src/tests/components/inputs.test.jsx` | Eingabekomponenten |
@@ -40,14 +40,14 @@ Lines        : 98.37% (182/185)
 
 ## 3. Was wird gut abgedeckt?
 
-- Eingabevalidierung fuer Fahrzeug- und Terminformulare
+- Eingabevalidierung für Fahrzeug- und Terminformulare
 - Aequivalenzklassen und Grenzwerte bei Kennzeichen, FIN, Baujahr und Kilometerstand
 - Workflow-Regel auf UI-/Hilfsfunktions-Ebene: HM/GM blockiert `Bestanden`
-- Maengelkatalog: Eintraege, eindeutige Codes, bekannte Kategorien
+- Mängelkatalog: Eintraege, eindeutige Codes, bekannte Kategorien
 - Wiederverwendbare UI-Komponenten
-- Hilfsfunktionen fuer Datum und Toasts
+- Hilfsfunktionen für Datum und Toasts
 
-## 4. MariaDB-spezifische Pruefung
+## 4. MariaDB-spezifische Prüfung
 
 Die aktive Laufzeitarchitektur ist:
 
@@ -55,7 +55,7 @@ Die aktive Laufzeitarchitektur ist:
 React Hook -> apiClient.ts -> Express API -> MariaDB
 ```
 
-Fuer diesen Pfad wurde ein Smoke-Test gegen die lokale MariaDB ausgefuehrt:
+Für diesen Pfad wurde ein Smoke-Test gegen die lokale MariaDB ausgefuehrt:
 
 ```powershell
 Invoke-RestMethod http://127.0.0.1:8787/api/health
@@ -71,7 +71,7 @@ Ergebnis:
 
 Alte Browserdatenbank- und Schema-Tests wurden entfernt, weil sie nicht mehr zur
 aktuellen MariaDB-Architektur gehoeren. Automatisierte
-Express/MariaDB-Integrationstests sind der naechste sinnvolle Schritt.
+Express/MariaDB-Integrationstests sind der nächste sinnvolle Schritt.
 
 ## 5. Coverage nach Bereichen
 
@@ -107,16 +107,16 @@ npm run lint
 ## 7. Was fehlt noch?
 
 - Vollstaendige automatisierte Integrationstests gegen eine echte MariaDB-Testdatenbank
-- API-Tests fuer alle Express-Endpunkte (`/api/halter`, `/api/fahrzeuge`, `/api/termine`, `/api/maengel`)
-- Fehlerpfad-Tests fuer MariaDB-Fehler: UNIQUE, FK, CHECK
-- Direkter Test fuer `PATCH /api/termine/:id/status` mit HM/GM in MariaDB
+- API-Tests für alle Express-Endpunkte (`/api/halter`, `/api/fahrzeuge`, `/api/termine`, `/api/mängel`)
+- Fehlerpfad-Tests für MariaDB-Fehler: UNIQUE, FK, CHECK
+- Direkter Test für `PATCH /api/termine/:id/status` mit HM/GM in MariaDB
 - Mehrbenutzer-/Parallelitaets-Tests
 - Automatisierte E2E-Tests im Browser
 
 ## 8. Bewertung
 
-Die Testabdeckung ist fuer Validatoren, Hilfsfunktionen und zentrale
-UI-Bausteine hoch. Fuer die MariaDB-Architektur ist der wichtigste naechste
+Die Testabdeckung ist für Validatoren, Hilfsfunktionen und zentrale
+UI-Bausteine hoch. Für die MariaDB-Architektur ist der wichtigste nächste
 Schritt, automatisierte Express/MariaDB-Integrationstests aufzubauen. Aktuell
-ist dieser Teil per Smoke-Test geprueft, aber noch nicht vollstaendig
+ist dieser Teil per Smoke-Test geprüft, aber noch nicht vollstaendig
 automatisiert.

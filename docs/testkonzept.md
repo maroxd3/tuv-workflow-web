@@ -10,11 +10,11 @@ Datenkonsistenz absichern.
 
 Schwerpunkte:
 
-- Validatoren fuer Kennzeichen, FIN, Baujahr und Kilometerstand
+- Validatoren für Kennzeichen, FIN, Baujahr und Kilometerstand
 - Komponenten- und Hook-Verhalten
 - Workflow-Regel WF-01
 - MariaDB-API-Start und Healthcheck
-- Build- und TypeScript-Pruefung
+- Build- und TypeScript-Prüfung
 
 ## 2. Testpyramide
 
@@ -44,13 +44,13 @@ Beispiele:
 
 - Baujahr an den Grenzen 1885 und 2100
 - Kilometerstand 0 und 3.000.000
-- Mindestlaengen fuer Pflichtfelder
+- Mindestlaengen für Pflichtfelder
 
 ### Entscheidungstabelle
 
 WF-01:
 
-| Maengel vorhanden | Blockierende Kategorie | Zielstatus | Erwartung |
+| Mängel vorhanden | Blockierende Kategorie | Zielstatus | Erwartung |
 |---|---|---|---|
 | nein | nein | Bestanden | erlaubt |
 | ja | LM/EM | Bestanden | erlaubt |
@@ -62,8 +62,8 @@ WF-01:
 Terminstatus:
 
 ```text
-Geplant -> In Pruefung -> Bestanden
-Geplant -> In Pruefung -> Nicht bestanden -> Nachpruefung
+Geplant -> In Prüfung -> Bestanden
+Geplant -> In Prüfung -> Nicht bestanden -> Nachprüfung
 ```
 
 ## 4. Automatisierte Befehle
@@ -84,7 +84,7 @@ Aktuell in dieser Arbeitskopie verifiziert:
 
 ## 5. API-Smoke-Test
 
-Voraussetzung: MariaDB und API laufen. Empfohlen ueber Docker Compose:
+Voraussetzung: MariaDB und API laufen. Empfohlen über Docker Compose:
 
 ```powershell
 docker compose up -d
@@ -112,18 +112,18 @@ Erwartung:
 |---|---|---|
 | Start | API und Frontend starten | App laedt ohne Endlos-Spinner |
 | Demo | Demo-Daten laden | Fahrzeuge und Termine erscheinen |
-| Fahrzeug | Fahrzeug anlegen, bearbeiten, loeschen | Aenderungen bleiben nach Reload sichtbar |
-| Termin | Termin anlegen und Status aendern | Tagesplan aktualisiert sich |
+| Fahrzeug | Fahrzeug anlegen, bearbeiten, löschen | Änderungen bleiben nach Reload sichtbar |
+| Termin | Termin anlegen und Status ändern | Tagesplan aktualisiert sich |
 | Mangel | HM/GM hinzufuegen | `Bestanden` wird verhindert |
 | Bericht | Bericht oeffnen und drucken | A4-Ansicht ist nutzbar |
-| Mobile | 360 px Viewport pruefen | Navigation und Modale bleiben bedienbar |
+| Mobile | 360 px Viewport prüfen | Navigation und Modale bleiben bedienbar |
 
 ## 7. Nicht automatisiert
 
 - echte Mehrbenutzer-Konflikte (Polling-Sync ist geplant, siehe Backlog US-16)
 - Lasttests mit vielen parallelen Clients
 - Restore-Test gegen ein echtes Backup (siehe `docs/backup.md` Punkt 5)
-- visuelle Regressionstests ueber alle Viewports
-- automatisierte WF-01-API-Tests gegen MariaDB (naechster Test-Schritt)
+- visuelle Regressionstests über alle Viewports
+- automatisierte WF-01-API-Tests gegen MariaDB (nächster Test-Schritt)
 
-Diese Punkte sind fuer den lokalen Prototyp dokumentierte Restrisiken.
+Diese Punkte sind für den lokalen Prototyp dokumentierte Restrisiken.

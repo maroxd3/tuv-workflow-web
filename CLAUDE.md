@@ -1,13 +1,13 @@
-# Hinweise fuer Claude in diesem Repo
+# Hinweise für Claude in diesem Repo
 
 Diese Datei wird bei jedem Session-Start automatisch in den Claude-Kontext
 geladen. Sie enthaelt das Wichtigste, damit man nach einer Pause sofort
 weitermachen kann.
 
-## 1. WICHTIG: Vor jeder Aenderung WORK_LOG.md lesen
+## 1. WICHTIG: Vor jeder Änderung WORK_LOG.md lesen
 
 Der **oberste Eintrag** in `WORK_LOG.md` beschreibt den letzten Stand, offene
-Punkte und die naechsten Schritte. Immer zuerst dort reinschauen, sonst riskiert
+Punkte und die nächsten Schritte. Immer zuerst dort reinschauen, sonst riskiert
 man, schon Erledigtes nochmal zu machen oder einen halben Branch zu verpassen.
 
 ```powershell
@@ -15,15 +15,15 @@ Get-Content WORK_LOG.md -TotalCount 80
 ```
 
 Nach jeder Arbeitssession (oder wenn Marwan sagt "save", "checkpoint",
-"morgen weiter", "hoere auf fuer heute"): einen **neuen Eintrag oben in
+"morgen weiter", "hoere auf für heute"): einen **neuen Eintrag oben in
 `WORK_LOG.md` einfuegen** mit dem unten beschriebenen Template.
 
 ## 2. Projekt-Kurzfassung
 
-- **Was:** Verwaltungssystem fuer TUEV-Pruefstellen (Termine, Fahrzeuge,
-  Maengel, Statistik, Berichte)
+- **Was:** Verwaltungssystem für TÜV-Prüfstellen (Termine, Fahrzeuge,
+  Mängel, Statistik, Berichte)
 - **Stack:** React 19 + Vite + TypeScript graduell, Express 5 API, MariaDB 11
-- **Produktmodell:** On-Premise pro Pruefstelle (kein Cloud-Multi-Tenant).
+- **Produktmodell:** On-Premise pro Prüfstelle (kein Cloud-Multi-Tenant).
   Jeder Kunde betreibt seinen eigenen Server-PC im LAN.
 - **Hochschul-Kontext:** Software-Projekt IIM-211-01, Dozentin Frau Fuchs
   (Datenbank-Spezialistin), Team Marwan + Oussama Hlayhel
@@ -35,8 +35,8 @@ Nach jeder Arbeitssession (oder wenn Marwan sagt "save", "checkpoint",
 ```text
 server/             Express-API + MariaDB-Pool (server/index.js, server/db.js)
 src/                Frontend
-  db/apiClient.ts   HTTP-Client fuer /api
-  hooks/useDb.ts    State-Hook ueber apiClient
+  db/apiClient.ts   HTTP-Client für /api
+  hooks/useDb.ts    State-Hook über apiClient
   hooks/useStoreCompat.ts  Adapter zwischen API-Form und Legacy-View-Form
   views/            Tagesplan, Fahrzeuge, Statistik, Berichte
   features/         Modale (Fahrzeug, Termin, Mangel)
@@ -61,11 +61,11 @@ docs/decisions/     ADRs (Architecture Decision Records)
 
 - **Frau Fuchs ist Datenbank-Spezialistin.** Sie bewertet primaer durch
   DB-Brille (3NF, FKs, Constraints, Trigger/Procedures). UI/Tests/CI sind ihr
-  zweitrangig. Default-Note ~3,0; fuer 1,x muss sie ueberrascht werden.
+  zweitrangig. Default-Note ~3,0; für 1,x muss sie überrascht werden.
 - **WF-01-Regel ("kein Bestanden bei HM/GM")** ist im UI und in der API
-  durchgesetzt, aber **NICHT** in MariaDB selbst. Naechster Schritt ist ein
+  durchgesetzt, aber **NICHT** in MariaDB selbst. Nächster Schritt ist ein
   Trigger oder eine Stored Procedure als 3. Defense-Layer.
-- **Server-Layer hat 0% Test-Coverage.** Frontend hat 95%+. API-Tests fuer
+- **Server-Layer hat 0% Test-Coverage.** Frontend hat 95%+. API-Tests für
   `PATCH /api/termine/:id/status` sind in ADR-003 explizit gefordert, aber
   noch nicht da.
 - **Tests:** 124 grun (Stand 17.05.2026). Nicht 133 (alte Zahl aus PGlite-Zeit).
@@ -75,16 +75,16 @@ docs/decisions/     ADRs (Architecture Decision Records)
 - master nicht direkt anfassen — Feature-Branch und Commit.
 - Keine destruktiven git-Operationen (`reset --hard`, `force push`, `clean -f`)
   ohne explizites OK von Marwan.
-- Keine neuen Abhaengigkeiten installieren ohne abzuklaeren — Repo soll schlank
+- Keine neuen Abhängigkeiten installieren ohne abzuklaeren — Repo soll schlank
   bleiben (Bachelor-Niveau-Overshoot vermeiden, kein Storybook, Playwright,
   Code-Splitting etc).
 - Keine PGlite-/Drizzle-Reste mehr einbauen. Das ist die alte Architektur,
   wurde am 15.-17.05.2026 entfernt.
 
-## 7. Quick-Commands fuer den Wiedereinstieg
+## 7. Quick-Commands für den Wiedereinstieg
 
 ```powershell
-# Repo-Stand pruefen
+# Repo-Stand prüfen
 cd C:\Users\Marwan\tuv-workflow-web
 git status
 git log --oneline -10
@@ -93,7 +93,7 @@ git branch --show-current
 # Letzten WORK_LOG-Eintrag lesen
 Get-Content WORK_LOG.md -TotalCount 80
 
-# Docker-Stack starten (siehe WORK_LOG fuer Test-Schritte)
+# Docker-Stack starten (siehe WORK_LOG für Test-Schritte)
 docker compose up -d
 docker compose logs -f api
 Invoke-RestMethod http://localhost:8787/api/health
@@ -103,7 +103,7 @@ npm test
 npm run typecheck
 ```
 
-## 8. Template fuer neue WORK_LOG-Eintraege
+## 8. Template für neue WORK_LOG-Eintraege
 
 Format ist bewusst kompakt. Pflichtfelder sind fett. Neueste Eintraege immer
 **oben**.
@@ -121,7 +121,7 @@ Format ist bewusst kompakt. Pflichtfelder sind fett. Neueste Eintraege immer
 - Tests: gruen / rot / nicht gelaufen
 - Was funktioniert / was hakt
 
-### **Naechste Schritte (Reihenfolge)**
+### **Nächste Schritte (Reihenfolge)**
 1. ...
 2. ...
 

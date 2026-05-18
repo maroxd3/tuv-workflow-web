@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="utf-8" />
-<title>So funktioniert die Pruefstelle - mit Bildern</title>
+<title>So funktioniert die Prüfstelle - mit Bildern</title>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <style>
   :root {
@@ -118,14 +118,14 @@
 <body>
 <div class="wrap">
 
-  <h1>So funktioniert deine Pruefstelle
+  <h1>So funktioniert deine Prüfstelle
     <span class="sub">Stell dir das System wie eine echte Werkstatt vor &mdash; mit drei Stationen und drei Waechtern.</span>
   </h1>
 
   <!-- === BIG PICTURE: WERKSTATT === -->
   <h2><span class="num">1</span>Die drei Stationen</h2>
   <p class="lead">
-    Jeder Klick im Pruefstellen-System geht den gleichen Weg: vom <b>Tablet des Pruefers</b> &rarr;
+    Jeder Klick im Prüfstellen-System geht den gleichen Weg: vom <b>Tablet des Prüfers</b> &rarr;
     zum <b>Empfangs-Mitarbeiter</b> &rarr; zum <b>Aktenschrank</b>. Wie in einer echten Werkstatt.
   </p>
 
@@ -134,11 +134,11 @@
     <div class="station tablet">
       <div class="emoji">📱</div>
       <h3>Das Tablet</h3>
-      <div class="who">Was der Pruefer in der Hand haelt</div>
+      <div class="who">Was der Prüfer in der Hand haelt</div>
       <div class="does">
-        Zeigt die Termine fuer heute, die Fahrzeuge, die Maengel. Hat Buttons wie "Bestanden", "Mangel hinzufuegen", "Speichern".
+        Zeigt die Termine für heute, die Fahrzeuge, die Mängel. Hat Buttons wie "Bestanden", "Mangel hinzufuegen", "Speichern".
       </div>
-      <div class="codename">Im Code heisst das: <b>Frontend (React)</b></div>
+      <div class="codename">Im Code heißt das: <b>Frontend (React)</b></div>
     </div>
 
     <div class="station empfang">
@@ -146,19 +146,19 @@
       <h3>Der Empfang</h3>
       <div class="who">Nimmt jede Anfrage entgegen, leitet sie weiter</div>
       <div class="does">
-        Wenn der Pruefer auf "Bestanden" tippt, ruft das Tablet beim Empfang an. Der Empfang prueft, ob die Anfrage Sinn macht, und gibt sie an den Aktenschrank weiter.
+        Wenn der Prüfer auf "Bestanden" tippt, ruft das Tablet beim Empfang an. Der Empfang prüft, ob die Anfrage Sinn macht, und gibt sie an den Aktenschrank weiter.
       </div>
-      <div class="codename">Im Code heisst das: <b>Express-API</b> (Container 1)</div>
+      <div class="codename">Im Code heißt das: <b>Express-API</b> (Container 1)</div>
     </div>
 
     <div class="station akten">
       <div class="emoji">🗄</div>
       <h3>Der Aktenschrank</h3>
-      <div class="who">Speichert ALLES, was die Pruefstelle weiss</div>
+      <div class="who">Speichert ALLES, was die Prüfstelle weiss</div>
       <div class="does">
-        Halter, Fahrzeuge, Termine, Maengel &mdash; alle Eintraege in sauberen Ordnern (Tabellen). Wer was wann gespeichert hat, wird mitgeschrieben.
+        Halter, Fahrzeuge, Termine, Mängel &mdash; alle Eintraege in sauberen Ordnern (Tabellen). Wer was wann gespeichert hat, wird mitgeschrieben.
       </div>
-      <div class="codename">Im Code heisst das: <b>MariaDB</b> (Container 2)</div>
+      <div class="codename">Im Code heißt das: <b>MariaDB</b> (Container 2)</div>
     </div>
   </div>
 
@@ -170,7 +170,7 @@
   <!-- === DIE 3 WAECHTER === -->
   <h2><span class="num">2</span>Die drei Waechter (gegen Schummel-Eintraege)</h2>
   <p class="lead">
-    Die <b>wichtigste Regel</b> in deiner Pruefstelle: <i>"Ein Termin darf NICHT auf 'Bestanden' gesetzt werden, wenn das Auto noch einen Hauptmangel oder gefaehrlichen Mangel hat."</i>
+    Die <b>wichtigste Regel</b> in deiner Prüfstelle: <i>"Ein Termin darf NICHT auf 'Bestanden' gesetzt werden, wenn das Auto noch einen Hauptmangel oder gefährlichen Mangel hat."</i>
     Damit das auf KEINEM Weg passieren kann, gibt es jetzt <b>drei Waechter</b> &mdash; einen an jeder Station.
   </p>
 
@@ -182,7 +182,7 @@
       <h3>Tablet-Waechter</h3>
       <div class="who">Schon im Tablet</div>
       <div class="does">
-        Wenn das Auto Hauptmaengel hat, ist der "Bestanden"-Button <b>ausgegraut</b> &mdash; der Pruefer kann ihn gar nicht erst druecken.
+        Wenn das Auto Hauptmängel hat, ist der "Bestanden"-Button <b>ausgegraut</b> &mdash; der Prüfer kann ihn gar nicht erst druecken.
       </div>
       <div class="codename">Im Code: <b>UI-Guard</b> in den Views</div>
     </div>
@@ -213,18 +213,18 @@
   <!-- === SCHUMMEL-SZENARIEN === -->
   <h2><span class="num">3</span>Drei Schummel-Versuche &mdash; alle scheitern</h2>
   <p class="lead">
-    Stell dir vor, jemand will einen Termin <b>faelschlich</b> auf "Bestanden" setzen, obwohl 5 Hauptmaengel drin sind. Was passiert?
+    Stell dir vor, jemand will einen Termin <b>faelschlich</b> auf "Bestanden" setzen, obwohl 5 Hauptmängel drin sind. Was passiert?
   </p>
 
   <div class="scams">
 
     <div class="scam">
-      <div class="h"><span class="e">🤥</span><span class="t">Schummel A &mdash; ueber das Tablet</span></div>
+      <div class="h"><span class="e">🤥</span><span class="t">Schummel A &mdash; über das Tablet</span></div>
       <div class="story">
-        Pruefer oeffnet das Tablet, sieht das Auto mit 5 Hauptmaengeln, will trotzdem auf "Bestanden" tippen.
+        Prüfer oeffnet das Tablet, sieht das Auto mit 5 Hauptmängeln, will trotzdem auf "Bestanden" tippen.
       </div>
       <div class="stopper">
-        Der Button ist <b>ausgegraut</b>. Pruefer kann nicht mal druecken.
+        Der Button ist <b>ausgegraut</b>. Prüfer kann nicht mal druecken.
         <div style="margin-top:6px; font-size:12px; color: var(--muted);">Gestoppt von: <b style="color: var(--tablet);">Waechter 1 (Tablet)</b></div>
       </div>
     </div>
@@ -235,7 +235,7 @@
         Jemand kennt die App und schickt direkt einen Trick-Befehl an den Empfang ("setz das einfach auf Bestanden, kein Zucken").
       </div>
       <div class="stopper">
-        Der Empfang prueft, sieht 5 Hauptmaengel, antwortet <b>"Verboten."</b>
+        Der Empfang prüft, sieht 5 Hauptmängel, antwortet <b>"Verboten."</b>
         <div style="margin-top:6px; font-size:12px; color: var(--muted);">Gestoppt von: <b style="color: var(--empfang);">Waechter 2 (Empfang)</b></div>
       </div>
     </div>
@@ -246,7 +246,7 @@
         Jemand schleicht sich am Empfang vorbei (Hacker, IT-Mensch, jemand mit Adminzugriff) und will <b>direkt</b> in den Aktenschrank greifen.
       </div>
       <div class="stopper">
-        Der Schrank selbst sagt <b>"STOPP &mdash; §29 StVZO."</b> und wirft die Akte zurueck.
+        Der Schrank selbst sagt <b>"STOPP &mdash; §29 StVZO."</b> und wirft die Akte zurück.
         <div style="margin-top:6px; font-size:12px; color: var(--muted);">Gestoppt von: <b style="color: var(--akten);">Waechter 3 (Akten)</b></div>
       </div>
     </div>
@@ -292,8 +292,8 @@
     <ul>
       <li><b>"Wir haben einen sauberen Aktenschrank"</b> (3NF-Schema mit FK-Constraints) &mdash; das erwartet sie.</li>
       <li><b>"Unsere Aktenschrank-Tueren haben Pruef-Mechanik"</b> (CHECK, UNIQUE, FOREIGN KEY) &mdash; gut.</li>
-      <li><b class="magic">"Unser Aktenschrank wirft falsche Akten von SELBST raus"</b> (BEFORE-UPDATE-Trigger mit SIGNAL SQLSTATE) &mdash; <span class="magic">DAS</span> ueberrascht sie. Das hebt deine Note Richtung 1,7.</li>
-      <li><b>"Wir schreiben jede Aenderung mit"</b> (Binary Logging fuer Point-in-Time-Recovery) &mdash; Betriebskonzept, nicht nur "wir machen Backup".</li>
+      <li><b class="magic">"Unser Aktenschrank wirft falsche Akten von SELBST raus"</b> (BEFORE-UPDATE-Trigger mit SIGNAL SQLSTATE) &mdash; <span class="magic">DAS</span> überrascht sie. Das hebt deine Note Richtung 1,7.</li>
+      <li><b>"Wir schreiben jede Änderung mit"</b> (Binary Logging für Point-in-Time-Recovery) &mdash; Betriebskonzept, nicht nur "wir machen Backup".</li>
       <li><b>"Selbst wenn jemand Empfang umgeht, halten Akten-Regeln die Daten sauber"</b> (Defense-in-Depth-Argument) &mdash; genau die Sprache, die sie hoeren will.</li>
     </ul>
   </div>
