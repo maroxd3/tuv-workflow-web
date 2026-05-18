@@ -307,7 +307,7 @@ const nodes = [
     role: 'React hook over apiClient.ts: loads halter/fahrzeuge/termine/mängel, exposes CRUD, applies optimistic updates, refresh()es from the Express API.',
     plain: 'The state manager for the app. It asks the API for data, updates the UI, and re-loads data after writes. There is no live push yet; the app pulls or refreshes.',
     path: 'src/hooks/useDb.ts:53',
-    notes: ['mount effect calls api.initDatabase() via /api/health', 'refresh() reloads halter + fahrzeuge + termine + per-termin mängel', 'writes call apiClient functions and then reconcile local state', 'multi-user: another browser sees writes after reload/refresh; live WebSocket push is not implemented'],
+    notes: ['mount effect calls api.initDatabase() via /api/health', 'refresh() reloads halter + fahrzeuge + termine + per-termin mängel', 'writes call apiClient functions and then reconcile local state', 'multi-user live-sync: 5-Sekunden-Polling (US-16, seit 2026-05-19) — pausiert wenn document.visibilityState !== visible'],
     tag: ['overview', 'data', 'tagesplan', 'fahrzeuge', 'maengel', 'all'],
     critical: true,
   }),
@@ -739,8 +739,8 @@ const KNOWN_BUGS = {
     { sev: 'med', t: 'Lines 256-265: updTr with status patch calls updTerminStatus and silently returns on failure (no toast, no throw). The App-layer guard is the only barrier the user sees.' },
   ],
   'useDb':          [
-    { sev: 'med', t: 'No live push yet. Other users see MariaDB changes after reload/refresh, but WebSocket/SSE realtime updates are not implemented.' },
     { sev: 'low', t: 'refresh() reloads halter + fahrzeuge + termine in parallel, then loads mängel with one extra request per termin. Fine for demo size, but a joined API endpoint would scale better.' },
+    { sev: 'low', t: 'Polling-Race: optimistische lokale Updates können theoretisch von einem Poll-Tick überschrieben werden, falls der Server-Write länger als 5 Sek dauert. Praktisch selten; bei Bedarf einen writeInFlight-Counter einbauen, der Polls während laufender API-Calls aussetzt.' },
   ],
   // 'types-propTypes': MangelShape.kat oneOf-Inkonsistenz wurde am 2026-05-19
   // mit der HU-Richtlinie-Migration aufgeloest. Eintrag entfernt.
@@ -1001,7 +1001,7 @@ function showDefault() {
     <h2>Notable findings from this map</h2>
     <div class="finding good"><strong>Single backend gateway</strong><br>Every persistent operation goes through <code>src/db/apiClient.ts</code> and the Express routes in <code>server/index.js</code>. SQL stays server-side in the API/MariaDB layer; database credentials never enter the frontend bundle.</div>
     <div class="finding good"><strong>WF-01 enforced thrice (Defense in Depth)</strong><br>UI layer refuses to set BESTANDEN when an unbehoben EM or GfM exists. API layer double-checks via MariaDB JOIN before the UPDATE. DB-Trigger <code>trg_termin_wf01_update</code> wirft <code>SIGNAL SQLSTATE '45000'</code>, falls jemand UI und API umgeht (direkter SQL-Zugriff). Alle drei Layer respektieren <code>mangel.behoben = TRUE</code>.</div>
-    <div class="finding warn"><strong>No live push yet</strong><br>Multiple clients share the same MariaDB data through the API. User B sees user A's changes after reload/refresh; WebSocket/SSE realtime updates are not implemented yet.</div>
+    <div class="finding good"><strong>Multi-User-Live-Sync</strong><br>Mehrere Clients teilen sich dieselben MariaDB-Daten über die API. Der React-Hook <code>useDb</code> pollt alle 5 Sekunden via <code>refresh()</code> — Empfang legt einen Termin an, das Prüfer-Tablet zeigt ihn nach spätestens 5 Sek. Polling pausiert, während der Tab im Hintergrund ist (Page-Visibility-API). WebSocket/SSE wäre die nächste Stufe, ist aber für 2–3 Arbeitsplätze nicht nötig.</div>
     <div class="finding warn"><strong>Compat layer is technical debt by design</strong><br><code>useStoreCompat.ts</code> exists to keep the existing views unchanged while <code>useDb.ts</code> talks to the Express/MariaDB API. The adapter translates field-by-field between the old view shape and the current API shape.</div>
     <div class="finding warn"><strong>Dead code still in tree</strong><br><code>src/components/Toast.jsx</code> is not imported by the app. App uses sonner via useToasts.</div>
     <div class="finding good"><strong>HU-Richtlinie-Konformitaet</strong><br>Frontend, API und DB nutzen dasselbe 4-Kategorien-Schema <code>OM/GM/EM/GfM</code> nach §29 StVZO Anlage VIII Nr. 3. Frueheres Drift zwischen PropTypes (<code>OM/GM/EM/HM/GF</code>) und DB (<code>OM/LM/EM/HM/GM</code>) ist mit der Migration am 2026-05-19 aufgeloest.</div>

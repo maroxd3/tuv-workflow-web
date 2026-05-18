@@ -84,7 +84,7 @@ export function useDb(): UseDbResult {
     (async () => {
       try {
         await api.initDatabase();
-        
+
         if (cancelled) return;
 
         if (cancelled) return;
@@ -101,6 +101,22 @@ export function useDb(): UseDbResult {
       cancelled = true;
     };
   }, [refresh]);
+
+  // ── Live-Sync via Polling (US-16) ───────────────────────────────────
+  // Empfang legt einen Termin an → Prüfer-Tablet sieht ihn spätestens
+  // nach POLL_INTERVAL_MS, ohne dass der Prüfer F5 drücken muss.
+  // Pausiert, während der Tab im Hintergrund ist (Page-Visibility-API),
+  // damit Akku und API-Last bei minimierten/inaktiven Tabs nicht
+  // unnötig belastet werden.
+  useEffect(() => {
+    if (!ready) return;
+    const POLL_INTERVAL_MS = 5000;
+    const id = window.setInterval(() => {
+      if (typeof document !== "undefined" && document.visibilityState !== "visible") return;
+      void refresh();
+    }, POLL_INTERVAL_MS);
+    return () => window.clearInterval(id);
+  }, [ready, refresh]);
 
   // ── Daten-Management (Sidebar-Buttons) ──
   const resetAllData = useCallback(async () => {
