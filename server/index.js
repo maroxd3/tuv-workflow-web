@@ -233,11 +233,13 @@ app.patch("/api/termine/:id/status", asyncRoute(async (req, res) => {
       `SELECT COUNT(*) AS count
        FROM mangel m
        JOIN mangel_kategorie mk ON mk.kategorie_code = m.kategorie_code
-       WHERE m.termin_id = ? AND mk.blockiert_bestanden = TRUE`,
+       WHERE m.termin_id = ?
+         AND mk.blockiert_bestanden = TRUE
+         AND m.behoben = FALSE`,
       [req.params.id],
     );
     if (Number(blocker?.count ?? 0) > 0) {
-      res.json({ ok: false, reason: "BESTANDEN nicht möglich bei Hauptmangel oder gefährlichem Mangel (§29 StVZO)" });
+      res.json({ ok: false, reason: "BESTANDEN nicht möglich bei erheblichem oder gefährlichem Mangel (§29 StVZO)" });
       return;
     }
   }
@@ -273,8 +275,9 @@ app.post("/api/maengel", asyncRoute(async (req, res) => {
   );
 
   let terminDemoted = false;
+  const istBehoben = Boolean(req.body.behoben);
   const kat = await one("SELECT blockiert_bestanden FROM mangel_kategorie WHERE kategorie_code = ?", [req.body.kategorieCode]);
-  if (bool(kat?.blockiert_bestanden)) {
+  if (!istBehoben && bool(kat?.blockiert_bestanden)) {
     const t = await one("SELECT status_code FROM termin WHERE termin_id = ?", [req.body.terminId]);
     if (t?.status_code === "Bestanden") {
       await db().query("UPDATE termin SET status_code = 'Nicht bestanden' WHERE termin_id = ?", [req.body.terminId]);
@@ -372,18 +375,18 @@ async function seedFullDemoData() {
     `INSERT INTO mangel (mangel_id, termin_id, code_stvzo, beschreibung, kategorie_code, behoben)
      VALUES (?, ?, ?, ?, ?, ?)`,
     [
-      [randomUUID(), terminIds[0], "2.5.1", "Bremsflüssigkeit: Wasseranteil zu hoch (> 3,5%)", "LM", false],
-      [randomUUID(), terminIds[2], "2.1.1", "Betriebsbremse: Ungleichmäßige Bremswirkung", "HM", false],
-      [randomUUID(), terminIds[2], "4.1.1", "Profiltiefe: Profiltiefe unter 1,6 mm", "HM", false],
-      [randomUUID(), terminIds[2], "3.3.1", "Bremslicht: Bremslicht links defekt", "HM", false],
-      [randomUUID(), terminIds[2], "2.3.1", "Bremsscheibe: Bremsscheibe stark verschlissen", "HM", false],
-      [randomUUID(), terminIds[2], "5.6.2", "Kennzeichen: Hinteres Kennzeichen unleserlich", "HM", false],
+      [randomUUID(), terminIds[0], "2.5.1", "Bremsflüssigkeit: Wasseranteil zu hoch (> 3,5%)", "GM", false],
+      [randomUUID(), terminIds[2], "2.1.1", "Betriebsbremse: Ungleichmäßige Bremswirkung", "EM", false],
+      [randomUUID(), terminIds[2], "4.1.1", "Profiltiefe: Profiltiefe unter 1,6 mm", "EM", false],
+      [randomUUID(), terminIds[2], "3.3.1", "Bremslicht: Bremslicht links defekt", "EM", false],
+      [randomUUID(), terminIds[2], "2.3.1", "Bremsscheibe: Bremsscheibe stark verschlissen", "EM", false],
+      [randomUUID(), terminIds[2], "5.6.2", "Kennzeichen: Hinteres Kennzeichen unleserlich", "EM", false],
       [randomUUID(), terminIds[9], "8.1.1", "Stoßdämpfer: Stoßdämpfer vorne defekt", "EM", false],
       [randomUUID(), terminIds[9], "4.1.2", "Profiltiefe: 1,6-3 mm (Empfehlung: wechseln)", "EM", false],
       [randomUUID(), terminIds[9], "3.5.3", "Blinker: Fahrtrichtungsanzeiger hinten links defekt", "EM", false],
       [randomUUID(), terminIds[10], "5.2.1", "Karosserie: Scharfe Kanten durch Unfallschaden", "EM", true],
-      [randomUUID(), terminIds[12], "6.1.1", "Abgasanlage: Undichtigkeit Abgasanlage", "HM", false],
-      [randomUUID(), terminIds[12], "2.6.1", "Feststellbremse: Feststellbremse hält nicht ausreichend", "HM", false],
+      [randomUUID(), terminIds[12], "5.3.1", "Motorhaube: Motorhaube öffnet sich während Fahrt", "GfM", false],
+      [randomUUID(), terminIds[12], "2.6.1", "Feststellbremse: Feststellbremse hält nicht ausreichend", "EM", false],
     ],
   );
 
@@ -394,6 +397,9 @@ app.post("/api/admin/demo", asyncRoute(async (_req, res) => {
   res.json(await seedFullDemoData());
 }));
 app.use((err, _req, res, _next) => {
+  if (err && err.sqlState === "45000") {
+    return res.status(422).json({ ok: false, reason: err.text || err.message });
+  }
   console.error(err);
   res.status(500).json({ error: err.message || "Server error" });
 });
