@@ -78,7 +78,22 @@ Daten dauerhaft im Browser. Die Express-API:
 
 ## 7. Betrieb
 
-Lokaler Betrieb:
+### Zielmodell: On-Premise pro Pruefstelle
+
+Jede Pruefstelle betreibt einen eigenen Server-PC mit Docker Compose. MariaDB
+und die Express-API laufen lokal; Mitarbeiter verbinden sich vom Empfangs-,
+Pruefer- oder Chef-Geraet ueber das interne Netzwerk.
+
+### Empfohlener Start (Docker Compose)
+
+```powershell
+copy .env.example .env
+docker compose up -d
+npm install
+npm run dev
+```
+
+### Alternativer Start (manuelles MariaDB)
 
 ```powershell
 npm run api
@@ -100,14 +115,17 @@ Die API laeuft standardmaessig auf Port `8787`, das Frontend auf Vite-Port
 
 ## 9. Offene Erweiterungen
 
-- Authentifizierung und Benutzerrollen
-- produktives Backup-/Restore-Konzept
+- Authentifizierung und Benutzerrollen (Phase 2)
+- Backup-/Restore-Konzept teilweise umgesetzt (siehe `docs/backup.md`); Tier-2-
+  und Tier-3-Skripte stehen aus
 - Migrationsversionierung fuer Schema-Aenderungen
-- API-Tests gegen eine isolierte Testdatenbank
-- Deployment-Konzept fuer API plus MariaDB
+- API-Tests gegen eine isolierte Testdatenbank (insbesondere WF-01-Endpunkt)
+- Polling- oder Server-Sent-Events-Sync zwischen mehreren Clients in derselben
+  Pruefstelle (aktuell nur Refresh nach eigenen Schreiboperationen)
 
 ## 10. Aenderungshistorie
 
 | Version | Datum | Aenderung |
 |---|---|---|
 | 3.0 | 2026-05-17 | Dokumentation auf MariaDB/Express umgestellt |
+| 3.1 | 2026-05-17 | On-Premise-Produktmodell, Docker-Compose-Betrieb und Backup-Roadmap ergaenzt |

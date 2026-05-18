@@ -17,13 +17,57 @@ Browser
 Der Browser spricht niemals direkt mit MariaDB. Dadurch bleiben Datenbankhost,
 Benutzer und Passwort im Backend.
 
-## 2. Voraussetzungen
+## 2. Setup-Variante waehlen
+
+Es gibt zwei Wege MariaDB bereitzustellen:
+
+| Variante | Vorteile | Wann nutzen? |
+|---|---|---|
+| **A — Docker Compose** | 1 Befehl, Binlog-Backup vorkonfiguriert, identisch in Dev/Prod | Standard, empfohlen |
+| **B — Manuelles MariaDB** | Kein Docker noetig | Wenn Docker nicht installierbar ist |
+
+### Variante A — Docker Compose (empfohlen)
+
+#### Voraussetzungen
+
+- Docker Desktop (Windows/Mac) oder Docker Engine (Linux)
+- Node.js v18+ fuer das Vite-Frontend
+
+#### Start
+
+```powershell
+copy .env.example .env
+docker compose up -d
+```
+
+Damit laufen MariaDB (Port 3306) und Express-API (Port 8787). Die API legt
+Datenbank, Tabellen und Stammdaten beim ersten Start automatisch an. Binary
+Logging ist aktiviert (siehe [backup.md](backup.md)).
+
+Pruefen:
+
+```powershell
+docker compose ps
+docker compose logs -f api
+Invoke-RestMethod http://localhost:8787/api/health
+```
+
+Stoppen:
+
+```powershell
+docker compose down            # Container weg, Daten bleiben im Volume
+docker compose down -v         # ACHTUNG: loescht auch das Daten-Volume
+```
+
+### Variante B — Manuelles MariaDB
+
+#### Voraussetzungen
 
 - Node.js und npm
-- MariaDB Server
+- MariaDB Server lokal installiert
 - Projektabhaengigkeiten aus `package-lock.json`
 
-## 3. Datenbank und Benutzer anlegen
+#### Datenbank und Benutzer anlegen
 
 In MariaDB als Admin ausfuehren:
 
@@ -131,7 +175,7 @@ angelegt. Fachliche CRUD- und Demo-Endpunkte liegen in `server/index.js`.
 
 ## 9. Deployment-Hinweis
 
-Firebase Hosting kann das statische Frontend ausliefern. Fuer gemeinsame Daten
-braucht es zusaetzlich eine erreichbare Express-API und eine MariaDB-Datenbank.
-Mehrere Benutzer sehen denselben Datenstand nur, wenn sie dieselbe API und
-dieselbe MariaDB verwenden.
+Die Anwendung wird **On-Premise pro Pruefstelle** ausgeliefert. Jeder Kunde
+betreibt einen eigenen Server-PC mit Docker Compose im lokalen Netzwerk.
+Mehrere Mitarbeiter-Geraete im LAN sehen denselben Datenstand, weil sie alle
+dieselbe Server-Instanz nutzen. Backup-Konzept: [backup.md](backup.md).

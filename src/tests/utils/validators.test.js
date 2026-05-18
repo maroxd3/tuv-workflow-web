@@ -350,34 +350,39 @@ describe("validateFahrzeug — Integration aller Einzel-Validatoren", () => {
   });
 });
 
-describe("validateStatusWechsel — fängt 'Bestanden trotz Hauptmangel'", () => {
+describe("validateStatusWechsel — blockiert Bestanden bei blockierenden Mängeln", () => {
   it("erlaubt Bestanden ohne Mängel", () => {
     expect(validateStatusWechsel(STATUS.BESTANDEN, [])).toBeNull();
   });
 
-  it("erlaubt Bestanden bei nur geringen / erheblichen Mängeln", () => {
-    expect(validateStatusWechsel(STATUS.BESTANDEN, [{ kat: "LM" }])).toBeNull();
-    expect(validateStatusWechsel(STATUS.BESTANDEN, [{ kat: "EM" }])).toBeNull();
+  it("erlaubt Bestanden bei nur geringen Mängeln (GM)", () => {
+    expect(validateStatusWechsel(STATUS.BESTANDEN, [{ kat: "OM" }])).toBeNull();
+    expect(validateStatusWechsel(STATUS.BESTANDEN, [{ kat: "GM" }])).toBeNull();
   });
 
-  it("blockiert Bestanden bei Hauptmangel (HM)", () => {
-    expect(validateStatusWechsel(STATUS.BESTANDEN, [{ kat: "HM" }]))
-      .toMatch(/Hauptmangel/);
+  it("blockiert Bestanden bei erheblichem Mangel (EM)", () => {
+    expect(validateStatusWechsel(STATUS.BESTANDEN, [{ kat: "EM" }]))
+      .toMatch(/erheblicher|gefährlicher/);
   });
 
-  it("blockiert Bestanden bei gefährlichem Mangel (GM-Key)", () => {
-    expect(validateStatusWechsel(STATUS.BESTANDEN, [{ kat: "GM" }]))
-      .toMatch(/Hauptmangel|gefährlicher/);
+  it("blockiert Bestanden bei gefährlichem Mangel (GfM)", () => {
+    expect(validateStatusWechsel(STATUS.BESTANDEN, [{ kat: "GfM" }]))
+      .toMatch(/gefährlicher/);
   });
 
-  it("blockiert auch bei gemischten Mängeln (mindestens ein HM reicht)", () => {
-    const maengel = [{ kat: "LM" }, { kat: "EM" }, { kat: "HM" }];
+  it("blockiert auch bei gemischten Mängeln (ein EM oder GfM reicht)", () => {
+    const maengel = [{ kat: "OM" }, { kat: "GM" }, { kat: "EM" }];
     expect(validateStatusWechsel(STATUS.BESTANDEN, maengel)).not.toBeNull();
   });
 
+  it("ignoriert behoben=true Mängel", () => {
+    expect(validateStatusWechsel(STATUS.BESTANDEN, [{ kat: "EM", behoben: true }])).toBeNull();
+    expect(validateStatusWechsel(STATUS.BESTANDEN, [{ kat: "GfM", behoben: true }])).toBeNull();
+  });
+
   it("greift nicht bei anderen Zielstatus", () => {
-    expect(validateStatusWechsel(STATUS.NICHT_BESTANDEN, [{ kat: "HM" }])).toBeNull();
-    expect(validateStatusWechsel(STATUS.NACHPRUEFUNG, [{ kat: "HM" }])).toBeNull();
+    expect(validateStatusWechsel(STATUS.NICHT_BESTANDEN, [{ kat: "EM" }])).toBeNull();
+    expect(validateStatusWechsel(STATUS.NACHPRUEFUNG, [{ kat: "EM" }])).toBeNull();
     expect(validateStatusWechsel(STATUS.GEPLANT, [])).toBeNull();
   });
 });

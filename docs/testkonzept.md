@@ -84,7 +84,15 @@ Aktuell in dieser Arbeitskopie verifiziert:
 
 ## 5. API-Smoke-Test
 
-Voraussetzung: MariaDB laeuft und `.env` ist gesetzt.
+Voraussetzung: MariaDB und API laufen. Empfohlen ueber Docker Compose:
+
+```powershell
+docker compose up -d
+Invoke-RestMethod http://localhost:8787/api/health
+Invoke-RestMethod http://localhost:8787/api/fahrzeuge
+```
+
+Alternativ manuell mit lokalem MariaDB:
 
 ```powershell
 npm run api
@@ -112,9 +120,10 @@ Erwartung:
 
 ## 7. Nicht automatisiert
 
-- echte Mehrbenutzer-Konflikte
+- echte Mehrbenutzer-Konflikte (Polling-Sync ist geplant, siehe Backlog US-16)
 - Lasttests mit vielen parallelen Clients
-- produktive Backup-/Restore-Prozesse
+- Restore-Test gegen ein echtes Backup (siehe `docs/backup.md` Punkt 5)
 - visuelle Regressionstests ueber alle Viewports
+- automatisierte WF-01-API-Tests gegen MariaDB (naechster Test-Schritt)
 
 Diese Punkte sind fuer den lokalen Prototyp dokumentierte Restrisiken.
