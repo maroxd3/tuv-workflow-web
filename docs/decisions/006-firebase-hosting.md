@@ -1,8 +1,8 @@
-# 006 - Firebase Hosting nur fuer statische Dateien
+# 006 - Firebase Hosting nur für statische Dateien
 
 Status: accepted  
 Datum: 2026-05-13  
-Aktualisiert: 2026-05-17 fuer MariaDB-Backend
+Aktualisiert: 2026-05-17 für MariaDB-Backend
 
 ## Kontext
 
@@ -11,18 +11,18 @@ nicht in Firebase, sondern in MariaDB hinter einer Express-API.
 
 ## Entscheidung
 
-Firebase Hosting darf fuer statische Frontend-Dateien genutzt werden. Die
+Firebase Hosting darf für statische Frontend-Dateien genutzt werden. Die
 Datenhaltung liegt in MariaDB hinter der Express-API.
 
-## Begruendung
+## Begründung
 
 - `firebase.json` und Hosting-Workflow existieren bereits.
 - Hosting liefert nur HTML, CSS und JavaScript aus.
-- MariaDB-Zugriffe laufen ueber die separat betriebene API.
+- MariaDB-Zugriffe laufen über die separat betriebene API.
 - HTTPS und einfache statische Deployments bleiben nutzbar.
 
 ## Konsequenzen
 
-- Fuer Produktion reicht Hosting allein nicht aus; API und MariaDB muessen
+- Für Produktion reicht Hosting allein nicht aus; API und MariaDB muessen
   zusaetzlich betrieben werden.
 - `VITE_API_BASE_URL` muss zur erreichbaren API passen.

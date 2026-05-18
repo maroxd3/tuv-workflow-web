@@ -178,7 +178,7 @@ Die Kardinalitäten stehen direkt an den Verbindungslinien (`1`, `0..1` bzw.
 | **PRUEFER** | Sachverständiger Prüfingenieur, der den Termin durchführt |
 | **PRUEFART** | Klassifikation der Prüfung (HU, AU, HU+AU, Nachprüfung, ...) |
 | **STATUS** | Zustand eines Termins im Workflow |
-| **MANGEL_KATEGORIE** | Einstufung eines Mangels (OM, LM, EM, HM, GM) inklusive Wirkung auf das Prüfergebnis |
+| **MANGEL_KATEGORIE** | Einstufung eines Mangels (OM, GM, EM, GfM) inklusive Wirkung auf das Prüfergebnis |
 
 ### 1.3 Beziehungen und Kardinalitäten
 
@@ -359,12 +359,12 @@ CREATE TABLE fahrzeug (
     CHECK (kilometerstand IS NULL OR (kilometerstand BETWEEN 0 AND 3000000))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE pruefart (
+CREATE TABLE prüfart (
   prueft_code VARCHAR(40) PRIMARY KEY,
   bezeichnung VARCHAR(120) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE pruefer (
+CREATE TABLE prüfer (
   pruefer_kuerzel VARCHAR(20) PRIMARY KEY,
   name            VARCHAR(120) NOT NULL,
   qualifikation   VARCHAR(120)
@@ -393,10 +393,10 @@ CREATE TABLE termin (
     FOREIGN KEY (fahrzeug_id) REFERENCES fahrzeug(fahrzeug_id)
     ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT termin_pruefart_fk
-    FOREIGN KEY (prueft_code) REFERENCES pruefart(prueft_code)
+    FOREIGN KEY (prueft_code) REFERENCES prüfart(prueft_code)
     ON DELETE RESTRICT ON UPDATE CASCADE,
   CONSTRAINT termin_pruefer_fk
-    FOREIGN KEY (pruefer_kuerzel) REFERENCES pruefer(pruefer_kuerzel)
+    FOREIGN KEY (pruefer_kuerzel) REFERENCES prüfer(pruefer_kuerzel)
     ON DELETE SET NULL ON UPDATE CASCADE,
   CONSTRAINT termin_status_fk
     FOREIGN KEY (status_code) REFERENCES status(status_code)

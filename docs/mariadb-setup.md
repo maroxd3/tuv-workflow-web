@@ -24,14 +24,14 @@ Es gibt zwei Wege MariaDB bereitzustellen:
 | Variante | Vorteile | Wann nutzen? |
 |---|---|---|
 | **A — Docker Compose** | 1 Befehl, Binlog-Backup vorkonfiguriert, identisch in Dev/Prod | Standard, empfohlen |
-| **B — Manuelles MariaDB** | Kein Docker noetig | Wenn Docker nicht installierbar ist |
+| **B — Manuelles MariaDB** | Kein Docker nötig | Wenn Docker nicht installierbar ist |
 
 ### Variante A — Docker Compose (empfohlen)
 
 #### Voraussetzungen
 
 - Docker Desktop (Windows/Mac) oder Docker Engine (Linux)
-- Node.js v18+ fuer das Vite-Frontend
+- Node.js v18+ für das Vite-Frontend
 
 #### Start
 
@@ -44,7 +44,7 @@ Damit laufen MariaDB (Port 3306) und Express-API (Port 8787). Die API legt
 Datenbank, Tabellen und Stammdaten beim ersten Start automatisch an. Binary
 Logging ist aktiviert (siehe [backup.md](backup.md)).
 
-Pruefen:
+Prüfen:
 
 ```powershell
 docker compose ps
@@ -65,7 +65,7 @@ docker compose down -v         # ACHTUNG: loescht auch das Daten-Volume
 
 - Node.js und npm
 - MariaDB Server lokal installiert
-- Projektabhaengigkeiten aus `package-lock.json`
+- Projektabhängigkeiten aus `package-lock.json`
 
 #### Datenbank und Benutzer anlegen
 
@@ -136,10 +136,10 @@ ok        : True
 halter    : 8
 fahrzeuge : 8
 termine   : 13
-maengel   : 12
+mängel   : 12
 ```
 
-## 7. Pruefen
+## 7. Prüfen
 
 API erreichbar:
 
@@ -166,8 +166,8 @@ SELECT COUNT(*) FROM mangel;
 - `termin`
 - `mangel`
 - `status`
-- `pruefart`
-- `pruefer`
+- `prüfart`
+- `prüfer`
 - `mangel_kategorie`
 
 Die Tabellen und Stammdaten werden beim API-Start durch `server/db.js`
@@ -175,7 +175,7 @@ angelegt. Fachliche CRUD- und Demo-Endpunkte liegen in `server/index.js`.
 
 ## 9. Deployment-Hinweis
 
-Die Anwendung wird **On-Premise pro Pruefstelle** ausgeliefert. Jeder Kunde
+Die Anwendung wird **On-Premise pro Prüfstelle** ausgeliefert. Jeder Kunde
 betreibt einen eigenen Server-PC mit Docker Compose im lokalen Netzwerk.
 Mehrere Mitarbeiter-Geraete im LAN sehen denselben Datenstand, weil sie alle
 dieselbe Server-Instanz nutzen. Backup-Konzept: [backup.md](backup.md).

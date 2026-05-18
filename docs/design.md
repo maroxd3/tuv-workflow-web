@@ -30,10 +30,10 @@ denselben Datenstand nutzen.
 
 | Schicht | Dateien | Verantwortung |
 |---|---|---|
-| Praesentation | `src/views`, `src/features`, `src/components` | UI, Formulare, Tabellen, Modale, Charts |
+| Präsentation | `src/views`, `src/features`, `src/components` | UI, Formulare, Tabellen, Modale, Charts |
 | State/API-Client | `src/hooks/useDb.ts`, `src/hooks/useStoreCompat.ts`, `src/db/apiClient.ts` | React-State, optimistische Updates, HTTP-Aufrufe |
 | Backend-API | `server/index.js` | REST-Endpunkte, Mapping camelCase/snake_case, Workflow-Regeln |
-| Datenbank | `server/db.js`, MariaDB | Tabellen, Fremdschluessel, Constraints, Stammdaten |
+| Datenbank | `server/db.js`, MariaDB | Tabellen, Fremdschlüssel, Constraints, Stammdaten |
 
 ## 3. Datenfluss
 
@@ -67,14 +67,14 @@ Die API liegt unter `/api`:
 
 | Methode | Pfad | Zweck |
 |---|---|---|
-| GET | `/api/health` | API-/DB-Verfuegbarkeit pruefen |
+| GET | `/api/health` | API-/DB-Verfuegbarkeit prüfen |
 | GET/POST/PATCH/DELETE | `/api/halter` | Halter verwalten |
 | GET/POST/PATCH/DELETE | `/api/fahrzeuge` | Fahrzeuge verwalten |
 | GET/POST/PATCH/DELETE | `/api/termine` | Termine verwalten |
-| PATCH | `/api/termine/:id/status` | Status mit WF-01-Pruefung setzen |
-| GET | `/api/termine/:id/maengel` | Maengel eines Termins laden |
-| POST/DELETE | `/api/maengel` | Maengel anlegen und loeschen |
-| POST | `/api/admin/reset` | Bewegungsdaten loeschen |
+| PATCH | `/api/termine/:id/status` | Status mit WF-01-Prüfung setzen |
+| GET | `/api/termine/:id/mängel` | Mängel eines Termins laden |
+| POST/DELETE | `/api/mängel` | Mängel anlegen und löschen |
+| POST | `/api/admin/reset` | Bewegungsdaten löschen |
 | POST | `/api/admin/demo` | Demo-Daten neu laden |
 
 `vite.config.js` proxyt lokale Frontend-Aufrufe von `/api` an
@@ -89,12 +89,12 @@ MariaDB speichert acht Tabellen:
 - `termin`
 - `mangel`
 - `status`
-- `pruefart`
-- `pruefer`
+- `prüfart`
+- `prüfer`
 - `mangel_kategorie`
 
-Die Tabellen sind in 3NF modelliert. Maengel sind nicht als Array im Termin
-eingebettet, sondern eigene Zeilen mit Fremdschluessel auf `termin`.
+Die Tabellen sind in 3NF modelliert. Mängel sind nicht als Array im Termin
+eingebettet, sondern eigene Zeilen mit Fremdschlüssel auf `termin`.
 
 Wichtige Constraints:
 
@@ -104,7 +104,7 @@ Wichtige Constraints:
 - eindeutiges Kennzeichen
 - eindeutige FIN, sofern gesetzt
 - CHECK auf Baujahr und Kilometerstand
-- Stammdaten-FKs fuer Status, Pruefart, Pruefer und Mangelkategorie
+- Stammdaten-FKs für Status, Prüfart, Prüfer und Mangelkategorie
 
 ## 6. Workflow-Regel WF-01
 
@@ -112,33 +112,33 @@ Ein Termin darf nicht auf `Bestanden` gesetzt werden, wenn ein blockierender
 Mangel vorhanden ist. Die Regel wird doppelt abgesichert:
 
 1. UI: Status-Controls verhindern die Auswahl, wenn ein HM/GM bekannt ist.
-2. API: `/api/termine/:id/status` prueft in MariaDB per JOIN gegen
+2. API: `/api/termine/:id/status` prüft in MariaDB per JOIN gegen
    `mangel_kategorie.blockiert_bestanden`.
 
 Wenn ein blockierender Mangel zu einem bereits bestandenen Termin angelegt wird,
-setzt die API den Termin automatisch auf `Nicht bestanden` zurueck.
+setzt die API den Termin automatisch auf `Nicht bestanden` zurück.
 
 ## 7. Deployment
 
-### Zielmodell: On-Premise pro Pruefstelle
+### Zielmodell: On-Premise pro Prüfstelle
 
-Jede Pruefstelle betreibt einen eigenen Server-PC im internen Netzwerk.
-Mitarbeiter (Empfang, Pruefer, Chef) verbinden sich vom jeweiligen Geraet
-ueber das LAN/WLAN. Kundendaten verlassen die Werkstatt nicht.
+Jede Prüfstelle betreibt einen eigenen Server-PC im internen Netzwerk.
+Mitarbeiter (Empfang, Prüfer, Chef) verbinden sich vom jeweiligen Geraet
+über das LAN/WLAN. Kundendaten verlassen die Werkstatt nicht.
 
 ```mermaid
 flowchart TB
-  subgraph Werkstatt[Pruefstelle - lokales Netzwerk]
+  subgraph Werkstatt[Prüfstelle - lokales Netzwerk]
     server[Server-PC<br/>docker compose up<br/>MariaDB + Express-API]
     empfang[Empfang<br/>Tablet/Laptop]
-    pruefer1[Pruefer 1<br/>Laptop]
-    pruefer2[Pruefer 2<br/>Laptop]
+    prüfer1[Prüfer 1<br/>Laptop]
+    prüfer2[Prüfer 2<br/>Laptop]
     chef[Chef<br/>Desktop]
   end
 
   empfang -->|HTTP /api| server
-  pruefer1 -->|HTTP /api| server
-  pruefer2 -->|HTTP /api| server
+  prüfer1 -->|HTTP /api| server
+  prüfer2 -->|HTTP /api| server
   chef -->|HTTP /api| server
 ```
 
@@ -154,12 +154,12 @@ flowchart TB
 
 - `docker-compose.yml`
 - `.env`-Vorlage mit Kunden-spezifischen Werten
-- `docs/backup.md` und Setup-Anleitung fuer Hetzner Storage Box
-- Server-PC mit Docker und einer dedizierten zweiten Festplatte fuer Tier-2-Backups
+- `docs/backup.md` und Setup-Anleitung für Hetzner Storage Box
+- Server-PC mit Docker und einer dedizierten zweiten Festplatte für Tier-2-Backups
 
 ### Sicherheitsgrenzen
 
 - Keine Authentifizierung im Prototyp - das LAN gilt als vertrauenswuerdige Zone.
 - Auth, HTTPS und Rollen kommen in einer Phase 2 (siehe Backlog US-12).
-- MariaDB-Zugangsdaten liegen ausschliesslich in `.env` auf dem Server.
+- MariaDB-Zugangsdaten liegen ausschließlich in `.env` auf dem Server.
 - Frontend-Bundle enthaelt keine Datenbank-Credentials.

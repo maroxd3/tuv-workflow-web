@@ -8,10 +8,10 @@ Aktuelle Architektur: MariaDB + Express API + React/Vite.
 Eine Story gilt als erledigt, wenn:
 
 - relevante UI-Flows funktionieren,
-- Daten ueber die Express-API in MariaDB gespeichert werden,
+- Daten über die Express-API in MariaDB gespeichert werden,
 - fachliche Regeln eingehalten werden,
 - `npm run build` und `npm run typecheck` erfolgreich sind,
-- Dokumentation bei Architektur- oder Datenmodell-Aenderungen aktualisiert ist.
+- Dokumentation bei Architektur- oder Datenmodell-Änderungen aktualisiert ist.
 
 ## 2. Aktueller Stand
 
@@ -19,7 +19,7 @@ Eine Story gilt als erledigt, wenn:
 |---|---|
 | Fahrzeug-CRUD | erledigt |
 | Terminplanung | erledigt |
-| Maengelerfassung | erledigt |
+| Mängelerfassung | erledigt |
 | Statistik | erledigt |
 | Berichte/PDF | erledigt |
 | MariaDB-Backend | erledigt |
@@ -31,11 +31,11 @@ Eine Story gilt als erledigt, wenn:
 |---|---|---|---|
 | US-01 | Als Mitarbeiter moechte ich Fahrzeuge erfassen und bearbeiten | Must | done |
 | US-02 | Als Mitarbeiter moechte ich Halter verwalten | Must | done |
-| US-03 | Als Pruefer moechte ich Termine planen | Must | done |
-| US-04 | Als Pruefer moechte ich Maengel dokumentieren | Must | done |
-| US-05 | Als Pruefer moechte ich `Bestanden` bei HM/GM verhindern | Must | done |
+| US-03 | Als Prüfer moechte ich Termine planen | Must | done |
+| US-04 | Als Prüfer moechte ich Mängel dokumentieren | Must | done |
+| US-05 | Als Prüfer moechte ich `Bestanden` bei HM/GM verhindern | Must | done |
 | US-06 | Als Leitung moechte ich Statistiken sehen | Should | done |
-| US-07 | Als Mitarbeiter moechte ich Pruefberichte drucken | Should | done |
+| US-07 | Als Mitarbeiter moechte ich Prüfberichte drucken | Should | done |
 | US-08 | Als Team moechten wir zentrale MariaDB-Persistenz | Must | done |
 | US-09 | Als Team moechten wir API-Healthchecks | Should | done |
 | US-10 | Als Betreiber moechte ich Zugangsdaten per `.env` setzen | Must | done |
@@ -43,8 +43,8 @@ Eine Story gilt als erledigt, wenn:
 | US-12 | Als Betreiber moechte ich Authentifizierung und Rollen | Could | open |
 | US-13 | Als Team moechten wir API-Integrationstests mit Testdatenbank | Should | open |
 | US-14 | Als Team moechten wir versionierte DB-Migrationen | Should | open |
-| US-15 | Als Betreiber moechte ich Docker-Compose-Deployment fuer Kunden | Must | in Arbeit (docker-compose.yml angelegt, Doku ergaenzt) |
-| US-16 | Als Pruefer moechte ich Aenderungen anderer Mitarbeiter live sehen | Should | open (Polling-Sync geplant) |
+| US-15 | Als Betreiber moechte ich Docker-Compose-Deployment für Kunden | Must | in Arbeit (docker-compose.yml angelegt, Doku ergaenzt) |
+| US-16 | Als Prüfer moechte ich Änderungen anderer Mitarbeiter live sehen | Should | open (Polling-Sync geplant) |
 | US-17 | Als Werkstatt-Inhaber moechte ich, dass Kundendaten on-premise bleiben | Must | done (kein Cloud-DB-Zugriff, alles im LAN) |
 
 ## 4. Sprint-Historie
@@ -54,7 +54,7 @@ Eine Story gilt als erledigt, wenn:
 | 1 | Setup, Tooling, Grundlayout | erledigt |
 | 2 | Fahrzeug- und Halterverwaltung | erledigt |
 | 3 | Tagesplan und Termine | erledigt |
-| 4 | Maengel, Berichte, Statistik | erledigt |
+| 4 | Mängel, Berichte, Statistik | erledigt |
 | 5 | Validierung, UX, Mobile, PDF | erledigt |
 | 6 | Abgabe-Dokumentation und Stabilisierung | erledigt |
 | 7 | Relationales Datenmodell und Tests | erledigt |
@@ -64,8 +64,8 @@ Eine Story gilt als erledigt, wenn:
 ## 5. Technische Schulden
 
 - API-Integrationstests sollten gegen eine isolierte MariaDB laufen
-  (insbesondere `PATCH /api/termine/:id/status` mit HM/GM-Maengeln).
-- Schema-Aenderungen sollten mittelfristig versioniert werden.
+  (insbesondere `PATCH /api/termine/:id/status` mit HM/GM-Mängeln).
+- Schema-Änderungen sollten mittelfristig versioniert werden.
 - WF-01 ist nur in UI und API durchgesetzt, nicht in MariaDB (Trigger oder
   Stored Procedure als zusaetzliche Defense-in-Depth offen).
 - Backup-Tier-2-Cron-Skript und Tier-3-Offsite-Sync sind als Konzept

@@ -1,30 +1,30 @@
 # Pflichtenheft
 
 Stand: 2026-05-17  
-System: TUEV Pruefstelle Pro mit React/Vite, Express API und MariaDB.
+System: TÜV Prüfstelle Pro mit React/Vite, Express API und MariaDB.
 
 ## 1. Ziel
 
-Die Anwendung unterstuetzt eine Pruefstelle bei Terminplanung,
-Fahrzeugverwaltung, Maengelerfassung, Statistik und Berichtsausgabe. Daten
-werden zentral in MariaDB gespeichert und ueber eine Express-API bereitgestellt.
+Die Anwendung unterstuetzt eine Prüfstelle bei Terminplanung,
+Fahrzeugverwaltung, Mängelerfassung, Statistik und Berichtsausgabe. Daten
+werden zentral in MariaDB gespeichert und über eine Express-API bereitgestellt.
 
 ## 2. Systemgrenzen
 
 Im Scope:
 
-- Fahrzeuge, Halter, Termine und Maengel verwalten
-- Stammdaten fuer Status, Pruefarten, Pruefer und Mangelkategorien
-- Workflow-Regel: kein `Bestanden` bei blockierenden Maengeln
+- Fahrzeuge, Halter, Termine und Mängel verwalten
+- Stammdaten für Status, Prüfarten, Prüfer und Mangelkategorien
+- Workflow-Regel: kein `Bestanden` bei blockierenden Mängeln
 - Statistik- und Berichtsansichten
-- PDF-Ausgabe ueber Browser-Druck
+- PDF-Ausgabe über Browser-Druck
 - Lokaler Betrieb mit MariaDB, Express API und Vite
 
 Nicht im Scope:
 
 - Benutzer- und Rollenverwaltung
 - Mandantenfaehigkeit
-- amtliche Schnittstellen zu TUEV/KBA
+- amtliche Schnittstellen zu TÜV/KBA
 - Online-Zahlung
 - automatische Synchronisation ohne laufende API
 
@@ -35,13 +35,13 @@ Nicht im Scope:
 | F-01 | Halter verwalten | Halter koennen angelegt, bearbeitet, geloescht und gelistet werden |
 | F-02 | Fahrzeuge verwalten | Fahrzeuge koennen mit Halterbezug gepflegt werden |
 | F-03 | Termine planen | Termine koennen Fahrzeugen zugeordnet und nach Datum angezeigt werden |
-| F-04 | Status pflegen | Statuswechsel sind ueber UI und API moeglich |
+| F-04 | Status pflegen | Statuswechsel sind über UI und API möglich |
 | F-05 | WF-01 durchsetzen | `Bestanden` wird bei HM/GM verhindert |
-| F-06 | Maengel erfassen | Maengel koennen mit Kategorie und Beschreibung gespeichert werden |
+| F-06 | Mängel erfassen | Mängel koennen mit Kategorie und Beschreibung gespeichert werden |
 | F-07 | Statistik anzeigen | Kennzahlen und Diagramme basieren auf MariaDB-Daten |
-| F-08 | Berichte erzeugen | Pruefberichte koennen angezeigt und gedruckt werden |
+| F-08 | Berichte erzeugen | Prüfberichte koennen angezeigt und gedruckt werden |
 | F-09 | Demo-Daten laden | `/api/admin/demo` erzeugt reproduzierbare Beispieldaten |
-| F-10 | Daten zuruecksetzen | `/api/admin/reset` entfernt Bewegungsdaten |
+| F-10 | Daten zurücksetzen | `/api/admin/reset` entfernt Bewegungsdaten |
 
 ## 4. Nicht-funktionale Anforderungen
 
@@ -69,20 +69,20 @@ Daten dauerhaft im Browser. Die Express-API:
 
 ## 6. Sicherheit und Datenschutz
 
-- MariaDB-Zugangsdaten werden ueber `.env` geladen.
+- MariaDB-Zugangsdaten werden über `.env` geladen.
 - `.env` ist in `.gitignore` ausgeschlossen.
 - Das Frontend bekommt keine Datenbank-Credentials.
 - Die API nutzt parametrisierte Queries.
-- Fuer produktiven Betrieb sind Authentifizierung, HTTPS, Backups und
+- Für produktiven Betrieb sind Authentifizierung, HTTPS, Backups und
   rollenbasierte Datenbankrechte nachzuziehen.
 
 ## 7. Betrieb
 
-### Zielmodell: On-Premise pro Pruefstelle
+### Zielmodell: On-Premise pro Prüfstelle
 
-Jede Pruefstelle betreibt einen eigenen Server-PC mit Docker Compose. MariaDB
+Jede Prüfstelle betreibt einen eigenen Server-PC mit Docker Compose. MariaDB
 und die Express-API laufen lokal; Mitarbeiter verbinden sich vom Empfangs-,
-Pruefer- oder Chef-Geraet ueber das interne Netzwerk.
+Prüfer- oder Chef-Geraet über das interne Netzwerk.
 
 ### Empfohlener Start (Docker Compose)
 
@@ -118,14 +118,14 @@ Die API laeuft standardmaessig auf Port `8787`, das Frontend auf Vite-Port
 - Authentifizierung und Benutzerrollen (Phase 2)
 - Backup-/Restore-Konzept teilweise umgesetzt (siehe `docs/backup.md`); Tier-2-
   und Tier-3-Skripte stehen aus
-- Migrationsversionierung fuer Schema-Aenderungen
+- Migrationsversionierung für Schema-Änderungen
 - API-Tests gegen eine isolierte Testdatenbank (insbesondere WF-01-Endpunkt)
 - Polling- oder Server-Sent-Events-Sync zwischen mehreren Clients in derselben
-  Pruefstelle (aktuell nur Refresh nach eigenen Schreiboperationen)
+  Prüfstelle (aktuell nur Refresh nach eigenen Schreiboperationen)
 
-## 10. Aenderungshistorie
+## 10. Änderungshistorie
 
-| Version | Datum | Aenderung |
+| Version | Datum | Änderung |
 |---|---|---|
 | 3.0 | 2026-05-17 | Dokumentation auf MariaDB/Express umgestellt |
 | 3.1 | 2026-05-17 | On-Premise-Produktmodell, Docker-Compose-Betrieb und Backup-Roadmap ergaenzt |

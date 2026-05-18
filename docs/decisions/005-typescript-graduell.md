@@ -7,20 +7,20 @@ Aktualisiert: 2026-05-17
 ## Kontext
 
 Das Projekt startete mit React/JSX. Eine vollstaendige Big-Bang-Migration auf
-TypeScript waere riskant und wuerde viele fachlich stabile Views beruehren.
+TypeScript waere riskant und würde viele fachlich stabile Views beruehren.
 
 ## Entscheidung
 
 TypeScript wird graduell genutzt. Neue oder datennahe Module koennen `.ts` sein,
 waehrend bestehende `.jsx`-Views erhalten bleiben, solange kein fachlicher Grund
-fuer eine Migration besteht.
+für eine Migration besteht.
 
-## Begruendung
+## Begründung
 
 - Geringes Refactor-Risiko.
 - Datentypen im Frontend koennen trotzdem zentral beschrieben werden.
 - Bestehende Tests und UI-Dateien bleiben stabil.
-- `allowJs` ermoeglicht gemischten Betrieb.
+- `allowJs` ermöglicht gemischten Betrieb.
 
 ## Konsequenzen
 

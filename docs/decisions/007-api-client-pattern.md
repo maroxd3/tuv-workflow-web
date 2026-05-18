@@ -7,7 +7,7 @@ Datum: 2026-05-17
 
 Die Views sollen keine HTTP-Details und keine Datenbankdetails kennen.
 Gleichzeitig nutzt ein Teil der UI noch die alte View-Datenform mit Feldern wie
-`fahrzeug.id`, `fahrzeug.besitzer` und `termin.maengel`.
+`fahrzeug.id`, `fahrzeug.besitzer` und `termin.mängel`.
 
 ## Entscheidung
 
@@ -15,7 +15,7 @@ Das Frontend nutzt `src/db/apiClient.ts` als zentrale HTTP-Schicht. `useDb.ts`
 verwaltet React-State und ruft den API-Client auf. `useStoreCompat.ts` bildet
 die MariaDB/API-Daten auf die bestehende View-Datenform ab.
 
-## Begruendung
+## Begründung
 
 - Views bleiben von API-Pfaden und JSON-Mapping entkoppelt.
 - Fehlerbehandlung und Request-Header sind zentral.
