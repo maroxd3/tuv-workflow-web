@@ -166,8 +166,8 @@ SELECT COUNT(*) FROM mangel;
 - `termin`
 - `mangel`
 - `status`
-- `prüfart`
-- `prüfer`
+- `pruefart`
+- `pruefer`
 - `mangel_kategorie`
 
 Die Tabellen und Stammdaten werden beim API-Start durch `server/db.js`
