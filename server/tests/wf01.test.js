@@ -86,8 +86,10 @@ beforeEach(async () => {
   await seedDemo();
 });
 
+const skipSqlBypass = process.env.TUV_SKIP_SQL_BYPASS === "1";
+
 describe.skipIf(!stackUp)("WF-01 Defense-in-Depth", () => {
-  it("Layer 3 (DB-Trigger): direkter SQL-UPDATE wird abgelehnt", async () => {
+  it.skipIf(skipSqlBypass)("Layer 3 (DB-Trigger): direkter SQL-UPDATE wird abgelehnt", async () => {
     const { termin } = await findTerminWithUnbehobenBlocker();
 
     let stderr = "";

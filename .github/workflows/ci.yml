@@ -10,7 +10,42 @@ jobs:
   quality:
     name: Lint · Typecheck · Test · Build
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
+
+    # MariaDB als GitHub-Actions-Service: ein Container, der parallel zum
+    # CI-Runner laeuft und auf localhost:3306 erreichbar ist. Damit kann
+    # die wf01-Integrationstest-Suite gegen eine echte DB laufen, statt
+    # nur lokal gegen den Docker-Stack.
+    services:
+      mariadb:
+        image: mariadb:11.4
+        env:
+          MARIADB_DATABASE: tuv_workflow
+          MARIADB_USER: tuv_app
+          MARIADB_PASSWORD: tuv_app_pw
+          MARIADB_ROOT_PASSWORD: ci_root_password
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+          --health-start-period=30s
+
+    env:
+      MARIADB_HOST: 127.0.0.1
+      MARIADB_PORT: 3306
+      MARIADB_USER: tuv_app
+      MARIADB_PASSWORD: tuv_app_pw
+      MARIADB_DATABASE: tuv_workflow
+      API_PORT: 8787
+      # Der SQL-Bypass-Test in wf01.test.js benutzt docker exec gegen den
+      # lokalen Compose-Stack. In CI gibt es keinen "tuv-mariadb"-Container —
+      # daher diesen einen Test ueberspringen. Die anderen 6 Layer-Tests
+      # (API-Layer, Trigger via API, Status-Endpoint, behoben-Semantik,
+      # Auto-Demotion) laufen vollwertig gegen die Service-DB.
+      TUV_SKIP_SQL_BYPASS: "1"
 
     steps:
       - uses: actions/checkout@v4
@@ -30,8 +65,34 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
-      - name: Test
+      # Express-API im Hintergrund starten. ensureDatabase() in server/db.js
+      # legt Schema, Stammdaten, migrierte Kategorien und den WF-01-Trigger
+      # automatisch an. Erst danach die Tests starten — sonst skipped die
+      # wf01-Suite wegen der top-level Health-Pre-Flight-Pruefung.
+      - name: Start API in background
+        run: |
+          node server/index.js &
+          echo $! > api.pid
+          for i in {1..30}; do
+            if curl -sf http://localhost:8787/api/health > /dev/null; then
+              echo "API ready after ${i} attempts."
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "API did not become healthy in 30s." >&2
+          exit 1
+
+      - name: Test (incl. WF-01 integration tests)
         run: npm test
+
+      - name: Stop API
+        if: always()
+        run: |
+          if [ -f api.pid ]; then
+            kill "$(cat api.pid)" || true
+            rm -f api.pid
+          fi
 
       - name: Build
         run: npm run build
