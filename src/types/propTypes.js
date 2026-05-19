@@ -37,9 +37,3 @@ export const TerminShape = PropTypes.shape({
   mängel: PropTypes.arrayOf(MangelShape),
   createdAt: PropTypes.string,
 });
-
-export const ToastShape = PropTypes.shape({
-  id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
-  msg: PropTypes.string.isRequired,
-  type: PropTypes.oneOf(["success", "error", "info", "warn"]),
-});
