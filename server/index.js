@@ -252,7 +252,29 @@ app.delete("/api/fahrzeuge/:id", asyncRoute(async (req, res) => {
 }));
 
 app.get("/api/termine", asyncRoute(async (req, res) => {
-  const rows = await db().query("SELECT * FROM termin ORDER BY datum DESC, uhrzeit ASC");
+  // Optionaler Zeitraum-Filter: ?from=YYYY-MM-DD&to=YYYY-MM-DD
+  // Skalierungs-Vorbereitung: bei vielen tausend Terminen lohnt sich der
+  // Pull "letzte 7 Tage + naechste 30 Tage" statt "alles". Ohne Parameter
+  // liefert der Endpoint weiterhin die volle Liste — kompatibel zum
+  // aktuellen Frontend, das BerichteView und StatistikView mit der
+  // Komplett-Historie versorgt.
+  const dateRe = /^\d{4}-\d{2}-\d{2}$/;
+  const from = typeof req.query.from === "string" && dateRe.test(req.query.from) ? req.query.from : null;
+  const to   = typeof req.query.to   === "string" && dateRe.test(req.query.to)   ? req.query.to   : null;
+  let sql = "SELECT * FROM termin";
+  const params = [];
+  if (from && to) {
+    sql += " WHERE datum BETWEEN ? AND ?";
+    params.push(from, to);
+  } else if (from) {
+    sql += " WHERE datum >= ?";
+    params.push(from);
+  } else if (to) {
+    sql += " WHERE datum <= ?";
+    params.push(to);
+  }
+  sql += " ORDER BY datum DESC, uhrzeit ASC";
+  const rows = await db().query(sql, params);
   const termine = rows.map(toTermin);
 
   // N+1-Fix: ?include=maengel laedt die Mangel-Liste pro Termin in einem

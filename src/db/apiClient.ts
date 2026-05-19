@@ -69,11 +69,22 @@ export interface TerminMitMaengeln extends Termin {
   maengel: Mangel[];
 }
 
+export interface ListTermineOptions {
+  includeMaengel?: boolean;
+  from?: string; // YYYY-MM-DD inclusive
+  to?: string;   // YYYY-MM-DD inclusive
+}
+
 export function listTermine(): Promise<Termin[]>;
-export function listTermine(opts: { includeMaengel: true }): Promise<TerminMitMaengeln[]>;
-export function listTermine(opts?: { includeMaengel?: boolean }): Promise<Termin[] | TerminMitMaengeln[]> {
-  const qs = opts?.includeMaengel ? "?include=maengel" : "";
-  return request(`/termine${qs}`);
+export function listTermine(opts: ListTermineOptions & { includeMaengel: true }): Promise<TerminMitMaengeln[]>;
+export function listTermine(opts: ListTermineOptions): Promise<Termin[]>;
+export function listTermine(opts?: ListTermineOptions): Promise<Termin[] | TerminMitMaengeln[]> {
+  const params = new URLSearchParams();
+  if (opts?.includeMaengel) params.set("include", "maengel");
+  if (opts?.from) params.set("from", opts.from);
+  if (opts?.to) params.set("to", opts.to);
+  const qs = params.toString();
+  return request(`/termine${qs ? `?${qs}` : ""}`);
 }
 
 export function addTermin(data: NeuerTermin): Promise<Termin> {
