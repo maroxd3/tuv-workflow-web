@@ -72,6 +72,24 @@
   .node-bg.dim { opacity: 0.18; }
   .edge { transition: opacity 0.15s; }
   .edge.dim { opacity: 0.07; }
+
+  /* Core-Architecture: presentation mode. Komplett separater Render-Pfad. */
+  .hidden-svg-group { display: none; }
+  .core-spine-line { animation: corePulse 3s ease-in-out infinite; }
+  @keyframes corePulse {
+    0%, 100% { stroke-opacity: 0.95; }
+    50%      { stroke-opacity: 0.7; }
+  }
+  .core-node text { paint-order: stroke; }
+  .core-chip { background: rgba(123,211,137,0.14) !important; color: var(--route) !important; border-color: rgba(123,211,137,0.55) !important; font-weight: 600 !important; }
+
+  /* Presentation Mode (optional toggle) */
+  .pmode .side { width: 320px; }
+  .pmode .legend { display: none; }
+  .pmode .topbar .title .sub { display: none; }
+  .toggle-pmode { background: var(--panel-2); border: 1px solid var(--border); color: var(--muted); padding: 5px 10px; border-radius: 999px; cursor: pointer; font-size: 11px; white-space: nowrap; user-select: none; font-weight: 500; transition: all 0.15s; margin-left: 6px; }
+  .toggle-pmode:hover { color: var(--text); border-color: #3a3a3a; }
+  .toggle-pmode.active { background: rgba(245,185,66,0.14); color: var(--accent); border-color: rgba(245,185,66,0.45); }
   .edge-label { font-size: 10px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
   .cluster-label { font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
   .badge-fix circle { fill: var(--route); }
@@ -89,6 +107,7 @@
   <div class="topbar">
     <div class="title">tuv-workflow-web<span class="sub">React 19 · Vite · Express API · MariaDB</span></div>
     <div class="chips" id="chips"></div>
+    <button class="toggle-pmode" id="toggle-pmode" title="Presentation Mode: larger spacing, no legend, narrower sidebar — good for screenshots/projector">⛶ Presentation</button>
   </div>
   <div class="canvas-wrap">
     <svg class="map" id="map" viewBox="0 0 2300 1400" preserveAspectRatio="xMidYMid meet">
@@ -108,11 +127,17 @@
         <marker id="arrow-mount" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto">
           <path d="M0,0 L8,4 L0,8 z" fill="#4ea1ff" />
         </marker>
+        <marker id="arrow-spine" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" orient="auto">
+          <path d="M0,0 L10,5 L0,10 z" fill="#7bd389" />
+        </marker>
       </defs>
       <g id="viewport">
         <g id="clusters"></g>
         <g id="edges"></g>
         <g id="nodes"></g>
+        <g id="core-clusters"></g>
+        <g id="core-edges"></g>
+        <g id="core-nodes"></g>
       </g>
     </svg>
     <div class="zoom-controls">
@@ -1016,24 +1041,29 @@ function showDefault() {
   if (activeFilter === 'core') {
     sideEl.innerHTML = `
       <h1>Core Architecture</h1>
-      <div class="role">Der zentrale Aufbau der Anwendung in einem Bild — ohne Modale, Validatoren, Konstanten oder externe Libraries.</div>
-      <h2>Hauptdatenfluss</h2>
-      <div class="finding good">
-        <strong>React-Oberfläche → Kompatibilitätsschicht → API-State-Hook → HTTP-Client → Express-Backend → MariaDB.</strong>
-        <br><br>
-        Diese Ansicht blendet Detailkomponenten aus und erklärt zuerst den Hauptdatenfluss des Systems. Wenn du das verstanden hast, wechsle auf <em>Overview</em>, um Modale und Domain-Konstanten dazuzusehen, oder <em>Critical path (spine)</em>, um nur die 10 roten Hop-Kanten zu sehen.
+      <div class="role">Diese Ansicht zeigt nur den Hauptaufbau des Systems — vom Browser-Entry bis zur zentralen MariaDB.</div>
+
+      <h2>Datenfluss in drei Schritten</h2>
+      <div class="finding good" style="line-height:1.7">
+        <strong>1.</strong> React-UI startet bei <code>index.html</code> → <code>main.jsx</code> → <code>App.jsx</code>.<br>
+        <strong>2.</strong> App nutzt vier Seiten und eine Kompatibilitäts-/State-Brücke (<code>useStoreCompat</code> → <code>useDb</code>).<br>
+        <strong>3.</strong> Daten fließen über den HTTP-Client (<code>apiClient.ts</code>) → Express-Backend (<code>server/index.js</code>) → MariaDB.
       </div>
-      <h2>Sichtbare Knoten</h2>
-      <ul class="notes">
-        <li><strong>Entry:</strong> index.html → main.jsx → App.jsx</li>
-        <li><strong>Layout:</strong> Sidebar, Topbar</li>
-        <li><strong>Pages:</strong> TagesplanView, FahrzeugeView, StatistikView, BerichteView</li>
-        <li><strong>State + Daten:</strong> useStoreCompat → useDb → apiClient</li>
-        <li><strong>Backend:</strong> server/index.js → server/db.js → MariaDB</li>
-      </ul>
-      <h2>Wie lesen?</h2>
+
+      <h2>Leserichtung</h2>
       <div class="finding">
-        Klick auf einen Knoten zeigt seine Details rechts. Klick auf eine andere Chip oben wechselt die Sicht — das Layout und die Pan/Zoom-Position bleiben erhalten.
+        <strong>Links → rechts.</strong> Der grüne, leicht pulsierende Pfad ist die zentrale Daten-Spine: <code>App → useStoreCompat → useDb → apiClient → server/index → server/db → MariaDB</code>. Klick auf jeden Knoten zeigt seine Details hier rechts.
+      </div>
+
+      <h2>Was bewusst ausgeblendet ist</h2>
+      <ul class="notes">
+        <li>Feature-Modale (Termin, Fahrzeug, Mängel)</li>
+        <li>Validatoren, Utilities, Konstanten</li>
+        <li>UI-Primitives (Pills, Badges, Buttons)</li>
+        <li>Externe Libraries (Express, MariaDB-Driver, Sonner, Recharts ...)</li>
+      </ul>
+      <div class="finding">
+        Sobald du den Aufbau verstanden hast, wechsle auf <em>Overview</em> für die volle Karte, <em>Critical path</em> für die 10 roten Hop-Kanten, oder <em>Roadmap &amp; bugs</em> für offene Punkte.
       </div>
     `;
     return;
@@ -1103,44 +1133,286 @@ function unhighlight() {
   document.querySelectorAll('.edge').forEach(el => el.classList.remove('dim'));
 }
 
+/* ════════════════════════════════════════════════════════════════════
+   CORE ARCHITECTURE — dedicated presentation layout
+   Lives in parallel to the main map. When activeFilter === 'core',
+   the main groups are hidden and these dedicated, cleanly laid-out
+   nodes/edges/clusters are shown instead. Node IDs match the main
+   map so click → showNode() reuses the same side-panel.
+   ════════════════════════════════════════════════════════════════════ */
+
+const CORE_NODE_LAYOUT = [
+  // Entry column
+  { id: 'index-html',    x: 60,   y: 380, w: 220, h: 96 },
+  { id: 'main',          x: 60,   y: 520, w: 220, h: 96 },
+  { id: 'App',           x: 60,   y: 660, w: 220, h: 120, hub: true },
+  // App-Shell
+  { id: 'Sidebar',       x: 340,  y: 600, w: 230, h: 96 },
+  { id: 'Topbar',        x: 340,  y: 720, w: 230, h: 96 },
+  // Pages
+  { id: 'TagesplanView', x: 340,  y: 80,  w: 240, h: 96 },
+  { id: 'FahrzeugeView', x: 340,  y: 200, w: 240, h: 96 },
+  { id: 'StatistikView', x: 340,  y: 320, w: 240, h: 96 },
+  { id: 'BerichteView',  x: 340,  y: 440, w: 240, h: 96 },
+  // Data Spine
+  { id: 'useStoreCompat',x: 680,  y: 680, w: 240, h: 120, spine: true },
+  { id: 'useDb',         x: 990,  y: 680, w: 240, h: 120, spine: true },
+  { id: 'api-client',    x: 1300, y: 680, w: 240, h: 120, spine: true },
+  { id: 'server-index',  x: 1610, y: 680, w: 240, h: 120, spine: true },
+  { id: 'server-db',     x: 1920, y: 680, w: 240, h: 120, spine: true },
+  { id: 'mariadb',       x: 2230, y: 680, w: 240, h: 120, spine: true },
+];
+
+const CORE_EDGE_LAYOUT = [
+  { from: 'index-html',     to: 'main',           label: 'loads' },
+  { from: 'main',           to: 'App',            label: 'render' },
+  { from: 'App',            to: 'Sidebar',        label: 'mounts' },
+  { from: 'App',            to: 'Topbar',         label: 'mounts' },
+  { from: 'App',            to: 'TagesplanView',  label: 'view' },
+  { from: 'App',            to: 'FahrzeugeView',  label: 'view' },
+  { from: 'App',            to: 'StatistikView',  label: 'view' },
+  { from: 'App',            to: 'BerichteView',   label: 'view' },
+  { from: 'App',            to: 'useStoreCompat', label: 'uses', spine: true },
+  { from: 'useStoreCompat', to: 'useDb',          label: 'wraps', spine: true },
+  { from: 'useDb',          to: 'api-client',     label: 'HTTP',  spine: true },
+  { from: 'api-client',     to: 'server-index',   label: '/api',  spine: true },
+  { from: 'server-index',   to: 'server-db',      label: 'pool',  spine: true },
+  { from: 'server-db',      to: 'mariadb',        label: 'SQL',   spine: true },
+];
+
+const CORE_CLUSTER_LAYOUT = [
+  { id: 'core-entry',   x: 30,   y: 350, w: 280,  h: 480, label: 'BROWSER ENTRY',     color: 'client'  },
+  { id: 'core-pages',   x: 320,  y: 50,  w: 280,  h: 510, label: 'PAGES',              color: 'route'   },
+  { id: 'core-shell',   x: 320,  y: 570, w: 280,  h: 280, label: 'APP SHELL',          color: 'route'   },
+  { id: 'core-bridge',  x: 660,  y: 640, w: 580,  h: 220, label: 'STATE & BRIDGE',     color: 'service' },
+  { id: 'core-backend', x: 1280, y: 640, w: 1200, h: 220, label: 'BACKEND & DATABASE', color: 'db'      },
+];
+
+function renderCoreLayout() {
+  const coreClustersGroup = document.getElementById('core-clusters');
+  const coreEdgesGroup = document.getElementById('core-edges');
+  const coreNodesGroup = document.getElementById('core-nodes');
+  const coreById = Object.fromEntries(CORE_NODE_LAYOUT.map(n => [n.id, n]));
+
+  // Clusters
+  CORE_CLUSTER_LAYOUT.forEach(c => {
+    const col = COLOR_MAP[c.color] || '#888';
+    const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    rect.setAttribute('x', c.x); rect.setAttribute('y', c.y);
+    rect.setAttribute('width', c.w); rect.setAttribute('height', c.h);
+    rect.setAttribute('rx', 16);
+    rect.setAttribute('fill', tint(col, 0.05));
+    rect.setAttribute('stroke', tint(col, 0.35));
+    rect.setAttribute('stroke-width', 1);
+    g.appendChild(rect);
+    const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    t.setAttribute('x', c.x + 20); t.setAttribute('y', c.y + 30);
+    t.setAttribute('class', 'cluster-label');
+    t.setAttribute('fill', tint(col, 0.9));
+    t.setAttribute('font-size', '12');
+    t.setAttribute('letter-spacing', '0.18em');
+    t.textContent = c.label;
+    g.appendChild(t);
+    coreClustersGroup.appendChild(g);
+  });
+
+  // Edges
+  CORE_EDGE_LAYOUT.forEach(e => {
+    const a = coreById[e.from], b = coreById[e.to];
+    if (!a || !b) return;
+    const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    g.setAttribute('class', 'edge core-edge');
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', edgePath(a, b));
+    path.setAttribute('fill', 'none');
+    if (e.spine) {
+      path.setAttribute('stroke', '#7bd389');
+      path.setAttribute('stroke-width', 3.2);
+      path.setAttribute('stroke-opacity', 0.95);
+      path.setAttribute('marker-end', 'url(#arrow-spine)');
+      path.setAttribute('class', 'core-spine-line');
+    } else {
+      path.setAttribute('stroke', '#a8a8a8');
+      path.setAttribute('stroke-width', 1.4);
+      path.setAttribute('stroke-opacity', 0.5);
+      path.setAttribute('stroke-dasharray', '5 3');
+      path.setAttribute('marker-end', 'url(#arrow-normal)');
+    }
+    g.appendChild(path);
+    if (e.label) {
+      const x1 = a.x + a.w, y1 = a.y + a.h / 2;
+      const x2 = b.x,       y2 = b.y + b.h / 2;
+      const mx = (x1 + x2) / 2;
+      const my = (y1 + y2) / 2 - 4;
+      const lbl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      lbl.setAttribute('x', mx); lbl.setAttribute('y', my);
+      lbl.setAttribute('text-anchor', 'middle');
+      lbl.setAttribute('fill', e.spine ? '#a8e6b8' : '#c0c0c0');
+      lbl.setAttribute('font-size', e.spine ? '13' : '11');
+      lbl.setAttribute('font-weight', e.spine ? '700' : '500');
+      lbl.setAttribute('font-family', 'ui-monospace, monospace');
+      lbl.textContent = e.label;
+      g.appendChild(bg); g.appendChild(lbl);
+      coreEdgesGroup.appendChild(g);
+      const bbox = lbl.getBBox();
+      bg.setAttribute('x', bbox.x - 7);
+      bg.setAttribute('y', bbox.y - 3);
+      bg.setAttribute('width', bbox.width + 14);
+      bg.setAttribute('height', bbox.height + 6);
+      bg.setAttribute('fill', 'rgba(15,15,15,0.92)');
+      bg.setAttribute('stroke', e.spine ? 'rgba(123,211,137,0.35)' : 'rgba(120,120,120,0.2)');
+      bg.setAttribute('rx', 5);
+    } else {
+      coreEdgesGroup.appendChild(g);
+    }
+  });
+
+  // Nodes
+  CORE_NODE_LAYOUT.forEach(layout => {
+    const n = nodeById[layout.id];
+    if (!n) return;
+    const col = COLOR_MAP[n.color] || '#888';
+    const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    g.setAttribute('class', 'node-bg core-node');
+    g.dataset.id = n.id;
+
+    const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    rect.setAttribute('x', layout.x); rect.setAttribute('y', layout.y);
+    rect.setAttribute('width', layout.w); rect.setAttribute('height', layout.h);
+    rect.setAttribute('rx', 12);
+    rect.setAttribute('fill', tint(col, layout.spine ? 0.18 : (layout.hub ? 0.16 : 0.10)));
+    rect.setAttribute('stroke', col);
+    rect.setAttribute('stroke-width', layout.spine ? 2.4 : (layout.hub ? 2.0 : 1.4));
+    rect.setAttribute('class', 'node-shadow');
+    if (layout.spine || layout.hub) {
+      rect.setAttribute('filter', `drop-shadow(0 0 16px ${tint(col, 0.45)})`);
+    }
+    g.appendChild(rect);
+
+    const lbl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    lbl.setAttribute('x', layout.x + 16);
+    lbl.setAttribute('y', layout.y + 32);
+    lbl.setAttribute('fill', '#f5f5f5');
+    lbl.setAttribute('font-weight', '700');
+    lbl.setAttribute('font-size', '16');
+    lbl.textContent = n.label;
+    g.appendChild(lbl);
+
+    if (n.sub) {
+      const sub = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      sub.setAttribute('x', layout.x + 16);
+      sub.setAttribute('y', layout.y + 56);
+      sub.setAttribute('fill', tint(col, 0.9));
+      sub.setAttribute('font-size', '12');
+      sub.setAttribute('font-family', 'ui-monospace, SFMono-Regular, Menlo, monospace');
+      sub.textContent = n.sub;
+      g.appendChild(sub);
+    }
+
+    if (n.path) {
+      const p = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      p.setAttribute('x', layout.x + 16);
+      p.setAttribute('y', layout.y + layout.h - 14);
+      p.setAttribute('fill', '#999');
+      p.setAttribute('font-size', '10.5');
+      p.setAttribute('font-family', 'ui-monospace, SFMono-Regular, Menlo, monospace');
+      p.textContent = n.path.replace(/^src\//, '');
+      g.appendChild(p);
+    }
+
+    g.addEventListener('mouseenter', () => { if (!selectedId) showNode(n.id); });
+    g.addEventListener('mouseleave', () => { if (!selectedId) showDefault(); });
+    g.addEventListener('click', (ev) => { ev.stopPropagation(); selectedId = n.id; showNode(n.id); });
+    coreNodesGroup.appendChild(g);
+  });
+}
+
+/* ── Smart fit: zoom/center the currently-visible content into viewBox ── */
+function fitToVisible() {
+  const isCore = activeFilter === 'core';
+  const selector = isCore ? '#core-nodes rect' : '#nodes rect';
+  const rects = document.querySelectorAll(selector);
+  if (rects.length === 0) return;
+
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  rects.forEach(r => {
+    if (!isCore) {
+      const parent = r.closest('.node-bg');
+      if (parent && parent.classList.contains('dim')) return;
+    }
+    const x = +r.getAttribute('x');
+    const y = +r.getAttribute('y');
+    const w = +r.getAttribute('width');
+    const h = +r.getAttribute('height');
+    if (Number.isNaN(x) || Number.isNaN(y)) return;
+    if (x < minX) minX = x;
+    if (y < minY) minY = y;
+    if (x + w > maxX) maxX = x + w;
+    if (y + h > maxY) maxY = y + h;
+  });
+  if (minX === Infinity) return;
+
+  const PAD = 80;
+  const contentW = maxX - minX;
+  const contentH = maxY - minY;
+  const vb = svg.viewBox.baseVal;
+  const availW = vb.width - PAD * 2;
+  const availH = vb.height - PAD * 2;
+  const newScale = Math.min(availW / contentW, availH / contentH, 1.4);
+  const scaledW = contentW * newScale;
+  const scaledH = contentH * newScale;
+  scale = newScale;
+  tx = PAD + (availW - scaledW) / 2 - minX * newScale;
+  ty = PAD + (availH - scaledH) / 2 - minY * newScale;
+  apply();
+}
+
 /* ── Filter logic ── */
 function applyFilter() {
-  if (activeFilter === 'core') {
-    document.querySelectorAll('.node-bg').forEach(el => {
-      el.classList.toggle('dim', !CORE_NODES.has(el.dataset.id));
-    });
-    document.querySelectorAll('.edge').forEach(el => {
-      const e = edges[+el.dataset.edgeIdx];
-      el.classList.toggle('dim', !CORE_EDGE_KEYS.has(`${e.from}→${e.to}`));
-    });
+  const isCore = activeFilter === 'core';
+
+  // Swap which SVG groups are visible
+  const mainGroups = ['clusters', 'edges', 'nodes'];
+  const coreGroups = ['core-clusters', 'core-edges', 'core-nodes'];
+  mainGroups.forEach(id => document.getElementById(id).classList.toggle('hidden-svg-group', isCore));
+  coreGroups.forEach(id => document.getElementById(id).classList.toggle('hidden-svg-group', !isCore));
+
+  if (isCore) {
+    // Core renders its own clean layout — no dim needed.
+    document.querySelectorAll('#nodes .node-bg').forEach(el => el.classList.remove('dim'));
+    document.querySelectorAll('#edges .edge').forEach(el => el.classList.remove('dim'));
   } else if (activeFilter === 'fixes-bugs') {
     const hot = new Set([...Object.keys(FIXES), ...Object.keys(KNOWN_BUGS)]);
-    document.querySelectorAll('.node-bg').forEach(el => el.classList.toggle('dim', !hot.has(el.dataset.id)));
-    document.querySelectorAll('.edge').forEach(el => {
+    document.querySelectorAll('#nodes .node-bg').forEach(el => el.classList.toggle('dim', !hot.has(el.dataset.id)));
+    document.querySelectorAll('#edges .edge').forEach(el => {
       const e = edges[+el.dataset.edgeIdx];
       el.classList.toggle('dim', !(hot.has(e.from) && hot.has(e.to)));
     });
   } else if (activeFilter === 'data') {
-    document.querySelectorAll('.node-bg').forEach(el => {
+    document.querySelectorAll('#nodes .node-bg').forEach(el => {
       const n = nodeById[el.dataset.id];
       el.classList.toggle('dim', !n.critical);
     });
-    document.querySelectorAll('.edge').forEach(el => {
+    document.querySelectorAll('#edges .edge').forEach(el => {
       const e = edges[+el.dataset.edgeIdx];
       el.classList.toggle('dim', e.kind !== 'critical');
     });
   } else {
-    document.querySelectorAll('.node-bg').forEach(el => {
+    document.querySelectorAll('#nodes .node-bg').forEach(el => {
       const n = nodeById[el.dataset.id];
       el.classList.toggle('dim', !(n.tag || []).includes(activeFilter));
     });
-    document.querySelectorAll('.edge').forEach(el => {
+    document.querySelectorAll('#edges .edge').forEach(el => {
       const e = edges[+el.dataset.edgeIdx];
       el.classList.toggle('dim', !(e.tag || []).includes(activeFilter));
     });
   }
   selectedId = null;
   showDefault();
+  // Smart auto-fit after a tick (so layout is settled)
+  setTimeout(() => fitToVisible(), 50);
 }
 
 /* ── Pan + zoom ── */
@@ -1183,7 +1455,7 @@ window.addEventListener('mouseup', () => {
   if (dragging) { dragging = false; svg.classList.remove('dragging'); }
 });
 
-document.getElementById('z-fit').addEventListener('click', fit);
+document.getElementById('z-fit').addEventListener('click', () => fitToVisible());
 document.getElementById('z-in').addEventListener('click', () => { scale = Math.min(3, scale * 1.2); apply(); });
 document.getElementById('z-out').addEventListener('click', () => { scale = Math.max(0.25, scale / 1.2); apply(); });
 
@@ -1191,13 +1463,27 @@ svg.addEventListener('click', (e) => {
   if (e.target.closest('.node-bg')) return;
   selectedId = null;
   unhighlight();
-  if (activeFilter !== 'overview') applyFilter();
   showDefault();
 });
 
+/* ── Presentation-Mode toggle ── */
+const pmodeBtn = document.getElementById('toggle-pmode');
+pmodeBtn.addEventListener('click', () => {
+  document.body.classList.toggle('pmode');
+  pmodeBtn.classList.toggle('active');
+  setTimeout(() => fitToVisible(), 50);
+});
+
+/* ── Mark the Core chip with its own accent ── */
+document.querySelectorAll('.chip').forEach(c => {
+  if (c.dataset.id === 'core') c.classList.add('core-chip');
+});
+
 /* ── First paint ── */
+renderCoreLayout();
 applyFilter();
 showDefault();
+setTimeout(() => fitToVisible(), 100);
 </script>
 </body>
 </html>
