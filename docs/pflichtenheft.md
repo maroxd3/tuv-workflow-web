@@ -5,7 +5,7 @@ System: TÜV Prüfstelle Pro mit React/Vite, Express API und MariaDB.
 
 ## 1. Ziel
 
-Die Anwendung unterstuetzt eine Prüfstelle bei Terminplanung,
+Die Anwendung unterstützt eine Prüfstelle bei Terminplanung,
 Fahrzeugverwaltung, Mängelerfassung, Statistik und Berichtsausgabe. Daten
 werden zentral in MariaDB gespeichert und über eine Express-API bereitgestellt.
 
@@ -23,7 +23,7 @@ Im Scope:
 Nicht im Scope:
 
 - Benutzer- und Rollenverwaltung
-- Mandantenfaehigkeit
+- Mandantenfähigkeit
 - amtliche Schnittstellen zu TÜV/KBA
 - Online-Zahlung
 - automatische Synchronisation ohne laufende API
@@ -49,7 +49,7 @@ Nicht im Scope:
 |---|---|---|
 | NF-01 | Startbarkeit | API und Frontend starten mit dokumentierten npm-Skripten |
 | NF-02 | Datenkonsistenz | MariaDB erzwingt FKs, UNIQUE und CHECK-Constraints |
-| NF-03 | Mehrclient-Faehigkeit | Mehrere Browser greifen auf dieselbe MariaDB zu |
+| NF-03 | Mehrclient-Fähigkeit | Mehrere Browser greifen auf dieselbe MariaDB zu |
 | NF-04 | Wartbarkeit | SQL liegt zentral in `server/index.js`/`server/db.js` |
 | NF-05 | Portabilitaet | Zugangsdaten liegen in `.env` |
 | NF-06 | Datenschutz | Keine geheimen Zugangsdaten im Frontend-Bundle |
@@ -82,7 +82,7 @@ Daten dauerhaft im Browser. Die Express-API:
 
 Jede Prüfstelle betreibt einen eigenen Server-PC mit Docker Compose. MariaDB
 und die Express-API laufen lokal; Mitarbeiter verbinden sich vom Empfangs-,
-Prüfer- oder Chef-Geraet über das interne Netzwerk.
+Prüfer- oder Chef-Gerät über das interne Netzwerk.
 
 ### Empfohlener Start (Docker Compose)
 
@@ -128,4 +128,4 @@ Die API laeuft standardmäßig auf Port `8787`, das Frontend auf Vite-Port
 | Version | Datum | Änderung |
 |---|---|---|
 | 3.0 | 2026-05-17 | Dokumentation auf MariaDB/Express umgestellt |
-| 3.1 | 2026-05-17 | On-Premise-Produktmodell, Docker-Compose-Betrieb und Backup-Roadmap ergaenzt |
+| 3.1 | 2026-05-17 | On-Premise-Produktmodell, Docker-Compose-Betrieb und Backup-Roadmap ergänzt |

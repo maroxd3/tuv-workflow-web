@@ -76,7 +76,7 @@ Ergebnis:
 - `/api/fahrzeuge` liefert Daten aus MariaDB
 
 Alte Browserdatenbank- und Schema-Tests wurden entfernt, weil sie nicht mehr zur
-aktuellen MariaDB-Architektur gehoeren. Automatisierte
+aktuellen MariaDB-Architektur gehören. Automatisierte
 Express/MariaDB-Integrationstests sind der nächste sinnvolle Schritt.
 
 ## 5. Coverage nach Bereichen
@@ -102,7 +102,7 @@ Coverage:
 npx vitest run --coverage
 ```
 
-Weitere Qualitaetschecks:
+Weitere Qualitätschecks:
 
 ```powershell
 npm run typecheck
@@ -112,8 +112,8 @@ npm run lint
 
 ## 7. Was fehlt noch?
 
-- Vollstaendige automatisierte Integrationstests gegen eine echte MariaDB-Testdatenbank (`server/tests/wf01.test.js` deckt aktuell den WF-01-Pfad ab, weitere Endpoints folgen)
-- API-Tests für die übrigen Express-Endpunkte (`/api/halter`, `/api/fahrzeuge`, `/api/termine`, `/api/maengel`)
+- Vollständige automatisierte Integrationstests gegen eine echte MariaDB-Testdatenbank (`server/tests/wf01.test.js` deckt aktuell den WF-01-Pfad ab, weitere Endpoints folgen)
+- API-Tests für die übrigen Express-Endpunkte (`/api/halter`, `/api/fahrzeuge`, `/api/termine`, `/api/mängel`)
 - Fehlerpfad-Tests für MariaDB-Fehler: UNIQUE, FK, CHECK
 - Mehrbenutzer-/Parallelitaets-Tests (Polling-Race-Conditions in `useDb`)
 - Automatisierte E2E-Tests im Browser
@@ -123,5 +123,5 @@ npm run lint
 Die Testabdeckung ist für Validatoren, Hilfsfunktionen und zentrale
 UI-Bausteine hoch. Für die MariaDB-Architektur ist der wichtigste nächste
 Schritt, automatisierte Express/MariaDB-Integrationstests aufzubauen. Aktuell
-ist dieser Teil per Smoke-Test geprüft, aber noch nicht vollstaendig
+ist dieser Teil per Smoke-Test geprüft, aber noch nicht vollständig
 automatisiert.

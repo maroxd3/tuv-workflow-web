@@ -100,9 +100,9 @@ M → A mit A ∈ M) sind ausgelassen.
 ### Vermiedene Anomalien
 
 - **Update-Anomalie:** Ändert sich die Anschrift eines Halters, wird sie nur in
-  einer Zeile von `halter` aktualisiert, nicht in jedem zugehoerigen Fahrzeug.
+  einer Zeile von `halter` aktualisiert, nicht in jedem zugehörigen Fahrzeug.
 - **Insert-Anomalie:** Ein Halter kann eingetragen werden, ohne dass schon ein
-  Fahrzeug existiert (war frueher mit eingebetteten Halterdaten unmöglich).
+  Fahrzeug existiert (war früher mit eingebetteten Halterdaten unmöglich).
 - **Delete-Anomalie:** Löscht man das letzte Fahrzeug eines Halters, bleibt der
   Halter erhalten. `ON DELETE RESTRICT` auf `fahrzeug.halter_id` verhindert
   zudem das versehentliche Löschen eines Halters mit aktiven Fahrzeugen.

@@ -17,7 +17,7 @@ SQL-Zugriffe.
 ## Begründung
 
 - Express ist leichtgewichtig und passt zum vorhandenen Node/Vite-Projekt.
-- Der `mariadb` Driver unterstuetzt Connection Pools und parametrisierte Queries.
+- Der `mariadb` Driver unterstützt Connection Pools und parametrisierte Queries.
 - API-Endpunkte können Frontend-Feldnamen auf Datenbankspalten mappen.
 - Workflow-Regeln können serverseitig durchgesetzt werden.
 - Die API ist lokal per `npm run dev:api` oder `npm run api` startbar.

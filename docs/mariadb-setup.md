@@ -17,7 +17,7 @@ Browser
 Der Browser spricht niemals direkt mit MariaDB. Dadurch bleiben Datenbankhost,
 Benutzer und Passwort im Backend.
 
-## 2. Setup-Variante waehlen
+## 2. Setup-Variante wählen
 
 Es gibt zwei Wege MariaDB bereitzustellen:
 
@@ -177,5 +177,5 @@ angelegt. Fachliche CRUD- und Demo-Endpunkte liegen in `server/index.js`.
 
 Die Anwendung wird **On-Premise pro Prüfstelle** ausgeliefert. Jeder Kunde
 betreibt einen eigenen Server-PC mit Docker Compose im lokalen Netzwerk.
-Mehrere Mitarbeiter-Geraete im LAN sehen denselben Datenstand, weil sie alle
+Mehrere Mitarbeiter-Geräte im LAN sehen denselben Datenstand, weil sie alle
 dieselbe Server-Instanz nutzen. Backup-Konzept: [backup.md](backup.md).

@@ -6,13 +6,13 @@ Aktualisiert: 2026-05-17
 
 ## Kontext
 
-Das Projekt startete mit React/JSX. Eine vollstaendige Big-Bang-Migration auf
+Das Projekt startete mit React/JSX. Eine vollständige Big-Bang-Migration auf
 TypeScript wäre riskant und würde viele fachlich stabile Views beruehren.
 
 ## Entscheidung
 
 TypeScript wird graduell genutzt. Neue oder datennahe Module können `.ts` sein,
-waehrend bestehende `.jsx`-Views erhalten bleiben, solange kein fachlicher Grund
+während bestehende `.jsx`-Views erhalten bleiben, solange kein fachlicher Grund
 für eine Migration besteht.
 
 ## Begründung

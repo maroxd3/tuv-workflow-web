@@ -18,7 +18,7 @@ Stand: 2026-05-17
 - TypeScript Handbook: https://www.typescriptlang.org/docs/
 - MDN Web Docs: https://developer.mozilla.org/
 
-## Tests und Qualitaet
+## Tests und Qualität
 
 - Vitest Documentation: https://vitest.dev/
 - Testing Library Documentation: https://testing-library.com/docs/react-testing-library/intro/

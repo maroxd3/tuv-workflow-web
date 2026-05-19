@@ -72,7 +72,7 @@ SQL gegen MariaDB aus und erstellt Tabellen sowie Stammdaten beim Start.
 | Animation | Framer Motion | UI-Transitions |
 | Charts | Recharts | Statistikdiagramme |
 | Tests | Vitest 4, React Testing Library | Unit-, Component-, Hook- und DB-Tests |
-| Linting | ESLint 9 | Statische Codequalitaet |
+| Linting | ESLint 9 | Statische Codequalität |
 | Container | Docker Compose | On-Premise-Deployment (MariaDB + API in einem Befehl) |
 | Hosting | Firebase Hosting | Optionales statisches Hosting des Frontends; Datenhaltung liegt nie in der Cloud |
 
@@ -81,7 +81,7 @@ SQL gegen MariaDB aus und erstellt Tabellen sowie Stammdaten beim Start.
 Es gibt zwei Wege das Projekt zu starten. **Docker Compose ist der empfohlene
 Weg** — ein Befehl startet MariaDB und Express-API mit Binary-Logging für
 Backups. Der manuelle Weg ist nur für Setups gedacht, in denen kein Docker
-verfuegbar ist.
+verfügbar ist.
 
 ### Variante A — Docker Compose (empfohlen)
 
@@ -162,7 +162,7 @@ API zeigen.
 
 Die Anwendung ist als **On-Premise-Lösung pro Prüfstelle** konzipiert. Jede
 Werkstatt betreibt einen eigenen Server-PC im internen Netzwerk; Mitarbeiter
-verbinden sich vom Empfang, von Prüfer-Geraeten oder Chef-PCs über das LAN
+verbinden sich vom Empfang, von Prüfer-Geräten oder Chef-PCs über das LAN
 mit der zentralen Instanz.
 
 Vorteile dieses Modells:

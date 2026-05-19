@@ -5,7 +5,7 @@ Aktuelle Architektur: React/Vite Frontend + Express API + MariaDB.
 
 ## 1. Zielbild
 
-Die Anwendung trennt Benutzeroberflaeche, API und relationale Persistenz klar:
+Die Anwendung trennt Benutzeroberfläche, API und relationale Persistenz klar:
 
 ```mermaid
 flowchart LR
@@ -22,7 +22,7 @@ flowchart LR
   api --> dbmod --> maria
 ```
 
-Der Browser enthaelt keine Datenbank-Engine. Alle dauerhaften Daten liegen in
+Der Browser enthält keine Datenbank-Engine. Alle dauerhaften Daten liegen in
 MariaDB. Das Frontend bleibt dadurch leichtgewichtig und mehrere Clients können
 denselben Datenstand nutzen.
 
@@ -67,7 +67,7 @@ Die API liegt unter `/api`:
 
 | Methode | Pfad | Zweck |
 |---|---|---|
-| GET | `/api/health` | API-/DB-Verfuegbarkeit prüfen |
+| GET | `/api/health` | API-/DB-Verfügbarkeit prüfen |
 | GET/POST/PATCH/DELETE | `/api/halter` | Halter verwalten |
 | GET/POST/PATCH/DELETE | `/api/fahrzeuge` | Fahrzeuge verwalten |
 | GET/POST/PATCH/DELETE | `/api/termine` | Termine verwalten |
@@ -130,7 +130,7 @@ Termin angelegt wird, setzt die API den Termin automatisch auf
 ### Zielmodell: On-Premise pro Prüfstelle
 
 Jede Prüfstelle betreibt einen eigenen Server-PC im internen Netzwerk.
-Mitarbeiter (Empfang, Prüfer, Chef) verbinden sich vom jeweiligen Geraet
+Mitarbeiter (Empfang, Prüfer, Chef) verbinden sich vom jeweiligen Gerät
 über das LAN/WLAN. Kundendaten verlassen die Werkstatt nicht.
 
 ```mermaid
@@ -169,4 +169,4 @@ flowchart TB
 - Keine Authentifizierung im Prototyp - das LAN gilt als vertrauenswuerdige Zone.
 - Auth, HTTPS und Rollen kommen in einer Phase 2 (siehe Backlog US-12).
 - MariaDB-Zugangsdaten liegen ausschließlich in `.env` auf dem Server.
-- Frontend-Bundle enthaelt keine Datenbank-Credentials.
+- Frontend-Bundle enthält keine Datenbank-Credentials.

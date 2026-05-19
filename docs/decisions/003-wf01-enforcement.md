@@ -17,7 +17,7 @@ StVZO Anlage VIII Nr. 3. Behobene Mängel zaehlen nicht.
 
 ### Mangel-Kategorien nach HU-Richtlinie
 
-Die DB-Tabelle `mangel_kategorie` enthaelt genau 4 Kategorien:
+Die DB-Tabelle `mangel_kategorie` enthält genau 4 Kategorien:
 
 | Code | Bezeichnung           | blockiert_bestanden |
 | ---- | --------------------- | ------------------- |
@@ -26,7 +26,7 @@ Die DB-Tabelle `mangel_kategorie` enthaelt genau 4 Kategorien:
 | EM   | Erheblicher Mangel    | 1                   |
 | GfM  | Gefährlicher Mangel  | 1                   |
 
-Frueher (Stand vor 18.05.2026) gab es 5 Kategorien (OM, GM, EM, GfM mit
+Früher (Stand vor 18.05.2026) gab es 5 Kategorien (OM, GM, EM, GfM mit
 GM=Gefährlich). Die Codes waren inkonsistent mit der offiziellen HU-Richtlinie
 und EM war faelschlich nicht blockierend. Die Korrektur erfolgt einmalig durch
 `migrateCategories()` in `server/db.js` (siehe unten).
@@ -51,11 +51,11 @@ Die Regel wird in drei Schichten umgesetzt:
 ## Begründung
 
 - **UI** gibt sofortiges Feedback im Tagesplan-Workflow.
-- **API** schuetzt gegen fehlerhafte oder direkte HTTP-Aufrufe, auch für
+- **API** schützt gegen fehlerhafte oder direkte HTTP-Aufrufe, auch für
   Endpunkte ausserhalb von `/status` (z. B. der generische
   `PATCH /api/termine/:id` setzte zuvor `status_code` ohne WF-01-Check — wird
   jetzt vom Trigger abgefangen und vom Error-Handler in 422 übersetzt).
-- **DB-Trigger** schuetzt gegen direkten SQL-Zugriff (Mariadb-Client,
+- **DB-Trigger** schützt gegen direkten SQL-Zugriff (Mariadb-Client,
   Adminer-Web-UI, zukünftige Tools, Backup-Restore-Skripte). Ist die einzige
   Schicht, die WF-01 noch garantiert, wenn jemand die API komplett umgeht.
 - Trigger ist idempotent angelegt (`CREATE OR REPLACE`), wird bei jedem

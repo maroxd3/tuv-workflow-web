@@ -29,23 +29,23 @@ Eine Story gilt als erledigt, wenn:
 
 | ID | User Story | Prioritaet | Status |
 |---|---|---|---|
-| US-01 | Als Mitarbeiter moechte ich Fahrzeuge erfassen und bearbeiten | Must | done |
-| US-02 | Als Mitarbeiter moechte ich Halter verwalten | Must | done |
-| US-03 | Als Prüfer moechte ich Termine planen | Must | done |
-| US-04 | Als Prüfer moechte ich Mängel dokumentieren | Must | done |
+| US-01 | Als Mitarbeiter möchte ich Fahrzeuge erfassen und bearbeiten | Must | done |
+| US-02 | Als Mitarbeiter möchte ich Halter verwalten | Must | done |
+| US-03 | Als Prüfer möchte ich Termine planen | Must | done |
+| US-04 | Als Prüfer möchte ich Mängel dokumentieren | Must | done |
 | US-05 | Als Prüfer möchte ich `Bestanden` bei EM/GfM verhindern | Must | done (3-Layer: UI + API + DB-Trigger) |
-| US-06 | Als Leitung moechte ich Statistiken sehen | Should | done |
-| US-07 | Als Mitarbeiter moechte ich Prüfberichte drucken | Should | done |
-| US-08 | Als Team moechten wir zentrale MariaDB-Persistenz | Must | done |
-| US-09 | Als Team moechten wir API-Healthchecks | Should | done |
-| US-10 | Als Betreiber moechte ich Zugangsdaten per `.env` setzen | Must | done |
-| US-11 | Als Betreiber moechte ich eine 3-Tier-Backup-Strategie | Should | in Arbeit (Konzept + Binlog: done; Skripte: open) |
-| US-12 | Als Betreiber moechte ich Authentifizierung und Rollen | Could | open |
-| US-13 | Als Team moechten wir API-Integrationstests mit Testdatenbank | Should | open |
-| US-14 | Als Team moechten wir versionierte DB-Migrationen | Should | open |
-| US-15 | Als Betreiber moechte ich Docker-Compose-Deployment für Kunden | Must | in Arbeit (docker-compose.yml angelegt, Doku ergaenzt) |
+| US-06 | Als Leitung möchte ich Statistiken sehen | Should | done |
+| US-07 | Als Mitarbeiter möchte ich Prüfberichte drucken | Should | done |
+| US-08 | Als Team möchten wir zentrale MariaDB-Persistenz | Must | done |
+| US-09 | Als Team möchten wir API-Healthchecks | Should | done |
+| US-10 | Als Betreiber möchte ich Zugangsdaten per `.env` setzen | Must | done |
+| US-11 | Als Betreiber möchte ich eine 3-Tier-Backup-Strategie | Should | in Arbeit (Konzept + Binlog: done; Skripte: open) |
+| US-12 | Als Betreiber möchte ich Authentifizierung und Rollen | Could | open |
+| US-13 | Als Team möchten wir API-Integrationstests mit Testdatenbank | Should | open |
+| US-14 | Als Team möchten wir versionierte DB-Migrationen | Should | open |
+| US-15 | Als Betreiber möchte ich Docker-Compose-Deployment für Kunden | Must | in Arbeit (docker-compose.yml angelegt, Doku ergänzt) |
 | US-16 | Als Prüfer möchte ich Änderungen anderer Mitarbeiter live sehen | Should | done (5-Sek-Polling in `useDb.ts`, pausiert bei Tab-Hintergrund) |
-| US-17 | Als Werkstatt-Inhaber moechte ich, dass Kundendaten on-premise bleiben | Must | done (kein Cloud-DB-Zugriff, alles im LAN) |
+| US-17 | Als Werkstatt-Inhaber möchte ich, dass Kundendaten on-premise bleiben | Must | done (kein Cloud-DB-Zugriff, alles im LAN) |
 
 ## 4. Sprint-Historie
 

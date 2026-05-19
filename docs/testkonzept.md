@@ -32,8 +32,8 @@ Schwerpunkte:
 
 Beispiel Kennzeichen:
 
-- gueltige Standardkennzeichen
-- ungueltige Kreiskennzeichen
+- gültige Standardkennzeichen
+- ungültige Kreiskennzeichen
 - zu lange Eingaben
 - Sonderzeichen
 - Saisonkennzeichen
@@ -115,7 +115,7 @@ Erwartung:
 | Fahrzeug | Fahrzeug anlegen, bearbeiten, löschen | Änderungen bleiben nach Reload sichtbar |
 | Termin | Termin anlegen und Status ändern | Tagesplan aktualisiert sich |
 | Mangel | HM/GM hinzufuegen | `Bestanden` wird verhindert |
-| Bericht | Bericht oeffnen und drucken | A4-Ansicht ist nutzbar |
+| Bericht | Bericht öffnen und drucken | A4-Ansicht ist nutzbar |
 | Mobile | 360 px Viewport prüfen | Navigation und Modale bleiben bedienbar |
 
 ## 7. Nicht automatisiert

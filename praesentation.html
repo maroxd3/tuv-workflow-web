@@ -721,7 +721,7 @@
   kennzeichen <span class="g">UK</span>              fahrzeug_id <span class="g">FK</span>
   fin <span class="g">UK</span>                       datum, uhrzeit
   hersteller* modell*          art (HU, AU, …)
-  baujahr [1885..year+1]       pruefer
+  baujahr [1885..year+1]       prüfer
   typ <span class="g">FK→FAHRZEUG_TYPEN</span>        status <span class="g">FK→STATUS</span>
   kmStand [0..3 000 000]       notiz
   besitzer telefon email     }
@@ -783,7 +783,7 @@
 + fahrzeugId : string     <span class="g">«FK»</span>
 + datum, uhrzeit, art : PruefArt
 + status : Status
-+ maengel : <span class="a">Mangel[]</span>      <span class="g">«1:N via FK»</span>
++ mängel : <span class="a">Mangel[]</span>      <span class="g">«1:N via FK»</span>
 ─────────────────────────
 + statusWechsel(neu) : void
    <span class="a">guard: kein BESTANDEN bei EM/GfM</span>
