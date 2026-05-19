@@ -72,8 +72,11 @@ const UMLAUT_RULES = [
   [/pruefung(?!_)/g, "prüfung"],
   [/pruefen(?!_)/g, "prüfen"],
   [/prueft(?!_)/g, "prüft"],
-  [/pruefer(?!_)/g, "prüfer"],
-  [/pruefart(?!_)/g, "prüfart"],
+  // ACHTUNG: lowercase `pruefer` und `pruefart` sind die MariaDB-Table-Namen.
+  // Sie als Wort umzuwandeln (`pruefer` -> `prüfer`) zerstört Code-Referenzen
+  // in Docs (z.B. `pruefart` in Tabellen-Listen). Daher hier bewusst raus.
+  // Capitalized `Pruefer`/`Pruefart` werden weiter oben behandelt (sind
+  // unzweideutig deutsche Substantive im Satz-Anfang).
 
   // Mängel
   [/Maengelerfassung/g, "Mängelerfassung"],
@@ -141,6 +144,62 @@ const UMLAUT_RULES = [
   // \b vorne, hinten frei — fängt "ueber den", "ueber HTTP" und Compounds.
   [/\bueber/g, "über"],
   [/\bUeber/g, "Über"],
+
+  // Ergänzungen aus dem 2026-05-19 Cleanup (vorher uebersehen):
+  [/ueblich/g, "üblich"],
+  [/Ueblich/g, "Üblich"],
+  [/waere/g, "wäre"],
+  [/waeren/g, "wären"],
+  [/Waere/g, "Wäre"],
+  [/Waeren/g, "Wären"],
+  [/eingefuehrt/g, "eingeführt"],
+  [/einfuehren/g, "einführen"],
+  [/Einfuehren/g, "Einführen"],
+  [/eingefuehren/g, "eingeführen"],
+  [/durchfuehren/g, "durchführen"],
+  [/Durchfuehren/g, "Durchführen"],
+  [/durchgefuehrt/g, "durchgeführt"],
+  [/ausgefuehrt/g, "ausgeführt"],
+  [/Ausfuehrung/g, "Ausführung"],
+  [/Domaene/g, "Domäne"],
+  [/domaene/g, "domäne"],
+  [/fuehren/g, "führen"],
+  [/Fuehren/g, "Führen"],
+  [/gefuehrt/g, "geführt"],
+  [/zwoelf/g, "zwölf"],
+  [/Zwoelf/g, "Zwölf"],
+  [/zukuenftige/g, "zukünftige"],
+  [/zukuenftig/g, "zukünftig"],
+  [/Zukuenftige/g, "Zukünftige"],
+  [/spaeter/g, "später"],
+  [/Spaeter/g, "Später"],
+  [/haeufig/g, "häufig"],
+  [/Haeufig/g, "Häufig"],
+  [/duenn/g, "dünn"],
+  [/Duenn/g, "Dünn"],
+  [/Komplexitaet/g, "Komplexität"],
+  [/komplexitaet/g, "komplexität"],
+  [/uebersehen/g, "übersehen"],
+  [/ueberschreitet/g, "überschreitet"],
+  [/ueberpruefen/g, "überprüfen"],
+  [/Ueberpruefen/g, "Überprüfen"],
+  [/spezifisch/g, "spezifisch"], // no umlaut, filler
+  [/textbuch/g, "textbuch"],
+  [/maessig/g, "mäßig"],
+  [/gemaess/g, "gemäß"],
+  [/Gemaess/g, "Gemäß"],
+  [/eindeutige/g, "eindeutige"], // no umlaut
+  [/Verhaeltnis/g, "Verhältnis"],
+  [/verhaeltnis/g, "verhältnis"],
+  [/Anwendungs-Schicht/g, "Anwendungs-Schicht"], // no umlaut
+  [/koennen/g, "können"],
+  [/Koennen/g, "Können"],
+  [/koennten/g, "könnten"],
+  [/koennt/g, "könnt"],
+  [/Loesung/g, "Lösung"],
+  [/loesung/g, "lösung"],
+  [/loescht/g, "löscht"],
+  [/Loescht/g, "Löscht"],
 
   // ß-Wörter (Substring-Matching, nur ungefährliche)
   [/ausschliesslich/g, "ausschließlich"],

@@ -184,8 +184,8 @@ Die physische MariaDB-Struktur wird in `server/db.js` erstellt:
 - `termin`
 - `mangel`
 - `status`
-- `pruefart`
-- `pruefer`
+- `prüfart`
+- `prüfer`
 - `mangel_kategorie`
 
 Die wichtigsten Integritätsregeln liegen in MariaDB:

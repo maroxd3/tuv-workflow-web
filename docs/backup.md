@@ -7,10 +7,10 @@ Architektur: On-Premise pro Prüfstelle, MariaDB lokal.
 
 Welche Vorfaelle muss eine Backup-Strategie abfangen?
 
-| Szenario | Haeufigkeit | Schutz durch |
+| Szenario | Häufigkeit | Schutz durch |
 |---|---|---|
 | Server-PC-Festplatte stirbt | alle 3–5 Jahre realistisch | Backup auf zweites Geraet |
-| Mitarbeiter loescht Termin versehentlich | jederzeit möglich | Point-in-Time-Recovery (Stunden zurück) |
+| Mitarbeiter löscht Termin versehentlich | jederzeit möglich | Point-in-Time-Recovery (Stunden zurück) |
 | Ransomware verschlüsselt den Server | selten, aber existenzbedrohend | Offsite-Backup auf getrenntem Konto |
 | Werkstatt brennt ab, Server wird gestohlen | sehr selten | Offsite-Cloud-Backup ausserhalb des Gebaeudes |
 
@@ -54,7 +54,7 @@ Haus**.
 ## 3. Warum diese Strategie sinnvoll ist
 
 1. **Point-in-Time-Recovery via Binary Logs** — wird ein Termin versehentlich
-   geloescht, kann auf den Stand 1 Minute vor dem Löschen zurückgerollt
+   gelöscht, kann auf den Stand 1 Minute vor dem Löschen zurückgerollt
    werden. Verlust: nur die seitdem geschriebenen Daten.
 2. **Verschlüsselung BEVOR das Backup das Geraet verlaesst** — der
    Verschlüsselungsschlüssel liegt nicht auf dem Server. Selbst eine
@@ -68,7 +68,7 @@ Haus**.
    E-Mail an den Werkstatt-Inhaber. So wird ein kaputtes Backup erkannt,
    bevor es im Ernstfall gebraucht wird.
 5. **Versionierung mit Rotation** — ein Fehler faellt manchmal erst Wochen
-   spaeter auf. Mehrere Generationen sind nötig, nicht nur "Backup von
+   später auf. Mehrere Generationen sind nötig, nicht nur "Backup von
    gestern".
 
 ## 4. Was im Repository umgesetzt ist
@@ -90,7 +90,7 @@ Haus**.
    - Schlüssel **ausgedruckt im Werkstatt-Tresor** aufbewahren
    - Schlüssel ist nicht wiederherstellbar — Verlust = Backup unbrauchbar
 4. **Mitarbeiter-E-Mail** für Backup-Fehler-Alarmierung eintragen
-5. **Erste Restore-Probe** gemeinsam durchfuehren
+5. **Erste Restore-Probe** gemeinsam durchführen
 
 ## 6. Notfall-Restore (Kurzfassung)
 

@@ -22,7 +22,7 @@ eigene Relationen mit referentieller Integrität über Fremdschlüssel. Die vier
 Stamm-Relationen (`status`, `pruefart`, `pruefer`, `mangel_kategorie`) sind
 ebenfalls eigene Relationen — keine Enums in den Hauptrelationen, damit
 Bezeichnungen und Geschäftslogik (z. B. `blockiert_bestanden`) als Daten
-gepflegt werden koennen.
+gepflegt werden können.
 
 ## Begründung und Normalformen-Nachweis
 
@@ -71,7 +71,7 @@ M → A mit A ∈ M) sind ausgelassen.
 - `kennzeichen → fahrzeug_id` (UNIQUE) und damit transitiv alles weitere
 - `fin → fahrzeug_id` (UNIQUE) und damit transitiv alles weitere
 - Keine nicht-trivialen FDs zwischen Nicht-Schlüssel-Attributen, die wir
-  modellieren. Diskussion: Semantisch koennte `fin → hersteller, modell, baujahr`
+  modellieren. Diskussion: Semantisch könnte `fin → hersteller, modell, baujahr`
   gelten (FIN ist standardisiert codiert). Da `fin` aber ein Schlüsselkandidat
   ist, ist die Abhängigkeit erlaubt (Determinante ist Superschlüssel) — somit
   kein BCNF-Verstoss.
@@ -88,8 +88,8 @@ M → A mit A ∈ M) sind ausgelassen.
 **mangel**:
 - `mangel_id → termin_id, code_stvzo, beschreibung, kategorie_code, behoben, erfasst_am`
 - **Diskussion einer potentiellen FD `code_stvzo → kategorie_code`**:
-  Semantisch koennte ein StVZO-Code die Mangelkategorie eindeutig festlegen
-  (Beispiel: `2.1.1 Betriebsbremse: ungleichmaessige Bremswirkung` ist nach
+  Semantisch könnte ein StVZO-Code die Mangelkategorie eindeutig festlegen
+  (Beispiel: `2.1.1 Betriebsbremse: ungleichmäßige Bremswirkung` ist nach
   HU-Richtlinie typischerweise EM). Wir modellieren `code_stvzo` aber als
   **rein dokumentarisches optionales Attribut** (`NULL` zulässig) und lassen
   die Mangelkategorie vom Prüfer **explizit** setzen. Begründung: ein und
@@ -103,7 +103,7 @@ M → A mit A ∈ M) sind ausgelassen.
   einer Zeile von `halter` aktualisiert, nicht in jedem zugehoerigen Fahrzeug.
 - **Insert-Anomalie:** Ein Halter kann eingetragen werden, ohne dass schon ein
   Fahrzeug existiert (war frueher mit eingebetteten Halterdaten unmöglich).
-- **Delete-Anomalie:** Loescht man das letzte Fahrzeug eines Halters, bleibt der
+- **Delete-Anomalie:** Löscht man das letzte Fahrzeug eines Halters, bleibt der
   Halter erhalten. `ON DELETE RESTRICT` auf `fahrzeug.halter_id` verhindert
   zudem das versehentliche Löschen eines Halters mit aktiven Fahrzeugen.
 
@@ -134,7 +134,7 @@ verlustlose Zerlegung im Sinne der Vorlesung.
   und das Fahrzeug benötigt vorher einen Halter. Das UI fuehrt durch diese
   Reihenfolge.
 - Die DB bleibt fachlich korrekt und wartbar; alle Änderungen an einem
-  Domaenenobjekt (z. B. Halter-Anschrift) sind genau einmal zu schreiben.
+  Domänenobjekt (z. B. Halter-Anschrift) sind genau einmal zu schreiben.
 - 4NF/5NF wurden nicht analysiert, da keine mehrwertigen Abhängigkeiten im
   Datenmodell vorkommen (siehe Fuchs Kap. 6 Teil 2, Folie 241: "in vielen
   Faellen reicht eine Normalisierung bis zur 3. Normalform").

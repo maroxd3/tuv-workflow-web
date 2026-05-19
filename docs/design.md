@@ -23,7 +23,7 @@ flowchart LR
 ```
 
 Der Browser enthaelt keine Datenbank-Engine. Alle dauerhaften Daten liegen in
-MariaDB. Das Frontend bleibt dadurch leichtgewichtig und mehrere Clients koennen
+MariaDB. Das Frontend bleibt dadurch leichtgewichtig und mehrere Clients können
 denselben Datenstand nutzen.
 
 ## 2. Schichten

@@ -7,7 +7,7 @@ Datum: 2026-05-17
 
 Die Anwendung verwaltet Halter, Fahrzeuge, Prüftermine und Mängel. Diese
 Daten haben klare Beziehungen und muessen von mehreren Benutzern gemeinsam
-gesehen werden koennen. Ein lokaler Browser-Speicher waere dafuer falsch, weil
+gesehen werden können. Ein lokaler Browser-Speicher wäre dafuer falsch, weil
 jeder Browser seinen eigenen Datenstand haette.
 
 ## Entscheidung
@@ -18,7 +18,7 @@ Wir nutzen MariaDB als zentrale relationale Datenbank. Das Frontend greift nur
 ## Begründung
 
 - MariaDB erzwingt Fremdschlüssel, UNIQUE- und CHECK-Constraints.
-- Mehrere Clients koennen denselben Datenbestand nutzen.
+- Mehrere Clients können denselben Datenbestand nutzen.
 - Die Datenbank ist lokal und serverseitig betreibbar.
 - Zugangsdaten bleiben im Backend und gelangen nicht ins Frontend-Bundle.
 - Das bestehende 3NF-Modell passt direkt zu MariaDB-Tabellen.

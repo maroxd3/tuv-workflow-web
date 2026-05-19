@@ -56,7 +56,7 @@ Die Regel wird in drei Schichten umgesetzt:
   `PATCH /api/termine/:id` setzte zuvor `status_code` ohne WF-01-Check — wird
   jetzt vom Trigger abgefangen und vom Error-Handler in 422 übersetzt).
 - **DB-Trigger** schuetzt gegen direkten SQL-Zugriff (Mariadb-Client,
-  Adminer-Web-UI, zukuenftige Tools, Backup-Restore-Skripte). Ist die einzige
+  Adminer-Web-UI, zukünftige Tools, Backup-Restore-Skripte). Ist die einzige
   Schicht, die WF-01 noch garantiert, wenn jemand die API komplett umgeht.
 - Trigger ist idempotent angelegt (`CREATE OR REPLACE`), wird bei jedem
   Server-Start in `server/db.js → migrateTriggers()` neu deklariert.
@@ -86,7 +86,7 @@ keine Zeile mehr betroffen.
   `422 {ok:false, reason}`.
 - Der Trigger ist auf `BEFORE UPDATE` beschraenkt — INSERT-Path wurde
   bewusst nicht zusaetzlich abgesichert, weil bei einer Termin-Neuanlage
-  noch keine Mängel verknuepft sein koennen (FK `mangel.termin_id`).
+  noch keine Mängel verknuepft sein können (FK `mangel.termin_id`).
 - API-Tests sollten alle drei Layer explizit prüfen:
   1. Direkter SQL-Update (Trigger isoliert)
   2. `PATCH /api/termine/:id` mit `statusCode: Bestanden` (Trigger via API)
