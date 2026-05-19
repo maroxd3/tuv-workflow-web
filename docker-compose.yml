@@ -45,6 +45,8 @@ services:
       MARIADB_PASSWORD: ${MARIADB_PASSWORD:-tuv_app_pw}
       MARIADB_DATABASE: ${MARIADB_DATABASE:-tuv_workflow}
       API_PORT: 8787
+      ADMIN_TOKEN: ${ADMIN_TOKEN:-}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-}
     ports:
       - "8787:8787"
     volumes:
@@ -57,15 +59,22 @@ services:
         condition: service_healthy
 
   # Adminer: Web-UI zum direkten Anschauen/Filtern/Bearbeiten der MariaDB.
-  # Erreichbar unter http://localhost:8080 sobald der Stack laeuft.
-  # Login-Server: "db" (interner Hostname im Docker-Netz), Nutzer/Passwort
-  # aus .env (MARIADB_USER / MARIADB_PASSWORD), Datenbank: tuv_workflow.
-  # Nicht fuer Produktion gedacht — vor Auslieferung an eine Pruefstelle
-  # entweder den Service entfernen oder ueber Compose-Profile gaten.
+  # Standardmäßig NICHT mitgestartet — Adminer auf einem Werkstatt-Server
+  # offen auf Port 8080 wäre eine unnötige Angriffsfläche. Nur per Profile
+  # `tools` für Demos und Debugging starten:
+  #
+  #   docker compose up -d                       # Standard ohne Adminer
+  #   docker compose --profile tools up -d       # Mit Adminer auf :8080
+  #
+  # Login-Server im Adminer-UI: `db` (interner Hostname im Docker-Netz).
+  # Nutzer/Passwort aus .env (MARIADB_USER / MARIADB_PASSWORD), Datenbank:
+  # tuv_workflow.
   adminer:
     image: adminer:5.4.0
     container_name: tuv-adminer
     restart: unless-stopped
+    profiles:
+      - tools
     ports:
       - "8080:8080"
     environment:
