@@ -312,10 +312,10 @@ const nodes = [
     critical: true,
   }),
   N('useToasts', 'state', 'useToasts.js', 'sonner wrapper', 980, 315, 210, 60, 'service', {
-    role: 'Returns { add, toasts, rm } where add() is a thin shim over sonner; toasts/rm are vestigial no-ops.',
+    role: 'Returns { add } — a thin shim over sonner. Maps "success" | "error" | "warn" | other to the right sonner method.',
     plain: 'Small helper that pops green/red status messages in the corner.',
     path: 'src/hooks/useToasts.js:3',
-    notes: ['success → sonner.success', 'toasts:[] and rm:() are leftovers from old custom toast system'],
+    notes: ['success → sonner.success, error → sonner.error, warn → sonner.warning, sonst → sonner() plain'],
     tag: ['overview', 'all'],
   }),
   N('useIsMobile', 'state', 'useIsMobile.js', 'viewport hook', 980, 390, 210, 60, 'service', {
@@ -732,9 +732,8 @@ const KNOWN_BUGS = {
   'Toast-dead':     [
     { sev: 'low', t: 'Toast.jsx and ToastContainer have zero importers in src/. App uses sonner instead via useToasts. Safe to delete in a later cleanup.' },
   ],
-  'useToasts':      [
-    { sev: 'low', t: 'Lines 11-12 expose toasts:[] and rm:() — leftovers from a previous custom toast implementation. No caller reads them.' },
-  ],
+  // 'useToasts': dead leftovers toasts:[] und rm:() wurden am 2026-05-19
+  // entfernt. Hook ist jetzt minimal: nur add() als sonner-Shim.
   'useStoreCompat': [
     { sev: 'med', t: 'Lines 256-265: updTr with status patch calls updTerminStatus and silently returns on failure (no toast, no throw). The App-layer guard is the only barrier the user sees.' },
   ],

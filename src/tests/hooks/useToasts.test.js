@@ -13,11 +13,6 @@ import { toast as sonner } from 'sonner';
 import { useToasts } from '../../hooks/useToasts';
 
 describe('useToasts', () => {
-  it('starts with an empty toast list', () => {
-    const { result } = renderHook(() => useToasts());
-    expect(result.current.toasts).toEqual([]);
-  });
-
   it('calls sonner.success for success type', () => {
     const { result } = renderHook(() => useToasts());
     result.current.add('Gespeichert', 'success');
