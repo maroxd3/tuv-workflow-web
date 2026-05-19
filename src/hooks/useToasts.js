@@ -8,7 +8,5 @@ export function useToasts() {
       else if (type === "warn") sonner.warning(msg);
       else sonner(msg);
     },
-    toasts: [],
-    rm: () => {},
   };
 }
