@@ -15,6 +15,7 @@ MariaDB-Branch.
 | [006](006-firebase-hosting.md) | accepted | Firebase Hosting nur für statische Frontend-Dateien | 2026-05-13 |
 | [007](007-api-client-pattern.md) | accepted | API-Client Pattern im Frontend | 2026-05-17 |
 | [008](008-keine-eingebetteten-arrays.md) | accepted | Mängel und Halter als eigene Tabellen | 2026-05-13 |
+| [009](009-monolithischer-server.md) | accepted | Monolithischer Server statt geschichteter Architektur | 2026-05-19 |
 
 ## Regeln
 
