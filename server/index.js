@@ -178,9 +178,29 @@ app.delete("/api/fahrzeuge/:id", asyncRoute(async (req, res) => {
   res.status(204).end();
 }));
 
-app.get("/api/termine", asyncRoute(async (_req, res) => {
+app.get("/api/termine", asyncRoute(async (req, res) => {
   const rows = await db().query("SELECT * FROM termin ORDER BY datum DESC, uhrzeit ASC");
-  res.json(rows.map(toTermin));
+  const termine = rows.map(toTermin);
+
+  // N+1-Fix: ?include=maengel laedt die Mangel-Liste pro Termin in einem
+  // zusaetzlichen SQL (statt einem Roundtrip pro Termin). Bei 13 Termine =
+  // 2 SQL-Queries statt 14 HTTP-Calls. Gruppierung erfolgt im Memory-Map.
+  if (req.query.include === "maengel") {
+    const allMaengel = await db().query(
+      "SELECT * FROM mangel ORDER BY termin_id, erfasst_am",
+    );
+    const byTermin = new Map();
+    for (const m of allMaengel) {
+      const arr = byTermin.get(m.termin_id);
+      if (arr) arr.push(toMangel(m));
+      else byTermin.set(m.termin_id, [toMangel(m)]);
+    }
+    return res.json(
+      termine.map((t) => ({ ...t, maengel: byTermin.get(t.terminId) || [] })),
+    );
+  }
+
+  res.json(termine);
 }));
 
 app.post("/api/termine", asyncRoute(async (req, res) => {
