@@ -32,14 +32,14 @@ Nicht im Scope:
 
 | ID | Anforderung | Akzeptanzkriterium |
 |---|---|---|
-| F-01 | Halter verwalten | Halter koennen angelegt, bearbeitet, geloescht und gelistet werden |
-| F-02 | Fahrzeuge verwalten | Fahrzeuge koennen mit Halterbezug gepflegt werden |
-| F-03 | Termine planen | Termine koennen Fahrzeugen zugeordnet und nach Datum angezeigt werden |
+| F-01 | Halter verwalten | Halter können angelegt, bearbeitet, gelöscht und gelistet werden |
+| F-02 | Fahrzeuge verwalten | Fahrzeuge können mit Halterbezug gepflegt werden |
+| F-03 | Termine planen | Termine können Fahrzeugen zugeordnet und nach Datum angezeigt werden |
 | F-04 | Status pflegen | Statuswechsel sind über UI und API möglich |
 | F-05 | WF-01 durchsetzen | `Bestanden` wird bei HM/GM verhindert |
-| F-06 | Mängel erfassen | Mängel koennen mit Kategorie und Beschreibung gespeichert werden |
+| F-06 | Mängel erfassen | Mängel können mit Kategorie und Beschreibung gespeichert werden |
 | F-07 | Statistik anzeigen | Kennzahlen und Diagramme basieren auf MariaDB-Daten |
-| F-08 | Berichte erzeugen | Prüfberichte koennen angezeigt und gedruckt werden |
+| F-08 | Berichte erzeugen | Prüfberichte können angezeigt und gedruckt werden |
 | F-09 | Demo-Daten laden | `/api/admin/demo` erzeugt reproduzierbare Beispieldaten |
 | F-10 | Daten zurücksetzen | `/api/admin/reset` entfernt Bewegungsdaten |
 
@@ -100,7 +100,7 @@ npm run api
 npm run dev
 ```
 
-Die API laeuft standardmaessig auf Port `8787`, das Frontend auf Vite-Port
+Die API laeuft standardmäßig auf Port `8787`, das Frontend auf Vite-Port
 `5173`. Vite proxyt `/api` an die API.
 
 ## 8. Abnahmekriterien
@@ -109,7 +109,7 @@ Die API laeuft standardmaessig auf Port `8787`, das Frontend auf Vite-Port
 - `npm run typecheck` ist erfolgreich.
 - `GET /api/health` liefert `{ ok: true }`.
 - `GET /api/fahrzeuge` liefert Daten aus MariaDB.
-- Demo-Daten koennen geladen und danach in Tagesplan, Fahrzeuge, Statistik und
+- Demo-Daten können geladen und danach in Tagesplan, Fahrzeuge, Statistik und
   Berichte verwendet werden.
 - Ein Termin mit HM/GM kann nicht als `Bestanden` gespeichert werden.
 

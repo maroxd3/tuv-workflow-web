@@ -56,7 +56,7 @@ Stoppen:
 
 ```powershell
 docker compose down            # Container weg, Daten bleiben im Volume
-docker compose down -v         # ACHTUNG: loescht auch das Daten-Volume
+docker compose down -v         # ACHTUNG: löscht auch das Daten-Volume
 ```
 
 ### Variante B — Manuelles MariaDB
@@ -69,7 +69,7 @@ docker compose down -v         # ACHTUNG: loescht auch das Daten-Volume
 
 #### Datenbank und Benutzer anlegen
 
-In MariaDB als Admin ausfuehren:
+In MariaDB als Admin ausführen:
 
 ```sql
 CREATE DATABASE IF NOT EXISTS tuv_workflow
@@ -123,7 +123,7 @@ an `http://127.0.0.1:8787` weiter.
 
 ## 6. Demo-Daten laden
 
-Der Demo-Endpunkt loescht die lokalen Fachdaten und legt den Demo-Stand neu an:
+Der Demo-Endpunkt löscht die lokalen Fachdaten und legt den Demo-Stand neu an:
 
 ```powershell
 Invoke-RestMethod -Method Post http://127.0.0.1:8787/api/admin/demo

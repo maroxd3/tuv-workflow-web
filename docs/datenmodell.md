@@ -359,12 +359,12 @@ CREATE TABLE fahrzeug (
     CHECK (kilometerstand IS NULL OR (kilometerstand BETWEEN 0 AND 3000000))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE prüfart (
+CREATE TABLE pruefart (
   prueft_code VARCHAR(40) PRIMARY KEY,
   bezeichnung VARCHAR(120) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE prüfer (
+CREATE TABLE pruefer (
   pruefer_kuerzel VARCHAR(20) PRIMARY KEY,
   name            VARCHAR(120) NOT NULL,
   qualifikation   VARCHAR(120)
@@ -393,10 +393,10 @@ CREATE TABLE termin (
     FOREIGN KEY (fahrzeug_id) REFERENCES fahrzeug(fahrzeug_id)
     ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT termin_pruefart_fk
-    FOREIGN KEY (prueft_code) REFERENCES prüfart(prueft_code)
+    FOREIGN KEY (prueft_code) REFERENCES pruefart(prueft_code)
     ON DELETE RESTRICT ON UPDATE CASCADE,
   CONSTRAINT termin_pruefer_fk
-    FOREIGN KEY (pruefer_kuerzel) REFERENCES prüfer(pruefer_kuerzel)
+    FOREIGN KEY (pruefer_kuerzel) REFERENCES pruefer(pruefer_kuerzel)
     ON DELETE SET NULL ON UPDATE CASCADE,
   CONSTRAINT termin_status_fk
     FOREIGN KEY (status_code) REFERENCES status(status_code)

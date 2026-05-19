@@ -18,14 +18,14 @@ SQL-Zugriffe.
 
 - Express ist leichtgewichtig und passt zum vorhandenen Node/Vite-Projekt.
 - Der `mariadb` Driver unterstuetzt Connection Pools und parametrisierte Queries.
-- API-Endpunkte koennen Frontend-Feldnamen auf Datenbankspalten mappen.
-- Workflow-Regeln koennen serverseitig durchgesetzt werden.
+- API-Endpunkte können Frontend-Feldnamen auf Datenbankspalten mappen.
+- Workflow-Regeln können serverseitig durchgesetzt werden.
 - Die API ist lokal per `npm run dev:api` oder `npm run api` startbar.
 
 ## Konsequenzen
 
 - SQL liegt zentral in `server/index.js`; Schema-Setup und Stammdaten liegen in
   `server/db.js`.
-- Frontend-Tests koennen ohne echte DB laufen, API-Tests brauchen MariaDB.
+- Frontend-Tests können ohne echte DB laufen, API-Tests brauchen MariaDB.
 - Für Produktion muss die API separat deployt und über HTTPS abgesichert
   werden.

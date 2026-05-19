@@ -30,7 +30,7 @@ Stand: 2026-05-17
 - Eric Evans: Domain-Driven Design.
 - Scrum Guide: https://scrumguides.org/
 
-## Domaene
+## Domäne
 
 - Straßenverkehrs-Zulassungs-Ordnung (StVZO), insbesondere Paragraf 29.
 - VdTUEV-Merkblaetter und einschlaegige Pruefpraxis als fachlicher Kontext.

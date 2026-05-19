@@ -116,7 +116,7 @@ docker compose up -d
 ### **Memory-Kontext für kuenftige Sessions**
 
 - Marwan ist Kfz-Gutachter — seine Domain-Expertise ist Gold wert, hat heute
-  den HM/EM/GM-Modellierungs-Fehler aufgedeckt. Bei zukuenftigen
+  den HM/EM/GM-Modellierungs-Fehler aufgedeckt. Bei zukünftigen
   Modellierungs-Fragen ihn aktiv fragen ("ist das nach §29 StVZO so
   korrekt?").
 - Adminer (`localhost:8080`) ist Marwans Fenster in die DB. Wenn er etwas
@@ -175,13 +175,13 @@ docker compose up -d
   - `f6511f2` Document on-premise model and Docker workflow
   - `b24b209` Add docker-compose foundation with binlog-enabled MariaDB
 - **Tests:** `npm run typecheck` gruen. `npm test` und Docker-Stack noch nicht
-  ausgefuehrt (Docker nicht installiert).
+  ausgeführt (Docker nicht installiert).
 - **Working tree:** sauber.
 - **Was funktioniert garantiert:** Doku-Änderungen sind reine Markdown-Edits.
   Typecheck laeuft. Kein Code-Verhalten geändert.
 - **Was noch ungetestet ist:** Der komplette Docker-Stack. Marwan muss Docker
-  Desktop installieren und `docker compose up -d` ausfuehren, bevor wir
-  pushen koennen.
+  Desktop installieren und `docker compose up -d` ausführen, bevor wir
+  pushen können.
 
 ### **Nächste Schritte (Reihenfolge)**
 
@@ -254,7 +254,7 @@ Wenn alles laeuft: `git push -u origin feat/docker-compose`, dann Step 2.
 - Marwans Vision: jede TÜV-Werkstatt bekommt eigenes On-Premise-Setup mit
   eigener MariaDB. Verkauf als Installations-Paket inkl. Backup-Konfiguration.
 - Oussama Hlayhel hat 15.-17.05.2026 die MariaDB-Migration via Codex gemacht,
-  mit 10 "Restore..."-Commits am Ende (Codex hat erst Sachen geloescht und
+  mit 10 "Restore..."-Commits am Ende (Codex hat erst Sachen gelöscht und
   musste sie zurückholen). Daher Vorsicht: bei kuenftigen großen Refactors
   vorher Sicherheitsbackup oder feature-branch.
 

@@ -1,7 +1,7 @@
 # Test Coverage
 
 Stand: 2026-05-17  
-Ausgefuehrt mit: `npm test` und `npx vitest run --coverage`
+Ausgeführt mit: `npm test` und `npx vitest run --coverage`
 
 ## 1. Ergebnis der aktuellen Testausfuehrung
 
@@ -55,7 +55,7 @@ Die aktive Laufzeitarchitektur ist:
 React Hook -> apiClient.ts -> Express API -> MariaDB
 ```
 
-Für diesen Pfad wurde ein Smoke-Test gegen die lokale MariaDB ausgefuehrt:
+Für diesen Pfad wurde ein Smoke-Test gegen die lokale MariaDB ausgeführt:
 
 ```powershell
 Invoke-RestMethod http://127.0.0.1:8787/api/health

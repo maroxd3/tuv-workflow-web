@@ -6,8 +6,8 @@ Aktualisiert: 2026-05-17 für MariaDB
 
 ## Kontext
 
-Mängel koennten theoretisch als JSON in einem Termin gespeichert werden.
-Halterdaten koennten theoretisch direkt im Fahrzeug stehen. Beides würde aber
+Mängel könnten theoretisch als JSON in einem Termin gespeichert werden.
+Halterdaten könnten theoretisch direkt im Fahrzeug stehen. Beides würde aber
 das relationale Modell schwaechen.
 
 ## Entscheidung
@@ -17,7 +17,7 @@ Mängel und Halter bleiben eigene MariaDB-Tabellen mit Fremdschlüsseln.
 ## Begründung
 
 - Mängel brauchen eigene IDs, Kategorien und Auswertbarkeit.
-- Halter koennen mehrere Fahrzeuge besitzen.
+- Halter können mehrere Fahrzeuge besitzen.
 - MariaDB kann FKs nur zwischen echten Tabellen erzwingen.
 - Statistiken nach Kategorie, Zeitraum oder Halter bleiben einfach.
 

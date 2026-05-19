@@ -1,4 +1,4 @@
-# 005 - TypeScript graduell einfuehren
+# 005 - TypeScript graduell einführen
 
 Status: accepted  
 Datum: 2026-05-13  
@@ -7,18 +7,18 @@ Aktualisiert: 2026-05-17
 ## Kontext
 
 Das Projekt startete mit React/JSX. Eine vollstaendige Big-Bang-Migration auf
-TypeScript waere riskant und würde viele fachlich stabile Views beruehren.
+TypeScript wäre riskant und würde viele fachlich stabile Views beruehren.
 
 ## Entscheidung
 
-TypeScript wird graduell genutzt. Neue oder datennahe Module koennen `.ts` sein,
+TypeScript wird graduell genutzt. Neue oder datennahe Module können `.ts` sein,
 waehrend bestehende `.jsx`-Views erhalten bleiben, solange kein fachlicher Grund
 für eine Migration besteht.
 
 ## Begründung
 
 - Geringes Refactor-Risiko.
-- Datentypen im Frontend koennen trotzdem zentral beschrieben werden.
+- Datentypen im Frontend können trotzdem zentral beschrieben werden.
 - Bestehende Tests und UI-Dateien bleiben stabil.
 - `allowJs` ermöglicht gemischten Betrieb.
 

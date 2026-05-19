@@ -304,7 +304,7 @@
             <div class="what">Migration auf zentrale MariaDB-Persistenz · Datenmodell v3 · ADRs</div>
           <div class="detail">
               <strong>Datenbank:</strong> Persistenz über zentrale <code>MariaDB</code>; Browser greifen über die <code>Express</code>-API unter <code>/api</code> auf denselben Datenbestand zu.<br>
-            <strong>Schema:</strong> 3NF-normalisiertes Modell mit Tabellen für <code>halter</code>, <code>fahrzeug</code>, <code>termin</code>, <code>mangel</code>, <code>status</code>, <code>prüfart</code>, <code>prüfer</code> und <code>mangel_kategorie</code>.<br>
+            <strong>Schema:</strong> 3NF-normalisiertes Modell mit Tabellen für <code>halter</code>, <code>fahrzeug</code>, <code>termin</code>, <code>mangel</code>, <code>status</code>, <code>pruefart</code>, <code>pruefer</code> und <code>mangel_kategorie</code>.<br>
             <strong>Dokumentation:</strong> <code>docs/datenmodell.md</code> wurde als Drei-Schichten-Modell überarbeitet; das ER-Diagramm ist im Chen-Stil dargestellt, Primärschlüssel sind unterstrichen.<br>
               <strong>Architekturentscheidungen:</strong> <code>docs/decisions/</code> enthält acht ADRs zu MariaDB, 3NF, WF-01, Express-API, TypeScript, Hosting, API-Client-Pattern und nicht-eingebetteten Arrays.
           </div>
