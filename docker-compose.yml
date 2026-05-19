@@ -54,6 +54,10 @@ services:
       - ./package.json:/app/package.json:ro
       - ./package-lock.json:/app/package-lock.json:ro
       - api_node_modules:/app/node_modules
+      # `dist/` muss vorher mit `npm run build` lokal erzeugt worden sein.
+      # Wenn vorhanden, serviert Express das Frontend mit aus
+      # (Single-Container-Deployment). Sonst nur /api.
+      - ./dist:/app/dist:ro
     depends_on:
       db:
         condition: service_healthy

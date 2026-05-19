@@ -1,6 +1,9 @@
 import express from "express";
 import cors from "cors";
 import { randomUUID } from "node:crypto";
+import { existsSync } from "node:fs";
+import { resolve, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { db, ensureDatabase } from "./db.js";
 import {
   check,
@@ -518,6 +521,25 @@ async function seedFullDemoData() {
 app.post("/api/admin/demo", requireAdminToken, asyncRoute(async (_req, res) => {
   res.json(await seedFullDemoData());
 }));
+// ── Statisches Frontend (Single-Container-Deployment) ────────────────
+// In Produktion liefert Express das geba ute React-Frontend aus `dist/`
+// gleich mit aus — keine separate Nginx-/Vite-Instanz nötig. Wenn
+// `dist/` fehlt (z. B. im Dev-Modus ohne `npm run build`), bleibt nur
+// die /api-Schnittstelle. SPA-Routing: jede nicht-/api-URL fällt auf
+// `index.html` zurück, damit der Browser den React-Router clientseitig
+// auflösen kann.
+const __dirname = resolve(fileURLToPath(import.meta.url), "..");
+const distPath = resolve(__dirname, "..", "dist");
+if (existsSync(distPath)) {
+  app.use(express.static(distPath));
+  app.get(/^\/(?!api\/).*/, (_req, res) => {
+    res.sendFile(join(distPath, "index.html"));
+  });
+  console.log(`[server] serving frontend from ${distPath}`);
+} else {
+  console.log(`[server] no dist/ found, running /api only (frontend via Vite dev server)`);
+}
+
 app.use((err, _req, res, _next) => {
   if (err && err.sqlState === "45000") {
     return res.status(422).json({ ok: false, reason: err.text || err.message });
