@@ -65,8 +65,15 @@ export function delFahrzeug(id: string): Promise<void> {
   return request(`/fahrzeuge/${id}`, { method: "DELETE" });
 }
 
-export function listTermine(): Promise<Termin[]> {
-  return request("/termine");
+export interface TerminMitMaengeln extends Termin {
+  maengel: Mangel[];
+}
+
+export function listTermine(): Promise<Termin[]>;
+export function listTermine(opts: { includeMaengel: true }): Promise<TerminMitMaengeln[]>;
+export function listTermine(opts?: { includeMaengel?: boolean }): Promise<Termin[] | TerminMitMaengeln[]> {
+  const qs = opts?.includeMaengel ? "?include=maengel" : "";
+  return request(`/termine${qs}`);
 }
 
 export function addTermin(data: NeuerTermin): Promise<Termin> {

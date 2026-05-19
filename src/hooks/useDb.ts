@@ -9,7 +9,7 @@
  * laedt bei Bedarf erneut von der API.
  */
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import * as api from "../db/apiClient";
 import type {
   Fahrzeug,
@@ -57,23 +57,30 @@ export function useDb(): UseDbResult {
   const [fahrzeuge, setFahrzeuge] = useState<Fahrzeug[]>([]);
   const [termine, setTermine] = useState<UseDbResult["termine"]>([]);
 
+  // ── Polling-Race-Guard ──────────────────────────────────────────────
+  // Zaehlt parallele Write-Operationen. Solange > 0 darf das 5-Sek-Polling
+  // NICHT refreshen, sonst koennte ein langsamer Server-Write durch einen
+  // Poll-Tick mit altem DB-Stand ueberschrieben werden.
+  const writeInFlight = useRef(0);
+  function tracked<T>(fn: () => Promise<T>): Promise<T> {
+    writeInFlight.current++;
+    return fn().finally(() => {
+      writeInFlight.current--;
+    });
+  }
+
   const refresh = useCallback(async () => {
     try {
-      const [h, f, t] = await Promise.all([
+      // N+1-Fix: includeMaengel: true holt termine+maengel in 2 SQL-Queries
+      // statt 14 (1 + N HTTP-Calls). Resultat hat .maengel-Array pro Termin.
+      const [h, f, tWith] = await Promise.all([
         api.listHalter(),
         api.listFahrzeuge(),
-        api.listTermine(),
+        api.listTermine({ includeMaengel: true }),
       ]);
-      // Mängel pro Termin nachladen (1 zusätzlicher Roundtrip, akzeptabel)
-      const termineWithMangel = await Promise.all(
-        t.map(async (tr) => ({
-          ...tr,
-          mängel: await api.listMangelByTermin(tr.terminId),
-        })),
-      );
       setHalterList(h);
       setFahrzeuge(f);
-      setTermine(termineWithMangel);
+      setTermine(tWith.map((tr) => ({ ...tr, mängel: tr.maengel })));
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     }
@@ -105,14 +112,16 @@ export function useDb(): UseDbResult {
   // ── Live-Sync via Polling (US-16) ───────────────────────────────────
   // Empfang legt einen Termin an → Prüfer-Tablet sieht ihn spätestens
   // nach POLL_INTERVAL_MS, ohne dass der Prüfer F5 drücken muss.
-  // Pausiert, während der Tab im Hintergrund ist (Page-Visibility-API),
-  // damit Akku und API-Last bei minimierten/inaktiven Tabs nicht
-  // unnötig belastet werden.
+  // Pausiert: (a) während der Tab im Hintergrund ist (Page-Visibility-API),
+  // (b) solange eine eigene Write-Operation läuft (sonst koennte ein
+  //     langsamer Server-Write durch einen Poll mit altem DB-Stand
+  //     ueberschrieben werden — siehe writeInFlight oben).
   useEffect(() => {
     if (!ready) return;
     const POLL_INTERVAL_MS = 5000;
     const id = window.setInterval(() => {
       if (typeof document !== "undefined" && document.visibilityState !== "visible") return;
+      if (writeInFlight.current > 0) return;
       void refresh();
     }, POLL_INTERVAL_MS);
     return () => window.clearInterval(id);
@@ -120,12 +129,12 @@ export function useDb(): UseDbResult {
 
   // ── Daten-Management (Sidebar-Buttons) ──
   const resetAllData = useCallback(async () => {
-    await api.clearAllDataTables();
+    await tracked(() => api.clearAllDataTables());
     await refresh();
   }, [refresh]);
 
   const loadDemoData = useCallback(async () => {
-    await api.loadDemoData();
+    await tracked(() => api.loadDemoData());
     await refresh();
   }, [refresh]);
 
@@ -143,7 +152,7 @@ export function useDb(): UseDbResult {
     setHalterList((current) => [optimisticHalter, ...current]);
 
     try {
-      const r = await api.addHalter({ ...h, halterId: optimisticHalter.halterId });
+      const r = await tracked(() => api.addHalter({ ...h, halterId: optimisticHalter.halterId }));
       setHalterList((current) =>
         current.map((item) => item.halterId === optimisticHalter.halterId ? r : item),
       );
@@ -164,7 +173,7 @@ export function useDb(): UseDbResult {
     });
 
     try {
-      const r = await api.updHalter(id, p);
+      const r = await tracked(() => api.updHalter(id, p));
       if (!r) {
         if (previous) setHalterList(previous);
         else await refresh();
@@ -189,7 +198,7 @@ export function useDb(): UseDbResult {
     });
 
     try {
-      await api.delHalter(id);
+      await tracked(() => api.delHalter(id));
     } catch (e) {
       if (removed) setHalterList((current) => [removed!, ...current]);
       else await refresh();
@@ -213,7 +222,7 @@ export function useDb(): UseDbResult {
     setFahrzeuge((current) => [optimisticFahrzeug, ...current]);
 
     try {
-      const r = await api.addFahrzeug({ ...f, fahrzeugId: optimisticFahrzeug.fahrzeugId });
+      const r = await tracked(() => api.addFahrzeug({ ...f, fahrzeugId: optimisticFahrzeug.fahrzeugId }));
       setFahrzeuge((current) =>
         current.map((item) => item.fahrzeugId === optimisticFahrzeug.fahrzeugId ? r : item),
       );
@@ -234,7 +243,7 @@ export function useDb(): UseDbResult {
     });
 
     try {
-      const r = await api.updFahrzeug(id, p);
+      const r = await tracked(() => api.updFahrzeug(id, p));
       if (!r) {
         if (previous) setFahrzeuge(previous);
         else await refresh();
@@ -265,7 +274,7 @@ export function useDb(): UseDbResult {
     });
 
     try {
-      await api.delFahrzeug(id);
+      await tracked(() => api.delFahrzeug(id));
     } catch (e) {
       if (previousFahrzeuge) setFahrzeuge(previousFahrzeuge);
       if (previousTermine) setTermine(previousTermine);
@@ -290,7 +299,7 @@ export function useDb(): UseDbResult {
     setTermine((current) => [optimisticTermin, ...current]);
 
     try {
-      const r = await api.addTermin({ ...t, terminId: optimisticTermin.terminId });
+      const r = await tracked(() => api.addTermin({ ...t, terminId: optimisticTermin.terminId }));
       setTermine((current) =>
         current.map((tr) =>
           tr.terminId === optimisticTermin.terminId ? { ...r, mängel: [] } : tr,
@@ -313,7 +322,7 @@ export function useDb(): UseDbResult {
     });
 
     try {
-      const r = await api.updTermin(id, p);
+      const r = await tracked(() => api.updTermin(id, p));
       if (!r) {
         if (previous) setTermine(previous);
         else await refresh();
@@ -339,7 +348,7 @@ export function useDb(): UseDbResult {
     });
 
     try {
-      await api.delTermin(id);
+      await tracked(() => api.delTermin(id));
     } catch (e) {
       if (removed) setTermine((current) => [removed!, ...current]);
       else await refresh();
@@ -358,7 +367,7 @@ export function useDb(): UseDbResult {
     });
 
     try {
-      const r = await api.updTerminStatus(id, status);
+      const r = await tracked(() => api.updTerminStatus(id, status));
       if (!r.ok) {
         if (previous) setTermine(previous);
         else await refresh();
@@ -399,7 +408,7 @@ export function useDb(): UseDbResult {
     });
 
     try {
-      const r = await api.addMangel({ ...m, mangelId: optimisticMangel.mangelId });
+      const r = await tracked(() => api.addMangel({ ...m, mangelId: optimisticMangel.mangelId }));
       setTermine((current) =>
         current.map((tr) => {
           if (tr.terminId !== optimisticMangel.terminId) return tr;
@@ -431,7 +440,7 @@ export function useDb(): UseDbResult {
     });
 
     try {
-      await api.delMangel(id);
+      await tracked(() => api.delMangel(id));
     } catch (e) {
       if (previous) setTermine(previous);
       else await refresh();
