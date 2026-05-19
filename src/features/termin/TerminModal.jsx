@@ -9,11 +9,11 @@ import { isoDate, fmtDate } from "../../utils/date";
 import { Modal } from "../../components/modal/Modal";
 import { Inp, Sel, Fld } from "../../components/ui/inputs";
 import { BtnG, BtnP } from "../../components/ui/buttons";
-import { FahrzeugShape } from "../../types/propTypes";
+import { FahrzeugShape, TerminShape } from "../../types/propTypes";
 import { hatHauptmangel } from "../../utils/mangel";
 import { validateTerminDatum } from "../../utils/validators";
 
-export function TerminModal({ fahrzeuge, initial = {}, onSave, onClose }) {
+export function TerminModal({ fahrzeuge, termine = [], initial = {}, onSave, onClose }) {
   const bestanden_gesperrt = hatHauptmangel(initial.mängel);
   const [form, setForm] = useState({
     fahrzeugId: fahrzeuge[0]?.id || "", datum: isoDate(), uhrzeit: "08:00",
@@ -38,7 +38,27 @@ export function TerminModal({ fahrzeuge, initial = {}, onSave, onClose }) {
     return Object.keys(e).length === 0;
   }
 
-  function save() { if (!validate()) return; onSave(form); }
+  function save() {
+    if (!validate()) return;
+    // UX-Warnung: gleiches Auto + gleicher Tag + gleiche Pruefart bereits gebucht?
+    // DB erlaubt das (verschiedene Uhrzeiten = verschiedene Slots), aber in der
+    // Werkstatt-Realitaet ist es meistens ein Tippfehler des Empfangs.
+    const duplicate = termine.find((t) =>
+      t.fahrzeugId === form.fahrzeugId &&
+      t.datum === form.datum &&
+      t.art === form.art &&
+      t.id !== initial.id,
+    );
+    if (duplicate) {
+      const ok = window.confirm(
+        `${selFz?.kennzeichen || "Dieses Fahrzeug"} hat am ${fmtDate(form.datum)} ` +
+        `bereits eine Prüfung der Art "${selArt?.label || form.art}" um ${duplicate.uhrzeit}.\n\n` +
+        `Trotzdem zusätzlich anlegen?`,
+      );
+      if (!ok) return;
+    }
+    onSave(form);
+  }
 
   return (
     <Modal title={isEdit ? "Termin bearbeiten" : "Prüftermin anlegen"} sub="Terminplanung und Ressourcenzuweisung" onClose={onClose} width={600}>
@@ -120,6 +140,7 @@ export function TerminModal({ fahrzeuge, initial = {}, onSave, onClose }) {
 
 TerminModal.propTypes = {
   fahrzeuge: PropTypes.arrayOf(FahrzeugShape).isRequired,
+  termine: PropTypes.arrayOf(TerminShape),
   initial: PropTypes.object,
   onSave: PropTypes.func.isRequired,
   onClose: PropTypes.func.isRequired,

@@ -395,7 +395,7 @@ export function TagesplanView({ fahrzeuge, termine, addTr, updTr, delTr, addMang
         {confirmDel && <ConfirmModal title="Termin löschen?" msg="Diese Aktion kann nicht rückgängig gemacht werden."
           onConfirm={() => { delTr(confirmDel); setConfirmDel(null); toast("Termin gelöscht", "info"); }}
           onCancel={() => setConfirmDel(null)} />}
-        {showTrModal && <TerminModal fahrzeuge={fahrzeuge}
+        {showTrModal && <TerminModal fahrzeuge={fahrzeuge} termine={termine}
           initial={editTr ? { ...editTr } : { datum: date, ...(newTrInit || {}) }}
           onSave={saveTr} onClose={() => { setShowTrModal(false); setEditTr(null); setNewTrInit(null); }} />}
         {maengelTr && <MaengelModal termin={maengelTr} fahrzeug={fzMap[maengelTr.fahrzeugId]}
