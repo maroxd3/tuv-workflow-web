@@ -304,8 +304,8 @@ const nodes = [
     critical: true,
   }),
   N('useDb', 'state', 'useDb.ts', 'API-backed React hook', 980, 205, 210, 96, 'service', {
-    role: 'React hook over apiClient.ts: loads halter/fahrzeuge/termine/mängel, exposes CRUD, applies optimistic updates, refresh()es from the Express API.',
-    plain: 'The state manager for the app. It asks the API for data, updates the UI, and re-loads data after writes. There is no live push yet; the app pulls or refreshes.',
+    role: 'React hook over apiClient.ts: loads halter/fahrzeuge/termine/mängel, exposes CRUD, applies optimistic updates, refresh()es from the Express API. Polls every 5 sec for multi-user live-sync (US-16).',
+    plain: 'The state manager for the app. It asks the API for data, updates the UI, and re-loads data after writes. Also pulls fresh data every 5 seconds (paused when the tab is in the background) so multiple workstations stay in sync without anyone hitting reload.',
     path: 'src/hooks/useDb.ts:53',
     notes: ['mount effect calls api.initDatabase() via /api/health', 'refresh() reloads halter + fahrzeuge + termine + per-termin mängel', 'writes call apiClient functions and then reconcile local state', 'multi-user live-sync: 5-Sekunden-Polling (US-16, seit 2026-05-19) — pausiert wenn document.visibilityState !== visible'],
     tag: ['overview', 'data', 'tagesplan', 'fahrzeuge', 'maengel', 'all'],
