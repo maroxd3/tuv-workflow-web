@@ -80,6 +80,25 @@ function asyncRoute(fn) {
   return (req, res, next) => Promise.resolve(fn(req, res)).catch(next);
 }
 
+// withTransaction(fn): holt eine Connection aus dem Pool, START TRANSACTION,
+// fuehrt fn(conn) aus, COMMIT bei Erfolg, ROLLBACK bei Fehler. Garantiert
+// All-or-Nothing-Semantik fuer Multi-Step-Writes (Demo-Seed, Mangel-Insert
+// mit Demotion, Admin-Reset). Fuchs-relevant: Kapitel 5 TCL.
+async function withTransaction(fn) {
+  const conn = await db().getConnection();
+  try {
+    await conn.beginTransaction();
+    const result = await fn(conn);
+    await conn.commit();
+    return result;
+  } catch (e) {
+    try { await conn.rollback(); } catch { /* swallow rollback errors */ }
+    throw e;
+  } finally {
+    conn.release();
+  }
+}
+
 app.get("/api/health", (_req, res) => res.json({ ok: true }));
 
 app.get("/api/halter", asyncRoute(async (_req, res) => {
@@ -281,34 +300,55 @@ app.get("/api/termine/:id/maengel", asyncRoute(async (req, res) => {
 
 app.post("/api/maengel", asyncRoute(async (req, res) => {
   const id = req.body.mangelId || randomUUID();
-  await db().query(
-    `INSERT INTO mangel (mangel_id, termin_id, code_stvzo, beschreibung, kategorie_code, behoben)
-     VALUES (?, ?, ?, ?, ?, ?)`,
-    [
-      id,
-      req.body.terminId,
-      req.body.codeStvzo ?? null,
-      req.body.beschreibung,
-      req.body.kategorieCode,
-      req.body.behoben ?? false,
-    ],
-  );
-
-  let terminDemoted = false;
   const istBehoben = Boolean(req.body.behoben);
-  const kat = await one("SELECT blockiert_bestanden FROM mangel_kategorie WHERE kategorie_code = ?", [req.body.kategorieCode]);
-  if (!istBehoben && bool(kat?.blockiert_bestanden)) {
-    const t = await one("SELECT status_code FROM termin WHERE termin_id = ?", [req.body.terminId]);
-    if (t?.status_code === "Bestanden") {
-      await db().query("UPDATE termin SET status_code = 'Nicht bestanden' WHERE termin_id = ?", [req.body.terminId]);
-      terminDemoted = true;
-    }
-  }
 
-  res.status(201).json({
-    mangel: toMangel(await one("SELECT * FROM mangel WHERE mangel_id = ?", [id])),
-    terminDemoted,
+  // Transaktion: Mangel-INSERT und ggf. Termin-Demotion sind logisch
+  // atomar. Wenn die Demotion fehlschlaegt, soll der Mangel auch nicht
+  // gespeichert werden — sonst haette der Termin den blockierenden Mangel
+  // aber noch Status 'Bestanden' (Inkonsistenz).
+  const { mangel, terminDemoted } = await withTransaction(async (conn) => {
+    await conn.query(
+      `INSERT INTO mangel (mangel_id, termin_id, code_stvzo, beschreibung, kategorie_code, behoben)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [
+        id,
+        req.body.terminId,
+        req.body.codeStvzo ?? null,
+        req.body.beschreibung,
+        req.body.kategorieCode,
+        req.body.behoben ?? false,
+      ],
+    );
+
+    let demoted = false;
+    const katRows = await conn.query(
+      "SELECT blockiert_bestanden FROM mangel_kategorie WHERE kategorie_code = ?",
+      [req.body.kategorieCode],
+    );
+    const kat = katRows[0] ?? null;
+    if (!istBehoben && bool(kat?.blockiert_bestanden)) {
+      const tRows = await conn.query(
+        "SELECT status_code FROM termin WHERE termin_id = ?",
+        [req.body.terminId],
+      );
+      const t = tRows[0] ?? null;
+      if (t?.status_code === "Bestanden") {
+        await conn.query(
+          "UPDATE termin SET status_code = 'Nicht bestanden' WHERE termin_id = ?",
+          [req.body.terminId],
+        );
+        demoted = true;
+      }
+    }
+
+    const mangelRows = await conn.query(
+      "SELECT * FROM mangel WHERE mangel_id = ?",
+      [id],
+    );
+    return { mangel: toMangel(mangelRows[0]), terminDemoted: demoted };
   });
+
+  res.status(201).json({ mangel, terminDemoted });
 }));
 
 app.delete("/api/maengel/:id", asyncRoute(async (req, res) => {
@@ -322,95 +362,106 @@ app.get("/api/count/fahrzeuge", asyncRoute(async (_req, res) => {
 }));
 
 app.post("/api/admin/reset", asyncRoute(async (_req, res) => {
-  await db().query("DELETE FROM mangel");
-  await db().query("DELETE FROM termin");
-  await db().query("DELETE FROM fahrzeug");
-  await db().query("DELETE FROM halter");
+  // Transaktion: alle vier DELETEs sind logisch atomar. Wenn z.B. der
+  // halter-DELETE wegen FK-RESTRICT fehlschlaegt (sollte nicht passieren
+  // weil mangel/termin/fahrzeug schon weg sind), bleibt nichts halb
+  // geloescht.
+  await withTransaction(async (conn) => {
+    await conn.query("DELETE FROM mangel");
+    await conn.query("DELETE FROM termin");
+    await conn.query("DELETE FROM fahrzeug");
+    await conn.query("DELETE FROM halter");
+  });
   res.json({ ok: true });
 }));
 
 async function seedFullDemoData() {
-  await db().query("DELETE FROM mangel");
-  await db().query("DELETE FROM termin");
-  await db().query("DELETE FROM fahrzeug");
-  await db().query("DELETE FROM halter");
+  // Transaktion: alle Loeschungen und alle Inserts sollen all-or-nothing
+  // sein. Wenn z.B. der mangel-INSERT auf einer FK-Verletzung scheitert,
+  // soll die DB im vorherigen Stand bleiben, nicht halb-leer.
+  return withTransaction(async (conn) => {
+    await conn.query("DELETE FROM mangel");
+    await conn.query("DELETE FROM termin");
+    await conn.query("DELETE FROM fahrzeug");
+    await conn.query("DELETE FROM halter");
 
-  const halterIds = Array.from({ length: 8 }, () => randomUUID());
-  const fahrzeugIds = Array.from({ length: 8 }, () => randomUUID());
-  const terminIds = Array.from({ length: 13 }, () => randomUUID());
-  const today = isoDate();
+    const halterIds = Array.from({ length: 8 }, () => randomUUID());
+    const fahrzeugIds = Array.from({ length: 8 }, () => randomUUID());
+    const terminIds = Array.from({ length: 13 }, () => randomUUID());
+    const today = isoDate();
 
-  await db().batch(
-    "INSERT INTO halter (halter_id, name, telefon, email) VALUES (?, ?, ?, ?)",
-    [
-      [halterIds[0], "Klaus Müller", "0176 1234567", "k.mueller@mail.de"],
-      [halterIds[1], "Sabine Koch", "0178 9876543", "s.koch@web.de"],
-      [halterIds[2], "Bau GmbH Lehmann", "089 55443322", "info@lehmann-bau.de"],
-      [halterIds[3], "Tarek Osman", "0171 4445566", "t.osman@gmail.com"],
-      [halterIds[4], "Anna Richter", "0162 7778899", "a.richter@outlook.de"],
-      [halterIds[5], "Kurierdienst Schnell GmbH", "0211 3344556", "fuhrpark@schnell-gmbh.de"],
-      [halterIds[6], "Dr. Julia Vogel", "069 77889900", "j.vogel@kanzlei-vogel.de"],
-      [halterIds[7], "Malerbetrieb Heinz Schreiber", "0561 123456", "schreiber-maler@t-online.de"],
-    ],
-  );
+    await conn.batch(
+      "INSERT INTO halter (halter_id, name, telefon, email) VALUES (?, ?, ?, ?)",
+      [
+        [halterIds[0], "Klaus Müller", "0176 1234567", "k.mueller@mail.de"],
+        [halterIds[1], "Sabine Koch", "0178 9876543", "s.koch@web.de"],
+        [halterIds[2], "Bau GmbH Lehmann", "089 55443322", "info@lehmann-bau.de"],
+        [halterIds[3], "Tarek Osman", "0171 4445566", "t.osman@gmail.com"],
+        [halterIds[4], "Anna Richter", "0162 7778899", "a.richter@outlook.de"],
+        [halterIds[5], "Kurierdienst Schnell GmbH", "0211 3344556", "fuhrpark@schnell-gmbh.de"],
+        [halterIds[6], "Dr. Julia Vogel", "069 77889900", "j.vogel@kanzlei-vogel.de"],
+        [halterIds[7], "Malerbetrieb Heinz Schreiber", "0561 123456", "schreiber-maler@t-online.de"],
+      ],
+    );
 
-  await db().batch(
-    `INSERT INTO fahrzeug
-     (fahrzeug_id, kennzeichen, fin, hersteller, modell, baujahr, farbe, typ, kilometerstand, hu_faellig, halter_id)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [
-      [fahrzeugIds[0], "B-TK 1234", "WBA3A5C50CF256985", "BMW", "320d xDrive", 2018, "Sophistograu", "PKW", 87420, isoDate(180), halterIds[0]],
-      [fahrzeugIds[1], "HH-AB 5678", "WVWZZZ1KZ5W315264", "Volkswagen", "Golf VIII GTI", 2021, "Schwarzsilber", "PKW", 42100, isoDate(540), halterIds[1]],
-      [fahrzeugIds[2], "M-XZ 9900", "3FADP4BJ1EM198765", "Ford", "Transit L3H2 2.0 TDCi", 2016, "Arktikweiß", "Transporter", 196300, isoDate(30), halterIds[2]],
-      [fahrzeugIds[3], "S-LM 2233", "ZFA31200001234567", "Fiat", "Ducato 35 Maxi", 2015, "Polarweiß", "Transporter", 234000, isoDate(-14), halterIds[3]],
-      [fahrzeugIds[4], "K-RP 4411", "WMWRC31060TJ32154", "MINI", "Cooper S Clubman", 2022, "Moonwalk Grey", "PKW", 18900, isoDate(720), halterIds[4]],
-      [fahrzeugIds[5], "D-EF 7712", "WDD2052281A123456", "Mercedes-Benz", "Sprinter 316 CDI", 2019, "Arktikweiß", "Transporter", 141000, isoDate(60), halterIds[5]],
-      [fahrzeugIds[6], "F-ML 3390", "WBAVD13500KX12345", "BMW", "iX3 M Sport", 2023, "Mineralweiß", "BEV", 22400, isoDate(900), halterIds[6]],
-      [fahrzeugIds[7], "KS-TF 1100", "VF7RHN9HPEJ123456", "Citroën", "Berlingo M 1.5 BlueHDi", 2017, "Perla Nera", "Transporter", 178000, isoDate(-2), halterIds[7]],
-    ],
-  );
+    await conn.batch(
+      `INSERT INTO fahrzeug
+       (fahrzeug_id, kennzeichen, fin, hersteller, modell, baujahr, farbe, typ, kilometerstand, hu_faellig, halter_id)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        [fahrzeugIds[0], "B-TK 1234", "WBA3A5C50CF256985", "BMW", "320d xDrive", 2018, "Sophistograu", "PKW", 87420, isoDate(180), halterIds[0]],
+        [fahrzeugIds[1], "HH-AB 5678", "WVWZZZ1KZ5W315264", "Volkswagen", "Golf VIII GTI", 2021, "Schwarzsilber", "PKW", 42100, isoDate(540), halterIds[1]],
+        [fahrzeugIds[2], "M-XZ 9900", "3FADP4BJ1EM198765", "Ford", "Transit L3H2 2.0 TDCi", 2016, "Arktikweiß", "Transporter", 196300, isoDate(30), halterIds[2]],
+        [fahrzeugIds[3], "S-LM 2233", "ZFA31200001234567", "Fiat", "Ducato 35 Maxi", 2015, "Polarweiß", "Transporter", 234000, isoDate(-14), halterIds[3]],
+        [fahrzeugIds[4], "K-RP 4411", "WMWRC31060TJ32154", "MINI", "Cooper S Clubman", 2022, "Moonwalk Grey", "PKW", 18900, isoDate(720), halterIds[4]],
+        [fahrzeugIds[5], "D-EF 7712", "WDD2052281A123456", "Mercedes-Benz", "Sprinter 316 CDI", 2019, "Arktikweiß", "Transporter", 141000, isoDate(60), halterIds[5]],
+        [fahrzeugIds[6], "F-ML 3390", "WBAVD13500KX12345", "BMW", "iX3 M Sport", 2023, "Mineralweiß", "BEV", 22400, isoDate(900), halterIds[6]],
+        [fahrzeugIds[7], "KS-TF 1100", "VF7RHN9HPEJ123456", "Citroën", "Berlingo M 1.5 BlueHDi", 2017, "Perla Nera", "Transporter", 178000, isoDate(-2), halterIds[7]],
+      ],
+    );
 
-  await db().batch(
-    `INSERT INTO termin
-     (termin_id, fahrzeug_id, datum, uhrzeit, prueft_code, pruefer_kuerzel, status_code, notiz)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-    [
-      [terminIds[0], fahrzeugIds[0], today, "08:00:00", "HU_AU", "MW", "Bestanden", "Fahrzeug in sehr gutem Zustand. Geringer Mangel an Bremsflüssigkeit notiert."],
-      [terminIds[1], fahrzeugIds[1], today, "09:00:00", "HU", "AF", "In Prüfung", null],
-      [terminIds[2], fahrzeugIds[2], today, "10:30:00", "HU_AU", "SK", "Nicht bestanden", "Fahrzeug nicht verkehrssicher. Hauptmängel an Bremsen und Reifen."],
-      [terminIds[3], fahrzeugIds[3], today, "13:00:00", "NP", "MW", "Geplant", "Nachprüfung nach HU vom 15.06."],
-      [terminIds[4], fahrzeugIds[4], today, "14:30:00", "HU", "LN", "Geplant", null],
-      [terminIds[5], fahrzeugIds[5], today, "15:00:00", "SP", "TB", "Geplant", "Regelmäßige SP für Gewerbebetrieb"],
-      [terminIds[6], fahrzeugIds[6], today, "16:00:00", "HU_AU", "AF", "Geplant", "Erstprüfung BEV - OBD-Diagnose einplanen."],
-      [terminIds[7], fahrzeugIds[1], isoDate(-1), "09:30:00", "AU", "TB", "Bestanden", null],
-      [terminIds[8], fahrzeugIds[0], isoDate(1), "08:30:00", "HU", "MW", "Geplant", null],
-      [terminIds[9], fahrzeugIds[7], today, "11:00:00", "HU_AU", "SK", "Nachprüfung", "Erhebliche Mängel. Nachprüfung in 4 Wochen empfohlen."],
-      [terminIds[10], fahrzeugIds[2], isoDate(-1), "14:00:00", "Abnahme", "AF", "Bestanden", null],
-      [terminIds[11], fahrzeugIds[5], isoDate(-2), "10:00:00", "HU_AU", "MW", "Bestanden", null],
-      [terminIds[12], fahrzeugIds[3], isoDate(-2), "13:30:00", "HU", "LN", "Nicht bestanden", null],
-    ],
-  );
+    await conn.batch(
+      `INSERT INTO termin
+       (termin_id, fahrzeug_id, datum, uhrzeit, prueft_code, pruefer_kuerzel, status_code, notiz)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        [terminIds[0], fahrzeugIds[0], today, "08:00:00", "HU_AU", "MW", "Bestanden", "Fahrzeug in sehr gutem Zustand. Geringer Mangel an Bremsflüssigkeit notiert."],
+        [terminIds[1], fahrzeugIds[1], today, "09:00:00", "HU", "AF", "In Prüfung", null],
+        [terminIds[2], fahrzeugIds[2], today, "10:30:00", "HU_AU", "SK", "Nicht bestanden", "Fahrzeug nicht verkehrssicher. Hauptmängel an Bremsen und Reifen."],
+        [terminIds[3], fahrzeugIds[3], today, "13:00:00", "NP", "MW", "Geplant", "Nachprüfung nach HU vom 15.06."],
+        [terminIds[4], fahrzeugIds[4], today, "14:30:00", "HU", "LN", "Geplant", null],
+        [terminIds[5], fahrzeugIds[5], today, "15:00:00", "SP", "TB", "Geplant", "Regelmäßige SP für Gewerbebetrieb"],
+        [terminIds[6], fahrzeugIds[6], today, "16:00:00", "HU_AU", "AF", "Geplant", "Erstprüfung BEV - OBD-Diagnose einplanen."],
+        [terminIds[7], fahrzeugIds[1], isoDate(-1), "09:30:00", "AU", "TB", "Bestanden", null],
+        [terminIds[8], fahrzeugIds[0], isoDate(1), "08:30:00", "HU", "MW", "Geplant", null],
+        [terminIds[9], fahrzeugIds[7], today, "11:00:00", "HU_AU", "SK", "Nachprüfung", "Erhebliche Mängel. Nachprüfung in 4 Wochen empfohlen."],
+        [terminIds[10], fahrzeugIds[2], isoDate(-1), "14:00:00", "Abnahme", "AF", "Bestanden", null],
+        [terminIds[11], fahrzeugIds[5], isoDate(-2), "10:00:00", "HU_AU", "MW", "Bestanden", null],
+        [terminIds[12], fahrzeugIds[3], isoDate(-2), "13:30:00", "HU", "LN", "Nicht bestanden", null],
+      ],
+    );
 
-  await db().batch(
-    `INSERT INTO mangel (mangel_id, termin_id, code_stvzo, beschreibung, kategorie_code, behoben)
-     VALUES (?, ?, ?, ?, ?, ?)`,
-    [
-      [randomUUID(), terminIds[0], "2.5.1", "Bremsflüssigkeit: Wasseranteil zu hoch (> 3,5%)", "GM", false],
-      [randomUUID(), terminIds[2], "2.1.1", "Betriebsbremse: Ungleichmäßige Bremswirkung", "EM", false],
-      [randomUUID(), terminIds[2], "4.1.1", "Profiltiefe: Profiltiefe unter 1,6 mm", "EM", false],
-      [randomUUID(), terminIds[2], "3.3.1", "Bremslicht: Bremslicht links defekt", "EM", false],
-      [randomUUID(), terminIds[2], "2.3.1", "Bremsscheibe: Bremsscheibe stark verschlissen", "EM", false],
-      [randomUUID(), terminIds[2], "5.6.2", "Kennzeichen: Hinteres Kennzeichen unleserlich", "EM", false],
-      [randomUUID(), terminIds[9], "8.1.1", "Stoßdämpfer: Stoßdämpfer vorne defekt", "EM", false],
-      [randomUUID(), terminIds[9], "4.1.2", "Profiltiefe: 1,6-3 mm (Empfehlung: wechseln)", "EM", false],
-      [randomUUID(), terminIds[9], "3.5.3", "Blinker: Fahrtrichtungsanzeiger hinten links defekt", "EM", false],
-      [randomUUID(), terminIds[10], "5.2.1", "Karosserie: Scharfe Kanten durch Unfallschaden", "EM", true],
-      [randomUUID(), terminIds[12], "5.3.1", "Motorhaube: Motorhaube öffnet sich während Fahrt", "GfM", false],
-      [randomUUID(), terminIds[12], "2.6.1", "Feststellbremse: Feststellbremse hält nicht ausreichend", "EM", false],
-    ],
-  );
+    await conn.batch(
+      `INSERT INTO mangel (mangel_id, termin_id, code_stvzo, beschreibung, kategorie_code, behoben)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [
+        [randomUUID(), terminIds[0], "2.5.1", "Bremsflüssigkeit: Wasseranteil zu hoch (> 3,5%)", "GM", false],
+        [randomUUID(), terminIds[2], "2.1.1", "Betriebsbremse: Ungleichmäßige Bremswirkung", "EM", false],
+        [randomUUID(), terminIds[2], "4.1.1", "Profiltiefe: Profiltiefe unter 1,6 mm", "EM", false],
+        [randomUUID(), terminIds[2], "3.3.1", "Bremslicht: Bremslicht links defekt", "EM", false],
+        [randomUUID(), terminIds[2], "2.3.1", "Bremsscheibe: Bremsscheibe stark verschlissen", "EM", false],
+        [randomUUID(), terminIds[2], "5.6.2", "Kennzeichen: Hinteres Kennzeichen unleserlich", "EM", false],
+        [randomUUID(), terminIds[9], "8.1.1", "Stoßdämpfer: Stoßdämpfer vorne defekt", "EM", false],
+        [randomUUID(), terminIds[9], "4.1.2", "Profiltiefe: 1,6-3 mm (Empfehlung: wechseln)", "EM", false],
+        [randomUUID(), terminIds[9], "3.5.3", "Blinker: Fahrtrichtungsanzeiger hinten links defekt", "EM", false],
+        [randomUUID(), terminIds[10], "5.2.1", "Karosserie: Scharfe Kanten durch Unfallschaden", "EM", true],
+        [randomUUID(), terminIds[12], "5.3.1", "Motorhaube: Motorhaube öffnet sich während Fahrt", "GfM", false],
+        [randomUUID(), terminIds[12], "2.6.1", "Feststellbremse: Feststellbremse hält nicht ausreichend", "EM", false],
+      ],
+    );
 
-  return { ok: true, halter: 8, fahrzeuge: 8, termine: 13, maengel: 12 };
+    return { ok: true, halter: 8, fahrzeuge: 8, termine: 13, maengel: 12 };
+  });
 }
 
 app.post("/api/admin/demo", asyncRoute(async (_req, res) => {
