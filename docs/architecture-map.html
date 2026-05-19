@@ -725,9 +725,10 @@ const KNOWN_BUGS = {
   // useToasts ist die einzige Toast-Quelle.
   // 'useToasts': dead leftovers toasts:[] und rm:() wurden am 2026-05-19
   // entfernt. Hook ist jetzt minimal: nur add() als sonner-Shim.
-  'useStoreCompat': [
-    { sev: 'med', t: 'Lines 256-265: updTr with status patch calls updTerminStatus and silently returns on failure (no toast, no throw). The App-layer guard is the only barrier the user sees.' },
-  ],
+  // 'useStoreCompat': der "Silent fail on Status-Reject"-Bug wurde am
+  // 2026-05-19 behoben — updTr() wirft jetzt einen Error, den die Views
+  // (TagesplanView.advance/saveTr/onStatus) in einen roten Fehler-Toast
+  // umwandeln.
   'useDb':          [
     { sev: 'low', t: 'refresh() reloads halter + fahrzeuge + termine in parallel, then loads mängel with one extra request per termin. Fine for demo size, but a joined API endpoint would scale better.' },
     { sev: 'low', t: 'Polling-Race: optimistische lokale Updates können theoretisch von einem Poll-Tick überschrieben werden, falls der Server-Write länger als 5 Sek dauert. Praktisch selten; bei Bedarf einen writeInFlight-Counter einbauen, der Polls während laufender API-Calls aussetzt.' },
