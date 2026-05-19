@@ -344,6 +344,8 @@ export function useStoreCompat() {
     fahrzeuge,
     termine,
     ready: db.ready,
+    error: db.error,
+    refresh: db.refresh,
     addFz,
     updFz,
     delFz,

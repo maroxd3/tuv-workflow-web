@@ -44,6 +44,47 @@ export default function App() {
 
   const SIDEBAR_W = 240;
 
+  // Fehler-Screen wenn die API/DB nicht erreichbar ist (Stack down, falsches
+  // VITE_API_BASE_URL, MariaDB-Crash). Vorher hing der User in einem ewigen
+  // "Daten werden geladen..."-Spinner. Jetzt: klare Botschaft, Retry-Knopf.
+  if (S.error) {
+    return (
+      <div style={{
+        minHeight: "100vh", background: C.bg, fontFamily: C.sans,
+        display: "flex", alignItems: "center", justifyContent: "center",
+        flexDirection: "column", gap: 20, padding: 24,
+      }}>
+        <style>{GLOBAL_CSS}</style>
+        <div style={{
+          width: 56, height: 56, borderRadius: "50%",
+          background: "rgba(240,69,90,0.10)", border: `1px solid rgba(240,69,90,0.45)`,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          color: C.redL, fontSize: 28, fontWeight: 700,
+        }}>!</div>
+        <div style={{ color: C.t1, fontSize: 20, fontWeight: 700 }}>
+          Verbindung zur Datenbank fehlgeschlagen
+        </div>
+        <div style={{ color: C.t3, fontSize: 14, maxWidth: 440, textAlign: "center", lineHeight: 1.55 }}>
+          Die App konnte den Express-API-Server nicht erreichen. Mögliche Ursachen:
+          Server-PC ist aus, Docker-Stack steht still, oder VITE_API_BASE_URL zeigt ins Leere.
+        </div>
+        <div style={{
+          fontSize: 11, fontFamily: C.mono, color: C.t4,
+          background: C.surface, padding: "8px 12px", borderRadius: 6, border: `1px solid ${C.line}`,
+          maxWidth: 520, wordBreak: "break-all",
+        }}>{S.error}</div>
+        <button
+          onClick={() => S.refresh?.()}
+          style={{
+            background: C.cyan, color: "#0a0a14", border: "none",
+            padding: "10px 22px", borderRadius: 8, fontSize: 13, fontWeight: 700,
+            cursor: "pointer", fontFamily: C.sans,
+          }}
+        >Erneut versuchen</button>
+      </div>
+    );
+  }
+
   if (!S.ready) {
     return (
       <div style={{
