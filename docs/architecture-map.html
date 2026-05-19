@@ -250,10 +250,10 @@ const nodes = [
 
   /* ── Feature Modals ── */
   N('TerminModal', 'modals', 'TerminModal.jsx', 'create/edit appt', 740, 100, 200, 76, 'service', {
-    role: 'Form for creating or editing an inspection appointment; UI-side enforces the Hauptmangel→Bestanden block.',
-    plain: 'Popup to book a vehicle into a slot or edit a booking. Refuses "passed" if a serious defect is on file.',
+    role: 'Form for creating or editing an inspection appointment; UI-side enforces the EM/GfM→Bestanden block AND warns on same-day-same-prueftype duplicates.',
+    plain: 'Popup to book a vehicle into a slot or edit a booking. Refuses "passed" if a serious defect is on file. Asks for confirmation if the same car already has the same Prüfart booked the same day.',
     path: 'src/features/termin/TerminModal.jsx:15',
-    notes: ['bestanden_gesperrt = hatHauptmangel(initial.mängel)', 'validate blocks BESTANDEN with Hauptmangel (§29 StVZO)', 'onSave bubbles to addTr/updTr in useStoreCompat'],
+    notes: ['bestanden_gesperrt = hatHauptmangel(initial.mängel) (alias hatBlockierendenMangel)', 'validate blocks BESTANDEN with EM/GfM (§29 StVZO)', 'window.confirm() before save if same fahrzeugId + datum + prueftCode already exists (UX soft-rule, not a DB constraint — same-day Nachprüfung edge case stays possible)', 'onSave bubbles to addTr/updTr in useStoreCompat'],
     tag: ['overview', 'tagesplan', 'termine', 'all'],
     critical: true,
   }),
@@ -993,7 +993,7 @@ let selectedId = null;
 function showDefault() {
   sideEl.innerHTML = `
     <h1>Architecture map · MariaDB backend (Stand 2026-05-19)</h1>
-    <div class="role">React 19 + Vite frontend with an Express API and central MariaDB database, running as a 3-container Docker stack (DB + API + Adminer). The browser never talks to MariaDB directly; all data flows through /api. On-Premise pro Pruefstelle.</div>
+    <div class="role">React 19 + Vite frontend with an Express API and central MariaDB database. Empfohlene Auslieferung: 3-Container Docker-Stack (DB + API + Adminer) per <code>docker compose up -d</code>. Alternative: native MariaDB-Installation, dieselbe App ohne Aenderungen. On-Premise pro Pruefstelle, Daten verlassen die Werkstatt nie. Browser spricht nie direkt mit MariaDB; alles fliesst durch <code>/api</code>.</div>
     <h2>How to read this</h2>
     <div class="finding">
       Red edges are the 10-hop spine from app boot to a row landing in MariaDB. Click any node to pin it; hover any node to peek. Use the chips at the top to dim everything outside one feature.
@@ -1005,7 +1005,10 @@ function showDefault() {
     <div class="finding warn"><strong>Compat layer is technical debt by design</strong><br><code>useStoreCompat.ts</code> exists to keep the existing views unchanged while <code>useDb.ts</code> talks to the Express/MariaDB API. The adapter translates field-by-field between the old view shape and the current API shape.</div>
     <div class="finding warn"><strong>Dead code still in tree</strong><br><code>src/components/Toast.jsx</code> is not imported by the app. App uses sonner via useToasts.</div>
     <div class="finding good"><strong>HU-Richtlinie-Konformitaet</strong><br>Frontend, API und DB nutzen dasselbe 4-Kategorien-Schema <code>OM/GM/EM/GfM</code> nach §29 StVZO Anlage VIII Nr. 3. Frueheres Drift zwischen PropTypes (<code>OM/GM/EM/HM/GF</code>) und DB (<code>OM/LM/EM/HM/GM</code>) ist mit der Migration am 2026-05-19 aufgeloest.</div>
-    <div class="finding good"><strong>Docker-Stack fuer On-Premise</strong><br>Drei Container per <code>docker compose up -d</code>: <code>tuv-mariadb</code> (DB + Binlog), <code>tuv-api</code> (Express), <code>tuv-adminer</code> (Web-DB-Browser auf Port 8080). Jeder Kunde bekommt einen eigenen Stack im LAN.</div>
+    <div class="finding good"><strong>Docker-Stack fuer On-Premise (empfohlene Variante)</strong><br>Drei Container per <code>docker compose up -d</code>: <code>tuv-mariadb</code> (DB + Binlog), <code>tuv-api</code> (Express), <code>tuv-adminer</code> (Web-DB-Browser auf Port 8080). Jeder Kunde bekommt einen eigenen Stack im LAN. <code>my.cnf</code> aktiviert <code>log_bin</code> + <code>log_bin_trust_function_creators</code> deterministisch — Voraussetzung fuer PITR + DB-Trigger.</div>
+    <div class="finding"><strong>Zweite Variante: manuelle MariaDB-Installation</strong><br>Die App ist <strong>Docker-unabhaengig</strong>. Express + <code>mariadb</code>-Node-Driver sprechen mit jeder MariaDB 11.4, egal ob im Container oder nativ installiert. Fuer Entwickler, alte Werkstatt-PCs ohne Docker oder Setups mit existierender IT-Infrastruktur dokumentiert in <code>docs/mariadb-setup.md</code>. Der Werkstatt-Inhaber muss dann Binlog + <code>log_bin_trust_function_creators</code> selbst setzen.</div>
+    <div class="finding good"><strong>Multi-User-Live-Sync via 5-Sek-Polling</strong><br><code>useDb</code> pollt alle 5 Sek mit <code>refresh()</code> — Empfang legt einen Termin an, das Pruefer-Tablet zeigt ihn nach max 5 Sek. <code>document.visibilityState</code> pausiert Polling im Hintergrund-Tab (Akku + LAN-Last). US-16 done.</div>
+    <div class="finding good"><strong>Doppel-Termin-Warnung (UX-Layer)</strong><br><code>TerminModal</code> warnt per <code>window.confirm()</code>, falls gleicher fahrzeugId + datum + prueftCode schon gebucht ist (z.B. 2x HU am 19.05. fuer B-TK 1234). DB-Constraint bleibt nur auf <code>UNIQUE(fahrzeug_id, datum, uhrzeit)</code> — eine Same-Day-Nachpruefung nach gefallener HU bleibt damit moeglich.</div>
     <h2>Filters</h2>
     <div class="finding">Click a chip to dim everything outside that feature. "Critical path" highlights only the 10 red edges of the spine. "Roadmap & bugs" highlights only nodes with green/red badges.</div>
   `;
