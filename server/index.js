@@ -2,6 +2,14 @@ import express from "express";
 import cors from "cors";
 import { randomUUID } from "node:crypto";
 import { db, ensureDatabase } from "./db.js";
+import {
+  check,
+  validateHalter,
+  validateFahrzeug,
+  validateTermin,
+  validateStatusUpdate,
+  validateMangel,
+} from "./validate.js";
 
 const app = express();
 const port = Number(process.env.API_PORT || 8787);
@@ -106,7 +114,7 @@ app.get("/api/halter", asyncRoute(async (_req, res) => {
   res.json(rows.map(toHalter));
 }));
 
-app.post("/api/halter", asyncRoute(async (req, res) => {
+app.post("/api/halter", check(validateHalter), asyncRoute(async (req, res) => {
   const id = req.body.halterId || randomUUID();
   await db().query(
     "INSERT INTO halter (halter_id, name, telefon, email, anschrift) VALUES (?, ?, ?, ?, ?)",
@@ -115,7 +123,7 @@ app.post("/api/halter", asyncRoute(async (req, res) => {
   res.status(201).json(toHalter(await one("SELECT * FROM halter WHERE halter_id = ?", [id])));
 }));
 
-app.patch("/api/halter/:id", asyncRoute(async (req, res) => {
+app.patch("/api/halter/:id", check(validateHalter), asyncRoute(async (req, res) => {
   const patch = clean({
     name: req.body.name,
     telefon: req.body.telefon,
@@ -143,7 +151,7 @@ app.get("/api/fahrzeuge", asyncRoute(async (_req, res) => {
   res.json(rows.map(toFahrzeug));
 }));
 
-app.post("/api/fahrzeuge", asyncRoute(async (req, res) => {
+app.post("/api/fahrzeuge", check(validateFahrzeug), asyncRoute(async (req, res) => {
   const id = req.body.fahrzeugId || randomUUID();
   await db().query(
     `INSERT INTO fahrzeug
@@ -166,7 +174,7 @@ app.post("/api/fahrzeuge", asyncRoute(async (req, res) => {
   res.status(201).json(toFahrzeug(await one("SELECT * FROM fahrzeug WHERE fahrzeug_id = ?", [id])));
 }));
 
-app.patch("/api/fahrzeuge/:id", asyncRoute(async (req, res) => {
+app.patch("/api/fahrzeuge/:id", check(validateFahrzeug), asyncRoute(async (req, res) => {
   const map = {
     kennzeichen: "kennzeichen",
     fin: "fin",
@@ -222,7 +230,7 @@ app.get("/api/termine", asyncRoute(async (req, res) => {
   res.json(termine);
 }));
 
-app.post("/api/termine", asyncRoute(async (req, res) => {
+app.post("/api/termine", check(validateTermin), asyncRoute(async (req, res) => {
   const id = req.body.terminId || randomUUID();
   await db().query(
     `INSERT INTO termin
@@ -242,7 +250,7 @@ app.post("/api/termine", asyncRoute(async (req, res) => {
   res.status(201).json(toTermin(await one("SELECT * FROM termin WHERE termin_id = ?", [id])));
 }));
 
-app.patch("/api/termine/:id", asyncRoute(async (req, res) => {
+app.patch("/api/termine/:id", check(validateTermin), asyncRoute(async (req, res) => {
   const map = {
     fahrzeugId: "fahrzeug_id",
     datum: "datum",
@@ -265,7 +273,7 @@ app.patch("/api/termine/:id", asyncRoute(async (req, res) => {
   res.json(row ? toTermin(row) : null);
 }));
 
-app.patch("/api/termine/:id/status", asyncRoute(async (req, res) => {
+app.patch("/api/termine/:id/status", check(validateStatusUpdate), asyncRoute(async (req, res) => {
   const neuerStatus = req.body.statusCode;
   if (neuerStatus === "Bestanden") {
     const blocker = await one(
@@ -298,7 +306,7 @@ app.get("/api/termine/:id/maengel", asyncRoute(async (req, res) => {
   res.json(rows.map(toMangel));
 }));
 
-app.post("/api/maengel", asyncRoute(async (req, res) => {
+app.post("/api/maengel", check(validateMangel), asyncRoute(async (req, res) => {
   const id = req.body.mangelId || randomUUID();
   const istBehoben = Boolean(req.body.behoben);
 
