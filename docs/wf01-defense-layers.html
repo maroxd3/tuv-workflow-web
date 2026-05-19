@@ -170,7 +170,7 @@
   <!-- === DIE 3 WAECHTER === -->
   <h2><span class="num">2</span>Die drei Waechter (gegen Schummel-Eintraege)</h2>
   <p class="lead">
-    Die <b>wichtigste Regel</b> in deiner Prüfstelle: <i>"Ein Termin darf NICHT auf 'Bestanden' gesetzt werden, wenn das Auto noch einen Hauptmangel oder gefährlichen Mangel hat."</i>
+    Die <b>wichtigste Regel</b> in deiner Prüfstelle: <i>"Ein Termin darf NICHT auf 'Bestanden' gesetzt werden, wenn das Auto noch einen erheblichen (EM) oder gefährlichen Mangel (GfM) hat."</i>
     Damit das auf KEINEM Weg passieren kann, gibt es jetzt <b>drei Waechter</b> &mdash; einen an jeder Station.
   </p>
 
@@ -182,7 +182,7 @@
       <h3>Tablet-Waechter</h3>
       <div class="who">Schon im Tablet</div>
       <div class="does">
-        Wenn das Auto Hauptmängel hat, ist der "Bestanden"-Button <b>ausgegraut</b> &mdash; der Prüfer kann ihn gar nicht erst druecken.
+        Wenn das Auto blockierende Mängel (EM oder GfM) hat, ist der "Bestanden"-Button <b>ausgegraut</b> &mdash; der Prüfer kann ihn gar nicht erst druecken.
       </div>
       <div class="codename">Im Code: <b>UI-Guard</b> in den Views</div>
     </div>
@@ -193,7 +193,7 @@
       <h3>Empfangs-Waechter</h3>
       <div class="who">Im Empfangs-Mitarbeiter</div>
       <div class="does">
-        Selbst wenn jemand das Tablet austrickst und direkt eine "Bestanden"-Anfrage schickt: Der Empfang schaut nochmal in den Aktenschrank, sieht den Hauptmangel und sagt <b>"Nein, geht nicht."</b>
+        Selbst wenn jemand das Tablet austrickst und direkt eine "Bestanden"-Anfrage schickt: Der Empfang schaut nochmal in den Aktenschrank, sieht den blockierenden Mangel (EM/GfM) und sagt <b>"Nein, geht nicht."</b>
       </div>
       <div class="codename">Im Code: <b>API-Guard</b> in <code style="color: var(--accent)">/api/termine/:id/status</code></div>
     </div>

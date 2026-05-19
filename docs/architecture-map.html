@@ -290,10 +290,10 @@ const nodes = [
     tag: ['overview', 'fahrzeuge', 'all'],
   }),
   N('MaengelModal', 'modals', 'MaengelModal.jsx', 'record defects', 740, 290, 200, 80, 'service', {
-    role: 'Two-pane modal: recorded defects + StVZO catalog search; status switcher blocks BESTANDEN if a Hauptmangel exists.',
-    plain: 'Popup for recording defects. Search the official catalog or type a free-text defect; system stops "passed" if a major defect is in the list.',
+    role: 'Two-pane modal: recorded defects + StVZO catalog search; status switcher blocks BESTANDEN if an EM (Erheblicher) or GfM (Gefaehrlicher) Mangel exists (HU-Richtlinie § 29 StVZO).',
+    plain: 'Popup for recording defects. Search the official catalog or type a free-text defect; system stops "passed" if a blocking EM/GfM defect is in the list.',
     path: 'src/features/mangel/MaengelModal.jsx:16',
-    notes: ['addVorlage adds catalog entry via onAdd', 'status buttons disable BESTANDEN when hasHM', 'kategorieCode EM/GfM trigger API-level auto-demotion in server/index.js'],
+    notes: ['addVorlage adds catalog entry via onAdd', 'status buttons disable BESTANDEN when hasBlockierendenMangel (alias hatHauptmangel)', 'kategorieCode EM/GfM trigger API-level + MariaDB-trigger auto-demotion (3-layer WF-01)'],
     tag: ['overview', 'tagesplan', 'maengel', 'all'],
     critical: true,
   }),
@@ -493,11 +493,11 @@ const nodes = [
     notes: ['reads MANGEL_KATEGORIEN', '5 categories'],
     tag: ['maengel', 'all'],
   }),
-  N('HauptmangelBadge', 'ui', 'HauptmangelBadge.jsx', '"HAUPTMANGEL"', 1770, 240, 180, 52, 'service', {
-    role: 'Static red HAUPTMANGEL chip; no props.',
-    plain: 'Bright red badge that simply says "HAUPTMANGEL" - shown when a major defect is present.',
+  N('HauptmangelBadge', 'ui', 'HauptmangelBadge.jsx', '"NICHT VERKEHRSSICHER"', 1770, 240, 180, 52, 'service', {
+    role: 'Static red NICHT-VERKEHRSSICHER chip; no props. Component name is legacy from before the HU-Richtlinie refactor; the visible label is correct per § 29 StVZO.',
+    plain: 'Bright red badge that says "NICHT VERKEHRSSICHER" - shown when an EM/GfM (blocking) mangel is present.',
     path: 'src/components/ui/HauptmangelBadge.jsx:3',
-    notes: ['rendered in TagesplanView and BerichteView'],
+    notes: ['rendered in TagesplanView and BerichteView', 'visible label "NICHT VERKEHRSSICHER" reflects HU-Richtlinie categories (EM/GfM)'],
     tag: ['maengel', 'all'],
   }),
   N('Kpi', 'ui', 'Kpi.jsx', 'metric card', 1770, 310, 180, 52, 'service', {

@@ -306,15 +306,28 @@
               <strong>Datenbank:</strong> Persistenz über zentrale <code>MariaDB</code>; Browser greifen über die <code>Express</code>-API unter <code>/api</code> auf denselben Datenbestand zu.<br>
             <strong>Schema:</strong> 3NF-normalisiertes Modell mit Tabellen für <code>halter</code>, <code>fahrzeug</code>, <code>termin</code>, <code>mangel</code>, <code>status</code>, <code>pruefart</code>, <code>pruefer</code> und <code>mangel_kategorie</code>.<br>
             <strong>Dokumentation:</strong> <code>docs/datenmodell.md</code> wurde als Drei-Schichten-Modell überarbeitet; das ER-Diagramm ist im Chen-Stil dargestellt, Primärschlüssel sind unterstrichen.<br>
-              <strong>Architekturentscheidungen:</strong> <code>docs/decisions/</code> enthält acht ADRs zu MariaDB, 3NF, WF-01, Express-API, TypeScript, Hosting, API-Client-Pattern und nicht-eingebetteten Arrays.
+              <strong>Architekturentscheidungen:</strong> <code>docs/decisions/</code> enthält neun ADRs zu MariaDB, 3NF, WF-01, Express-API, TypeScript, Hosting, API-Client-Pattern, nicht-eingebetteten Arrays und monolithischem Server (ADR-009 wurde am 19.&nbsp;5. ergänzt).
           </div>
           <div class="commits">commits c08bd7a · 2f8fc51 · 2e4fe00 · e25bb5e · 525e7e2 · 30182ce</div>
         </div>
 
         <div class="tl-item done">
-          <div class="date">14. Mai · Aktueller Stand</div>
-          <div class="what">Aktueller Projektstand verifiziert</div>
+          <div class="date">14. Mai · Zwischenstand</div>
+          <div class="what">MariaDB-Migration verifiziert</div>
           <div class="detail">136 von 136 Vitest-Tests grün · Produktions-Build erfolgreich · MariaDB-API-Smoke-Test über <code>/api/health</code> und <code>/api/fahrzeuge</code> · GitHub-Stand auf <code>master</code> aktualisiert.</div>
+        </div>
+
+        <div class="tl-item done">
+          <div class="date">17.–19. Mai · Sprint 8 (Endspurt)</div>
+          <div class="what">WF-01 DB-Trigger · Docker-Compose · Live-Sync · HU-Richtlinie</div>
+          <div class="detail">
+            <strong>WF-01 als 3-Layer-Defense:</strong> Geschäftsregel „kein Bestanden bei EM/GfM" jetzt zusätzlich als MariaDB-<code>BEFORE UPDATE</code>-Trigger abgesichert, nicht nur in UI und Express-API (siehe <code>ADR-003</code>).<br>
+            <strong>Docker-Compose:</strong> Reproducible On-Premise-Deployment mit MariaDB (Binlog enabled), Express-API und Adminer für lokales DB-Browsing.<br>
+            <strong>Live-Sync (US-16):</strong> 5-Sek-Polling im <code>useDb</code>-Hook implementiert (pausiert bei Tab-Hintergrund), N+1-Queries eliminiert, <code>writeInFlight</code>-Race-Window geschlossen.<br>
+            <strong>HU-Richtlinie-Refactor:</strong> Mangel-Kategorien auf das offizielle 4er-System OM/GM/EM/GfM angeglichen (vorher 5er mit „Hauptmangel"), Schema-Migration via <code>ON UPDATE CASCADE</code> auf <code>mangel.kategorie_code</code>.<br>
+            <strong>ADR-009:</strong> bewusste Architektur-Entscheidung GEGEN Layered Backend dokumentiert (server/index.js bleibt monolithisch im aktuellen Scope).
+          </div>
+          <div class="commits">commits cac3cf6 · fca829d · 5bb79c8 · f25c447 · 49f0174 · b5990de · 952f2c9</div>
         </div>
       </div>
     </div>
@@ -328,7 +341,7 @@
         <tr>
           <th style="width:20%">Kritikpunkt</th>
           <th style="width:36%">Vorher (vor 24.04.)</th>
-          <th style="width:44%">Nachher (Stand 14.05.)</th>
+          <th style="width:44%">Nachher (Stand 19.05.)</th>
         </tr>
         <tr>
           <td class="label">Bug „BMW Polo"</td>
@@ -346,9 +359,9 @@
           <td class="after">Eigenes Validator-Modul mit Format-Regex und Doppel-Detection beim Anlegen</td>
         </tr>
         <tr>
-          <td class="label">„Bestanden" trotz Hauptmangel</td>
+          <td class="label">„Bestanden" trotz blockierendem Mangel</td>
           <td class="before">War möglich, kein Workflow-Schutz</td>
-          <td class="after">In UI und Express-API abgesichert; Statuswechsel auf „Bestanden" wird bei blockierendem Mangel verhindert</td>
+          <td class="after">3-Layer-Defense: UI-Guard im React, API-Guard in Express, MariaDB-<code>BEFORE UPDATE</code>-Trigger (WF-01). Statuswechsel auf „Bestanden" bei EM/GfM ist von keiner Schicht aus möglich. Siehe ADR-003.</td>
         </tr>
         <tr>
           <td class="label">Pflichtenheft</td>
@@ -378,7 +391,7 @@
         <tr>
           <td class="label">Echtzeit vs. Polling</td>
           <td class="before">Nicht begründet</td>
-          <td class="after">Mit MariaDB sehen mehrere Clients denselben Datenbestand über die API; Änderungen werden nach Reload oder Refresh sichtbar. Live-Push per WebSocket ist noch nicht umgesetzt</td>
+          <td class="after">5-Sekunden-Polling im <code>useDb</code>-Hook (US-16) — Änderungen anderer Clients erscheinen automatisch, ohne Reload. Polling pausiert bei Tab im Hintergrund. WebSocket-Push als spätere Option, im aktuellen Scope nicht nötig.</td>
         </tr>
         <tr>
           <td class="label">Test-Abdeckung</td>
@@ -403,7 +416,7 @@
         <tr>
           <td class="label">Architekturentscheidungen</td>
           <td class="before">Entscheidungen waren implizit über Code und verstreute Doku erklärbar</td>
-          <td class="after"><code>docs/decisions/</code> enthält acht neutrale ADRs mit Optionen, Begründung, Konsequenzen und Quellen</td>
+          <td class="after"><code>docs/decisions/</code> enthält neun neutrale ADRs (001 zentrale Persistenz, 002 3NF, 003 WF-01-Enforcement, 004 Express-API, 005 TypeScript graduell, 006 Firebase-Hosting nur statisch, 007 API-Client-Pattern, 008 keine eingebetteten Arrays, 009 monolithischer Server) mit Optionen, Begründung, Konsequenzen und Quellen</td>
         </tr>
       </table>
     </div>
@@ -415,7 +428,7 @@
     <div class="body">
       <div class="stats">
         <div class="stat"><div class="num green">136</div><div class="lbl">Vitest-Tests grün</div></div>
-        <div class="stat"><div class="num">8</div><div class="lbl">ADR-Entscheidungen dokumentiert</div></div>
+        <div class="stat"><div class="num">9</div><div class="lbl">ADR-Entscheidungen dokumentiert</div></div>
         <div class="stat"><div class="num cyan">SQL</div><div class="lbl">MariaDB + Express-API</div></div>
         <div class="stat"><div class="num green">✓</div><div class="lbl">Build erfolgreich</div></div>
       </div>

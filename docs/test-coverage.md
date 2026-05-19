@@ -1,14 +1,19 @@
 # Test Coverage
 
-Stand: 2026-05-17  
+Stand: 2026-05-19  
 Ausgeführt mit: `npm test` und `npx vitest run --coverage`
 
 ## 1. Ergebnis der aktuellen Testausfuehrung
 
 ```text
-Test Files  7 passed (7)
-Tests       124 passed (124)
+Test Files  8 passed (8)
+Tests       135 passed | 1 skipped (136)
 ```
+
+Die zusätzlichen 11 Tests gegenüber dem Stand vom 17.05. stammen aus
+`server/tests/wf01.test.js` (API-Test für den WF-01-DB-Trigger über
+`PATCH /api/termine/:id/status`) sowie aus Regressionstests für die
+HU-Richtlinie-Kategorien (OM/GM/EM/GfM).
 
 Coverage mit V8:
 
@@ -31,19 +36,20 @@ Lines        : 98.37% (182/185)
 | Datei | Schwerpunkt |
 |---|---|
 | `src/tests/utils/validators.test.js` | Kennzeichen, FIN, Baujahr, Kilometerstand, Telefon, E-Mail, HU-/Termin-Datum, Statuswechsel |
-| `src/tests/utils/mangel.test.js` | HM/GM-Erkennung und Mängelkatalog-Konsistenz |
+| `src/tests/utils/mangel.test.js` | EM/GfM-Erkennung (Alias `hatHauptmangel`), Mängelkatalog-Konsistenz, Kategorie-Validierung |
 | `src/tests/utils/date.test.js` | Datumsformatierung und lokale Datumskonvertierung |
 | `src/tests/components/buttons.test.jsx` | UI-Buttons, Varianten, Zustaende |
 | `src/tests/components/inputs.test.jsx` | Eingabekomponenten |
 | `src/tests/components/StatusPill.test.jsx` | Statusanzeige |
 | `src/tests/hooks/useToasts.test.js` | Toast-Hook |
+| `server/tests/wf01.test.js` | Express-API + MariaDB-Trigger: WF-01 blockiert `Bestanden` bei EM/GfM auf DB-Ebene |
 
 ## 3. Was wird gut abgedeckt?
 
 - Eingabevalidierung für Fahrzeug- und Terminformulare
 - Aequivalenzklassen und Grenzwerte bei Kennzeichen, FIN, Baujahr und Kilometerstand
-- Workflow-Regel auf UI-/Hilfsfunktions-Ebene: HM/GM blockiert `Bestanden`
-- Mängelkatalog: Eintraege, eindeutige Codes, bekannte Kategorien
+- Workflow-Regel auf allen drei Ebenen: UI-Guard, API-Guard und MariaDB-Trigger blockieren `Bestanden` bei EM/GfM (siehe `server/tests/wf01.test.js`)
+- Mängelkatalog: Eintraege, eindeutige Codes, alle vier HU-Richtlinie-Kategorien (OM/GM/EM/GfM)
 - Wiederverwendbare UI-Komponenten
 - Hilfsfunktionen für Datum und Toasts
 
@@ -106,11 +112,10 @@ npm run lint
 
 ## 7. Was fehlt noch?
 
-- Vollstaendige automatisierte Integrationstests gegen eine echte MariaDB-Testdatenbank
-- API-Tests für alle Express-Endpunkte (`/api/halter`, `/api/fahrzeuge`, `/api/termine`, `/api/mängel`)
+- Vollstaendige automatisierte Integrationstests gegen eine echte MariaDB-Testdatenbank (`server/tests/wf01.test.js` deckt aktuell den WF-01-Pfad ab, weitere Endpoints folgen)
+- API-Tests für die übrigen Express-Endpunkte (`/api/halter`, `/api/fahrzeuge`, `/api/termine`, `/api/maengel`)
 - Fehlerpfad-Tests für MariaDB-Fehler: UNIQUE, FK, CHECK
-- Direkter Test für `PATCH /api/termine/:id/status` mit HM/GM in MariaDB
-- Mehrbenutzer-/Parallelitaets-Tests
+- Mehrbenutzer-/Parallelitaets-Tests (Polling-Race-Conditions in `useDb`)
 - Automatisierte E2E-Tests im Browser
 
 ## 8. Bewertung
