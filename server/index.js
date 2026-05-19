@@ -14,8 +14,51 @@ import {
 const app = express();
 const port = Number(process.env.API_PORT || 8787);
 
-app.use(cors());
+// CORS: nur lokales LAN und localhost erlauben. Wildcard-CORS (urspruenglich)
+// liess jeder beliebigen Origin Calls machen — fuer ein On-Premise-Geraet
+// im LAN unnoetig offen. Falls Origin fehlt (same-origin oder Server-to-Server)
+// wird durchgelassen.
+const ADMIN_TOKEN = process.env.ADMIN_TOKEN || "";
+const ALLOWED_ORIGIN_HOSTS = (process.env.ALLOWED_ORIGINS || "")
+  .split(",").map(s => s.trim()).filter(Boolean);
+
+function isAllowedOrigin(origin) {
+  if (!origin) return true;
+  // explizite whitelist via .env
+  if (ALLOWED_ORIGIN_HOSTS.includes(origin)) return true;
+  try {
+    const u = new URL(origin);
+    if (u.hostname === "localhost" || u.hostname === "127.0.0.1") return true;
+    // Private LANs (RFC 1918): 10.x.x.x, 172.16-31.x.x, 192.168.x.x
+    if (/^10\./.test(u.hostname)) return true;
+    if (/^192\.168\./.test(u.hostname)) return true;
+    if (/^172\.(1[6-9]|2[0-9]|3[01])\./.test(u.hostname)) return true;
+  } catch { /* ignore */ }
+  return false;
+}
+
+app.use(cors({
+  origin: (origin, cb) => isAllowedOrigin(origin)
+    ? cb(null, true)
+    : cb(new Error(`CORS: origin ${origin} not allowed`)),
+}));
 app.use(express.json({ limit: "1mb" }));
+
+// Admin-Token-Middleware: schuetzt destruktive /admin/*-Endpoints. Wenn die
+// ADMIN_TOKEN env-Variable leer ist, gilt Dev-Modus (warn + durchlassen).
+// In Produktion MUSS sie gesetzt sein und der Client muss sie als
+// X-Admin-Token-Header schicken.
+if (!ADMIN_TOKEN) {
+  console.warn("[server] ADMIN_TOKEN not set — /api/admin/* endpoints are PUBLIC (dev mode).");
+}
+function requireAdminToken(req, res, next) {
+  if (!ADMIN_TOKEN) return next();
+  const provided = req.header("X-Admin-Token") || "";
+  if (provided !== ADMIN_TOKEN) {
+    return res.status(401).json({ ok: false, error: "Admin-Token erforderlich oder ungültig" });
+  }
+  next();
+}
 
 const bool = (v) => Boolean(Number(v));
 const clean = (obj) => Object.fromEntries(Object.entries(obj).filter(([, v]) => v !== undefined));
@@ -369,7 +412,7 @@ app.get("/api/count/fahrzeuge", asyncRoute(async (_req, res) => {
   res.json({ count: Number(row?.count ?? 0) });
 }));
 
-app.post("/api/admin/reset", asyncRoute(async (_req, res) => {
+app.post("/api/admin/reset", requireAdminToken, asyncRoute(async (_req, res) => {
   // Transaktion: alle vier DELETEs sind logisch atomar. Wenn z.B. der
   // halter-DELETE wegen FK-RESTRICT fehlschlaegt (sollte nicht passieren
   // weil mangel/termin/fahrzeug schon weg sind), bleibt nichts halb
@@ -472,7 +515,7 @@ async function seedFullDemoData() {
   });
 }
 
-app.post("/api/admin/demo", asyncRoute(async (_req, res) => {
+app.post("/api/admin/demo", requireAdminToken, asyncRoute(async (_req, res) => {
   res.json(await seedFullDemoData());
 }));
 app.use((err, _req, res, _next) => {
