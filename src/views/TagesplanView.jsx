@@ -129,13 +129,22 @@ export function TagesplanView({ fahrzeuge, termine, addTr, updTr, delTr, addMang
     setShowTrModal(true);
   }
 
-  function saveTr(form) {
-    if (editTr) { updTr(editTr.id, form); toast("Termin aktualisiert", "success"); }
-    else { addTr(form); toast("Termin angelegt", "success"); }
-    setShowTrModal(false); setEditTr(null);
+  async function saveTr(form) {
+    try {
+      if (editTr) {
+        await updTr(editTr.id, form);
+        toast("Termin aktualisiert", "success");
+      } else {
+        await addTr(form);
+        toast("Termin angelegt", "success");
+      }
+      setShowTrModal(false); setEditTr(null);
+    } catch (e) {
+      toast(e?.message || "Speichern fehlgeschlagen", "error");
+    }
   }
 
-  function advance(t) {
+  async function advance(t) {
     const hasHM = hatHauptmangel(t.mängel);
     const next = t.status === STATUS.GEPLANT
       ? STATUS.IN_PRUEFUNG
@@ -143,8 +152,12 @@ export function TagesplanView({ fahrzeuge, termine, addTr, updTr, delTr, addMang
         ? (hasHM ? STATUS.NICHT_BESTANDEN : STATUS.BESTANDEN)
         : null;
     if (!next) return;
-    updTr(t.id, { status: next });
-    toast(`→ ${next}`, hasHM && next === STATUS.NICHT_BESTANDEN ? "warn" : "success");
+    try {
+      await updTr(t.id, { status: next });
+      toast(`→ ${next}`, hasHM && next === STATUS.NICHT_BESTANDEN ? "warn" : "success");
+    } catch (e) {
+      toast(e?.message || "Status-Wechsel abgelehnt", "error");
+    }
   }
 
   const weekDays = useMemo(() => Array.from({ length: 7 }, (_, i) => addDays(
@@ -400,7 +413,14 @@ export function TagesplanView({ fahrzeuge, termine, addTr, updTr, delTr, addMang
           onSave={saveTr} onClose={() => { setShowTrModal(false); setEditTr(null); setNewTrInit(null); }} />}
         {maengelTr && <MaengelModal termin={maengelTr} fahrzeug={fzMap[maengelTr.fahrzeugId]}
           onAdd={addMangel} onDel={delMangel}
-          onStatus={(id, s) => { updTr(id, { status: s }); toast(`Status: ${s}`, "success"); }}
+          onStatus={async (id, s) => {
+            try {
+              await updTr(id, { status: s });
+              toast(`Status: ${s}`, "success");
+            } catch (e) {
+              toast(e?.message || "Status-Wechsel abgelehnt", "error");
+            }
+          }}
           onClose={() => setMaengelId(null)} />}
       </AnimatePresence>
     </div>

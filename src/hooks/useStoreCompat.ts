@@ -282,13 +282,13 @@ export function useStoreCompat() {
   // ── Write-Adapter: updTr (mit WF-01-Guard) ──
   const updTr = useCallback(
     async (id: string, patch: any) => {
-      // Status-Wechsel? Über die Guard-Funktion
+      // Status-Wechsel? Über die Guard-Funktion. Bei Ablehnung (WF-01-Trigger
+      // oder API-Layer-Block) Error werfen, damit der Caller im View eine
+      // sichtbare Fehlermeldung als Toast zeigen kann.
       if ("status" in patch) {
         const result = await db.updTerminStatus(id, patch.status);
         if (!result.ok) {
-          // Fehler still schlucken — App-Layer hat eigene Guard.
-          // In Produktion könnte man hier per Toast warnen.
-          return;
+          throw new Error(result.reason || "Status-Wechsel abgelehnt");
         }
       }
       const trPatch: any = {};
