@@ -784,7 +784,8 @@ const clusterColorById = (id) => {
 /* ── Build chips ── */
 const chipsRoot = document.getElementById('chips');
 const FILTERS = [
-  { id: 'overview',   label: 'Overview',           default: true },
+  { id: 'core',       label: 'Core Architecture',  default: true },
+  { id: 'overview',   label: 'Overview' },
   { id: 'tagesplan',  label: 'Tagesplan' },
   { id: 'fahrzeuge',  label: 'Fahrzeuge' },
   { id: 'maengel',    label: 'Mängel' },
@@ -796,7 +797,34 @@ const FILTERS = [
   { id: 'all',        label: 'Show all wires' },
   { id: 'fixes-bugs', label: 'Roadmap & bugs', danger: true },
 ];
-let activeFilter = 'overview';
+
+// Core-View: knappe Auswahl fuer den "first look". Wird durch eine spezielle
+// Bedingung in applyFilter() durchgereicht (analog zu 'data' und 'fixes-bugs').
+const CORE_NODES = new Set([
+  'index-html', 'main', 'App',
+  'Sidebar', 'Topbar',
+  'TagesplanView', 'FahrzeugeView', 'StatistikView', 'BerichteView',
+  'useStoreCompat', 'useDb', 'api-client',
+  'server-index', 'server-db', 'mariadb',
+]);
+const CORE_EDGE_KEYS = new Set([
+  'index-html→main',
+  'main→App',
+  'App→Sidebar',
+  'App→Topbar',
+  'App→TagesplanView',
+  'App→FahrzeugeView',
+  'App→StatistikView',
+  'App→BerichteView',
+  'App→useStoreCompat',
+  'useStoreCompat→useDb',
+  'useDb→api-client',
+  'api-client→server-index',
+  'server-index→server-db',
+  'server-db→mariadb',
+]);
+
+let activeFilter = 'core';
 FILTERS.forEach(f => {
   const b = document.createElement('button');
   b.className = 'chip' + (f.default ? ' active' : '') + (f.danger ? ' danger' : '');
@@ -985,6 +1013,31 @@ const sideEl = document.getElementById('side');
 let selectedId = null;
 
 function showDefault() {
+  if (activeFilter === 'core') {
+    sideEl.innerHTML = `
+      <h1>Core Architecture</h1>
+      <div class="role">Der zentrale Aufbau der Anwendung in einem Bild — ohne Modale, Validatoren, Konstanten oder externe Libraries.</div>
+      <h2>Hauptdatenfluss</h2>
+      <div class="finding good">
+        <strong>React-Oberfläche → Kompatibilitätsschicht → API-State-Hook → HTTP-Client → Express-Backend → MariaDB.</strong>
+        <br><br>
+        Diese Ansicht blendet Detailkomponenten aus und erklärt zuerst den Hauptdatenfluss des Systems. Wenn du das verstanden hast, wechsle auf <em>Overview</em>, um Modale und Domain-Konstanten dazuzusehen, oder <em>Critical path (spine)</em>, um nur die 10 roten Hop-Kanten zu sehen.
+      </div>
+      <h2>Sichtbare Knoten</h2>
+      <ul class="notes">
+        <li><strong>Entry:</strong> index.html → main.jsx → App.jsx</li>
+        <li><strong>Layout:</strong> Sidebar, Topbar</li>
+        <li><strong>Pages:</strong> TagesplanView, FahrzeugeView, StatistikView, BerichteView</li>
+        <li><strong>State + Daten:</strong> useStoreCompat → useDb → apiClient</li>
+        <li><strong>Backend:</strong> server/index.js → server/db.js → MariaDB</li>
+      </ul>
+      <h2>Wie lesen?</h2>
+      <div class="finding">
+        Klick auf einen Knoten zeigt seine Details rechts. Klick auf eine andere Chip oben wechselt die Sicht — das Layout und die Pan/Zoom-Position bleiben erhalten.
+      </div>
+    `;
+    return;
+  }
   sideEl.innerHTML = `
     <h1>Architecture map · MariaDB backend (Stand 2026-05-19)</h1>
     <div class="role">React 19 + Vite frontend with an Express API and central MariaDB database. Empfohlene Auslieferung: 3-Container Docker-Stack (DB + API + Adminer) per <code>docker compose up -d</code>. Alternative: native MariaDB-Installation, dieselbe App ohne Aenderungen. On-Premise pro Pruefstelle, Daten verlassen die Werkstatt nie. Browser spricht nie direkt mit MariaDB; alles fliesst durch <code>/api</code>.</div>
@@ -1002,7 +1055,7 @@ function showDefault() {
     <div class="finding good"><strong>Multi-User-Live-Sync via 5-Sek-Polling</strong><br><code>useDb</code> pollt alle 5 Sek mit <code>refresh()</code> — Empfang legt einen Termin an, das Pruefer-Tablet zeigt ihn nach max 5 Sek. Drei Skip-Bedingungen: (a) <code>document.visibilityState !== "visible"</code> (Akku + LAN), (b) <code>writeInFlight &gt; 0</code> (verhindert Race mit eigenem Write), (c) Single <code>refresh()</code> macht nur 3 HTTP-Requests dank <code>?include=maengel</code>-Endpoint (N+1 fix). US-16 done.</div>
     <div class="finding good"><strong>Doppel-Termin-Warnung (UX-Layer)</strong><br><code>TerminModal</code> warnt per <code>window.confirm()</code>, falls gleicher fahrzeugId + datum + prueftCode schon gebucht ist (z.B. 2x HU am 19.05. fuer B-TK 1234). DB-Constraint bleibt nur auf <code>UNIQUE(fahrzeug_id, datum, uhrzeit)</code> — eine Same-Day-Nachpruefung nach gefallener HU bleibt damit moeglich.</div>
     <h2>Filters</h2>
-    <div class="finding">Click a chip to dim everything outside that feature. "Critical path" highlights only the 10 red edges of the spine. "Roadmap & bugs" highlights only nodes with green/red badges.</div>
+    <div class="finding">Click a chip to dim everything outside that feature. <strong>"Core Architecture"</strong> is the simplified "first look" — only the entry → views → state → API → DB spine. "Critical path" highlights only the 10 red edges. "Roadmap &amp; bugs" highlights only nodes with green/red badges.</div>
   `;
 }
 
@@ -1052,7 +1105,15 @@ function unhighlight() {
 
 /* ── Filter logic ── */
 function applyFilter() {
-  if (activeFilter === 'fixes-bugs') {
+  if (activeFilter === 'core') {
+    document.querySelectorAll('.node-bg').forEach(el => {
+      el.classList.toggle('dim', !CORE_NODES.has(el.dataset.id));
+    });
+    document.querySelectorAll('.edge').forEach(el => {
+      const e = edges[+el.dataset.edgeIdx];
+      el.classList.toggle('dim', !CORE_EDGE_KEYS.has(`${e.from}→${e.to}`));
+    });
+  } else if (activeFilter === 'fixes-bugs') {
     const hot = new Set([...Object.keys(FIXES), ...Object.keys(KNOWN_BUGS)]);
     document.querySelectorAll('.node-bg').forEach(el => el.classList.toggle('dim', !hot.has(el.dataset.id)));
     document.querySelectorAll('.edge').forEach(el => {
