@@ -406,7 +406,16 @@ export function TagesplanView({ fahrzeuge, termine, addTr, updTr, delTr, addMang
 
       <AnimatePresence>
         {confirmDel && <ConfirmModal title="Termin löschen?" msg="Diese Aktion kann nicht rückgängig gemacht werden."
-          onConfirm={() => { delTr(confirmDel); setConfirmDel(null); toast("Termin gelöscht", "info"); }}
+          onConfirm={async () => {
+            const id = confirmDel;
+            setConfirmDel(null);
+            try {
+              await delTr(id);
+              toast("Termin gelöscht", "info");
+            } catch (e) {
+              toast(e?.message || "Löschen fehlgeschlagen", "error");
+            }
+          }}
           onCancel={() => setConfirmDel(null)} />}
         {showTrModal && <TerminModal fahrzeuge={fahrzeuge} termine={termine}
           initial={editTr ? { ...editTr } : { datum: date, ...(newTrInit || {}) }}

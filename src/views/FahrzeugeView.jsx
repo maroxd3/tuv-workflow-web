@@ -50,10 +50,20 @@ export function FahrzeugeView({ fahrzeuge, termine, addFz, updFz, delFz, toast }
     return { days, color: days < 0 ? C.redL : days < 30 ? C.orangeL : days < 90 ? C.amberL : C.greenL, label: days < 0 ? `${Math.abs(days)}d überfällig` : `in ${days}d` };
   }
 
-  function save(form) {
-    if (editFz) { updFz(editFz.id, form); toast("Fahrzeug aktualisiert", "success"); if (sel?.id === editFz.id) setSel({ ...editFz, ...form }); }
-    else { addFz(form); toast("Fahrzeug erfasst", "success"); }
-    setShowModal(false); setEditFz(null);
+  async function save(form) {
+    try {
+      if (editFz) {
+        await updFz(editFz.id, form);
+        toast("Fahrzeug aktualisiert", "success");
+        if (sel?.id === editFz.id) setSel({ ...editFz, ...form });
+      } else {
+        await addFz(form);
+        toast("Fahrzeug erfasst", "success");
+      }
+      setShowModal(false); setEditFz(null);
+    } catch (e) {
+      toast(e?.message || "Speichern fehlgeschlagen", "error");
+    }
   }
 
   const sidebarTr = sel ? termine.filter(t => t.fahrzeugId === sel.id).sort((a, b) => b.datum.localeCompare(a.datum)) : [];
@@ -210,7 +220,17 @@ export function FahrzeugeView({ fahrzeuge, termine, addFz, updFz, delFz, toast }
 
       <AnimatePresence>
         {confirmDel && <ConfirmModal title="Fahrzeug löschen?" msg="Alle Termine dieses Fahrzeugs werden ebenfalls gelöscht."
-          onConfirm={() => { delFz(confirmDel); setSel(null); setConfirmDel(null); toast("Fahrzeug gelöscht", "info"); }}
+          onConfirm={async () => {
+            const id = confirmDel;
+            setConfirmDel(null);
+            try {
+              await delFz(id);
+              if (sel?.id === id) setSel(null);
+              toast("Fahrzeug gelöscht", "info");
+            } catch (e) {
+              toast(e?.message || "Löschen fehlgeschlagen", "error");
+            }
+          }}
           onCancel={() => setConfirmDel(null)} />}
         {showModal && <FahrzeugModal initial={editFz || {}} fahrzeuge={fahrzeuge} onSave={save} onClose={() => { setShowModal(false); setEditFz(null); }} />}
       </AnimatePresence>
