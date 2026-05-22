@@ -12,7 +12,7 @@ MariaDB-Branch.
 | [003](003-wf01-enforcement.md) | accepted | WF-01 serverseitig und in der UI absichern | 2026-05-13 |
 | [004](004-express-api-mariadb-driver.md) | accepted | Express API mit MariaDB Driver | 2026-05-17 |
 | [005](005-typescript-graduell.md) | accepted | TypeScript graduell einführen | 2026-05-13 |
-| [006](006-firebase-hosting.md) | accepted | Firebase Hosting nur für statische Frontend-Dateien | 2026-05-13 |
+| [006](006-firebase-hosting.md) | superseded by [010](010-hardening-roadmap.md) | Firebase Hosting (verworfen, Auslieferung erfolgt on-premise) | 2026-05-13 |
 | [007](007-api-client-pattern.md) | accepted | API-Client Pattern im Frontend | 2026-05-17 |
 | [008](008-keine-eingebetteten-arrays.md) | accepted | Mängel und Halter als eigene Tabellen | 2026-05-13 |
 | [009](009-monolithischer-server.md) | accepted | Monolithischer Server statt geschichteter Architektur | 2026-05-19 |

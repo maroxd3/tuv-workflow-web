@@ -49,7 +49,7 @@ in einem React-Projekt eng zusammenhängen.
 | Datenmodell, Mangel-Katalog (StVZO Anlage VIII), Statistik-Auswertung | Oussama Hlayhel |
 | Testkonzept, Vitest-Test-Suite, Coverage-Report | Oussama Hlayhel |
 | Pflichtenheft, Backlog, Sprint-Methodik, Dokumentation | gemeinsam |
-| Tauri-Desktop-Build, Firebase-Hosting, Deployment | gemeinsam |
+| Tauri-Desktop-Build, On-Premise-Deployment (Docker Compose) | gemeinsam |
 
 Diese Aufteilung ist nicht trennscharf — beide Studierende haben in
 allen Bereichen mitgewirkt; die Zuordnung gibt die jeweilige

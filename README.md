@@ -73,8 +73,7 @@ SQL gegen MariaDB aus und erstellt Tabellen sowie Stammdaten beim Start.
 | Charts | Recharts | Statistikdiagramme |
 | Tests | Vitest 4, React Testing Library | Unit-, Component-, Hook- und DB-Tests |
 | Linting | ESLint 9 | Statische Codequalität |
-| Container | Docker Compose | On-Premise-Deployment (MariaDB + API in einem Befehl) |
-| Hosting | Firebase Hosting | Optionales statisches Hosting des Frontends; Datenhaltung liegt nie in der Cloud |
+| Container | Docker Compose | On-Premise-Deployment (MariaDB + API + Frontend in einem Befehl) |
 
 ## Getting Started
 
