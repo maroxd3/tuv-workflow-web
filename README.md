@@ -7,7 +7,7 @@ Diese Variante nutzt eine zentrale **MariaDB-Datenbank** über eine
 **Express-API** in `server/index.js`. Die Browser-App spricht nicht direkt mit
 der Datenbank, sondern ausschließlich über HTTP-Endpunkte unter `/api`.
 
-[![Tests](https://img.shields.io/badge/tests-136%20passing-brightgreen)](#testing)
+[![Tests](https://img.shields.io/badge/tests-passing-brightgreen)](#testing)
 [![Lint](https://img.shields.io/badge/eslint-0%20errors-brightgreen)](#testing)
 [![TypeScript](https://img.shields.io/badge/typescript-graduell-blue)](#tech-stack)
 [![Database](https://img.shields.io/badge/db-MariaDB-003545)](#tech-stack)
@@ -207,8 +207,13 @@ npm run build
 
 Aktueller Stand dieser Arbeitskopie:
 
+- `npm run lint` und `npm run typecheck` erfolgreich
 - `npm run build` erfolgreich
-- `npm run typecheck` erfolgreich
+- 136 Tests insgesamt. Lokal ohne laufende MariaDB: 128 passing,
+  8 skipped (die WF-01-Integrationstests gegen die echte DB).
+  In der GitHub-Actions-CI mit MariaDB-Service: 135 passing, 1 skipped
+  (der `docker exec`-basierte SQL-Bypass-Test, der einen lokalen
+  Compose-Stack voraussetzt).
 - API-Healthcheck gegen MariaDB erfolgreich
 - `/api/fahrzeuge` konnte Daten aus MariaDB lesen
 
