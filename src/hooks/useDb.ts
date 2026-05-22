@@ -70,6 +70,10 @@ export function useDb(): UseDbResult {
   }
 
   const refresh = useCallback(async () => {
+    // setError(null) am Anfang: ein erfolgreicher Refresh (z. B. Retry nach
+    // API-Ausfall) raeumt den Fehler-Screen weg. setReady(true) am Ende:
+    // falls die initiale Mount-Sequenz wegen API-Down haengen geblieben war,
+    // schaltet ein erfolgreicher Retry die App jetzt frei.
     try {
       // N+1-Fix: includeMaengel: true holt termine+maengel in 2 SQL-Queries
       // statt 14 (1 + N HTTP-Calls). Resultat hat .maengel-Array pro Termin.
@@ -81,6 +85,8 @@ export function useDb(): UseDbResult {
       setHalterList(h);
       setFahrzeuge(f);
       setTermine(tWith.map((tr) => ({ ...tr, mängel: tr.maengel })));
+      setError(null);
+      setReady(true);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     }
