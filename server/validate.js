@@ -26,13 +26,11 @@ const PRUEFER_VALUES = new Set(["MW", "AF", "SK", "TB", "LN"]);
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const TIME_RE = /^\d{2}:\d{2}(:\d{2})?$/;
-const KENNZEICHEN_RE = /^[A-ZÄÖÜ]{1,3}[- ][A-Z]{1,2} \d{1,4}( H| E)?(\s\d{2}-\d{2})?$/;
 const FIN_RE = /^[A-HJ-NPR-Z0-9]{17}$/;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function isString(v) { return typeof v === "string"; }
 function isNonEmpty(v) { return isString(v) && v.trim().length > 0; }
-function isInt(v) { return typeof v === "number" && Number.isInteger(v); }
 
 // ── Validatoren pro Endpoint ──────────────────────────────────────────
 
