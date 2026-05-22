@@ -25,7 +25,7 @@ Insbesondere versichern wir, dass
    `docs/pflichtenheft.md` und `docs/testkonzept.md`);
 3. wir die Nutzung KI-basierter Werkzeuge bei der Erstellung von Code
    und Dokumentation transparent in der separaten KI-Nutzungserklärung
-   (`docs/ki_nutzung.md`) offengelegt haben und die endgültige inhaltliche
+   (`docs/ki-nutzung.md`) offengelegt haben und die endgültige inhaltliche
    und fachliche Verantwortung für jede Zeile in diesem Repository bei
    uns liegt;
 4. die Arbeit in dieser oder ähnlicher Form weder in einem anderen Modul
