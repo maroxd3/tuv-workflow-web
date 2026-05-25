@@ -22,8 +22,22 @@ const port = Number(process.env.API_PORT || 8787);
 // im LAN unnoetig offen. Falls Origin fehlt (same-origin oder Server-to-Server)
 // wird durchgelassen.
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN || "";
+const NODE_ENV = process.env.NODE_ENV || "development";
 const ALLOWED_ORIGIN_HOSTS = (process.env.ALLOWED_ORIGINS || "")
   .split(",").map(s => s.trim()).filter(Boolean);
+
+// Fail-fast: in Produktion darf der Admin-Token nicht leer sein. Sonst waeren
+// /api/admin/reset und /api/admin/demo (DB-Wipe + Reseed) fuer jeden im LAN
+// erreichbar, und die dev-mode-Warnung im Startup-Log faellt einem
+// Werkstatt-IT-Setup nicht auf. Lieber loud broken als silently insecure.
+if (NODE_ENV === "production" && !ADMIN_TOKEN) {
+  console.error(
+    "[server] FATAL: ADMIN_TOKEN must be set when NODE_ENV=production. " +
+    "Ohne Token sind /api/admin/* Endpunkte oeffentlich und koennen die " +
+    "Datenbank loeschen. Setze ADMIN_TOKEN in .env (>= 32 Zeichen).",
+  );
+  process.exit(1);
+}
 
 function isAllowedOrigin(origin) {
   if (!origin) return true;

@@ -35,7 +35,15 @@ aufrufbar — sicherheitsrelevant sobald das Gerät im LAN steht.
 ist `X-Admin-Token`-Header Pflicht, sonst 401. Im Dev-Modus (leere
 Env) bleibt der Zugriff offen mit Warn-Log beim Start.
 
-**Commit:** `9e01034`
+**Production-Boot-Guard (Nachtrag 2026-05-26):** Bei `NODE_ENV=production`
+und leerem `ADMIN_TOKEN` verweigert der Server jetzt den Start mit
+FATAL-Log und `exit(1)`. Hintergrund: in einem Werkstatt-IT-Setup wird die
+einmalige Dev-Warnung im Boot-Log nicht zuverlässig gesehen — ohne
+Fail-fast wären `/api/admin/reset` und `/api/admin/demo` öffentlich, und
+niemand würde es merken. Boot-Verhalten ist durch
+`server/tests/admin-token-boot.test.js` abgesichert.
+
+**Commit:** `9e01034` (Initial-Schutz) + Boot-Guard (siehe ADR-Nachtrag)
 
 ### 2. Deployment-Konsistenz — ✅ umgesetzt
 
