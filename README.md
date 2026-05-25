@@ -207,15 +207,14 @@ npm run build
 
 Aktueller Stand dieser Arbeitskopie:
 
-- `npm run lint` und `npm run typecheck` erfolgreich
-- `npm run build` erfolgreich
-- 136 Tests insgesamt. Lokal ohne laufende MariaDB: 128 passing,
-  8 skipped (die WF-01-Integrationstests gegen die echte DB).
-  In der GitHub-Actions-CI mit MariaDB-Service: 135 passing, 1 skipped
-  (der `docker exec`-basierte SQL-Bypass-Test, der einen lokalen
-  Compose-Stack voraussetzt).
-- API-Healthcheck gegen MariaDB erfolgreich
-- `/api/fahrzeuge` konnte Daten aus MariaDB lesen
+- `npm run lint`, `npm run typecheck` und `npm run build` laufen ohne Fehler.
+- Frontend- und Unit-Tests laufen lokal vollständig.
+- Die WF-01-Integrationstests laufen in der GitHub-Actions-CI gegen einen
+  echten MariaDB-Service (siehe `.github/workflows/ci.yml`).
+- Ein direkter SQL-Bypass-Test setzt einen laufenden lokalen Compose-Stack
+  voraus und wird sonst übersprungen.
+- API-Healthcheck gegen MariaDB erfolgreich; `/api/fahrzeuge` liest Daten
+  aus MariaDB.
 
 ## Projekt-Struktur
 
