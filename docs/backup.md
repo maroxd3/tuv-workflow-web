@@ -15,7 +15,7 @@ Welche Vorfälle muss eine Backup-Strategie abfangen?
 | Werkstatt brennt ab, Server wird gestohlen | sehr selten | Offsite-Cloud-Backup ausserhalb des Gebäudes |
 
 Ein einfaches `mysqldump`-Cronjob auf der gleichen Festplatte schützt nur vor
-dem ersten Szenario. Eine vollständige Strategie deckt alle vier ab.
+dem ersten Szenario. Eine vollständige Strategie deckt alle vier ab
 
 ## 2. 3-Tier-Strategie (3-2-1-Regel)
 
