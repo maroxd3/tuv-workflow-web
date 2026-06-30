@@ -68,5 +68,5 @@ Eine Story gilt als erledigt, wenn:
   Semantik). Weitere Endpunkte (Halter, Fahrzeug, Termin-CRUD) sind offen.
 - Schema-Änderungen sollten mittelfristig versioniert werden.
 - Backup-Tier-2-Cron-Skript und Tier-3-Offsite-Sync sind als Konzept
-  dokumentiert (`docs/backup.md`), die Skripte stehen aus.
+  dokumentiert (`docs/backup.md`), die Skripte stehen aus
 - Produktiver Betrieb braucht zusaetzlich Auth, HTTPS und Rollen.
