@@ -208,7 +208,7 @@ const PRUEFER_SEED = [
 ];
 
 // Mangel-Kategorien nach HU-Richtlinie (§29 StVZO, Anlage VIII Nr. 3).
-// Konsistent in DB, Backend, Frontend — keine Doppel-Sprache.
+// Konsistent in DB, Backend, Frontend — keine Doppel-Sprache
 // blockiert_bestanden = TRUE: Termin darf nicht auf "Bestanden" gesetzt werden.
 const MANGEL_KATEGORIE_SEED = [
   ["OM",  "Ohne Mangel",          false],
