@@ -5,7 +5,7 @@
 //
 // Begruendung statt Frontend-Validation: das Frontend kann umgangen werden
 // (direkter API-Call via curl, Adminer, anderer Client). Die DB-Constraints
-// schuetzen Integritaet, aber liefern HTTP 500 mit SQL-Errors statt sauberer
+// schuetzen Integritaet , aber liefern HTTP 500 mit SQL-Errors statt sauberer
 // 4xx-Antworten. Dieses Modul liegt dazwischen.
 
 const STATUS_VALUES = new Set([
