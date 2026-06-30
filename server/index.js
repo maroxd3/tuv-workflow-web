@@ -271,7 +271,7 @@ app.get("/api/termine", asyncRoute(async (req, res) => {
   // Pull "letzte 7 Tage + naechste 30 Tage" statt "alles". Ohne Parameter
   // liefert der Endpoint weiterhin die volle Liste — kompatibel zum
   // aktuellen Frontend, das BerichteView und StatistikView mit der
-  // Komplett-Historie versorgt.
+  // Komplett-Historie versorgt
   const dateRe = /^\d{4}-\d{2}-\d{2}$/;
   const from = typeof req.query.from === "string" && dateRe.test(req.query.from) ? req.query.from : null;
   const to   = typeof req.query.to   === "string" && dateRe.test(req.query.to)   ? req.query.to   : null;
