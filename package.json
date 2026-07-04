@@ -19,7 +19,9 @@
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
+    "express-rate-limit": "^8.5.2",
     "framer-motion": "^12.38.0",
+    "helmet": "^8.2.0",
     "lucide-react": "^1.7.0",
     "mariadb": "^3.5.2",
     "prop-types": "^15.8.1",
@@ -48,6 +50,7 @@
     "jsdom": "^29.0.1",
     "tailwindcss": "^4.2.2",
     "typescript": "^6.0.3",
+    "typescript-eslint": "^8.62.1",
     "vite": "^8.0.1",
     "vitest": "^4.1.2"
   }

@@ -19,8 +19,13 @@ services:
       MARIADB_USER: ${MARIADB_USER:-tuv_app}
       MARIADB_PASSWORD: ${MARIADB_PASSWORD:-tuv_app_pw}
       MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD:-please_change_me_in_production}
+    # Port nur an localhost des Server-PCs binden: die API erreicht MariaDB
+    # ueber das interne Docker-Netz ("db"), Clients im LAN brauchen die DB
+    # nie direkt. Ein offenes 3306 im ganzen Werkstatt-WLAN waere unnoetige
+    # Angriffsflaeche (Default-Credentials!). Fuer DB-Tools am Server-PC
+    # selbst (HeidiSQL, DBeaver) bleibt 127.0.0.1:3306 erreichbar.
     ports:
-      - "3306:3306"
+      - "127.0.0.1:3306:3306"
     volumes:
       - mariadb_data:/var/lib/mysql
       - ./docker/mariadb/my.cnf:/etc/mysql/conf.d/tuv.cnf:ro
@@ -45,6 +50,11 @@ services:
       MARIADB_PASSWORD: ${MARIADB_PASSWORD:-tuv_app_pw}
       MARIADB_DATABASE: ${MARIADB_DATABASE:-tuv_workflow}
       API_PORT: 8787
+      # Docker-Deployment = Kunden-Deployment, daher Default production.
+      # Ohne NODE_ENV lief der Container immer im dev-Modus und der
+      # Fail-fast-Guard (Boot-Verweigerung ohne ADMIN_TOKEN) griff nie —
+      # /api/admin/* waere still oeffentlich gewesen.
+      NODE_ENV: ${NODE_ENV:-production}
       ADMIN_TOKEN: ${ADMIN_TOKEN:-}
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-}
     ports:

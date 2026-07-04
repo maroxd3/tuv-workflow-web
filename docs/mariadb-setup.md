@@ -123,10 +123,16 @@ an `http://127.0.0.1:8787` weiter.
 
 ## 6. Demo-Daten laden
 
-Der Demo-Endpunkt löscht die lokalen Fachdaten und legt den Demo-Stand neu an:
+Der Demo-Endpunkt löscht die lokalen Fachdaten und legt den Demo-Stand neu an.
+Wenn `ADMIN_TOKEN` gesetzt ist (im Docker-Deployment Pflicht), muss er als
+`X-Admin-Token`-Header mitgeschickt werden:
 
 ```powershell
+# Dev-Modus (NODE_ENV=development, kein ADMIN_TOKEN):
 Invoke-RestMethod -Method Post http://127.0.0.1:8787/api/admin/demo
+
+# Mit gesetztem ADMIN_TOKEN:
+Invoke-RestMethod -Method Post -Headers @{ "X-Admin-Token" = "<ADMIN_TOKEN>" } http://127.0.0.1:8787/api/admin/demo
 ```
 
 Erwartete Antwort:

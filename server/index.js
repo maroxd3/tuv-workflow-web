@@ -1,6 +1,8 @@
 import express from "express";
 import cors from "cors";
-import { randomUUID } from "node:crypto";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
+import { randomUUID, createHash, timingSafeEqual } from "node:crypto";
 import { existsSync } from "node:fs";
 import { resolve, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -54,6 +56,38 @@ function isAllowedOrigin(origin) {
   return false;
 }
 
+// Security-Header via helmet. Die Default-CSP erlaubt Inline-Styles
+// ('unsafe-inline' in style-src — noetig fuer die style={{...}}-Attribute
+// des Frontends und den Print-Report), aber KEINE Inline-Scripts — deshalb
+// triggert BerichteView den Druck vom Opener aus statt per <script> im
+// generierten Dokument. `upgrade-insecure-requests` wird entfernt, weil
+// das On-Premise-Deployment ueber plain HTTP im LAN laeuft — die Direktive
+// wuerde alle Asset-Requests auf ein nicht existierendes HTTPS umschreiben.
+app.use(helmet({
+  contentSecurityPolicy: {
+    useDefaults: true,
+    directives: { "upgrade-insecure-requests": null },
+  },
+}));
+
+// Rate-Limiting nur in Produktion: schuetzt vor Brute-Force auf den
+// Admin-Token und vor Amok-Clients im LAN. In dev/CI ausgeschaltet, damit
+// Integrationstests (viele Requests + Reseed pro Testfall) nicht anschlagen.
+if (NODE_ENV === "production") {
+  app.use("/api", rateLimit({
+    windowMs: 60_000,
+    limit: 600,
+    standardHeaders: true,
+    legacyHeaders: false,
+  }));
+  app.use("/api/admin", rateLimit({
+    windowMs: 15 * 60_000,
+    limit: 30,
+    standardHeaders: true,
+    legacyHeaders: false,
+  }));
+}
+
 app.use(cors({
   origin: (origin, cb) => isAllowedOrigin(origin)
     ? cb(null, true)
@@ -68,10 +102,19 @@ app.use(express.json({ limit: "1mb" }));
 if (!ADMIN_TOKEN) {
   console.warn("[server] ADMIN_TOKEN not set — /api/admin/* endpoints are PUBLIC (dev mode).");
 }
+// Konstantzeit-Vergleich: ein naives `!==` bricht beim ersten abweichenden
+// Zeichen ab und leakt ueber die Antwortzeit, wie viele Zeichen des Tokens
+// stimmen. Beide Seiten werden gehasht, damit timingSafeEqual gleich lange
+// Buffer bekommt (Laengen-Leak vermeiden).
+function tokenMatches(provided) {
+  const a = createHash("sha256").update(provided).digest();
+  const b = createHash("sha256").update(ADMIN_TOKEN).digest();
+  return timingSafeEqual(a, b);
+}
 function requireAdminToken(req, res, next) {
   if (!ADMIN_TOKEN) return next();
   const provided = req.header("X-Admin-Token") || "";
-  if (provided !== ADMIN_TOKEN) {
+  if (!tokenMatches(provided)) {
     return res.status(401).json({ ok: false, error: "Admin-Token erforderlich oder ungültig" });
   }
   next();
@@ -167,7 +210,16 @@ async function withTransaction(fn) {
   }
 }
 
-app.get("/api/health", (_req, res) => res.json({ ok: true }));
+// Health prueft die DB mit (SELECT 1), nicht nur den Express-Prozess —
+// sonst meldet der Endpoint "ok" waehrend MariaDB laengst weg ist.
+app.get("/api/health", async (_req, res) => {
+  try {
+    await db().query("SELECT 1");
+    res.json({ ok: true, db: true });
+  } catch {
+    res.status(503).json({ ok: false, db: false });
+  }
+});
 
 app.get("/api/halter", asyncRoute(async (_req, res) => {
   const rows = await db().query("SELECT * FROM halter ORDER BY name");
@@ -198,11 +250,13 @@ app.patch("/api/halter/:id", check(validateHalter), asyncRoute(async (req, res) 
     );
   }
   const row = await one("SELECT * FROM halter WHERE halter_id = ?", [req.params.id]);
-  res.json(row ? toHalter(row) : null);
+  if (!row) return res.status(404).json({ ok: false, error: "Halter nicht gefunden" });
+  res.json(toHalter(row));
 }));
 
 app.delete("/api/halter/:id", asyncRoute(async (req, res) => {
-  await db().query("DELETE FROM halter WHERE halter_id = ?", [req.params.id]);
+  const result = await db().query("DELETE FROM halter WHERE halter_id = ?", [req.params.id]);
+  if (!result.affectedRows) return res.status(404).json({ ok: false, error: "Halter nicht gefunden" });
   res.status(204).end();
 }));
 
@@ -257,11 +311,13 @@ app.patch("/api/fahrzeuge/:id", check(validateFahrzeug), asyncRoute(async (req, 
     );
   }
   const row = await one("SELECT * FROM fahrzeug WHERE fahrzeug_id = ?", [req.params.id]);
-  res.json(row ? toFahrzeug(row) : null);
+  if (!row) return res.status(404).json({ ok: false, error: "Fahrzeug nicht gefunden" });
+  res.json(toFahrzeug(row));
 }));
 
 app.delete("/api/fahrzeuge/:id", asyncRoute(async (req, res) => {
-  await db().query("DELETE FROM fahrzeug WHERE fahrzeug_id = ?", [req.params.id]);
+  const result = await db().query("DELETE FROM fahrzeug WHERE fahrzeug_id = ?", [req.params.id]);
+  if (!result.affectedRows) return res.status(404).json({ ok: false, error: "Fahrzeug nicht gefunden" });
   res.status(204).end();
 }));
 
@@ -352,7 +408,8 @@ app.patch("/api/termine/:id", check(validateTermin), asyncRoute(async (req, res)
     );
   }
   const row = await one("SELECT * FROM termin WHERE termin_id = ?", [req.params.id]);
-  res.json(row ? toTermin(row) : null);
+  if (!row) return res.status(404).json({ ok: false, error: "Termin nicht gefunden" });
+  res.json(toTermin(row));
 }));
 
 app.patch("/api/termine/:id/status", check(validateStatusUpdate), asyncRoute(async (req, res) => {
@@ -375,11 +432,13 @@ app.patch("/api/termine/:id/status", check(validateStatusUpdate), asyncRoute(asy
 
   await db().query("UPDATE termin SET status_code = ? WHERE termin_id = ?", [neuerStatus, req.params.id]);
   const row = await one("SELECT * FROM termin WHERE termin_id = ?", [req.params.id]);
+  if (!row) return res.status(404).json({ ok: false, error: "Termin nicht gefunden" });
   res.json({ ok: true, termin: toTermin(row) });
 }));
 
 app.delete("/api/termine/:id", asyncRoute(async (req, res) => {
-  await db().query("DELETE FROM termin WHERE termin_id = ?", [req.params.id]);
+  const result = await db().query("DELETE FROM termin WHERE termin_id = ?", [req.params.id]);
+  if (!result.affectedRows) return res.status(404).json({ ok: false, error: "Termin nicht gefunden" });
   res.status(204).end();
 }));
 
@@ -442,7 +501,8 @@ app.post("/api/maengel", check(validateMangel), asyncRoute(async (req, res) => {
 }));
 
 app.delete("/api/maengel/:id", asyncRoute(async (req, res) => {
-  await db().query("DELETE FROM mangel WHERE mangel_id = ?", [req.params.id]);
+  const result = await db().query("DELETE FROM mangel WHERE mangel_id = ?", [req.params.id]);
+  if (!result.affectedRows) return res.status(404).json({ ok: false, error: "Mangel nicht gefunden" });
   res.status(204).end();
 }));
 
@@ -576,12 +636,31 @@ if (existsSync(distPath)) {
   console.log(`[server] no dist/ found, running /api only (frontend via Vite dev server)`);
 }
 
+// Zentraler Error-Handler. Bekannte DB-Constraint-Fehler werden auf
+// fachliche 4xx-Antworten gemappt statt als 500 durchzuschlagen. Der
+// 500-Fall gibt bewusst KEINE err.message an den Client — SQL-Fehlertexte
+// leaken Schema-Details (Tabellen-/Spaltennamen); die Details landen nur
+// im Server-Log.
+const DB_ERROR_MAP = {
+  1062: { status: 409, error: "Datensatz existiert bereits — eindeutiger Wert doppelt (z. B. Kennzeichen, FIN oder E-Mail)." },
+  1452: { status: 400, error: "Referenzierter Datensatz existiert nicht (ungültige halterId, fahrzeugId oder terminId)." },
+  1451: { status: 409, error: "Datensatz wird noch referenziert und kann nicht gelöscht werden." },
+  4025: { status: 400, error: "Wert verletzt eine Plausibilitätsregel (CHECK-Constraint, z. B. Baujahr oder Kilometerstand)." },
+};
+
 app.use((err, _req, res, _next) => {
   if (err && err.sqlState === "45000") {
     return res.status(422).json({ ok: false, reason: err.text || err.message });
   }
+  const mapped = err && DB_ERROR_MAP[err.errno];
+  if (mapped) {
+    return res.status(mapped.status).json({ ok: false, error: mapped.error });
+  }
+  if (err && /^CORS:/.test(err.message || "")) {
+    return res.status(403).json({ ok: false, error: "Origin nicht erlaubt (CORS)" });
+  }
   console.error(err);
-  res.status(500).json({ error: err.message || "Server error" });
+  res.status(500).json({ ok: false, error: "Interner Serverfehler" });
 });
 
 await ensureDatabase();

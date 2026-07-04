@@ -28,9 +28,22 @@ const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const TIME_RE = /^\d{2}:\d{2}(:\d{2})?$/;
 const FIN_RE = /^[A-HJ-NPR-Z0-9]{17}$/;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// IDs (PK und FK) sind ueberall UUIDs (crypto.randomUUID, server- oder
+// client-seitig fuer Optimistic Updates). Clients duerfen eigene IDs
+// mitschicken, aber nur in diesem Format — sonst waeren beliebige Strings
+// als Primary Key moeglich.
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function isString(v) { return typeof v === "string"; }
 function isNonEmpty(v) { return isString(v) && v.trim().length > 0; }
+
+// Prueft ein optionales oder Pflicht-ID-Feld auf UUID-Format (nur wenn es
+// gesetzt ist — Pflichtfeld-Checks passieren separat).
+function checkUuid(errs, body, field) {
+  if (body[field] != null && body[field] !== "" && !UUID_RE.test(body[field])) {
+    errs.push({ field, message: "Ungültiges ID-Format (UUID erwartet)" });
+  }
+}
 
 // ── Validatoren pro Endpoint ──────────────────────────────────────────
 
@@ -42,6 +55,7 @@ export function validateHalter(body, { partial = false } = {}) {
   if (body.email != null && body.email !== "" && !EMAIL_RE.test(body.email)) {
     errs.push({ field: "email", message: "Ungültiges E-Mail-Format" });
   }
+  checkUuid(errs, body, "halterId");
   return errs;
 }
 
@@ -83,6 +97,8 @@ export function validateFahrzeug(body, { partial = false } = {}) {
   if (body.huFaellig != null && body.huFaellig !== "" && !DATE_RE.test(body.huFaellig)) {
     errs.push({ field: "huFaellig", message: "Datum im Format YYYY-MM-DD erwartet" });
   }
+  checkUuid(errs, body, "fahrzeugId");
+  checkUuid(errs, body, "halterId");
   return errs;
 }
 
@@ -110,6 +126,8 @@ export function validateTermin(body, { partial = false } = {}) {
   if (body.statusCode != null && !STATUS_VALUES.has(body.statusCode)) {
     errs.push({ field: "statusCode", message: `Unbekannter Status '${body.statusCode}'` });
   }
+  checkUuid(errs, body, "terminId");
+  checkUuid(errs, body, "fahrzeugId");
   return errs;
 }
 
@@ -135,6 +153,8 @@ export function validateMangel(body) {
   if (body.behoben != null && typeof body.behoben !== "boolean") {
     errs.push({ field: "behoben", message: "Boolean erwartet (true/false)" });
   }
+  checkUuid(errs, body, "mangelId");
+  checkUuid(errs, body, "terminId");
   return errs;
 }
 

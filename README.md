@@ -93,11 +93,27 @@ verfügbar ist.
 
 ```powershell
 copy .env.example .env
+```
+
+`ADMIN_TOKEN` in der `.env` setzen — im Docker-Deployment läuft die API mit
+`NODE_ENV=production` und **verweigert ohne Token absichtlich den Start**
+(sonst wären die Admin-Endpunkte für jeden im LAN offen). Token erzeugen:
+
+```powershell
+# PowerShell
+[Convert]::ToBase64String((1..32 | ForEach-Object { Get-Random -Maximum 256 }))
+# bash/zsh
+openssl rand -hex 32
+```
+
+Dann:
+
+```powershell
 docker compose up -d
 ```
 
-Das startet MariaDB (Port 3306) und die Express-API (Port 8787). Tabellen und
-Stammdaten werden beim ersten Start angelegt.
+Das startet MariaDB (Port 3306, nur localhost) und die Express-API
+(Port 8787). Tabellen und Stammdaten werden beim ersten Start angelegt.
 
 Frontend dazu starten:
 
@@ -109,10 +125,10 @@ npm run dev
 Die App ist unter `http://localhost:5173` erreichbar. Vite proxyt `/api` an
 `http://127.0.0.1:8787`.
 
-Demo-Daten laden:
+Demo-Daten laden (mit dem Token aus der `.env`):
 
 ```powershell
-Invoke-RestMethod -Method Post http://localhost:8787/api/admin/demo
+Invoke-RestMethod -Method Post -Headers @{ "X-Admin-Token" = "<ADMIN_TOKEN>" } http://localhost:8787/api/admin/demo
 ```
 
 ### Variante B — Manuelles Setup ohne Docker
