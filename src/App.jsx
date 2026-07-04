@@ -142,7 +142,6 @@ export default function App() {
               fahrzeuge={S.fahrzeuge} termine={S.termine}
               resetAll={S.resetAll}
               loadDemo={S.loadDemo}
-              onClose={() => setSidebarOpen(false)}
             />
           </motion.div>
         )}

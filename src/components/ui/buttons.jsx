@@ -55,7 +55,8 @@ BtnG.propTypes = {
 
 export function IconBtn({ onClick, icon, color, danger = false, sm = false, title }) {
   return (
-    <button onClick={onClick} title={title} className="btn-icon" style={{
+    // A11y: Icon-only-Button — title dient gleichzeitig als aria-label
+    <button onClick={onClick} title={title} aria-label={title} className="btn-icon" style={{
       background: danger ? "rgba(239,68,68,0.09)" : C.glass,
       border: `1px solid ${danger ? "rgba(239,68,68,0.22)" : C.line}`,
       borderRadius: 7, padding: sm ? "4px 6px" : "6px 8px",

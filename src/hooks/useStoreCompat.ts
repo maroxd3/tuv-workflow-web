@@ -30,8 +30,7 @@
 
 import { useCallback, useMemo } from "react";
 import { useDb } from "./useDb";
-
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import type { NeuesFahrzeug, NeuerTermin } from "../db/types";
 
 // Legacy-Form: ein Fahrzeug-Objekt wie es die alten Views erwarten
 interface LegacyFahrzeug {
@@ -70,6 +69,46 @@ interface LegacyTermin {
   notiz: string | null;
   mängel: LegacyMangel[];
   createdAt: string;
+}
+
+// ── Eingabe-Formen der Write-Adapter ──
+// Das sind die Felder, die die Views tatsaechlich uebergeben:
+// FahrzeugModal.save() → addFz/updFz, TerminModal.save() → addTr/updTr,
+// MaengelModal (addVorlage/addCustom) → addMangel.
+
+// Fahrzeug-Form inkl. Besitzer-Feldern (werden hier in Halter abgesplittet)
+interface LegacyFahrzeugInput {
+  kennzeichen: string;
+  fin?: string | null;
+  hersteller: string;
+  modell: string;
+  baujahr?: number | null;
+  farbe?: string | null;
+  typ: string;
+  kmStand?: number | null;
+  besitzer?: string;
+  telefon?: string | null;
+  email?: string | null;
+  hu_faellig?: string | null;
+}
+type LegacyFahrzeugPatch = Partial<LegacyFahrzeugInput>;
+
+interface LegacyTerminInput {
+  fahrzeugId: string;
+  datum: string;
+  uhrzeit?: string | null;
+  art: string;
+  pruefer?: string | null;
+  status?: string;
+  notiz?: string | null;
+}
+type LegacyTerminPatch = Partial<LegacyTerminInput>;
+
+interface LegacyMangelInput {
+  code?: string;
+  text: string;
+  kat: string;
+  behoben?: boolean;
 }
 
 /**
@@ -167,7 +206,7 @@ export function useStoreCompat() {
 
   // ── Write-Adapter: addFz (splittet Besitzer-Daten in Halter ab) ──
   const addFz = useCallback(
-    async (data: any) => {
+    async (data: LegacyFahrzeugInput) => {
       const besitzer = (data.besitzer ?? "").trim();
       let halterId: string | undefined;
 
@@ -217,7 +256,7 @@ export function useStoreCompat() {
 
   // ── Write-Adapter: updFz ──
   const updFz = useCallback(
-    async (id: string, patch: any) => {
+    async (id: string, patch: LegacyFahrzeugPatch) => {
       // Halter-Felder ggf. updaten
       if ("besitzer" in patch || "telefon" in patch || "email" in patch) {
         const f = db.fahrzeuge.find((x) => x.fahrzeugId === id);
@@ -230,7 +269,7 @@ export function useStoreCompat() {
         }
       }
       // Fahrzeug-Felder
-      const fzPatch: any = {};
+      const fzPatch: Partial<NeuesFahrzeug> = {};
       if ("kennzeichen" in patch) fzPatch.kennzeichen = patch.kennzeichen;
       if ("fin" in patch) fzPatch.fin = patch.fin || null;
       if ("hersteller" in patch) fzPatch.hersteller = patch.hersteller;
@@ -259,7 +298,7 @@ export function useStoreCompat() {
   // verschwinden. Wir loggen prominent und werfen weiter — der Caller
   // (App / Toast-System) kann darauf reagieren.
   const addTr = useCallback(
-    async (data: any) => {
+    async (data: LegacyTerminInput) => {
       try {
         const t = await db.addTermin({
           fahrzeugId: data.fahrzeugId,
@@ -281,17 +320,17 @@ export function useStoreCompat() {
 
   // ── Write-Adapter: updTr (mit WF-01-Guard) ──
   const updTr = useCallback(
-    async (id: string, patch: any) => {
+    async (id: string, patch: LegacyTerminPatch) => {
       // Status-Wechsel? Über die Guard-Funktion. Bei Ablehnung (WF-01-Trigger
       // oder API-Layer-Block) Error werfen, damit der Caller im View eine
       // sichtbare Fehlermeldung als Toast zeigen kann.
-      if ("status" in patch) {
+      if (patch.status !== undefined) {
         const result = await db.updTerminStatus(id, patch.status);
         if (!result.ok) {
           throw new Error(result.reason || "Status-Wechsel abgelehnt");
         }
       }
-      const trPatch: any = {};
+      const trPatch: Partial<NeuerTermin> = {};
       if ("datum" in patch) trPatch.datum = patch.datum;
       if ("uhrzeit" in patch) trPatch.uhrzeit = patch.uhrzeit;
       if ("art" in patch) trPatch.prueftCode = patch.art;
@@ -310,7 +349,7 @@ export function useStoreCompat() {
 
   // ── Write-Adapter: addMangel / delMangel ──
   const addMangel = useCallback(
-    async (tid: string, m: any) => {
+    async (tid: string, m: LegacyMangelInput) => {
       await db.addMangel({
         terminId: tid,
         codeStvzo: m.code === "FR" ? null : m.code,

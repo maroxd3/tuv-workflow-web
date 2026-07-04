@@ -1,10 +1,12 @@
 import { useState } from "react";
 import PropTypes from "prop-types";
+import { AnimatePresence } from "framer-motion";
 import { Shield, Trash2, Sparkles, AlertOctagon, AlertTriangle } from "lucide-react";
 import { C } from "../styles/theme";
 import { STATUS } from "../constants/status";
 import { NAV } from "../constants/nav";
 import { isoDate, fmtDate } from "../utils/date";
+import { ConfirmModal } from "../components/modal/ConfirmModal";
 import { FahrzeugShape, TerminShape } from "../types/propTypes";
 
 export function Sidebar({ view, setView, fahrzeuge, termine, resetAll, loadDemo }) {
@@ -12,6 +14,7 @@ export function Sidebar({ view, setView, fahrzeuge, termine, resetAll, loadDemo 
   const todayTr = termine.filter(t => t.datum === today);
   const offenTr = todayTr.filter(t => t.status === STATUS.GEPLANT || t.status === STATUS.IN_PRUEFUNG);
   const [now] = useState(() => Date.now());
+  const [confirmReset, setConfirmReset] = useState(false); // ersetzt window.confirm
   const huWarn = fahrzeuge.filter(f => f.hu_faellig && new Date(f.hu_faellig) < new Date(now + 30 * 86400000) && new Date(f.hu_faellig) >= new Date(now)).length;
   const huUeberr = fahrzeuge.filter(f => f.hu_faellig && new Date(f.hu_faellig) < new Date(now)).length;
 
@@ -149,11 +152,7 @@ export function Sidebar({ view, setView, fahrzeuge, termine, resetAll, loadDemo 
           </button>
         ) : (
           <button
-            onClick={() => {
-              if (window.confirm("Wirklich alle Fahrzeuge und Termine löschen? Die App startet danach leer (Live-Modus).")) {
-                resetAll();
-              }
-            }}
+            onClick={() => setConfirmReset(true)}
             style={{
               width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
               background: "rgba(220,38,38,0.08)", border: "1px solid rgba(220,38,38,0.20)",
@@ -165,6 +164,21 @@ export function Sidebar({ view, setView, fahrzeuge, termine, resetAll, loadDemo 
           </button>
         )}
       </div>
+
+      {/* Reset-Rueckfrage (ersetzt window.confirm) */}
+      <AnimatePresence>
+        {confirmReset && (
+          <ConfirmModal
+            title="Alle Daten löschen?"
+            msg="Wirklich alle Fahrzeuge und Termine löschen? Die App startet danach leer (Live-Modus)."
+            onConfirm={() => {
+              setConfirmReset(false);
+              resetAll();
+            }}
+            onCancel={() => setConfirmReset(false)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

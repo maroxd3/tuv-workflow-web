@@ -1,17 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { uid, isoDate, addDays, fmtDate, fmtDateLong, dayName, dayShort } from '../../utils/date';
-
-describe('uid', () => {
-  it('returns a non-empty string', () => {
-    expect(typeof uid()).toBe('string');
-    expect(uid().length).toBeGreaterThan(0);
-  });
-
-  it('generates unique values', () => {
-    const ids = new Set(Array.from({ length: 100 }, uid));
-    expect(ids.size).toBe(100);
-  });
-});
+import { isoDate, addDays, fmtDate, fmtDateLong, dayName, dayShort } from '../../utils/date';
 
 describe('isoDate', () => {
   it('formats today as YYYY-MM-DD', () => {

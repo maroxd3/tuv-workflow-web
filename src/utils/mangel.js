@@ -2,9 +2,13 @@ import { MANGEL_KATEGORIEN } from "../constants/mangel";
 
 // Ein blockierender Mangel verhindert nach HU-Richtlinie das Bestehen:
 // EM (Erheblicher Mangel) oder GfM (Gefaehrlicher Mangel). Behobene Maengel
-// zaehlen nicht.
+// zaehlen nicht. Einziger Ort fuer diese Regel — Kategorien-Daten liegen
+// in MANGEL_KATEGORIEN[kat].blockiert, hier NICHT hart auf "EM"/"GfM" pruefen.
+export const istBlockierenderMangel = (m) =>
+  !!m && !m.behoben && !!MANGEL_KATEGORIEN[m.kat]?.blockiert;
+
 export const hatBlockierendenMangel = (maengel) =>
-  maengel?.some((m) => !m.behoben && MANGEL_KATEGORIEN[m.kat]?.blockiert) ?? false;
+  maengel?.some(istBlockierenderMangel) ?? false;
 
 // Backwards-compat alias — vor dem HU-Richtlinie-Refactor war das die
 // Standard-Funktion. Wird in den Views noch unter altem Namen benutzt.

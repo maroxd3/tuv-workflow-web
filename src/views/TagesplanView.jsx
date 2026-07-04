@@ -10,7 +10,7 @@ import { C } from "../styles/theme";
 import { STATUS, STATUS_CFG } from "../constants/status";
 import { TIME_SLOTS } from "../constants/fahrzeug";
 import { PRUEFUNG_ARTEN, PRUEFER } from "../constants/pruefung";
-import { isoDate, addDays, fmtDate, fmtDateLong, dayName, dayShort } from "../utils/date";
+import { isoDate, addDays, parseIsoLocal, fmtDate, fmtDateLong, dayName, dayShort } from "../utils/date";
 import { hatHauptmangel } from "../utils/mangel";
 import { StatusPill } from "../components/ui/StatusPill";
 import { MangelPill } from "../components/ui/MangelPill";
@@ -61,11 +61,11 @@ function ContextMenu({ menu, onClose, onNewTr, onEdit, onDelete, onMaengel, onAd
       boxShadow: "0 8px 30px rgba(15,23,42,0.16), 0 0 0 1px rgba(0,0,0,0.05)",
       minWidth: 210,
     }}>
-      {items.map((item, i) =>
+      {items.map(item =>
         item === "divider"
-          ? <div key={i} style={{ height: 1, background: C.line, margin: "4px 0" }} />
+          ? <div key="divider" style={{ height: 1, background: C.line, margin: "4px 0" }} />
           : (
-            <button key={i} onClick={item.action} style={{
+            <button key={item.label} onClick={item.action} style={{
               display: "flex", alignItems: "center", gap: 10,
               width: "100%", padding: "8px 12px", borderRadius: 7,
               background: "transparent", border: "none",
@@ -160,9 +160,14 @@ export function TagesplanView({ fahrzeuge, termine, addTr, updTr, delTr, addMang
     }
   }
 
-  const weekDays = useMemo(() => Array.from({ length: 7 }, (_, i) => addDays(
-    isoDate(new Date(new Date(date).setDate(new Date(date).getDate() - new Date(date).getDay() + 1 + i))), 0
-  )), [date]);
+  // Wochenleiste: Montag der ausgewaehlten Woche + 6 Folgetage.
+  // Lokal-sicher ueber parseIsoLocal/addDays — new Date("yyyy-mm-dd") wuerde
+  // UTC-Mitternacht parsen und die Woche in Zeitzonen westlich von UTC
+  // um einen Tag verschieben. (getDay(): So=0 ... Sa=6)
+  const weekDays = useMemo(() => {
+    const monday = addDays(date, 1 - parseIsoLocal(date).getDay());
+    return Array.from({ length: 7 }, (_, i) => addDays(monday, i));
+  }, [date]);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
@@ -214,7 +219,7 @@ export function TagesplanView({ fahrzeuge, termine, addTr, updTr, delTr, addMang
               style={{ background: isSel ? C.blue : isToday ? "rgba(75,140,247,0.10)" : C.glass, border: `1px solid ${isSel ? "transparent" : isToday ? "rgba(75,140,247,0.26)" : C.line}`, borderRadius: 8, padding: "7px 4px", cursor: "pointer", textAlign: "center", transition: "all 0.15s" }}>
               <div style={{ fontSize: 10, color: isSel ? "rgba(255,255,255,0.8)" : C.t4, marginBottom: 2 }}>{dayShort(d)}</div>
               <div style={{ fontSize: 14, fontWeight: 700, color: isSel ? "#fff" : isToday ? C.blue : C.t2, fontFamily: C.mono }}>
-                {new Date(d).getDate()}
+                {parseIsoLocal(d).getDate()}
               </div>
               {cnt > 0 && <div style={{ fontSize: 9, color: isSel ? "rgba(255,255,255,0.75)" : C.t4, marginTop: 2, fontFamily: C.mono }}>{cnt}</div>}
             </button>
@@ -378,9 +383,9 @@ export function TagesplanView({ fahrzeuge, termine, addTr, updTr, delTr, addMang
                       </td>
                       <td style={{ padding: "10px 14px" }}>
                         <div style={{ display: "flex", gap: 4 }}>
-                          <IconBtn sm onClick={() => setMaengelId(t.id)} icon={<ClipboardList size={11} />} color={C.amberL} />
-                          <IconBtn sm onClick={() => { setEditTr(t); setShowTrModal(true); }} icon={<Pencil size={11} />} color={C.t3} />
-                          <IconBtn sm onClick={() => setConfirmDel(t.id)} icon={<Trash2 size={11} />} color={C.redL} danger />
+                          <IconBtn sm onClick={() => setMaengelId(t.id)} icon={<ClipboardList size={11} />} color={C.amberL} title="Mängel erfassen" />
+                          <IconBtn sm onClick={() => { setEditTr(t); setShowTrModal(true); }} icon={<Pencil size={11} />} color={C.t3} title="Bearbeiten" />
+                          <IconBtn sm onClick={() => setConfirmDel(t.id)} icon={<Trash2 size={11} />} color={C.redL} danger title="Löschen" />
                         </div>
                       </td>
                     </tr>

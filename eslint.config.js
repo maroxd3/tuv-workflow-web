@@ -3,6 +3,7 @@ import globals from 'globals'
 import react from 'eslint-plugin-react'
 import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
+import tseslint from 'typescript-eslint'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
@@ -30,6 +31,24 @@ export default defineConfig([
       'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
       'react/prop-types': 'error',
       'react/react-in-jsx-scope': 'off',
+    },
+  },
+  // TypeScript-Module (apiClient, useDb, useStoreCompat, types) — vorher
+  // lintete ESLint nur js/jsx, d.h. die TS-Schicht war komplett ungeprueft.
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      js.configs.recommended,
+      tseslint.configs.recommended,
+      reactHooks.configs.flat.recommended,
+    ],
+    languageOptions: {
+      ecmaVersion: 'latest',
+      globals: { ...globals.browser, ...globals.node },
+    },
+    rules: {
+      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-explicit-any': 'error',
     },
   },
   {

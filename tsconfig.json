@@ -8,7 +8,6 @@
     "checkJs": false,
     "jsx": "react-jsx",
     "strict": true,
-    "noImplicitAny": false,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,

@@ -19,7 +19,13 @@ export function MaengelModal({ termin, fahrzeug, onAdd, onDel, onStatus, onClose
   const [custom, setCustom] = useState({ code: "", text: "", kat: "EM" });
   const [gruppeOpen, setGruppeOpen] = useState({});
 
-  const addedCodes = useMemo(() => new Set(termin.mängel?.map(m => m.code) || []), [termin.mängel]);
+  // Bereits erfasste Katalog-Codes (fuer den "schon hinzugefuegt"-Haken).
+  // "FR" ausschliessen: ALLE Freitext-Maengel kommen mit code "FR" zurueck —
+  // sie duerfen weder untereinander noch gegen Katalog-Eintraege dedupen.
+  const addedCodes = useMemo(
+    () => new Set((termin.mängel ?? []).map(m => m.code).filter(c => c !== "FR")),
+    [termin.mängel],
+  );
   const hasHM = hatHauptmangel(termin.mängel);
   const mCount = termin.mängel?.length || 0;
 
@@ -74,6 +80,7 @@ export function MaengelModal({ termin, fahrzeug, onAdd, onDel, onStatus, onClose
                       <div style={{ fontSize: 12, color: C.t2, lineHeight: 1.4 }}>{m.text}</div>
                     </div>
                     <button onClick={() => onDel(termin.id, m.id)}
+                      aria-label="Mangel entfernen" title="Mangel entfernen"
                       style={{ background: "none", border: "none", cursor: "pointer", color: C.t4, flexShrink: 0, padding: 2 }}>
                       <X size={12} />
                     </button>

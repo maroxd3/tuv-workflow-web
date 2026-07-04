@@ -1,15 +1,23 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import PropTypes from "prop-types";
 import { motion } from "framer-motion";
 import { X } from "lucide-react";
 import { C } from "../../styles/theme";
 
 export function Modal({ title, sub, onClose, children, width = 640 }) {
+  const panelRef = useRef(null);
+
   useEffect(() => {
     const h = e => { if (e.key === "Escape") onClose(); };
     window.addEventListener("keydown", h);
     return () => window.removeEventListener("keydown", h);
   }, [onClose]);
+
+  // A11y: Fokus beim Oeffnen in den Dialog verschieben, damit Tastatur-/
+  // Screenreader-Nutzer nicht im Hintergrund haengen bleiben.
+  useEffect(() => {
+    panelRef.current?.focus();
+  }, []);
 
   return (
     <div style={{
@@ -19,10 +27,12 @@ export function Modal({ title, sub, onClose, children, width = 640 }) {
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
       <motion.div initial={{ opacity: 0, scale: 0.96, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.96, y: 20 }} transition={{ duration: 0.2, ease: "easeOut" }}
+        ref={panelRef} role="dialog" aria-modal="true" aria-label={title} tabIndex={-1}
         style={{
           background: C.surface, border: `1px solid ${C.lineMed}`, borderRadius: 14,
           width: "100%", maxWidth: width, maxHeight: "94vh", overflow: "auto",
           boxShadow: "0 24px 80px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.08)",
+          outline: "none",
         }}>
         <div className="pad-mobile" style={{
           display: "flex", alignItems: "flex-start", justifyContent: "space-between",

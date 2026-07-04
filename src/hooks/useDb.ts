@@ -97,12 +97,12 @@ export function useDb(): UseDbResult {
     (async () => {
       try {
         await api.initDatabase();
-
-        if (cancelled) return;
-
         if (cancelled) return;
         await refresh();
         if (cancelled) return;
+        // refresh() setzt ready bereits bei Erfolg — hier zusaetzlich fuer den
+        // Fehlerfall (refresh faengt seine Fehler selbst): so startet das
+        // Polling unten und uebernimmt den automatischen Retry.
         setReady(true);
       } catch (e) {
         if (!cancelled) {

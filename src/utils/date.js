@@ -1,12 +1,19 @@
 const pad = n => String(n).padStart(2, "0");
 
-export const uid = () => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
-
 export const isoDate = (d = new Date()) =>
   `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 
+// "yyyy-mm-dd" LOKAL parsen. Achtung: new Date("yyyy-mm-dd") interpretiert
+// den String als UTC-Mitternacht — in Zeitzonen westlich von UTC landet man
+// damit lokal am Vortag und alle getDay()/getDate()-Rechnungen verrutschen.
+export const parseIsoLocal = (ds) => {
+  if (ds instanceof Date) return new Date(ds);
+  const [y, m, d] = String(ds).slice(0, 10).split("-").map(Number);
+  return new Date(y, m - 1, d);
+};
+
 export const addDays = (ds, n) => {
-  const d = new Date(ds);
+  const d = parseIsoLocal(ds);
   d.setDate(d.getDate() + n);
   return isoDate(d);
 };

@@ -234,7 +234,7 @@ export function StatistikView({ termine, fahrzeuge }) {
                 <PieChart>
                   <Pie data={mangelPieData} cx="50%" cy="50%" innerRadius={52} outerRadius={85}
                     dataKey="value" stroke="none" paddingAngle={2}>
-                    {mangelPieData.map((d, i) => <Cell key={i} fill={d.color} />)}
+                    {mangelPieData.map(d => <Cell key={d.name} fill={d.color} />)}
                   </Pie>
                   <Tooltip content={({ active, payload }) => {
                     if (!active || !payload?.length) return null;
@@ -249,8 +249,8 @@ export function StatistikView({ termine, fahrzeuge }) {
                 </PieChart>
               </ResponsiveContainer>
               <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 8 }}>
-                {mangelPieData.map((d, i) => (
-                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                {mangelPieData.map(d => (
+                  <div key={d.name} style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     <div style={{ width: 10, height: 10, borderRadius: 3, background: d.color, flexShrink: 0 }} />
                     <span style={{ fontSize: 11, color: C.t3, flex: 1 }}>{d.label}</span>
                     <span style={{ fontSize: 12, fontWeight: 700, color: C.t1, fontFamily: C.mono }}>{d.value}</span>
@@ -284,8 +284,8 @@ export function StatistikView({ termine, fahrzeuge }) {
                 );
               }} />
               <Bar dataKey="Prüfungen" radius={[6, 6, 0, 0]}>
-                {artData.map((_, i) => (
-                  <Cell key={i} fill={`hsl(${215 + i * 18}, 75%, ${55 + i * 3}%)`} />
+                {artData.map((d, i) => (
+                  <Cell key={d.name} fill={`hsl(${215 + i * 18}, 75%, ${55 + i * 3}%)`} />
                 ))}
               </Bar>
             </BarChart>

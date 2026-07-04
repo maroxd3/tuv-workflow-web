@@ -1,5 +1,6 @@
 import { useState } from "react";
 import PropTypes from "prop-types";
+import { AnimatePresence } from "framer-motion";
 import { Check } from "lucide-react";
 import { C } from "../../styles/theme";
 import { STATUS } from "../../constants/status";
@@ -7,6 +8,7 @@ import { FAHRZEUG_TYPEN, TIME_SLOTS } from "../../constants/fahrzeug";
 import { PRUEFUNG_ARTEN, PRUEFER } from "../../constants/pruefung";
 import { isoDate, fmtDate } from "../../utils/date";
 import { Modal } from "../../components/modal/Modal";
+import { ConfirmModal } from "../../components/modal/ConfirmModal";
 import { Inp, Sel, Fld } from "../../components/ui/inputs";
 import { BtnG, BtnP } from "../../components/ui/buttons";
 import { FahrzeugShape, TerminShape } from "../../types/propTypes";
@@ -20,6 +22,7 @@ export function TerminModal({ fahrzeuge, termine = [], initial = {}, onSave, onC
     art: "HU", pruefer: PRUEFER[0].id, status: STATUS.GEPLANT, notiz: "", ...initial,
   });
   const [err, setErr] = useState({});
+  const [dupWarn, setDupWarn] = useState(null); // Duplikat-Rueckfrage (ersetzt window.confirm)
   const f = k => e => setForm(p => ({ ...p, [k]: e.target.value }));
   const isEdit = !!initial.id;
   const selFz = fahrzeuge.find(fz => fz.id === form.fahrzeugId);
@@ -50,12 +53,12 @@ export function TerminModal({ fahrzeuge, termine = [], initial = {}, onSave, onC
       t.id !== initial.id,
     );
     if (duplicate) {
-      const ok = window.confirm(
+      setDupWarn(
         `${selFz?.kennzeichen || "Dieses Fahrzeug"} hat am ${fmtDate(form.datum)} ` +
-        `bereits eine Prüfung der Art "${selArt?.label || form.art}" um ${duplicate.uhrzeit}.\n\n` +
+        `bereits eine Prüfung der Art "${selArt?.label || form.art}" um ${duplicate.uhrzeit}. ` +
         `Trotzdem zusätzlich anlegen?`,
       );
-      if (!ok) return;
+      return;
     }
     onSave(form);
   }
@@ -134,6 +137,19 @@ export function TerminModal({ fahrzeuge, termine = [], initial = {}, onSave, onC
           <BtnP onClick={save} icon={Check}>{isEdit ? "Aktualisieren" : "Termin anlegen"}</BtnP>
         </div>
       </div>
+
+      {/* Duplikat-Rueckfrage (ersetzt window.confirm) */}
+      <AnimatePresence>
+        {dupWarn && (
+          <ConfirmModal
+            title="Doppelter Termin?"
+            msg={dupWarn}
+            danger={false}
+            onConfirm={() => { setDupWarn(null); onSave(form); }}
+            onCancel={() => setDupWarn(null)}
+          />
+        )}
+      </AnimatePresence>
     </Modal>
   );
 }

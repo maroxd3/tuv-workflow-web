@@ -16,6 +16,7 @@ import { HERSTELLER_REFERENZ, normalizeHersteller } from "../constants/kfzRefere
 import { isValidKreisCode } from "../constants/kfzKreis";
 import { STATUS } from "../constants/status";
 import { isoDate } from "./date";
+import { hatBlockierendenMangel } from "./mangel";
 
 /* Normales Kennzeichen: B-TK 1234 (mit optionalem H/E-Suffix für Historisch/Elektro)
    Saison-Kennzeichen: B-TK 1234 04-10 (Saison von April bis Oktober) */
@@ -270,8 +271,7 @@ export function checkFinPruefziffer(raw) {
  */
 export function validateStatusWechsel(zielStatus, maengel = []) {
   if (zielStatus !== STATUS.BESTANDEN) return null;
-  const hasBlocker = maengel.some(m => !m.behoben && (m.kat === "EM" || m.kat === "GfM"));
-  if (hasBlocker) {
+  if (hatBlockierendenMangel(maengel)) {
     return "Bestanden nicht möglich — erheblicher oder gefährlicher Mangel vorhanden";
   }
   return null;
