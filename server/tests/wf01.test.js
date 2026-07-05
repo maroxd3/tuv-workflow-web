@@ -8,6 +8,7 @@
  *
  * @vitest-environment node
  */
+import "dotenv/config";
 import { describe, it, expect, beforeEach } from "vitest";
 import { execSync } from "node:child_process";
 
@@ -30,7 +31,12 @@ const stackUp = await (async () => {
 })();
 
 async function seedDemo() {
-  const r = await fetch(`${API}/api/admin/demo`, { method: "POST" });
+  // X-Admin-Token: im Dev-Modus (leeres ADMIN_TOKEN) ignoriert der Server
+  // den Header — gegen eine Production-API ist er Pflicht (401 sonst).
+  const r = await fetch(`${API}/api/admin/demo`, {
+    method: "POST",
+    headers: { "X-Admin-Token": process.env.ADMIN_TOKEN || "" },
+  });
   if (!r.ok) throw new Error(`Demo-Seed fehlgeschlagen: HTTP ${r.status}`);
   return r.json();
 }
