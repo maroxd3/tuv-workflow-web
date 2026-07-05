@@ -23,10 +23,14 @@ describe('StatusPill', () => {
   });
 
   it('applies larger padding with size="lg"', () => {
+    // Padding kommt seit der Tailwind-Migration aus Utility-Klassen,
+    // nicht mehr aus Inline-Styles — daher Klassen vergleichen.
     const { container: sm } = render(<StatusPill status={STATUS.BESTANDEN} size="sm" />);
     const { container: lg } = render(<StatusPill status={STATUS.BESTANDEN} size="lg" />);
-    const smStyle = sm.querySelector('span').style.padding;
-    const lgStyle = lg.querySelector('span').style.padding;
-    expect(smStyle).not.toBe(lgStyle);
+    const smCls = sm.querySelector('span').className;
+    const lgCls = lg.querySelector('span').className;
+    expect(smCls).not.toBe(lgCls);
+    expect(lgCls).toContain('py-[5px]');
+    expect(smCls).toContain('py-[3px]');
   });
 });

@@ -1,12 +1,14 @@
 import { lazy, Suspense, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Toaster } from "sonner";
-import { C, GLOBAL_CSS } from "./styles/theme";
+import { C } from "./styles/theme";
 import { useDb } from "./hooks/useDb";
 import { useToasts } from "./hooks/useToasts";
 import { useIsMobile } from "./hooks/useIsMobile";
 import { Sidebar } from "./layout/Sidebar";
 import { Topbar } from "./layout/Topbar";
+import { useAuth } from "./auth/AuthContext";
+import { LoginView } from "./views/LoginView";
 const TagesplanView = lazy(() => import("./views/TagesplanView").then(m => ({ default: m.TagesplanView })));
 const FahrzeugeView = lazy(() => import("./views/FahrzeugeView").then(m => ({ default: m.FahrzeugeView })));
 const StatistikView = lazy(() => import("./views/StatistikView").then(m => ({ default: m.StatistikView })));
@@ -14,21 +16,36 @@ const BerichteView = lazy(() => import("./views/BerichteView").then(m => ({ defa
 
 function ViewFallback() {
   return (
-    <div style={{
-      minHeight: 220,
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      color: C.t3,
-      fontSize: 13,
-      fontWeight: 600,
-    }}>
+    <div className="flex min-h-[220px] items-center justify-center text-[13px] font-semibold text-t3">
       Ansicht wird geladen...
     </div>
   );
 }
 
+/* Auth-Gate: entscheidet VOR dem App-Shell-Mount, ob ein Login noetig ist.
+   Wichtig: useDb (inkl. 5-Sek-Polling) lebt in AppShell und wird erst
+   gemountet, wenn ein Benutzer feststeht — sonst haemmert das Polling
+   401er gegen die API, solange der Login-Screen offen ist. */
 export default function App() {
+  const auth = useAuth();
+
+  // Neutraler Splash, solange GET /api/auth/me laeuft.
+  if (auth.status === "laden") {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-bg font-sans">
+        <div className="h-10 w-10 animate-[spin_0.8s_linear_infinite] rounded-full border-[3px] border-line border-t-cyan" />
+      </div>
+    );
+  }
+
+  if (auth.status !== "eingeloggt" || !auth.benutzer) {
+    return <LoginView />;
+  }
+
+  return <AppShell />;
+}
+
+function AppShell() {
   const isMobile = useIsMobile();
   const [view, setView] = useState("tagesplan");
   const [sidebarOpen, setSidebarOpen] = useState(!isMobile);
@@ -49,37 +66,19 @@ export default function App() {
   // "Daten werden geladen..."-Spinner. Jetzt: klare Botschaft, Retry-Knopf.
   if (S.error) {
     return (
-      <div style={{
-        minHeight: "100vh", background: C.bg, fontFamily: C.sans,
-        display: "flex", alignItems: "center", justifyContent: "center",
-        flexDirection: "column", gap: 20, padding: 24,
-      }}>
-        <style>{GLOBAL_CSS}</style>
-        <div style={{
-          width: 56, height: 56, borderRadius: "50%",
-          background: "rgba(240,69,90,0.10)", border: `1px solid rgba(240,69,90,0.45)`,
-          display: "flex", alignItems: "center", justifyContent: "center",
-          color: C.redL, fontSize: 28, fontWeight: 700,
-        }}>!</div>
-        <div style={{ color: C.t1, fontSize: 20, fontWeight: 700 }}>
+      <div className="flex min-h-screen flex-col items-center justify-center gap-5 bg-bg p-6 font-sans">
+        <div className="flex h-14 w-14 items-center justify-center rounded-full border border-[rgba(240,69,90,0.45)] bg-[rgba(240,69,90,0.10)] text-[28px] font-bold text-red-l">!</div>
+        <div className="text-[20px] font-bold text-t1">
           Verbindung zur Datenbank fehlgeschlagen
         </div>
-        <div style={{ color: C.t3, fontSize: 14, maxWidth: 440, textAlign: "center", lineHeight: 1.55 }}>
+        <div className="max-w-[440px] text-center text-[14px] leading-[1.55] text-t3">
           Die App konnte den Express-API-Server nicht erreichen. Mögliche Ursachen:
           Server-PC ist aus, Docker-Stack steht still, oder VITE_API_BASE_URL zeigt ins Leere.
         </div>
-        <div style={{
-          fontSize: 11, fontFamily: C.mono, color: C.t4,
-          background: C.surface, padding: "8px 12px", borderRadius: 6, border: `1px solid ${C.line}`,
-          maxWidth: 520, wordBreak: "break-all",
-        }}>{S.error}</div>
+        <div className="max-w-[520px] break-all rounded-md border border-line bg-surface px-3 py-2 font-mono text-[11px] text-t4">{S.error}</div>
         <button
           onClick={() => S.refresh?.()}
-          style={{
-            background: C.cyan, color: "#0a0a14", border: "none",
-            padding: "10px 22px", borderRadius: 8, fontSize: 13, fontWeight: 700,
-            cursor: "pointer", fontFamily: C.sans,
-          }}
+          className="cursor-pointer rounded-lg border-none bg-cyan px-[22px] py-2.5 font-sans text-[13px] font-bold text-[#0a0a14]"
         >Erneut versuchen</button>
       </div>
     );
@@ -87,24 +86,15 @@ export default function App() {
 
   if (!S.ready) {
     return (
-      <div style={{
-        minHeight: "100vh", background: C.bg, fontFamily: C.sans,
-        display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 16,
-      }}>
-        <style>{GLOBAL_CSS}</style>
-        <div style={{
-          width: 40, height: 40, border: `3px solid ${C.line}`, borderTopColor: C.cyan,
-          borderRadius: "50%", animation: "spin 0.8s linear infinite",
-        }} />
-        <div style={{ color: C.t3, fontSize: 14, fontWeight: 500 }}>Daten werden geladen...</div>
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-bg font-sans">
+        <div className="h-10 w-10 animate-[spin_0.8s_linear_infinite] rounded-full border-[3px] border-line border-t-cyan" />
+        <div className="text-[14px] font-medium text-t3">Daten werden geladen...</div>
       </div>
     );
   }
 
   return (
-    <div style={{ minHeight: "100vh", background: C.bg, fontFamily: C.sans, color: C.t1, display: "flex" }}>
-      <style>{GLOBAL_CSS}</style>
+    <div className="flex min-h-screen bg-bg font-sans text-t1">
       <Toaster richColors position="bottom-right" toastOptions={{ style: { fontFamily: C.sans } }} />
 
       {/* Mobile-Backdrop hinter geöffneter Sidebar */}
@@ -117,11 +107,7 @@ export default function App() {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
             onClick={() => setSidebarOpen(false)}
-            style={{
-              position: "fixed", inset: 0, zIndex: 55,
-              background: "rgba(15,15,26,0.55)",
-              backdropFilter: "blur(4px)",
-            }}
+            className="fixed inset-0 z-[55] bg-[rgba(15,15,26,0.55)] backdrop-blur-[4px]"
           />
         )}
       </AnimatePresence>
@@ -135,7 +121,7 @@ export default function App() {
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: -SIDEBAR_W, opacity: 0 }}
             transition={{ duration: 0.22, ease: "easeInOut" }}
-            style={{ position: "fixed", left: 0, top: 0, bottom: 0, zIndex: 60, width: SIDEBAR_W }}
+            className="fixed left-0 top-0 bottom-0 z-[60] w-60"
           >
             <Sidebar
               view={view} setView={handleSetView}
@@ -152,11 +138,11 @@ export default function App() {
       <motion.div
         animate={{ marginLeft: sidebarOpen && !isMobile ? SIDEBAR_W : 0 }}
         transition={{ duration: 0.22, ease: "easeInOut" }}
-        style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: "100vh", minWidth: 0 }}
+        className="flex min-h-screen min-w-0 flex-1 flex-col"
       >
         <Topbar view={view} sidebarOpen={sidebarOpen} onToggleSidebar={() => setSidebarOpen(o => !o)} />
 
-        <div className="pad-mobile" style={{ padding: "24px 32px", flex: 1 }}>
+        <div className="flex-1 px-8 py-6 max-[768px]:px-3.5 max-[768px]:py-3">
           <AnimatePresence mode="wait">
             <motion.div key={view}
               initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}

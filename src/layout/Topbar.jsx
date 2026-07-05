@@ -1,77 +1,65 @@
 import PropTypes from "prop-types";
-import { User, Menu } from "lucide-react";
+import { User, Menu, LogOut } from "lucide-react";
 import { C } from "../styles/theme";
 import { NAV } from "../constants/nav";
+import { useAuth, ROLLEN_LABEL } from "../auth/AuthContext";
 
 export function Topbar({ view, onToggleSidebar }) {
   const V = NAV.find(v => v.key === view);
   const Icon = V?.icon;
+  const { benutzer, authRequired, logout } = useAuth();
 
   return (
-    <div className="pad-mobile" style={{
-      background: C.surface, borderBottom: `1px solid ${C.line}`,
-      boxShadow: "0 1px 0 rgba(0,0,0,0.06)",
-      padding: "0 32px", height: 60,
-      display: "flex", alignItems: "center", justifyContent: "space-between",
-      position: "sticky", top: 0, zIndex: 50,
-    }}>
+    <div className="sticky top-0 z-50 flex h-15 items-center justify-between border-b border-line bg-surface px-8 shadow-[0_1px_0_rgba(0,0,0,0.06)] max-[768px]:px-3.5 max-[768px]:py-3">
       {/* Left: hamburger + page title */}
-      <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
+      <div className="flex min-w-0 items-center gap-3">
         {onToggleSidebar && (
-          <button onClick={onToggleSidebar} className="btn-icon" aria-label="Menü"
-            style={{
-              width: 36, height: 36, borderRadius: 8,
-              background: C.glass, border: `1px solid ${C.line}`,
-              display: "flex", alignItems: "center", justifyContent: "center",
-              cursor: "pointer", color: C.t2, flexShrink: 0,
-            }}>
+          <button onClick={onToggleSidebar} aria-label="Menü"
+            className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-line bg-glass text-t2 transition-all duration-150 hover:scale-[1.08] hover:bg-[rgba(0,0,0,0.07)]">
             <Menu size={16} />
           </button>
         )}
         {Icon && (
-          <div className="hide-mobile" style={{
-            width: 36, height: 36, borderRadius: 10,
-            background: "rgba(99,102,241,0.12)",
-            border: "1px solid rgba(99,102,241,0.22)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            flexShrink: 0,
-          }}>
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] border border-[rgba(99,102,241,0.22)] bg-[rgba(99,102,241,0.12)] max-[768px]:hidden">
             <Icon size={16} color={C.blue} />
           </div>
         )}
-        <div style={{ minWidth: 0 }}>
-          <div style={{ fontSize: 16, fontWeight: 700, color: C.t1, letterSpacing: "-0.02em", lineHeight: 1.2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{V?.label}</div>
-          <div className="hide-mobile" style={{ fontSize: 11, color: C.t4, marginTop: 1 }}>{V?.desc}</div>
+        <div className="min-w-0">
+          <div className="overflow-hidden text-ellipsis whitespace-nowrap text-[16px] font-bold leading-[1.2] tracking-[-0.02em] text-t1">{V?.label}</div>
+          <div className="mt-px text-[11px] text-t4 max-[768px]:hidden">{V?.desc}</div>
         </div>
       </div>
 
-      {/* Right: date + user — mit hide-mobile für Datum-Pille */}
-      <div style={{ display: "flex", alignItems: "center", gap: 14, flexShrink: 0 }}>
-        <div className="hide-mobile" style={{
-          fontSize: 12, color: C.t3, fontFamily: C.mono,
-          background: C.surfaceUp, border: `1px solid ${C.line}`,
-          borderRadius: 8, padding: "6px 12px",
-        }}>
+      {/* Right: date + user — Datum-Pille auf Mobil ausgeblendet */}
+      <div className="flex shrink-0 items-center gap-3.5">
+        <div className="rounded-lg border border-line bg-surface-up px-3 py-1.5 font-mono text-[12px] text-t3 max-[768px]:hidden">
           {new Date().toLocaleDateString("de-DE", { weekday: "short", day: "2-digit", month: "short", year: "numeric" })}
         </div>
 
-        <div className="hide-mobile" style={{ width: 1, height: 20, background: C.line }} />
+        <div className="h-5 w-px bg-line max-[768px]:hidden" />
 
-        {/* User */}
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{
-            width: 36, height: 36, borderRadius: "50%",
-            background: "linear-gradient(135deg, #2563EB, #7C3AED)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            boxShadow: "0 2px 8px rgba(37,99,235,0.3)",
-            flexShrink: 0,
-          }}>
+        {/* User: echter Benutzer aus dem AuthContext. Bei authRequired:false
+            laeuft der Server ohne Auth → "Dev-Modus", kein Logout. */}
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#2563EB,#7C3AED)] shadow-[0_2px_8px_rgba(37,99,235,0.3)]">
             <User size={15} color="#fff" />
           </div>
-          <div className="hide-mobile">
-            <div style={{ fontSize: 13, color: C.t1, fontWeight: 600 }}>Administrator</div>
-            <div style={{ fontSize: 10, color: C.t4 }}>Prüfstelle Pro</div>
+          <div className="max-[768px]:hidden">
+            <div className="text-[13px] font-semibold text-t1">{benutzer?.name || "—"}</div>
+            <div className="text-[10px] text-t4">
+              {authRequired ? (ROLLEN_LABEL[benutzer?.rolle] || benutzer?.rolle || "") : "Dev-Modus"}
+            </div>
           </div>
+          {authRequired && (
+            <button
+              onClick={logout}
+              title="Abmelden"
+              aria-label="Abmelden"
+              className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-line bg-glass text-t3 transition-all duration-150 hover:scale-[1.08] hover:bg-[rgba(239,68,68,0.09)] hover:text-red-l"
+            >
+              <LogOut size={14} />
+            </button>
+          )}
         </div>
       </div>
     </div>

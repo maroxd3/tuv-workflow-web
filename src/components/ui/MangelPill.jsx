@@ -1,17 +1,15 @@
 import PropTypes from "prop-types";
-import { C } from "../../styles/theme";
 import { MANGEL_KATEGORIEN } from "../../constants/mangel";
 
 export function MangelPill({ kat }) {
   const m = MANGEL_KATEGORIEN[kat];
   if (!m) return null;
   return (
-    <span style={{
-      display: "inline-flex", alignItems: "center",
-      background: m.bg, color: m.color, border: `1px solid ${m.border}`,
-      borderRadius: 4, padding: "2px 7px", fontSize: 10, fontWeight: 700,
-      fontFamily: C.mono, letterSpacing: "0.05em", whiteSpace: "nowrap",
-    }}>{m.kurz}</span>
+    <span
+      className="inline-flex items-center rounded-sm border px-[7px] py-0.5 font-mono text-[10px] font-bold tracking-[0.05em] whitespace-nowrap"
+      // Laufzeitwerte: Farben kommen pro Kategorie aus MANGEL_KATEGORIEN
+      style={{ background: m.bg, color: m.color, borderColor: m.border }}
+    >{m.kurz}</span>
   );
 }
 

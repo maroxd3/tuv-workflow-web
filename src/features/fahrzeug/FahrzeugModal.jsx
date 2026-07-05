@@ -1,7 +1,6 @@
 import { useState, useMemo } from "react";
 import PropTypes from "prop-types";
 import { Check, User, AlertTriangle } from "lucide-react";
-import { C } from "../../styles/theme";
 import { FAHRZEUG_TYPEN } from "../../constants/fahrzeug";
 import { HERSTELLER_REFERENZ, normalizeHersteller, getHerstellerDisplayList } from "../../constants/kfzReferenz";
 import { KFZ_KREIS_CODES } from "../../constants/kfzKreis";
@@ -94,13 +93,13 @@ export function FahrzeugModal({ initial = {}, fahrzeuge = [], onSave, onClose })
 
   return (
     <Modal title={isEdit ? "Fahrzeug bearbeiten" : "Fahrzeug neu erfassen"} sub="Pflichtfelder sind mit * markiert" onClose={onClose} width={720}>
-      <div className="grid-resp-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+      <div className="grid grid-cols-2 gap-3.5 max-[768px]:grid-cols-1">
         <Fld label="Kennzeichen *" error={err.kennzeichen}>
           <Inp value={form.kennzeichen}
             onChange={e => setForm(p => ({ ...p, kennzeichen: e.target.value.toUpperCase() }))}
             placeholder="B-TK 1234 (Saison: B-TK 1234 04-10)"
             error={err.kennzeichen} mono list="kfz-kreise"
-            style={{ fontWeight: 700, fontSize: 15, letterSpacing: "0.06em" }} />
+            className="font-bold text-[15px]! tracking-[0.06em]" />
           <datalist id="kfz-kreise">
             {KFZ_KREIS_CODES.map(({ code, region }) => (
               <option key={code} value={code}>{region}</option>
@@ -108,7 +107,7 @@ export function FahrzeugModal({ initial = {}, fahrzeuge = [], onSave, onClose })
           </datalist>
         </Fld>
         <Fld label="FIN (17 Zeichen)" error={err.fin}>
-          <Inp value={form.fin} onChange={f("fin")} placeholder="WBA3A5C50CF256985" error={err.fin} mono style={{ fontSize: 12 }} />
+          <Inp value={form.fin} onChange={f("fin")} placeholder="WBA3A5C50CF256985" error={err.fin} mono className="text-[12px]!" />
         </Fld>
         <Fld label="Hersteller *" error={err.hersteller}>
           <Sel value={herstellerDropdownValue} onChange={onHerstellerChange}>
@@ -118,7 +117,7 @@ export function FahrzeugModal({ initial = {}, fahrzeuge = [], onSave, onClose })
           </Sel>
           {isOther && (
             <Inp value={form.hersteller} onChange={f("hersteller")} placeholder="z. B. Tatra, Lada, Tuning-Werkstatt"
-              error={err.hersteller} style={{ marginTop: 6 }} />
+              error={err.hersteller} className="mt-1.5" />
           )}
         </Fld>
         <Fld label="Modell / Variante *" error={err.modell}>
@@ -151,25 +150,15 @@ export function FahrzeugModal({ initial = {}, fahrzeuge = [], onSave, onClose })
           <Inp value={form.huFaellig} onChange={f("huFaellig")} type="date" error={err.huFaellig} />
         </Fld>
         {finWarnung && (
-          <div style={{
-            gridColumn: "1/-1",
-            background: "rgba(245,158,11,0.10)",
-            border: "1px solid rgba(245,166,32,0.32)",
-            borderRadius: 8, padding: "10px 14px",
-            display: "flex", alignItems: "flex-start", gap: 8,
-            fontSize: 12, color: C.amberL, lineHeight: 1.5,
-          }}>
-            <AlertTriangle size={14} style={{ flexShrink: 0, marginTop: 1 }} />
+          <div className="col-span-full flex items-start gap-2 rounded-lg border border-[rgba(245,166,32,0.32)] bg-[rgba(245,158,11,0.10)] px-3.5 py-2.5 text-[12px] leading-normal text-amber-l">
+            <AlertTriangle size={14} className="mt-px shrink-0" />
             <span>{finWarnung.warning}</span>
           </div>
         )}
-        <div style={{ gridColumn: "1/-1", marginTop: 4 }}>
-          <div style={{ height: 1, background: C.line, marginBottom: 16 }} />
-          <div style={{
-            fontSize: 11, fontWeight: 700, color: C.t3, letterSpacing: "0.1em", textTransform: "uppercase",
-            marginBottom: 14, display: "flex", alignItems: "center", gap: 6,
-          }}><User size={11} />Fahrzeughalter</div>
-          <div className="grid-resp-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+        <div className="col-span-full mt-1">
+          <div className="mb-4 h-px bg-line" />
+          <div className="mb-3.5 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.1em] text-t3"><User size={11} />Fahrzeughalter</div>
+          <div className="grid grid-cols-2 gap-3.5 max-[768px]:grid-cols-1">
             <Fld label="Name / Firma *" error={err.halterName}>
               <Inp value={form.halterName} onChange={f("halterName")} placeholder="Klaus Müller" error={err.halterName} />
             </Fld>
@@ -181,10 +170,7 @@ export function FahrzeugModal({ initial = {}, fahrzeuge = [], onSave, onClose })
             </Fld>
           </div>
         </div>
-        <div style={{
-          gridColumn: "1/-1", display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 8,
-          paddingTop: 16, borderTop: `1px solid ${C.line}`,
-        }}>
+        <div className="col-span-full mt-2 flex justify-end gap-2.5 border-t border-line pt-4">
           <BtnG onClick={onClose}>Abbrechen</BtnG>
           <BtnP onClick={save} icon={Check}>{isEdit ? "Änderungen speichern" : "Fahrzeug erfassen"}</BtnP>
         </div>

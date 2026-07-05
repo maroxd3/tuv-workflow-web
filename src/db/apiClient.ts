@@ -11,22 +11,110 @@ import type {
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "/api";
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
+// ── Auth: Token-Handling + 401-Callback ───────────────────────────────
+// Der Token wird in localStorage persistiert (Key TOKEN_STORAGE_KEY),
+// damit ein Reload den Login nicht verwirft. Alle Zugriffe laufen ueber
+// try/catch — localStorage kann fehlen (Privacy-Modus, alte WebViews).
+
+export const TOKEN_STORAGE_KEY = "tuv.auth.token";
+
+export type Rolle = "empfang" | "pruefer" | "chef";
+
+export interface Benutzer {
+  kuerzel: string;
+  name: string;
+  rolle: Rolle;
+}
+
+export interface AuthMeAntwort {
+  authRequired: boolean;
+  benutzer: Benutzer;
+}
+
+export interface LoginAntwort {
+  token: string;
+  benutzer: Benutzer;
+}
+
+/** Fehler mit HTTP-Status — z. B. um 401 (Login falsch) von Netzwerk-
+ *  Problemen unterscheiden zu koennen. */
+export class ApiError extends Error {
+  readonly status: number;
+  constructor(status: number, message: string) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+  }
+}
+
+function readStoredToken(): string | null {
+  try {
+    return window.localStorage.getItem(TOKEN_STORAGE_KEY);
+  } catch {
+    return null;
+  }
+}
+
+let authToken: string | null = readStoredToken();
+
+export function setAuthToken(token: string | null): void {
+  authToken = token;
+  try {
+    if (token) window.localStorage.setItem(TOKEN_STORAGE_KEY, token);
+    else window.localStorage.removeItem(TOKEN_STORAGE_KEY);
+  } catch {
+    // localStorage nicht verfuegbar — Token lebt dann nur im Speicher.
+  }
+}
+
+export function getAuthToken(): string | null {
+  return authToken;
+}
+
+// Callback bei 401 auf einer fachlichen Route (Token abgelaufen/ungueltig):
+// die App registriert hier ihren Logout, damit sie zum Login zurueckfaellt.
+let onUnauthorized: (() => void) | null = null;
+
+export function setOnUnauthorized(cb: (() => void) | null): void {
+  onUnauthorized = cb;
+}
+
+interface RequestOpts {
+  /** true fuer Auth-Routen (/auth/login, /auth/me): dort ist 401 eine
+   *  normale Antwort und darf NICHT den globalen Logout ausloesen. */
+  skip401Handler?: boolean;
+}
+
+async function request<T>(path: string, init?: RequestInit, opts?: RequestOpts): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, {
     ...init,
     headers: {
       "Content-Type": "application/json",
+      ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
       ...(init?.headers || {}),
     },
   });
 
   if (!res.ok) {
-    const body = await res.json().catch(() => null);
-    throw new Error(body?.error || `${res.status} ${res.statusText}`);
+    if (res.status === 401 && !opts?.skip401Handler) onUnauthorized?.();
+    const body: { error?: string } | null = await res.json().catch(() => null);
+    throw new ApiError(res.status, body?.error || `${res.status} ${res.statusText}`);
   }
 
   if (res.status === 204) return undefined as T;
   return res.json() as Promise<T>;
+}
+
+export function authLogin(kuerzel: string, passwort: string): Promise<LoginAntwort> {
+  return request(
+    "/auth/login",
+    { method: "POST", body: JSON.stringify({ kuerzel, passwort }) },
+    { skip401Handler: true },
+  );
+}
+
+export function authMe(): Promise<AuthMeAntwort> {
+  return request("/auth/me", undefined, { skip401Handler: true });
 }
 
 export async function initDatabase(): Promise<void> {

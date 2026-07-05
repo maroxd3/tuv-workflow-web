@@ -6,7 +6,9 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
     proxy: {
-      '/api': 'http://127.0.0.1:8787',
+      // Ueberschreibbar, um den Dev-Server gegen eine andere API-Instanz
+      // zu fahren (z. B. Test-Stack): VITE_API_PROXY_TARGET=http://127.0.0.1:8788
+      '/api': process.env.VITE_API_PROXY_TARGET || 'http://127.0.0.1:8787',
     },
   },
   test: {

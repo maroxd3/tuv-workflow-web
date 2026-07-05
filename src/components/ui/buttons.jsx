@@ -1,20 +1,24 @@
 import PropTypes from "prop-types";
-import { C } from "../../styles/theme";
+
+/* Wiederverwendete Klassen-Bausteine für die drei Button-Varianten */
+const BTN_BASE = "flex items-center gap-1.5 rounded-[9px] font-sans";
+const BTN_SIZE = sm => (sm ? "px-3.5 py-[7px] text-[12px]" : "px-5 py-[9px] text-[13px]");
 
 export function BtnP({ onClick, children, icon: Icon, disabled = false, danger = false, sm = false }) {
   return (
-    <button onClick={onClick} disabled={disabled} className="btn-primary" style={{
-      display: "flex", alignItems: "center", gap: 6,
-      background: danger ? "rgba(220,38,38,0.09)" : "linear-gradient(135deg, #2563EB, #3B82F6)",
-      border: `1px solid ${danger ? "rgba(220,38,38,0.25)" : "transparent"}`,
-      borderRadius: 9, padding: sm ? "7px 14px" : "9px 20px",
-      color: danger ? C.redL : "#fff",
-      cursor: disabled ? "not-allowed" : "pointer",
-      fontSize: sm ? 12 : 13, fontWeight: 600,
-      opacity: disabled ? 0.5 : 1,
-      fontFamily: C.sans,
-      boxShadow: danger ? "none" : "0 2px 8px rgba(37,99,235,0.28)",
-    }}>
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className={[
+        BTN_BASE, BTN_SIZE(sm), "font-semibold border",
+        "transition-all duration-[0.18s] ease-in-out",
+        "enabled:hover:brightness-110 enabled:hover:-translate-y-px enabled:hover:shadow-[0_6px_24px_rgba(79,70,229,0.35)] enabled:active:translate-y-0",
+        disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer",
+        danger
+          ? "bg-[rgba(220,38,38,0.09)] border-[rgba(220,38,38,0.25)] text-red-l shadow-none"
+          : "bg-[linear-gradient(135deg,#2563EB,#3B82F6)] border-transparent text-white shadow-[0_2px_8px_rgba(37,99,235,0.28)]",
+      ].join(" ")}
+    >
       {Icon && <Icon size={sm ? 12 : 14} />}{children}
     </button>
   );
@@ -31,15 +35,16 @@ BtnP.propTypes = {
 
 export function BtnG({ onClick, children, icon: Icon, danger = false, sm = false }) {
   return (
-    <button onClick={onClick} className="btn-ghost" style={{
-      display: "flex", alignItems: "center", gap: 6,
-      background: danger ? "rgba(239,68,68,0.09)" : C.glass,
-      border: `1px solid ${danger ? "rgba(239,68,68,0.25)" : C.line}`,
-      borderRadius: 9, padding: sm ? "7px 14px" : "9px 20px",
-      color: danger ? C.redL : C.t2,
-      cursor: "pointer", fontSize: sm ? 12 : 13, fontWeight: 500,
-      fontFamily: C.sans,
-    }}>
+    <button
+      onClick={onClick}
+      className={[
+        BTN_BASE, BTN_SIZE(sm), "font-medium border cursor-pointer",
+        "transition-all duration-150 ease-in-out hover:bg-[rgba(0,0,0,0.06)] hover:border-[rgba(0,0,0,0.14)]",
+        danger
+          ? "bg-[rgba(239,68,68,0.09)] border-[rgba(239,68,68,0.25)] text-red-l"
+          : "bg-glass border-line text-t2",
+      ].join(" ")}
+    >
       {Icon && <Icon size={sm ? 12 : 14} />}{children}
     </button>
   );
@@ -56,12 +61,19 @@ BtnG.propTypes = {
 export function IconBtn({ onClick, icon, color, danger = false, sm = false, title }) {
   return (
     // A11y: Icon-only-Button — title dient gleichzeitig als aria-label
-    <button onClick={onClick} title={title} aria-label={title} className="btn-icon" style={{
-      background: danger ? "rgba(239,68,68,0.09)" : C.glass,
-      border: `1px solid ${danger ? "rgba(239,68,68,0.22)" : C.line}`,
-      borderRadius: 7, padding: sm ? "4px 6px" : "6px 8px",
-      color, cursor: "pointer", display: "flex",
-    }}>
+    <button
+      onClick={onClick}
+      title={title}
+      aria-label={title}
+      className={[
+        "flex cursor-pointer rounded-[7px] border",
+        "transition-all duration-150 ease-in-out hover:scale-[1.08] hover:bg-[rgba(0,0,0,0.07)]",
+        sm ? "px-1.5 py-1" : "px-2 py-1.5",
+        "max-[768px]:p-[9px]", // Touch-Target auf Mobil vergrößern
+        danger ? "bg-[rgba(239,68,68,0.09)] border-[rgba(239,68,68,0.22)]" : "bg-glass border-line",
+      ].join(" ")}
+      style={{ color }} // Laufzeitwert: Icon-Farbe kommt als Prop
+    >
       {icon}
     </button>
   );

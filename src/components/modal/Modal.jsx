@@ -2,7 +2,6 @@ import { useEffect, useRef } from "react";
 import PropTypes from "prop-types";
 import { motion } from "framer-motion";
 import { X } from "lucide-react";
-import { C } from "../../styles/theme";
 
 export function Modal({ title, sub, onClose, children, width = 640 }) {
   const panelRef = useRef(null);
@@ -20,39 +19,28 @@ export function Modal({ title, sub, onClose, children, width = 640 }) {
   }, []);
 
   return (
-    <div style={{
-      position: "fixed", inset: 0, zIndex: 400, background: "rgba(15,15,26,0.55)", backdropFilter: "blur(8px)",
-      display: "flex", alignItems: "center", justifyContent: "center", padding: 8,
-    }}
+    <div
+      className="fixed inset-0 z-[400] flex items-center justify-center bg-[rgba(15,15,26,0.55)] p-2 backdrop-blur-[8px]"
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
       <motion.div initial={{ opacity: 0, scale: 0.96, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.96, y: 20 }} transition={{ duration: 0.2, ease: "easeOut" }}
         ref={panelRef} role="dialog" aria-modal="true" aria-label={title} tabIndex={-1}
-        style={{
-          background: C.surface, border: `1px solid ${C.lineMed}`, borderRadius: 14,
-          width: "100%", maxWidth: width, maxHeight: "94vh", overflow: "auto",
-          boxShadow: "0 24px 80px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.08)",
-          outline: "none",
-        }}>
-        <div className="pad-mobile" style={{
-          display: "flex", alignItems: "flex-start", justifyContent: "space-between",
-          padding: "20px 24px 18px", borderBottom: `1px solid ${C.line}`,
-          position: "sticky", top: 0, background: C.surface, zIndex: 1, gap: 12,
-        }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0, flex: 1 }}>
-            <div style={{ minWidth: 0 }}>
-              <div style={{ fontSize: 16, fontWeight: 700, color: C.t1, letterSpacing: "-0.02em" }}>{title}</div>
-              {sub && <div style={{ fontSize: 11, color: C.t4, marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{sub}</div>}
+        className="w-full max-h-[94vh] overflow-auto rounded-[14px] border border-line-med bg-surface outline-none shadow-[0_24px_80px_rgba(0,0,0,0.18),0_0_0_1px_rgba(0,0,0,0.08)]"
+        style={{ maxWidth: width }} // Laufzeitwert: Breite kommt als Prop
+      >
+        <div className="sticky top-0 z-[1] flex items-start justify-between gap-3 border-b border-line bg-surface px-6 pt-5 pb-[18px] max-[768px]:px-3.5 max-[768px]:py-3">
+          <div className="flex min-w-0 flex-1 items-center gap-3">
+            <div className="min-w-0">
+              <div className="text-[16px] font-bold text-t1 tracking-[-0.02em]">{title}</div>
+              {sub && <div className="mt-0.5 overflow-hidden text-ellipsis whitespace-nowrap text-[11px] text-t4">{sub}</div>}
             </div>
           </div>
-          <button onClick={onClose} className="btn-icon" aria-label="Schließen" style={{
-            background: C.glass, border: `1px solid ${C.line}`, borderRadius: 8,
-            padding: "7px", cursor: "pointer", color: C.t3, display: "flex", flexShrink: 0,
-          }}>
+          <button onClick={onClose} aria-label="Schließen"
+            className="flex shrink-0 cursor-pointer rounded-lg border border-line bg-glass p-[7px] text-t3 transition-all duration-150 hover:scale-[1.08] hover:bg-[rgba(0,0,0,0.07)] max-[768px]:p-[9px]">
             <X size={14} />
           </button>
         </div>
-        <div className="pad-mobile" style={{ padding: "22px 24px" }}>{children}</div>
+        <div className="px-6 py-[22px] max-[768px]:px-3.5 max-[768px]:py-3">{children}</div>
       </motion.div>
     </div>
   );

@@ -3,14 +3,14 @@ import { C } from "../../styles/theme";
 
 export function SectionHead({ label, icon: Icon, right }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+    <div className="mb-4 flex items-center justify-between">
+      <div className="flex items-center gap-2">
         {Icon && (
-          <div style={{ width: 24, height: 24, borderRadius: 6, background: `${C.blue}14`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div className="flex h-6 w-6 items-center justify-center rounded-md bg-[#4F46E514]">
             <Icon size={12} color={C.blue} />
           </div>
         )}
-        <span style={{ fontSize: 12, fontWeight: 700, color: C.t2, letterSpacing: "0.01em" }}>{label}</span>
+        <span className="text-[12px] font-bold tracking-[0.01em] text-t2">{label}</span>
       </div>
       {right}
     </div>

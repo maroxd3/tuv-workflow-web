@@ -40,10 +40,10 @@ Eine Story gilt als erledigt, wenn:
 | US-09 | Als Team möchten wir API-Healthchecks | Should | done |
 | US-10 | Als Betreiber möchte ich Zugangsdaten per `.env` setzen | Must | done |
 | US-11 | Als Betreiber möchte ich eine 3-Tier-Backup-Strategie | Should | in Arbeit (Konzept + Binlog: done; Skripte: open) |
-| US-12 | Als Betreiber möchte ich Authentifizierung und Rollen | Could | open |
-| US-13 | Als Team möchten wir API-Integrationstests mit Testdatenbank | Should | open |
-| US-14 | Als Team möchten wir versionierte DB-Migrationen | Should | open |
-| US-15 | Als Betreiber möchte ich Docker-Compose-Deployment für Kunden | Must | in Arbeit (docker-compose.yml angelegt, Doku ergänzt) |
+| US-12 | Als Betreiber möchte ich Authentifizierung und Rollen | Could | done (Login + Rollen empfang/pruefer/chef, serverseitig erzwungen; in dev/CI deaktiviert) |
+| US-13 | Als Team möchten wir API-Integrationstests mit Testdatenbank | Should | done (WF-01-Integrationstests + validate-/auth-Unit-Tests, CI gegen echte MariaDB) |
+| US-14 | Als Team möchten wir versionierte DB-Migrationen | Should | done (`server/migrations.js`, schema_migration-Tabelle, ADR-011) |
+| US-15 | Als Betreiber möchte ich Docker-Compose-Deployment für Kunden | Must | done (Compose mit production-Defaults, ADMIN_TOKEN-Pflicht, DB nur localhost) |
 | US-16 | Als Prüfer möchte ich Änderungen anderer Mitarbeiter live sehen | Should | done (5-Sek-Polling in `useDb.ts`, pausiert bei Tab-Hintergrund) |
 | US-17 | Als Werkstatt-Inhaber möchte ich, dass Kundendaten on-premise bleiben | Must | done (kein Cloud-DB-Zugriff, alles im LAN) |
 
@@ -59,14 +59,16 @@ Eine Story gilt als erledigt, wenn:
 | 6 | Abgabe-Dokumentation und Stabilisierung | erledigt |
 | 7 | Relationales Datenmodell und Tests | erledigt |
 | 8 | MariaDB-Backend und Doku-Umstellung | erledigt |
-| 9 | On-Premise-Deployment-Modell, Docker-Compose, Backup-Konzept | in Arbeit |
+| 9 | On-Premise-Deployment-Modell, Docker-Compose, Backup-Konzept | erledigt |
+| 10 | Hardening + Architektur-Reife: API-404/409-Semantik, helmet/Rate-Limit, Compat-Layer-Abbau (ein View-Model), versionierte Migrationen (ADR-011), Benutzer/Rollen, Tailwind-Migration, UI-Interaktionstests | in Arbeit |
 
 ## 5. Technische Schulden
 
-- API-Integrationstests gegen die Docker-MariaDB sind angelegt
-  (`server/tests/wf01.test.js`, 7 Cases für alle drei WF-01-Layer + behoben-
-  Semantik). Weitere Endpunkte (Halter, Fahrzeug, Termin-CRUD) sind offen.
-- Schema-Änderungen sollten mittelfristig versioniert werden.
+- CRUD-Integrationstests für Halter/Fahrzeug/Termin gegen die Docker-MariaDB
+  sind offen (WF-01-Layer und Validierung sind abgedeckt, die Negativfälle
+  laufen als Unit-Tests gegen `server/validate.js`).
 - Backup-Tier-2-Cron-Skript und Tier-3-Offsite-Sync sind als Konzept
-  dokumentiert (`docs/backup.md`), die Skripte stehen aus
-- Produktiver Betrieb braucht zusaetzlich Auth, HTTPS und Rollen.
+  dokumentiert (`docs/backup.md`), die Skripte stehen aus.
+- Produktiver Betrieb über Netzwerkgrenzen hinweg bräuchte HTTPS
+  (im LAN-Modell bewusst nicht umgesetzt); Passwort-Änderung läuft aktuell
+  über die DB, ein Self-Service-Endpunkt fehlt.

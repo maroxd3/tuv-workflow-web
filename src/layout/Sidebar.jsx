@@ -2,12 +2,15 @@ import { useState } from "react";
 import PropTypes from "prop-types";
 import { AnimatePresence } from "framer-motion";
 import { Shield, Trash2, Sparkles, AlertOctagon, AlertTriangle } from "lucide-react";
-import { C } from "../styles/theme";
 import { STATUS } from "../constants/status";
 import { NAV } from "../constants/nav";
 import { isoDate, fmtDate, toIsoDateStr } from "../utils/date";
 import { ConfirmModal } from "../components/modal/ConfirmModal";
+import { useRechte } from "../auth/AuthContext";
 import { FahrzeugShape, TerminShape } from "../types/propTypes";
+
+/* Wiederkehrendes Muster: Abschnitts-Überschrift in der Sidebar */
+const SB_HEADING = "text-[9px] font-bold uppercase tracking-[0.16em] text-sb-t3";
 
 export function Sidebar({ view, setView, fahrzeuge, termine, resetAllData, loadDemoData }) {
   const today = isoDate();
@@ -15,51 +18,38 @@ export function Sidebar({ view, setView, fahrzeuge, termine, resetAllData, loadD
   const offenTr = todayTr.filter(t => t.statusCode === STATUS.GEPLANT || t.statusCode === STATUS.IN_PRUEFUNG);
   const [now] = useState(() => Date.now());
   const [confirmReset, setConfirmReset] = useState(false); // ersetzt window.confirm
+  const { darfAdmin } = useRechte(); // Reset + Demo-Daten: nur Rolle chef
   const huWarn = fahrzeuge.filter(f => f.huFaellig && new Date(f.huFaellig) < new Date(now + 30 * 86400000) && new Date(f.huFaellig) >= new Date(now)).length;
   const huUeberr = fahrzeuge.filter(f => f.huFaellig && new Date(f.huFaellig) < new Date(now)).length;
 
   return (
-    <div style={{
-      width: 240, flexShrink: 0,
-      background: `linear-gradient(180deg, ${C.sb} 0%, #110E30 100%)`,
-      display: "flex", flexDirection: "column",
-      position: "fixed", left: 0, top: 0, bottom: 0, zIndex: 60,
-      boxShadow: "4px 0 24px rgba(0,0,0,0.40)",
-    }}>
+    <div className="fixed left-0 top-0 bottom-0 z-[60] flex w-60 shrink-0 flex-col bg-[linear-gradient(180deg,var(--color-sb)_0%,#110E30_100%)] shadow-[4px_0_24px_rgba(0,0,0,0.40)]">
 
       {/* Logo */}
-      <div style={{ padding: "24px 20px 20px", borderBottom: `1px solid ${C.sbLine}` }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
-          <div style={{
-            width: 40, height: 40, flexShrink: 0, borderRadius: 12,
-            background: "linear-gradient(135deg, #4F46E5, #7C3AED)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            boxShadow: "0 4px 20px rgba(99,102,241,0.55)",
-          }}>
+      <div className="border-b border-sb-line px-5 pt-6 pb-5">
+        <div className="mb-4 flex items-center gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[linear-gradient(135deg,#4F46E5,#7C3AED)] shadow-[0_4px_20px_rgba(99,102,241,0.55)]">
             <Shield size={18} color="#fff" />
           </div>
           <div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: C.sbT1, letterSpacing: "-0.01em" }}>TÜV Prüfstelle</div>
-            <div style={{ fontSize: 10, color: C.sbT3, letterSpacing: "0.06em", marginTop: 1 }}>VERWALTUNGSSYSTEM</div>
+            <div className="text-[14px] font-bold tracking-[-0.01em] text-sb-t1">TÜV Prüfstelle</div>
+            <div className="mt-px text-[10px] tracking-[0.06em] text-sb-t3">VERWALTUNGSSYSTEM</div>
           </div>
         </div>
 
         {/* Status pill */}
-        <div style={{
-          background: "rgba(16,185,129,0.12)", border: "1px solid rgba(16,185,129,0.22)",
-          borderRadius: 8, padding: "7px 12px", display: "flex", alignItems: "center", gap: 8,
-        }}>
-          <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#10B981", boxShadow: "0 0 8px #10B981", flexShrink: 0 }} />
-          <span style={{ fontSize: 11, color: "#34D399", flex: 1, fontWeight: 500 }}>System aktiv</span>
-          <span style={{ fontSize: 10, color: C.sbT3, fontFamily: C.mono }}>
+        <div className="flex items-center gap-2 rounded-lg border border-[rgba(16,185,129,0.22)] bg-[rgba(16,185,129,0.12)] px-3 py-[7px]">
+          <div className="h-[7px] w-[7px] shrink-0 rounded-full bg-[#10B981] shadow-[0_0_8px_#10B981]" />
+          <span className="flex-1 text-[11px] font-medium text-[#34D399]">System aktiv</span>
+          <span className="font-mono text-[10px] text-sb-t3">
             {new Date().toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })}
           </span>
         </div>
       </div>
 
       {/* Nav */}
-      <nav style={{ padding: "12px 12px", flex: 1, overflowY: "auto" }}>
-        <div style={{ fontSize: 9, fontWeight: 700, color: C.sbT3, letterSpacing: "0.16em", textTransform: "uppercase", padding: "4px 8px 10px" }}>
+      <nav className="flex-1 overflow-y-auto px-3 py-3">
+        <div className={`${SB_HEADING} px-2 pt-1 pb-2.5`}>
           Navigation
         </div>
         {NAV.map(v => {
@@ -67,30 +57,20 @@ export function Sidebar({ view, setView, fahrzeuge, termine, resetAllData, loadD
           const act = view === v.key;
           const badge = v.key === "tagesplan" ? offenTr.length : null;
           return (
-            <button key={v.key} onClick={() => setView(v.key)} className="nav-btn" style={{
-              display: "flex", alignItems: "center", gap: 10, width: "100%",
-              padding: "10px 12px", borderRadius: 10, marginBottom: 2,
-              background: act ? "rgba(99,102,241,0.20)" : "transparent",
-              border: `1px solid ${act ? "rgba(99,102,241,0.35)" : "transparent"}`,
-              color: act ? "#A5B4FC" : C.sbT2,
-              cursor: "pointer", fontSize: 13, fontWeight: act ? 600 : 400,
-              textAlign: "left", transition: "all 0.15s",
-            }}>
-              <div style={{
-                width: 28, height: 28, borderRadius: 7, flexShrink: 0,
-                background: act ? "rgba(99,102,241,0.30)" : "rgba(255,255,255,0.07)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                transition: "all 0.15s",
-              }}>
+            <button key={v.key} onClick={() => setView(v.key)}
+              className={[
+                "mb-0.5 flex w-full cursor-pointer items-center gap-2.5 rounded-[10px] border px-3 py-2.5 text-left text-[13px]",
+                "transition-all duration-150 hover:bg-[rgba(255,255,255,0.08)] max-[768px]:p-3",
+                act
+                  ? "border-[rgba(99,102,241,0.35)] bg-[rgba(99,102,241,0.20)] font-semibold text-[#A5B4FC]"
+                  : "border-transparent bg-transparent font-normal text-sb-t2",
+              ].join(" ")}>
+              <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-[7px] transition-all duration-150 ${act ? "bg-[rgba(99,102,241,0.30)]" : "bg-[rgba(255,255,255,0.07)]"}`}>
                 <Icon size={14} color={act ? "#A5B4FC" : "#6058A0"} />
               </div>
-              <span style={{ flex: 1 }}>{v.label}</span>
+              <span className="flex-1">{v.label}</span>
               {badge > 0 && (
-                <span style={{
-                  fontSize: 10, fontFamily: C.mono, fontWeight: 700,
-                  background: "#6366F1", color: "#fff",
-                  borderRadius: 999, padding: "2px 7px", lineHeight: 1.4,
-                }}>{badge}</span>
+                <span className="rounded-full bg-[#6366F1] px-[7px] py-0.5 font-mono text-[10px] font-bold leading-[1.4] text-white">{badge}</span>
               )}
             </button>
           );
@@ -98,20 +78,20 @@ export function Sidebar({ view, setView, fahrzeuge, termine, resetAllData, loadD
 
         {/* Warnings */}
         {(huWarn > 0 || huUeberr > 0) && (
-          <div style={{ marginTop: 16 }}>
-            <div style={{ fontSize: 9, fontWeight: 700, color: C.sbT3, letterSpacing: "0.16em", textTransform: "uppercase", padding: "4px 8px 8px" }}>
+          <div className="mt-4">
+            <div className={`${SB_HEADING} px-2 pt-1 pb-2`}>
               Warnungen
             </div>
             {huUeberr > 0 && (
-              <div style={{ background: "rgba(220,38,38,0.12)", border: "1px solid rgba(220,38,38,0.22)", borderRadius: 8, padding: "9px 12px", marginBottom: 4, display: "flex", gap: 8, alignItems: "center" }}>
+              <div className="mb-1 flex items-center gap-2 rounded-lg border border-[rgba(220,38,38,0.22)] bg-[rgba(220,38,38,0.12)] px-3 py-[9px]">
                 <AlertOctagon size={13} color="#FCA5A5" />
-                <span style={{ fontSize: 12, color: "#FCA5A5", fontWeight: 500 }}>{huUeberr} HU überfällig</span>
+                <span className="text-[12px] font-medium text-[#FCA5A5]">{huUeberr} HU überfällig</span>
               </div>
             )}
             {huWarn > 0 && (
-              <div style={{ background: "rgba(217,119,6,0.12)", border: "1px solid rgba(217,119,6,0.22)", borderRadius: 8, padding: "9px 12px", display: "flex", gap: 8, alignItems: "center" }}>
+              <div className="flex items-center gap-2 rounded-lg border border-[rgba(217,119,6,0.22)] bg-[rgba(217,119,6,0.12)] px-3 py-[9px]">
                 <AlertTriangle size={13} color="#FCD34D" />
-                <span style={{ fontSize: 12, color: "#FCD34D", fontWeight: 500 }}>{huWarn} HU in 30d fällig</span>
+                <span className="text-[12px] font-medium text-[#FCD34D]">{huWarn} HU in 30d fällig</span>
               </div>
             )}
           </div>
@@ -119,49 +99,44 @@ export function Sidebar({ view, setView, fahrzeuge, termine, resetAllData, loadD
       </nav>
 
       {/* Footer stats */}
-      <div style={{ padding: "14px 16px 18px", borderTop: `1px solid ${C.sbLine}` }}>
-        <div style={{ fontSize: 9, fontWeight: 700, color: C.sbT3, letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: 10 }}>
+      <div className="border-t border-sb-line px-4 pt-3.5 pb-[18px]">
+        <div className="mb-2.5 text-[9px] font-bold uppercase tracking-[0.14em] text-sb-t3">
           Heute · {fmtDate(today)}
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, marginBottom: 12 }}>
+        <div className="mb-3 grid grid-cols-2 gap-1.5">
           {[
             ["Termine", todayTr.length, "#3B82F6"],
             ["Erledigt", todayTr.filter(t => t.statusCode === STATUS.BESTANDEN || t.statusCode === STATUS.NICHT_BESTANDEN).length, "#10B981"],
             ["Ausstehend", offenTr.length, "#F59E0B"],
-            ["Fahrzeuge", fahrzeuge.length, C.sbT2],
+            ["Fahrzeuge", fahrzeuge.length, "var(--color-sb-t2)"],
           ].map(([l, v, c]) => (
-            <div key={l} style={{ background: "rgba(255,255,255,0.04)", borderRadius: 8, padding: "8px 10px", border: `1px solid ${C.sbLine}` }}>
-              <div style={{ fontSize: 18, fontWeight: 700, color: c, fontFamily: C.mono, lineHeight: 1 }}>{v}</div>
-              <div style={{ fontSize: 9, color: C.sbT3, marginTop: 3, letterSpacing: "0.04em" }}>{l}</div>
+            <div key={l} className="rounded-lg border border-sb-line bg-[rgba(255,255,255,0.04)] px-2.5 py-2">
+              {/* Laufzeitwert: Zahl-Farbe pro Stat aus dem Daten-Array */}
+              <div className="font-mono text-[18px] font-bold leading-none" style={{ color: c }}>{v}</div>
+              <div className="mt-[3px] text-[9px] tracking-[0.04em] text-sb-t3">{l}</div>
             </div>
           ))}
         </div>
-        {fahrzeuge.length === 0 && termine.length === 0 ? (
-          <button
-            onClick={() => {
-              if (loadDemoData) loadDemoData();
-            }}
-            style={{
-              width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
-              background: "rgba(99,102,241,0.12)", border: "1px solid rgba(99,102,241,0.30)",
-              borderRadius: 8, padding: "10px 0", color: "#A5B4FC", cursor: "pointer",
-              fontSize: 11, fontWeight: 600, fontFamily: C.sans, transition: "all 0.15s",
-            }}
-          >
-            <Sparkles size={11} /> Beispieldaten laden
-          </button>
-        ) : (
-          <button
-            onClick={() => setConfirmReset(true)}
-            style={{
-              width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
-              background: "rgba(220,38,38,0.08)", border: "1px solid rgba(220,38,38,0.20)",
-              borderRadius: 8, padding: "10px 0", color: "#FCA5A5", cursor: "pointer",
-              fontSize: 11, fontWeight: 500, fontFamily: C.sans, transition: "all 0.15s",
-            }}
-          >
-            <Trash2 size={10} /> Alle Daten löschen
-          </button>
+        {/* Admin-Aktionen (Reset/Demo-Daten): nur fuer Rolle chef —
+            serverseitig erzwingt /api/admin/* das ohnehin. */}
+        {darfAdmin && (
+          fahrzeuge.length === 0 && termine.length === 0 ? (
+            <button
+              onClick={() => {
+                if (loadDemoData) loadDemoData();
+              }}
+              className="flex w-full cursor-pointer items-center justify-center gap-[5px] rounded-lg border border-[rgba(99,102,241,0.30)] bg-[rgba(99,102,241,0.12)] py-2.5 font-sans text-[11px] font-semibold text-[#A5B4FC] transition-all duration-150"
+            >
+              <Sparkles size={11} /> Beispieldaten laden
+            </button>
+          ) : (
+            <button
+              onClick={() => setConfirmReset(true)}
+              className="flex w-full cursor-pointer items-center justify-center gap-[5px] rounded-lg border border-[rgba(220,38,38,0.20)] bg-[rgba(220,38,38,0.08)] py-2.5 font-sans text-[11px] font-medium text-[#FCA5A5] transition-all duration-150"
+            >
+              <Trash2 size={10} /> Alle Daten löschen
+            </button>
+          )
         )}
       </div>
 

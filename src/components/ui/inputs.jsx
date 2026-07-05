@@ -1,19 +1,23 @@
-import { useState, useId, Children, cloneElement, isValidElement } from "react";
+import { useId, Children, cloneElement, isValidElement } from "react";
 import PropTypes from "prop-types";
 import { ChevronDown, AlertCircle } from "lucide-react";
-import { C } from "../../styles/theme";
 
-export function Inp({ value, onChange, placeholder, type = "text", error, style = {}, mono = false, list, disabled = false, ...props }) {
-  const [f, setF] = useState(false);
+/* Gemeinsame Feld-Optik für Inp/Sel/textarea-Verwender.
+   Bewusst OHNE Hintergrund — den setzt jeder Verwender selbst
+   (Inp/Sel: bg-surface, Freitext-Mangel-Textarea: bg-bg). */
+export const FIELD_CLS = "w-full rounded-lg border px-3 py-[9px] text-[13px] text-t1 outline-none";
+
+export function Inp({ value, onChange, placeholder, type = "text", error, className = "", mono = false, list, disabled = false, ...props }) {
   return (
     <input value={value} onChange={onChange} placeholder={placeholder} type={type} list={list} disabled={disabled} {...props}
-      onFocus={() => setF(true)} onBlur={() => setF(false)}
-      style={{
-        background: C.surface, border: `1px solid ${error ? "rgba(220,38,38,0.5)" : f ? C.blue : C.line}`,
-        borderRadius: 8, padding: "9px 12px", color: C.t1, fontSize: 13, outline: "none",
-        width: "100%", fontFamily: mono ? C.mono : C.sans, transition: "border-color 0.15s",
-        opacity: disabled ? 0.6 : 1, cursor: disabled ? "not-allowed" : "text", ...style,
-      }}
+      className={[
+        FIELD_CLS, "bg-surface",
+        "transition-[border-color] duration-150",
+        error ? "border-[rgba(220,38,38,0.5)]" : "border-line focus:border-blue",
+        mono ? "font-mono" : "font-sans",
+        disabled ? "opacity-60 cursor-not-allowed" : "cursor-text",
+        className,
+      ].join(" ")}
     />
   );
 }
@@ -24,21 +28,25 @@ Inp.propTypes = {
   placeholder: PropTypes.string,
   type: PropTypes.string,
   error: PropTypes.string,
-  style: PropTypes.object,
+  className: PropTypes.string,
   mono: PropTypes.bool,
   list: PropTypes.string,
   disabled: PropTypes.bool,
 };
 
-export function Sel({ value, onChange, children, style = {}, id }) {
+export function Sel({ value, onChange, children, className = "", id, disabled = false, title }) {
   return (
-    <div style={{ position: "relative" }}>
-      <select id={id} value={value} onChange={onChange} style={{
-        background: C.surface, border: `1px solid ${C.line}`, borderRadius: 8,
-        padding: "9px 32px 9px 12px", color: C.t1, fontSize: 13, outline: "none",
-        width: "100%", fontFamily: C.sans, cursor: "pointer", appearance: "none", ...style,
-      }}>{children}</select>
-      <ChevronDown size={12} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", color: C.t3, pointerEvents: "none" }} />
+    // title am Wrapper: der Browser zeigt den Tooltip auch ueber einem
+    // disabled <select> (dort feuern keine Pointer-Events).
+    <div className="relative" title={title}>
+      <select id={id} value={value} onChange={onChange} disabled={disabled} title={title}
+        className={[
+          FIELD_CLS, "bg-surface border-line font-sans appearance-none pr-8",
+          disabled ? "opacity-60 cursor-not-allowed" : "cursor-pointer",
+          className,
+        ].join(" ")}
+      >{children}</select>
+      <ChevronDown size={12} className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-t3" />
     </div>
   );
 }
@@ -47,8 +55,10 @@ Sel.propTypes = {
   value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
   onChange: PropTypes.func,
   children: PropTypes.node,
-  style: PropTypes.object,
+  className: PropTypes.string,
   id: PropTypes.string,
+  disabled: PropTypes.bool,
+  title: PropTypes.string,
 };
 
 export function Fld({ label, error, children, span = 1 }) {
@@ -64,10 +74,10 @@ export function Fld({ label, error, children, span = 1 }) {
     i === firstIdx && !child.props.id ? cloneElement(child, { id: autoId }) : child,
   );
   return (
-    <div style={{ gridColumn: span === 2 ? "1/-1" : "auto", display: "flex", flexDirection: "column", gap: 5 }}>
-      <label htmlFor={controlId || undefined} style={{ fontSize: 10, fontWeight: 700, color: C.t3, letterSpacing: "0.1em", textTransform: "uppercase" }}>{label}</label>
+    <div className={`flex flex-col gap-[5px] ${span === 2 ? "col-span-full" : ""}`}>
+      <label htmlFor={controlId || undefined} className="text-[10px] font-bold text-t3 tracking-[0.1em] uppercase">{label}</label>
       {kids}
-      {error && <span style={{ fontSize: 10, color: C.redL, display: "flex", alignItems: "center", gap: 3 }}><AlertCircle size={10} />{error}</span>}
+      {error && <span className="flex items-center gap-[3px] text-[10px] text-red-l"><AlertCircle size={10} />{error}</span>}
     </div>
   );
 }

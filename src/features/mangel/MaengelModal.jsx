@@ -9,8 +9,9 @@ import { hatHauptmangel } from "../../utils/mangel";
 import { Modal } from "../../components/modal/Modal";
 import { MangelPill } from "../../components/ui/MangelPill";
 import { SectionHead } from "../../components/ui/SectionHead";
-import { Inp, Sel, Fld } from "../../components/ui/inputs";
+import { Inp, Sel, Fld, FIELD_CLS } from "../../components/ui/inputs";
 import { BtnP } from "../../components/ui/buttons";
+import { useRechte } from "../../auth/AuthContext";
 import { FahrzeugShape, TerminShape } from "../../types/propTypes";
 
 export function MaengelModal({ termin, fahrzeug, onAdd, onDel, onStatus, onClose }) {
@@ -18,6 +19,9 @@ export function MaengelModal({ termin, fahrzeug, onAdd, onDel, onStatus, onClose
   const [tab, setTab] = useState("katalog");
   const [custom, setCustom] = useState({ code: "", text: "", kat: "EM" });
   const [gruppeOpen, setGruppeOpen] = useState({});
+  // Rollen-Gating: Maengel erfassen/entfernen + Status setzen sind
+  // Pruefer-/Chef-Sache; Empfang sieht die Erfassung nur lesend.
+  const { darfMaengel, darfStatusSetzen } = useRechte();
 
   // Bereits erfasste Katalog-Codes (fuer den "schon hinzugefuegt"-Haken).
   // codeStvzo === null ausschliessen: das sind Freitext-Maengel ("FR") —
@@ -69,36 +73,40 @@ export function MaengelModal({ termin, fahrzeug, onAdd, onDel, onStatus, onClose
 
   return (
     <Modal title="Mängelerfassung" sub={`${fahrzeug?.kennzeichen || ""} · ${fahrzeug?.hersteller || ""} ${fahrzeug?.modell || ""} · ${art?.label || ""}`} onClose={onClose} width={860}>
-      <div className="grid-resp-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+      <div className="grid grid-cols-2 gap-5 max-[768px]:grid-cols-1">
         {/* LEFT: Recorded */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center justify-between">
             <SectionHead label="Erfasste Mängel" />
-            <span style={{ fontFamily: C.mono, fontSize: 11, background: C.glass, border: `1px solid ${C.line}`, borderRadius: 999, padding: "2px 9px", color: C.t3 }}>{mCount}</span>
+            <span className="rounded-full border border-line bg-glass px-[9px] py-0.5 font-mono text-[11px] text-t3">{mCount}</span>
           </div>
 
           {mCount === 0 ? (
-            <div style={{ background: C.glass, border: `1px dashed ${C.line}`, borderRadius: 10, padding: "24px", textAlign: "center", color: C.t4, fontSize: 13 }}>
+            <div className="rounded-[10px] border border-dashed border-line bg-glass p-6 text-center text-[13px] text-t4">
               Keine Mängel erfasst<br />
-              <span style={{ fontSize: 11 }}>Fahrzeug bisher ohne Beanstandungen</span>
+              <span className="text-[11px]">Fahrzeug bisher ohne Beanstandungen</span>
             </div>
           ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 4, maxHeight: 280, overflowY: "auto" }}>
+            <div className="flex max-h-[280px] flex-col gap-1 overflow-y-auto">
               {termin.maengel?.map(m => {
                 const mc = MANGEL_KATEGORIEN[m.kategorieCode];
                 return (
                   <div key={m.mangelId}
-                    style={{ display: "flex", alignItems: "flex-start", gap: 8, background: C.surfaceHigh, border: `1px solid ${mc?.border || C.line}`, borderRadius: 8, padding: "8px 10px" }}>
+                    className="flex items-start gap-2 rounded-lg border bg-surface-high px-2.5 py-2"
+                    // Laufzeitwert: Rahmenfarbe pro Mangel-Kategorie
+                    style={{ borderColor: mc?.border || C.line }}>
                     <MangelPill kat={m.kategorieCode} />
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 10, fontFamily: C.mono, color: C.t4 }}>{m.codeStvzo ?? "FR"}</div>
-                      <div style={{ fontSize: 12, color: C.t2, lineHeight: 1.4 }}>{m.beschreibung}</div>
+                    <div className="min-w-0 flex-1">
+                      <div className="font-mono text-[10px] text-t4">{m.codeStvzo ?? "FR"}</div>
+                      <div className="text-[12px] leading-[1.4] text-t2">{m.beschreibung}</div>
                     </div>
-                    <button onClick={() => onDel(m.mangelId)}
-                      aria-label="Mangel entfernen" title="Mangel entfernen"
-                      style={{ background: "none", border: "none", cursor: "pointer", color: C.t4, flexShrink: 0, padding: 2 }}>
-                      <X size={12} />
-                    </button>
+                    {darfMaengel && (
+                      <button onClick={() => onDel(m.mangelId)}
+                        aria-label="Mangel entfernen" title="Mangel entfernen"
+                        className="shrink-0 cursor-pointer border-none bg-transparent p-0.5 text-t4">
+                        <X size={12} />
+                      </button>
+                    )}
                   </div>
                 );
               })}
@@ -106,30 +114,28 @@ export function MaengelModal({ termin, fahrzeug, onAdd, onDel, onStatus, onClose
           )}
 
           {mCount > 0 && (
-            <div style={{
-              borderRadius: 8, padding: "10px 14px",
-              background: hasHM ? "rgba(240,69,90,0.10)" : "rgba(15,194,138,0.10)",
-              border: `1px solid ${hasHM ? "rgba(240,69,90,0.30)" : "rgba(15,194,138,0.28)"}`,
-            }}>
-              <div style={{ fontSize: 12, color: hasHM ? C.redL : C.greenL, fontWeight: 700, display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+            <div className={`rounded-lg border px-3.5 py-2.5 ${hasHM ? "border-[rgba(240,69,90,0.30)] bg-[rgba(240,69,90,0.10)]" : "border-[rgba(15,194,138,0.28)] bg-[rgba(15,194,138,0.10)]"}`}>
+              <div className={`mb-1 flex items-center gap-1.5 text-[12px] font-bold ${hasHM ? "text-red-l" : "text-green-l"}`}>
                 {hasHM
                   ? <><AlertOctagon size={13} />Hauptmangel vorhanden — nicht bestanden</>
                   : <><CheckCircle2 size={13} />Kein Hauptmangel — Bestehen möglich</>}
               </div>
-              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+              <div className="flex flex-wrap gap-1.5">
                 {Object.entries(MANGEL_KATEGORIEN).filter(([k]) => k !== "OM").map(([k, v]) => {
                   const cnt = termin.maengel?.filter(m => m.kategorieCode === k).length || 0;
                   if (!cnt) return null;
-                  return <span key={k} style={{ fontFamily: C.mono, fontSize: 10, color: v.color }}>{cnt}×{v.kurz}</span>;
+                  // Laufzeitwert: Zähler-Farbe pro Kategorie aus MANGEL_KATEGORIEN
+                  return <span key={k} className="font-mono text-[10px]" style={{ color: v.color }}>{cnt}×{v.kurz}</span>;
                 })}
               </div>
             </div>
           )}
 
-          {/* Set result */}
-          <div style={{ background: C.glass, border: `1px solid ${C.line}`, borderRadius: 10, padding: "12px 14px" }}>
-            <div style={{ fontSize: 10, fontWeight: 700, color: C.t4, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8 }}>Prüfergebnis setzen</div>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+          {/* Set result — Status setzen nur fuer Pruefer/Chef */}
+          {darfStatusSetzen && (
+          <div className="rounded-[10px] border border-line bg-glass px-3.5 py-3">
+            <div className="mb-2 text-[10px] font-bold uppercase tracking-[0.1em] text-t4">Prüfergebnis setzen</div>
+            <div className="flex flex-wrap gap-[5px]">
               {[STATUS.BESTANDEN, STATUS.NICHT_BESTANDEN, STATUS.IN_PRUEFUNG, STATUS.NACHPRUEFUNG, STATUS.ABGEBROCHEN, STATUS.NICHT_ERSCHIENEN].map(s => {
                 const sc = STATUS_CFG[s]; const act = termin.statusCode === s;
                 const blocked = s === STATUS.BESTANDEN && hasHM;
@@ -137,52 +143,55 @@ export function MaengelModal({ termin, fahrzeug, onAdd, onDel, onStatus, onClose
                   <button key={s} onClick={() => { if (!blocked) onStatus(termin.terminId, s); }}
                     disabled={blocked}
                     title={blocked ? "Bestanden nicht möglich — Hauptmangel vorhanden (§ 29 StVZO)" : undefined}
-                    style={{
-                      background: act ? sc.glow : "transparent",
-                      border: `1px solid ${act ? sc.border : C.line}`,
-                      borderRadius: 6, padding: "7px 12px",
-                      color: act ? sc.color : blocked ? C.t4 : C.t3,
-                      cursor: blocked ? "not-allowed" : "pointer",
-                      opacity: blocked ? 0.35 : 1,
-                      fontSize: 11, fontWeight: act ? 700 : 400, fontFamily: C.mono, transition: "all 0.15s",
-                      textDecoration: blocked ? "line-through" : "none",
-                    }}>{s}</button>
+                    className={[
+                      "rounded-md border px-3 py-[7px] font-mono text-[11px] transition-all duration-150",
+                      act ? "font-bold" : "font-normal",
+                      blocked ? "cursor-not-allowed opacity-35 line-through text-t4" : "cursor-pointer",
+                      !act && !blocked ? "border-line bg-transparent text-t3" : "",
+                      !act && blocked ? "border-line bg-transparent" : "",
+                    ].join(" ")}
+                    // Laufzeitwerte: Farben des aktiven Status aus STATUS_CFG
+                    style={act ? { background: sc.glow, borderColor: sc.border, color: sc.color } : undefined}
+                  >{s}</button>
                 );
               })}
             </div>
           </div>
+          )}
         </div>
 
-        {/* RIGHT: Catalog */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          <div style={{ display: "flex", borderBottom: `1px solid ${C.line}`, marginBottom: 2 }}>
+        {/* RIGHT: Catalog — Maengel hinzufuegen nur fuer Pruefer/Chef,
+            Empfang sieht stattdessen einen Hinweis. */}
+        {!darfMaengel ? (
+          <div className="flex items-start gap-2 self-start rounded-lg border border-[rgba(245,166,32,0.28)] bg-[rgba(245,158,11,0.08)] px-3.5 py-3 text-[12px] leading-[1.5] text-amber-l">
+            <Info size={13} className="mt-0.5 shrink-0" />
+            Mängel können nur von Prüfern erfasst oder entfernt werden.
+          </div>
+        ) : (
+        <div className="flex flex-col gap-2.5">
+          <div className="mb-0.5 flex border-b border-line">
             {[["katalog", "StVZO-Katalog"], ["custom", "Freitext"]].map(([k, l]) => (
-              <button key={k} onClick={() => setTab(k)} style={{
-                background: "none", border: "none", borderBottom: `2px solid ${tab === k ? C.blue : "transparent"}`,
-                padding: "7px 16px", color: tab === k ? C.blueL : C.t3, cursor: "pointer",
-                fontSize: 12, fontWeight: tab === k ? 700 : 400, transition: "all 0.15s",
-              }}>{l}</button>
+              <button key={k} onClick={() => setTab(k)}
+                className={[
+                  "cursor-pointer bg-transparent px-4 py-[7px] text-[12px] transition-all duration-150 border-b-2",
+                  tab === k ? "border-b-blue font-bold text-blue-l" : "border-b-transparent font-normal text-t3",
+                ].join(" ")}>{l}</button>
             ))}
           </div>
 
           {tab === "katalog" && (
             <>
-              <div style={{ position: "relative" }}>
-                <Search size={12} style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: C.t4 }} />
-                <Inp value={search} onChange={e => setSearch(e.target.value)} placeholder="Suchen nach Code oder Beschreibung..." style={{ paddingLeft: 30, fontSize: 12 }} />
+              <div className="relative">
+                <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-t4" />
+                <Inp value={search} onChange={e => setSearch(e.target.value)} placeholder="Suchen nach Code oder Beschreibung..." className="pl-[30px] text-[12px]!" />
               </div>
-              <div style={{ overflowY: "auto", maxHeight: 420, display: "flex", flexDirection: "column", gap: 2 }}>
+              <div className="flex max-h-[420px] flex-col gap-0.5 overflow-y-auto">
                 {groups.map(g => {
                   const open = search || gruppeOpen[g.label] !== false;
                   return (
                     <div key={g.label}>
                       <button onClick={() => !search && setGruppeOpen(p => ({ ...p, [g.label]: !open }))}
-                        style={{
-                          width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
-                          background: C.glass, border: `1px solid ${C.line}`, borderRadius: 6,
-                          padding: "6px 10px", cursor: "pointer", color: C.t3, fontSize: 10, fontWeight: 700,
-                          textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 2, textAlign: "left",
-                        }}>
+                        className="mb-0.5 flex w-full cursor-pointer items-center justify-between rounded-md border border-line bg-glass px-2.5 py-1.5 text-left text-[10px] font-bold uppercase tracking-[0.08em] text-t3">
                         {g.label}
                         {!search && (open ? <ChevronUp size={10} /> : <ChevronDown size={10} />)}
                       </button>
@@ -190,19 +199,16 @@ export function MaengelModal({ termin, fahrzeug, onAdd, onDel, onStatus, onClose
                         const isAdd = addedCodes.has(v.code);
                         return (
                           <button key={v.code} onClick={() => addVorlage(v)} disabled={isAdd}
-                            style={{
-                              display: "flex", alignItems: "flex-start", gap: 8, textAlign: "left",
-                              background: isAdd ? C.glass : C.glassMed,
-                              border: `1px solid ${C.line}`, borderRadius: 6,
-                              padding: "7px 9px", cursor: isAdd ? "default" : "pointer",
-                              opacity: isAdd ? 0.4 : 1, width: "100%", marginBottom: 2, transition: "all 0.1s",
-                            }}>
+                            className={[
+                              "mb-0.5 flex w-full items-start gap-2 rounded-md border border-line px-[9px] py-[7px] text-left transition-all duration-100",
+                              isAdd ? "cursor-default bg-glass opacity-40" : "cursor-pointer bg-glass-med opacity-100",
+                            ].join(" ")}>
                             <MangelPill kat={v.kat} />
-                            <span style={{ fontSize: 10, fontFamily: C.mono, color: C.t4, minWidth: 34, marginTop: 1 }}>{v.code}</span>
-                            <span style={{ fontSize: 12, color: C.t2, flex: 1, lineHeight: 1.4 }}>{v.text}</span>
+                            <span className="mt-px min-w-[34px] font-mono text-[10px] text-t4">{v.code}</span>
+                            <span className="flex-1 text-[12px] leading-[1.4] text-t2">{v.text}</span>
                             {isAdd
-                              ? <Check size={11} color={C.greenL} style={{ flexShrink: 0, marginTop: 2 }} />
-                              : <Plus size={11} color={C.blueL} style={{ flexShrink: 0, marginTop: 2 }} />}
+                              ? <Check size={11} color={C.greenL} className="mt-0.5 shrink-0" />
+                              : <Plus size={11} color={C.blueL} className="mt-0.5 shrink-0" />}
                           </button>
                         );
                       })}
@@ -214,11 +220,11 @@ export function MaengelModal({ termin, fahrzeug, onAdd, onDel, onStatus, onClose
           )}
 
           {tab === "custom" && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              <div style={{ background: "rgba(245,158,11,0.08)", border: `1px solid rgba(245,166,32,0.28)`, borderRadius: 8, padding: "10px 14px", fontSize: 12, color: C.amberL, display: "flex", gap: 8, alignItems: "center" }}>
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center gap-2 rounded-lg border border-[rgba(245,166,32,0.28)] bg-[rgba(245,158,11,0.08)] px-3.5 py-2.5 text-[12px] text-amber-l">
                 <Info size={13} />Nur für Mängel ohne passenden Katalogeintrag
               </div>
-              <div style={{ display: "grid", gridTemplateColumns: "90px 1fr", gap: 10 }}>
+              <div className="grid grid-cols-[90px_1fr] gap-2.5">
                 <Fld label="Code (opt.)">
                   <Inp value={custom.code} onChange={e => setCustom(p => ({ ...p, code: e.target.value }))} placeholder="FR" />
                 </Fld>
@@ -233,12 +239,13 @@ export function MaengelModal({ termin, fahrzeug, onAdd, onDel, onStatus, onClose
               <Fld label="Mangelbeschreibung *">
                 <textarea value={custom.text} onChange={e => setCustom(p => ({ ...p, text: e.target.value }))}
                   placeholder="Freitext-Beschreibung des Mangels..." rows={3}
-                  style={{ background: C.bg, border: `1px solid ${C.line}`, borderRadius: 8, padding: "9px 12px", color: C.t1, fontSize: 13, outline: "none", width: "100%", fontFamily: C.sans, resize: "vertical" }} />
+                  className={`${FIELD_CLS} bg-bg border-line resize-y font-sans`} />
               </Fld>
               <BtnP onClick={addCustom} icon={Plus}>Mangel hinzufügen</BtnP>
             </div>
           )}
         </div>
+        )}
       </div>
     </Modal>
   );

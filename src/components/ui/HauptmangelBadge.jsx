@@ -1,14 +1,6 @@
-import { C } from "../../styles/theme";
-
 export function HauptmangelBadge() {
   return (
-    <span style={{
-      fontSize: 9, fontWeight: 700, letterSpacing: "0.08em",
-      background: "rgba(220,38,38,0.10)", color: C.red,
-      border: "1px solid rgba(220,38,38,0.25)",
-      borderRadius: 4, padding: "2px 7px",
-      fontFamily: C.mono, whiteSpace: "nowrap",
-    }}>
+    <span className="rounded-sm border border-[rgba(220,38,38,0.25)] bg-[rgba(220,38,38,0.10)] px-[7px] py-0.5 font-mono text-[9px] font-bold tracking-[0.08em] text-red whitespace-nowrap">
       NICHT VERKEHRSSICHER
     </span>
   );

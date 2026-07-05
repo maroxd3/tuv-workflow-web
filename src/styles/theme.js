@@ -1,3 +1,11 @@
+/* ────────────────────────────────────────────────────────────────
+   ACHTUNG: Die Quelle der Wahrheit für diese Palette ist der
+   @theme-Block in src/index.css (Tailwind-4-Design-Tokens).
+   Dieses JS-Objekt existiert nur noch für Stellen, die Farben zur
+   Laufzeit als JS-Werte brauchen (Recharts-Props, dynamisch
+   berechnete Styles, STATUS_CFG/MANGEL_KATEGORIEN-Configs).
+   Änderungen IMMER an beiden Stellen synchron vornehmen.
+   ──────────────────────────────────────────────────────────────── */
 export const C = {
   /* ── Backgrounds ── */
   bg:           "#F4F6FA",
@@ -55,56 +63,3 @@ export const C = {
   sans:  "'Inter', 'Helvetica Neue', sans-serif",
   disp:  "'Inter', sans-serif",
 };
-
-export const GLOBAL_CSS = `
-  *{box-sizing:border-box;margin:0;padding:0;}
-  ::-webkit-scrollbar{width:5px;height:5px;}
-  ::-webkit-scrollbar-track{background:transparent;}
-  ::-webkit-scrollbar-thumb{background:#C5C8E0;border-radius:3px;}
-  ::-webkit-scrollbar-thumb:hover{background:#A0A4CC;}
-  input,select,textarea,button{font-family:inherit;}
-  input[type=date]::-webkit-calendar-picker-indicator{filter:none;opacity:0.5;cursor:pointer;}
-  button:focus-visible{outline:2px solid #4F46E5;outline-offset:2px;}
-  option{background:#FFFFFF;color:#0F0F1A;}
-
-  /* ── Hover effects ── */
-  .btn-primary{transition:all 0.18s ease;}
-  .btn-primary:not(:disabled):hover{filter:brightness(1.10);transform:translateY(-1px);box-shadow:0 6px 24px rgba(79,70,229,0.35)!important;}
-  .btn-primary:not(:disabled):active{transform:translateY(0);}
-
-  .btn-ghost{transition:all 0.15s ease;}
-  .btn-ghost:hover{background:rgba(0,0,0,0.06)!important;border-color:rgba(0,0,0,0.14)!important;}
-
-  .btn-icon{transition:all 0.15s ease;}
-  .btn-icon:hover{transform:scale(1.08);background:rgba(0,0,0,0.07)!important;}
-
-  .kpi-card{transition:all 0.2s ease;}
-  .kpi-card:hover{transform:translateY(-3px);box-shadow:0 12px 36px rgba(0,0,0,0.12)!important;}
-
-  .fz-card{transition:all 0.18s ease;}
-  .fz-card:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,0,0,0.10)!important;}
-
-  .nav-btn{transition:all 0.15s ease;}
-  .nav-btn:hover{background:rgba(255,255,255,0.08)!important;}
-
-  .termin-row{transition:background 0.12s ease;}
-  .termin-row:hover{background:rgba(79,70,229,0.06)!important;}
-
-  .recharts-tooltip-wrapper{pointer-events:none;}
-
-  /* ── Mobile (< 768px) responsive overrides ── */
-  @media (max-width: 768px) {
-    .grid-resp-2 { grid-template-columns: 1fr !important; }
-    .grid-resp-4 { grid-template-columns: 1fr 1fr !important; }
-    .grid-resp-5 { grid-template-columns: 1fr 1fr !important; }
-    .stack-mobile { grid-template-columns: 1fr !important; }
-    .hide-mobile { display: none !important; }
-    .full-mobile { width: 100% !important; max-width: 100% !important; }
-    .pad-mobile { padding: 12px 14px !important; }
-    .row-wrap-mobile { flex-wrap: wrap !important; }
-    .card-mobile { padding: 14px 16px !important; }
-    /* Touch-Targets vergrößern */
-    .btn-icon { padding: 9px !important; }
-    .nav-btn { padding: 12px !important; }
-  }
-`;

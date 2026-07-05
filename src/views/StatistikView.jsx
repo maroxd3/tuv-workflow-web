@@ -17,21 +17,22 @@ import { Kpi } from "../components/ui/Kpi";
 import { MangelPill } from "../components/ui/MangelPill";
 import { FahrzeugShape, TerminShape } from "../types/propTypes";
 
+/* Wiederkehrende Muster */
+const TOOLTIP_CLS = "rounded-[10px] border border-line-med bg-surface px-3.5 py-2.5 shadow-[0_8px_24px_rgba(15,23,42,0.14)]";
+const CHART_EMPTY_CLS = "flex items-center justify-center text-[13px] text-t4";
+
 /* ── Shared chart tooltip ── */
 function ChartTooltip({ active = false, payload, label, unit = "" }) {
   if (!active || !payload?.length) return null;
   return (
-    <div style={{
-      background: C.surface, border: `1px solid ${C.lineMed}`, borderRadius: 10,
-      padding: "10px 14px", boxShadow: "0 8px 24px rgba(15,23,42,0.14)",
-      fontFamily: C.sans, minWidth: 130,
-    }}>
-      {label && <div style={{ fontSize: 11, color: C.t3, marginBottom: 8, fontFamily: C.mono }}>{label}</div>}
+    <div className={`${TOOLTIP_CLS} min-w-[130px] font-sans`}>
+      {label && <div className="mb-2 font-mono text-[11px] text-t3">{label}</div>}
       {payload.map((p, i) => (
-        <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: i < payload.length - 1 ? 4 : 0 }}>
-          <div style={{ width: 8, height: 8, borderRadius: 2, background: p.color, flexShrink: 0 }} />
-          <span style={{ fontSize: 12, color: C.t3 }}>{p.name}:</span>
-          <span style={{ fontSize: 12, fontWeight: 700, color: C.t1 }}>{p.value}{unit}</span>
+        <div key={i} className={`flex items-center gap-2 ${i < payload.length - 1 ? "mb-1" : "mb-0"}`}>
+          {/* Laufzeitwert: Serienfarbe kommt aus dem Chart-Payload */}
+          <div className="h-2 w-2 shrink-0 rounded-xs" style={{ background: p.color }} />
+          <span className="text-[12px] text-t3">{p.name}:</span>
+          <span className="text-[12px] font-bold text-t1">{p.value}{unit}</span>
         </div>
       ))}
     </div>
@@ -39,12 +40,9 @@ function ChartTooltip({ active = false, payload, label, unit = "" }) {
 }
 
 /* ── Card wrapper ── */
-function Card({ children, style = {} }) {
+function Card({ children }) {
   return (
-    <div className="card-mobile" style={{
-      background: C.surface, border: `1px solid ${C.line}`, borderRadius: 16,
-      padding: "20px 24px", boxShadow: "0 2px 8px rgba(15,23,42,0.06)", ...style,
-    }}>
+    <div className="rounded-2xl border border-line bg-surface px-6 py-5 shadow-[0_2px_8px_rgba(15,23,42,0.06)] max-[768px]:px-4 max-[768px]:py-3.5">
       {children}
     </div>
   );
@@ -52,15 +50,15 @@ function Card({ children, style = {} }) {
 
 function CardHead({ title, icon: Icon, sub }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
+    <div className="mb-5 flex items-center gap-2.5">
       {Icon && (
-        <div style={{ width: 28, height: 28, borderRadius: 8, background: `${C.blue}14`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#4F46E514]">
           <Icon size={14} color={C.blue} />
         </div>
       )}
       <div>
-        <div style={{ fontSize: 13, fontWeight: 700, color: C.t1 }}>{title}</div>
-        {sub && <div style={{ fontSize: 11, color: C.t4, marginTop: 1 }}>{sub}</div>}
+        <div className="text-[13px] font-bold text-t1">{title}</div>
+        {sub && <div className="mt-px text-[11px] text-t4">{sub}</div>}
       </div>
     </div>
   );
@@ -147,26 +145,24 @@ export function StatistikView({ termine, fahrzeuge }) {
   );
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+    <div className="flex flex-col gap-5">
 
       {/* Range selector */}
-      <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+      <div className="flex flex-wrap gap-1.5">
         {[7, 30, 90, 365].map(d => (
-          <button key={d} onClick={() => setRange(d)} className="btn-ghost" style={{
-            background: range === d ? C.blue : C.surface,
-            border: `1px solid ${range === d ? C.blue : C.line}`,
-            borderRadius: 8, padding: "7px 16px",
-            color: range === d ? "#fff" : C.t3,
-            cursor: "pointer", fontSize: 12, fontWeight: range === d ? 700 : 500,
-            boxShadow: "0 1px 3px rgba(15,23,42,0.05)",
-          }}>
+          <button key={d} onClick={() => setRange(d)}
+            className={[
+              "cursor-pointer rounded-lg border px-4 py-[7px] text-[12px] shadow-[0_1px_3px_rgba(15,23,42,0.05)]",
+              "transition-all duration-150 hover:bg-[rgba(0,0,0,0.06)] hover:border-[rgba(0,0,0,0.14)]",
+              range === d ? "border-blue bg-blue font-bold text-white" : "border-line bg-surface font-medium text-t3",
+            ].join(" ")}>
             {d === 365 ? "1 Jahr" : `${d} Tage`}
           </button>
         ))}
       </div>
 
       {/* KPIs */}
-      <div className="grid-resp-4" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12 }}>
+      <div className="grid grid-cols-4 gap-3 max-[768px]:grid-cols-2">
         <Kpi label="Prüfungen gesamt" value={s.total} sub={`in ${range} Tagen`} accent={C.blue} icon={Activity} />
         <Kpi label="Bestandsquote" value={`${s.passR}%`} sub={`${s.best} bestanden`} accent={C.green} icon={TrendingUp} />
         <Kpi label="Nicht bestanden" value={s.fail} sub={`${s.allM} Mängel erfasst`} accent={C.red} icon={XCircle} />
@@ -177,7 +173,7 @@ export function StatistikView({ termine, fahrzeuge }) {
       <Card>
         <CardHead title="Tagesverlauf — Bestandsquote & Prüfvolumen" icon={Activity} sub={`Letzte ${range} Tage`} />
         {trendData.length === 0 ? (
-          <div style={{ height: 200, display: "flex", alignItems: "center", justifyContent: "center", color: C.t4, fontSize: 13 }}>
+          <div className={`${CHART_EMPTY_CLS} h-[200px]`}>
             Keine Daten im gewählten Zeitraum.
           </div>
         ) : (
@@ -205,13 +201,13 @@ export function StatistikView({ termine, fahrzeuge }) {
       </Card>
 
       {/* Prüfer + Mängel row */}
-      <div className="grid-resp-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+      <div className="grid grid-cols-2 gap-4 max-[768px]:grid-cols-1">
 
         {/* Prüfer performance */}
         <Card>
           <CardHead title="Leistung nach Prüfer" icon={Award} />
           {prüferData.length === 0 ? (
-            <div style={{ height: 200, display: "flex", alignItems: "center", justifyContent: "center", color: C.t4, fontSize: 13 }}>Keine Daten.</div>
+            <div className={`${CHART_EMPTY_CLS} h-[200px]`}>Keine Daten.</div>
           ) : (
             <ResponsiveContainer width="100%" height={Math.max(prüferData.length * 52, 160)}>
               <BarChart data={prüferData} layout="vertical" margin={{ top: 0, right: 40, left: 0, bottom: 0 }}>
@@ -230,9 +226,9 @@ export function StatistikView({ termine, fahrzeuge }) {
         <Card>
           <CardHead title="Mängel nach Kategorie" icon={AlertTriangle} />
           {mangelPieData.length === 0 ? (
-            <div style={{ height: 200, display: "flex", alignItems: "center", justifyContent: "center", color: C.t4, fontSize: 13 }}>Keine Mängel erfasst.</div>
+            <div className={`${CHART_EMPTY_CLS} h-[200px]`}>Keine Mängel erfasst.</div>
           ) : (
-            <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+            <div className="flex items-center gap-4">
               <ResponsiveContainer width="55%" height={200}>
                 <PieChart>
                   <Pie data={mangelPieData} cx="50%" cy="50%" innerRadius={52} outerRadius={85}
@@ -243,20 +239,22 @@ export function StatistikView({ termine, fahrzeuge }) {
                     if (!active || !payload?.length) return null;
                     const d = payload[0].payload;
                     return (
-                      <div style={{ background: C.surface, border: `1px solid ${C.lineMed}`, borderRadius: 10, padding: "10px 14px", boxShadow: "0 8px 24px rgba(15,23,42,0.14)" }}>
-                        <div style={{ fontSize: 12, fontWeight: 700, color: C.t1 }}>{d.label}</div>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: d.color, marginTop: 4 }}>{d.value}×</div>
+                      <div className={TOOLTIP_CLS}>
+                        <div className="text-[12px] font-bold text-t1">{d.label}</div>
+                        {/* Laufzeitwert: Kategoriefarbe aus dem Chart-Payload */}
+                        <div className="mt-1 text-[13px] font-bold" style={{ color: d.color }}>{d.value}×</div>
                       </div>
                     );
                   }} />
                 </PieChart>
               </ResponsiveContainer>
-              <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 8 }}>
+              <div className="flex flex-1 flex-col gap-2">
                 {mangelPieData.map(d => (
-                  <div key={d.name} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <div style={{ width: 10, height: 10, borderRadius: 3, background: d.color, flexShrink: 0 }} />
-                    <span style={{ fontSize: 11, color: C.t3, flex: 1 }}>{d.label}</span>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: C.t1, fontFamily: C.mono }}>{d.value}</span>
+                  <div key={d.name} className="flex items-center gap-2">
+                    {/* Laufzeitwert: Kategoriefarbe aus MANGEL_KATEGORIEN */}
+                    <div className="h-2.5 w-2.5 shrink-0 rounded-[3px]" style={{ background: d.color }} />
+                    <span className="flex-1 text-[11px] text-t3">{d.label}</span>
+                    <span className="font-mono text-[12px] font-bold text-t1">{d.value}</span>
                   </div>
                 ))}
               </div>
@@ -269,7 +267,7 @@ export function StatistikView({ termine, fahrzeuge }) {
       <Card>
         <CardHead title="Prüfungen nach Art" icon={BarChart2} />
         {artData.length === 0 ? (
-          <div style={{ height: 160, display: "flex", alignItems: "center", justifyContent: "center", color: C.t4, fontSize: 13 }}>Keine Daten.</div>
+          <div className={`${CHART_EMPTY_CLS} h-40`}>Keine Daten.</div>
         ) : (
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={artData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
@@ -280,9 +278,9 @@ export function StatistikView({ termine, fahrzeuge }) {
                 if (!active || !payload?.length) return null;
                 const art = PRUEFUNG_ARTEN.find(a => a.code === label);
                 return (
-                  <div style={{ background: C.surface, border: `1px solid ${C.lineMed}`, borderRadius: 10, padding: "10px 14px", boxShadow: "0 8px 24px rgba(15,23,42,0.14)" }}>
-                    <div style={{ fontSize: 11, color: C.t3, marginBottom: 4 }}>{art?.label || label}</div>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: C.blue }}>{payload[0].value} Prüfungen</div>
+                  <div className={TOOLTIP_CLS}>
+                    <div className="mb-1 text-[11px] text-t3">{art?.label || label}</div>
+                    <div className="text-[14px] font-bold text-blue">{payload[0].value} Prüfungen</div>
                   </div>
                 );
               }} />
@@ -299,19 +297,19 @@ export function StatistikView({ termine, fahrzeuge }) {
       {/* Pass rate meter */}
       <Card>
         <CardHead title="Gesamte Bestandsquote" icon={Target} />
-        <div style={{ display: "flex", alignItems: "center", gap: 24, flexWrap: "wrap" }}>
-          <div style={{ flex: 1 }}>
-            <div style={{ height: 20, background: C.surfaceUp, borderRadius: 10, overflow: "hidden", border: `1px solid ${C.line}`, marginBottom: 8 }}>
+        <div className="flex flex-wrap items-center gap-6">
+          <div className="flex-1">
+            <div className="mb-2 h-5 overflow-hidden rounded-[10px] border border-line bg-surface-up">
               <motion.div initial={{ width: 0 }} animate={{ width: `${s.passR}%` }} transition={{ duration: 1.2, ease: "easeOut" }}
-                style={{ height: "100%", borderRadius: 10, background: `linear-gradient(90deg,${C.green},${C.greenL})` }} />
+                className="h-full rounded-[10px] bg-[linear-gradient(90deg,var(--color-green),var(--color-green-l))]" />
             </div>
-            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: C.t4 }}>
+            <div className="flex justify-between text-[10px] text-t4">
               <span>0%</span><span>50%</span><span>100%</span>
             </div>
           </div>
-          <div style={{ textAlign: "right", minWidth: 90 }}>
-            <div style={{ fontSize: 40, fontWeight: 700, fontFamily: C.mono, lineHeight: 1, color: C.green }}>{s.passR}%</div>
-            <div style={{ fontSize: 11, color: C.t4, marginTop: 4 }}>Bestandsquote</div>
+          <div className="min-w-[90px] text-right">
+            <div className="font-mono text-[40px] font-bold leading-none text-green">{s.passR}%</div>
+            <div className="mt-1 text-[11px] text-t4">Bestandsquote</div>
           </div>
         </div>
       </Card>
@@ -320,20 +318,16 @@ export function StatistikView({ termine, fahrzeuge }) {
       <Card>
         <CardHead title="Top 10 häufigste Mängel" icon={Zap} />
         {s.top10.length === 0
-          ? <div style={{ fontSize: 13, color: C.t4, padding: "16px 0" }}>Keine Mängel erfasst.</div>
+          ? <div className="py-4 text-[13px] text-t4">Keine Mängel erfasst.</div>
           : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            <div className="flex flex-col gap-1">
               {s.top10.map((m, i) => (
-                <div key={m.code} style={{
-                  display: "flex", alignItems: "center", gap: 10,
-                  background: C.surfaceUp, borderRadius: 9, padding: "9px 14px",
-                  border: `1px solid ${C.line}`, flexWrap: "wrap",
-                }}>
-                  <span style={{ fontSize: 11, fontFamily: C.mono, color: C.t4, minWidth: 22, textAlign: "center", fontWeight: 700 }}>#{i + 1}</span>
+                <div key={m.code} className="flex flex-wrap items-center gap-2.5 rounded-[9px] border border-line bg-surface-up px-3.5 py-[9px]">
+                  <span className="min-w-[22px] text-center font-mono text-[11px] font-bold text-t4">#{i + 1}</span>
                   <MangelPill kat={m.kat} />
-                  <span style={{ fontSize: 10, fontFamily: C.mono, color: C.t4 }}>{m.code}</span>
-                  <span style={{ fontSize: 12, color: C.t2, flex: "1 1 200px", minWidth: 0 }}>{m.text}</span>
-                  <span style={{ fontSize: 13, fontFamily: C.mono, color: C.t1, fontWeight: 700, marginLeft: "auto" }}>{m.cnt}×</span>
+                  <span className="font-mono text-[10px] text-t4">{m.code}</span>
+                  <span className="min-w-0 flex-[1_1_200px] text-[12px] text-t2">{m.text}</span>
+                  <span className="ml-auto font-mono text-[13px] font-bold text-t1">{m.cnt}×</span>
                 </div>
               ))}
             </div>
@@ -352,7 +346,6 @@ ChartTooltip.propTypes = {
 
 Card.propTypes = {
   children: PropTypes.node,
-  style: PropTypes.object,
 };
 
 CardHead.propTypes = {

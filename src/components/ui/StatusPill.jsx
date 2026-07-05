@@ -1,22 +1,25 @@
 import PropTypes from "prop-types";
-import { C } from "../../styles/theme";
 import { STATUS, STATUS_CFG } from "../../constants/status";
 
 export function StatusPill({ status, size = "sm" }) {
   const cfg = STATUS_CFG[status] || STATUS_CFG[STATUS.GEPLANT];
   const lg = size === "lg";
   return (
-    <span style={{
-      display: "inline-flex", alignItems: "center", gap: 5,
-      background: cfg.glow, color: cfg.color, border: `1px solid ${cfg.border}`,
-      borderRadius: 999, padding: lg ? "5px 14px" : "3px 9px",
-      fontSize: lg ? 12 : 10, fontWeight: 700, letterSpacing: "0.04em",
-      whiteSpace: "nowrap", fontFamily: C.mono,
-    }}>
-      <span style={{
-        width: 5, height: 5, borderRadius: "50%", background: cfg.dot, flexShrink: 0,
-        boxShadow: status === STATUS.IN_PRUEFUNG ? `0 0 6px ${cfg.dot}` : undefined,
-      }} />
+    <span
+      className={[
+        "inline-flex items-center gap-[5px] rounded-full border font-mono font-bold tracking-[0.04em] whitespace-nowrap",
+        lg ? "px-3.5 py-[5px] text-[12px]" : "px-[9px] py-[3px] text-[10px]",
+      ].join(" ")}
+      // Laufzeitwerte: Farben kommen pro Status aus STATUS_CFG
+      style={{ background: cfg.glow, color: cfg.color, borderColor: cfg.border }}
+    >
+      <span
+        className="h-[5px] w-[5px] shrink-0 rounded-full"
+        // Laufzeitwerte: Dot-Farbe + Glow pro Status aus STATUS_CFG
+        style={{
+          background: cfg.dot,
+          boxShadow: status === STATUS.IN_PRUEFUNG ? `0 0 6px ${cfg.dot}` : undefined,
+        }} />
       {status}
     </span>
   );

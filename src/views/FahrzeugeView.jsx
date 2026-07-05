@@ -19,7 +19,14 @@ import { Inp, Sel } from "../components/ui/inputs";
 import { BtnG, BtnP } from "../components/ui/buttons";
 import { ConfirmModal } from "../components/modal/ConfirmModal";
 import { FahrzeugModal } from "../features/fahrzeug/FahrzeugModal";
+import { useRechte } from "../auth/AuthContext";
 import { FahrzeugShape, HalterShape, TerminShape } from "../types/propTypes";
+
+/* Wiederkehrende Muster */
+const META_ITEM_CLS = "flex items-center gap-[3px] text-[11px] text-t4";
+const HISTORY_TILE_CLS = "rounded-lg border border-line bg-surface-up";
+const SIDEBAR_ICON_BTN_CLS = "flex cursor-pointer rounded-[7px] border border-line bg-glass p-[7px] text-t3 transition-all duration-150 hover:scale-[1.08] hover:bg-[rgba(0,0,0,0.07)] max-[768px]:p-[9px]";
+const TYPE_PILL_CLS = "rounded-full border border-line bg-glass px-2.5 py-[3px] font-mono text-[10px]";
 
 export function FahrzeugeView({ fahrzeuge, halter, termine, addFahrzeugMitHalter, updFahrzeug, updHalter, delFahrzeug, toast }) {
   const [q, setQ] = useState("");
@@ -29,6 +36,7 @@ export function FahrzeugeView({ fahrzeuge, halter, termine, addFahrzeugMitHalter
   const [sel, setSel] = useState(null);
   const [confirmDel, setConfirmDel] = useState(null);
   const [sortBy, setSortBy] = useState("kennzeichen");
+  const { darfLoeschen } = useRechte(); // Fahrzeug loeschen: nur Rolle chef
 
   const typen = ["Alle", ...new Set(fahrzeuge.map(f => f.typ))];
   const halterMap = useMemo(() => Object.fromEntries(halter.map(h => [h.halterId, h])), [halter]);
@@ -96,17 +104,17 @@ export function FahrzeugeView({ fahrzeuge, halter, termine, addFahrzeugMitHalter
   return (
     <div>
       {/* Toolbar */}
-      <div style={{ display: "flex", gap: 10, marginBottom: 20, alignItems: "center", flexWrap: "wrap" }}>
-        <div style={{ position: "relative", flex: "1 1 240px", minWidth: 200, maxWidth: 400 }}>
-          <Search size={13} style={{ position: "absolute", left: 11, top: "50%", transform: "translateY(-50%)", color: C.t4 }} />
-          <Inp value={q} onChange={e => setQ(e.target.value)} placeholder="Suche..." style={{ paddingLeft: 34 }} />
+      <div className="mb-5 flex flex-wrap items-center gap-2.5">
+        <div className="relative min-w-[200px] max-w-[400px] flex-[1_1_240px]">
+          <Search size={13} className="absolute left-[11px] top-1/2 -translate-y-1/2 text-t4" />
+          <Inp value={q} onChange={e => setQ(e.target.value)} placeholder="Suche..." className="pl-[34px]" />
         </div>
-        <div style={{ flex: "1 1 140px", minWidth: 140, maxWidth: 220 }}>
+        <div className="min-w-[140px] max-w-[220px] flex-[1_1_140px]">
           <Sel value={typFilter} onChange={e => setTypFilter(e.target.value)}>
             {typen.map(t => <option key={t}>{t}</option>)}
           </Sel>
         </div>
-        <div style={{ flex: "1 1 140px", minWidth: 140, maxWidth: 200 }}>
+        <div className="min-w-[140px] max-w-[200px] flex-[1_1_140px]">
           <Sel value={sortBy} onChange={e => setSortBy(e.target.value)}>
             <option value="kennzeichen">Sortierung: KFZ</option>
             <option value="halterName">Sortierung: Halter</option>
@@ -117,7 +125,7 @@ export function FahrzeugeView({ fahrzeuge, halter, termine, addFahrzeugMitHalter
       </div>
 
       {/* Summary row */}
-      <div className="grid-resp-4" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10, marginBottom: 20 }}>
+      <div className="mb-5 grid grid-cols-4 gap-2.5 max-[768px]:grid-cols-2">
         <Kpi label="Fahrzeuge gesamt" value={fahrzeuge.length} accent={C.blue} icon={Car} />
         <Kpi label="PKW" value={fahrzeuge.filter(f => f.typ === "PKW").length} accent={C.cyan} icon={Car} />
         <Kpi label="Nutzfahrzeuge" value={fahrzeuge.filter(f => ["LKW", "Transporter", "Sattel", "Bus"].includes(f.typ)).length} accent={C.amber} icon={Car} />
@@ -125,34 +133,40 @@ export function FahrzeugeView({ fahrzeuge, halter, termine, addFahrzeugMitHalter
       </div>
 
       {/* Grid */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(min(280px,100%),1fr))", gap: 10 }}>
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(min(280px,100%),1fr))] gap-2.5">
         {filtered.map(fz => {
           const lastT = getLastTr(fz.fahrzeugId); const cnt = getTrCnt(fz.fahrzeugId); const hu = getHuStatus(fz);
           const fzTyp = FAHRZEUG_TYPEN.find(t => t.id === fz.typ);
           return (
             <motion.div key={fz.fahrzeugId} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
-              onClick={() => setSel(fz)} className="fz-card"
-              style={{ background: sel?.fahrzeugId === fz.fahrzeugId ? C.surfaceHigh : C.surface, border: `1px solid ${sel?.fahrzeugId === fz.fahrzeugId ? C.blue : C.line}`, borderRadius: 12, padding: "16px 18px", cursor: "pointer", boxShadow: "0 2px 8px rgba(15,23,42,0.06)" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
+              onClick={() => setSel(fz)}
+              className={[
+                "cursor-pointer rounded-xl border px-[18px] py-4 shadow-[0_2px_8px_rgba(15,23,42,0.06)]",
+                "transition-all duration-[0.18s] hover:-translate-y-0.5 hover:shadow-[0_8px_28px_rgba(0,0,0,0.10)]",
+                sel?.fahrzeugId === fz.fahrzeugId ? "border-blue bg-surface-high" : "border-line bg-surface",
+              ].join(" ")}>
+              <div className="mb-2.5 flex items-start justify-between">
                 <div>
-                  <div style={{ fontSize: 17, fontWeight: 700, color: C.t1, fontFamily: C.mono, letterSpacing: "0.06em" }}>{fz.kennzeichen}</div>
-                  <div style={{ fontSize: 12, color: C.t3, marginTop: 2 }}>{fz.hersteller} {fz.modell} {fz.baujahr ? `(${fz.baujahr})` : ""}</div>
+                  <div className="font-mono text-[17px] font-bold tracking-[0.06em] text-t1">{fz.kennzeichen}</div>
+                  <div className="mt-0.5 text-[12px] text-t3">{fz.hersteller} {fz.modell} {fz.baujahr ? `(${fz.baujahr})` : ""}</div>
                 </div>
-                <div style={{ textAlign: "right" }}>
-                  <div style={{ fontSize: 11, color: C.t4, marginBottom: 4 }}>{fzTyp?.icon} {fz.typ}</div>
+                <div className="text-right">
+                  <div className="mb-1 text-[11px] text-t4">{fzTyp?.icon} {fz.typ}</div>
                   {lastT && <StatusPill status={lastT.statusCode} />}
                 </div>
               </div>
-              <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: hu ? 8 : 0 }}>
-                <span style={{ fontSize: 11, color: C.t4, display: "flex", alignItems: "center", gap: 3 }}><User size={10} />{halterName(fz)}</span>
-                {fz.kilometerstand && <span style={{ fontSize: 11, color: C.t4, display: "flex", alignItems: "center", gap: 3 }}><Gauge size={10} />{fz.kilometerstand.toLocaleString("de-DE")} km</span>}
-                <span style={{ fontSize: 11, color: C.t4, display: "flex", alignItems: "center", gap: 3 }}><ClipboardList size={10} />{cnt} Prüfung{cnt !== 1 ? "en" : ""}</span>
+              <div className={`flex flex-wrap gap-3 ${hu ? "mb-2" : "mb-0"}`}>
+                <span className={META_ITEM_CLS}><User size={10} />{halterName(fz)}</span>
+                {fz.kilometerstand && <span className={META_ITEM_CLS}><Gauge size={10} />{fz.kilometerstand.toLocaleString("de-DE")} km</span>}
+                <span className={META_ITEM_CLS}><ClipboardList size={10} />{cnt} Prüfung{cnt !== 1 ? "en" : ""}</span>
               </div>
               {hu && (
-                <div style={{ display: "flex", alignItems: "center", gap: 6, paddingTop: 8, borderTop: `1px solid ${C.line}` }}>
+                <div className="flex items-center gap-1.5 border-t border-line pt-2">
                   <CalIcon size={10} color={hu.color} />
-                  <span style={{ fontSize: 11, color: hu.color, fontFamily: C.mono }}>HU {fmtDate(fz.huFaellig)}</span>
-                  <span style={{ fontSize: 10, color: hu.color, background: `${hu.color}18`, border: `1px solid ${hu.color}30`, borderRadius: 999, padding: "1px 7px" }}>{hu.label}</span>
+                  {/* Laufzeitwerte: HU-Ampelfarbe wird aus der Restlaufzeit berechnet */}
+                  <span className="font-mono text-[11px]" style={{ color: hu.color }}>HU {fmtDate(fz.huFaellig)}</span>
+                  <span className="rounded-full border px-[7px] py-px text-[10px]"
+                    style={{ color: hu.color, background: `${hu.color}18`, borderColor: `${hu.color}30` }}>{hu.label}</span>
                 </div>
               )}
             </motion.div>
@@ -164,42 +178,39 @@ export function FahrzeugeView({ fahrzeuge, halter, termine, addFahrzeugMitHalter
       {/* Sidebar detail */}
       <AnimatePresence>
         {sel && (
-          <div style={{ position: "fixed", inset: 0, zIndex: 100 }} onClick={() => setSel(null)}>
+          <div className="fixed inset-0 z-[100]" onClick={() => setSel(null)}>
             <motion.div initial={{ x: 480, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: 480, opacity: 0 }}
               transition={{ type: "spring", damping: 30, stiffness: 320 }}
               onClick={e => e.stopPropagation()}
-              className="full-mobile"
-              style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: 460, background: C.bg, borderLeft: `1px solid ${C.line}`, display: "flex", flexDirection: "column", overflowY: "auto" }}>
+              className="absolute right-0 top-0 bottom-0 flex w-[460px] flex-col overflow-y-auto border-l border-line bg-bg max-[768px]:w-full max-[768px]:max-w-full">
               {/* Sidebar header */}
-              <div style={{ padding: "20px 24px", borderBottom: `1px solid ${C.line}`, background: C.surface, position: "sticky", top: 0, zIndex: 1 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
+              <div className="sticky top-0 z-[1] border-b border-line bg-surface px-6 py-5">
+                <div className="mb-2.5 flex items-start justify-between">
                   <div>
-                    <div style={{ fontSize: 23, fontWeight: 700, color: C.t1, fontFamily: C.mono, letterSpacing: "0.05em" }}>{sel.kennzeichen}</div>
-                    <div style={{ fontSize: 13, color: C.t3 }}>{sel.hersteller} {sel.modell}</div>
+                    <div className="font-mono text-[23px] font-bold tracking-[0.05em] text-t1">{sel.kennzeichen}</div>
+                    <div className="text-[13px] text-t3">{sel.hersteller} {sel.modell}</div>
                   </div>
-                  <div style={{ display: "flex", gap: 6 }}>
+                  <div className="flex gap-1.5">
                     <button onClick={e => { e.stopPropagation(); setEditFz(sel); setShowModal(true); }}
-                      className="btn-icon" aria-label="Bearbeiten"
-                      style={{ background: C.glass, border: `1px solid ${C.line}`, borderRadius: 7, padding: 7, cursor: "pointer", color: C.t3, display: "flex" }}>
+                      aria-label="Bearbeiten" className={SIDEBAR_ICON_BTN_CLS}>
                       <Pencil size={14} />
                     </button>
                     <button onClick={() => setSel(null)}
-                      className="btn-icon" aria-label="Schließen"
-                      style={{ background: C.glass, border: `1px solid ${C.line}`, borderRadius: 7, padding: 7, cursor: "pointer", color: C.t3, display: "flex" }}>
+                      aria-label="Schließen" className={SIDEBAR_ICON_BTN_CLS}>
                       <X size={14} />
                     </button>
                   </div>
                 </div>
-                <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                <div className="flex flex-wrap gap-1.5">
                   {sidebarTr[0] && <StatusPill status={sidebarTr[0].statusCode} />}
-                  <span style={{ fontSize: 10, background: C.glass, border: `1px solid ${C.line}`, borderRadius: 999, padding: "3px 10px", color: C.t3, fontFamily: C.mono }}>{FAHRZEUG_TYPEN.find(t => t.id === sel.typ)?.icon} {sel.typ}</span>
-                  {sel.fin && <span style={{ fontSize: 10, background: C.glass, border: `1px solid ${C.line}`, borderRadius: 999, padding: "3px 10px", color: C.t4, fontFamily: C.mono }}>{sel.fin}</span>}
+                  <span className={`${TYPE_PILL_CLS} text-t3`}>{FAHRZEUG_TYPEN.find(t => t.id === sel.typ)?.icon} {sel.typ}</span>
+                  {sel.fin && <span className={`${TYPE_PILL_CLS} text-t4`}>{sel.fin}</span>}
                 </div>
               </div>
 
-              <div style={{ padding: "20px 24px", flex: 1 }}>
+              <div className="flex-1 px-6 py-5">
                 {/* Details */}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 20 }}>
+                <div className="mb-5 grid grid-cols-2 gap-2">
                   {[
                     ["Baujahr", sel.baujahr || "—"], ["Farbe", sel.farbe || "—"],
                     ["Kilometerstand", sel.kilometerstand ? `${sel.kilometerstand.toLocaleString("de-DE")} km` : "—"],
@@ -207,36 +218,38 @@ export function FahrzeugeView({ fahrzeuge, halter, termine, addFahrzeugMitHalter
                     ["Telefon", halterMap[sel.halterId]?.telefon || "—"], ["E-Mail", halterMap[sel.halterId]?.email || "—"],
                     ["HU fällig", sel.huFaellig ? fmtDate(sel.huFaellig) : "—"],
                   ].map(([k, v]) => (
-                    <div key={k} style={{ background: C.surfaceUp, borderRadius: 8, padding: "9px 12px", border: `1px solid ${C.line}` }}>
-                      <div style={{ fontSize: 9, color: C.t4, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 3 }}>{k}</div>
-                      <div style={{ fontSize: 12, color: C.t1, wordBreak: "break-all" }}>{v}</div>
+                    <div key={k} className={`${HISTORY_TILE_CLS} px-3 py-[9px]`}>
+                      <div className="mb-[3px] text-[9px] uppercase tracking-[0.1em] text-t4">{k}</div>
+                      <div className="break-all text-[12px] text-t1">{v}</div>
                     </div>
                   ))}
                 </div>
 
                 {/* History */}
                 <SectionHead label="Prüfungshistorie" />
-                {sidebarTr.length === 0 && <div style={{ fontSize: 13, color: C.t4, padding: "16px 0" }}>Keine Prüfungen.</div>}
-                <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+                {sidebarTr.length === 0 && <div className="py-4 text-[13px] text-t4">Keine Prüfungen.</div>}
+                <div className="flex flex-col gap-[7px]">
                   {sidebarTr.map(t => {
                     const art = PRUEFUNG_ARTEN.find(a => a.id === t.prueftCode);
                     const pr = PRUEFER.find(p => p.id === t.prueferKuerzel);
                     return (
-                      <div key={t.terminId} style={{ background: C.surfaceUp, border: `1px solid ${C.line}`, borderRadius: 8, padding: "10px 13px" }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
-                          <span style={{ fontSize: 12, color: C.t3, fontFamily: C.mono }}>{fmtDate(t.datum)} {toTimeStr(t.uhrzeit)}</span>
+                      <div key={t.terminId} className={`${HISTORY_TILE_CLS} px-[13px] py-2.5`}>
+                        <div className="mb-1 flex items-center justify-between">
+                          <span className="font-mono text-[12px] text-t3">{fmtDate(t.datum)} {toTimeStr(t.uhrzeit)}</span>
                           <StatusPill status={t.statusCode} />
                         </div>
-                        <div style={{ fontSize: 12, color: C.t4 }}>{art?.label || t.prueftCode} · {pr?.name || t.prueferKuerzel}</div>
-                        {t.maengel?.length > 0 && <div style={{ marginTop: 6, display: "flex", gap: 3, flexWrap: "wrap" }}>{t.maengel.map(m => <MangelPill key={m.mangelId} kat={m.kategorieCode} />)}</div>}
-                        {t.notiz && <div style={{ marginTop: 6, fontSize: 11, color: C.t4, borderTop: `1px solid ${C.line}`, paddingTop: 6 }}>{t.notiz}</div>}
+                        <div className="text-[12px] text-t4">{art?.label || t.prueftCode} · {pr?.name || t.prueferKuerzel}</div>
+                        {t.maengel?.length > 0 && <div className="mt-1.5 flex flex-wrap gap-[3px]">{t.maengel.map(m => <MangelPill key={m.mangelId} kat={m.kategorieCode} />)}</div>}
+                        {t.notiz && <div className="mt-1.5 border-t border-line pt-1.5 text-[11px] text-t4">{t.notiz}</div>}
                       </div>
                     );
                   })}
                 </div>
-                <div style={{ marginTop: 20, paddingTop: 16, borderTop: `1px solid ${C.line}` }}>
-                  <BtnG onClick={() => setConfirmDel(sel.fahrzeugId)} danger icon={Trash2}>Fahrzeug löschen</BtnG>
-                </div>
+                {darfLoeschen && (
+                  <div className="mt-5 border-t border-line pt-4">
+                    <BtnG onClick={() => setConfirmDel(sel.fahrzeugId)} danger icon={Trash2}>Fahrzeug löschen</BtnG>
+                  </div>
+                )}
               </div>
             </motion.div>
           </div>

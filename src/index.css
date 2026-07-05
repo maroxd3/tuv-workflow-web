@@ -1,6 +1,84 @@
 @import "tailwindcss";
 
-html, body, #root {
-  background: #F4F6FA;
-  color: #0F0F1A;
+/* ────────────────────────────────────────────────────────────────
+   Design-Tokens (Quelle der Wahrheit).
+   src/styles/theme.js exportiert dieselbe Palette als JS-Objekt `C`
+   für Recharts/Chart-Farben und dynamisch berechnete Styles —
+   beide MÜSSEN synchron gehalten werden (siehe Kommentar dort).
+   ──────────────────────────────────────────────────────────────── */
+@theme {
+  /* ── Backgrounds ── */
+  --color-bg:            #F4F6FA;
+  --color-bg-grid:       #ECEEF4;
+  --color-surface:       #FFFFFF;
+  --color-surface-up:    #F8F9FC;
+  --color-surface-high:  #EEF0F8;
+  --color-glass:         rgba(0, 0, 0, 0.04);
+  --color-glass-med:     rgba(0, 0, 0, 0.06);
+  --color-glass-bright:  rgba(0, 0, 0, 0.10);
+
+  /* ── Borders ── */
+  --color-line:          rgba(0, 0, 0, 0.08);
+  --color-line-med:      rgba(0, 0, 0, 0.12);
+  --color-line-high:     rgba(0, 0, 0, 0.20);
+
+  /* ── Text ── */
+  --color-t1:            #0F0F1A;
+  --color-t2:            #4B4B6B;
+  --color-t3:            #8888AA;
+  --color-t4:            #AAAAC4;
+
+  /* ── Sidebar ── */
+  --color-sb:            #1A1740;
+  --color-sb-up:         #211E52;
+  --color-sb-high:       #2A2660;
+  --color-sb-line:       rgba(255, 255, 255, 0.09);
+  --color-sb-t1:         #F0EEFF;
+  --color-sb-t2:         #9490CC;
+  --color-sb-t3:         #5450A0;
+
+  /* ── Primary accent: indigo ── */
+  --color-blue:          #4F46E5;
+  --color-blue-l:        #6366F1;
+  --color-blue-glow:     rgba(79, 70, 229, 0.18);
+
+  /* ── Other accents ── */
+  --color-cyan:          #0891B2;
+  --color-cyan-l:        #06B6D4;
+  --color-green:         #059669;
+  --color-green-l:       #10B981;
+  --color-red:           #DC2626;
+  --color-red-l:         #EF4444;
+  --color-amber:         #D97706;
+  --color-amber-l:       #F59E0B;
+  --color-orange:        #EA580C;
+  --color-orange-l:      #F97316;
+  --color-purple:        #7C3AED;
+  --color-purple-l:      #A855F7;
+  --color-pink:          #DB2777;
+  --color-pink-l:        #EC4899;
+
+  /* ── Fonts ── */
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  --font-sans: 'Inter', 'Helvetica Neue', sans-serif;
+  --font-disp: 'Inter', sans-serif;
 }
+
+/* ── Basis-Styles (vorher GLOBAL_CSS in theme.js) ── */
+html, body, #root {
+  background: var(--color-bg);
+  color: var(--color-t1);
+  font-family: var(--font-sans);
+}
+
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #C5C8E0; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #A0A4CC; }
+
+input, select, textarea, button { font-family: inherit; }
+input[type=date]::-webkit-calendar-picker-indicator { filter: none; opacity: 0.5; cursor: pointer; }
+button:focus-visible { outline: 2px solid var(--color-blue); outline-offset: 2px; }
+option { background: var(--color-surface); color: var(--color-t1); }
+
+.recharts-tooltip-wrapper { pointer-events: none; }

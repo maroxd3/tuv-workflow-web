@@ -4,7 +4,6 @@ import { AnimatePresence } from "framer-motion";
 import {
   Search, ChevronDown, ChevronUp, Eye, FileText, Printer,
 } from "lucide-react";
-import { C } from "../styles/theme";
 import { STATUS } from "../constants/status";
 import { PRUEFUNG_ARTEN, PRUEFER } from "../constants/pruefung";
 import { fmtDate, toIsoDateStr, toTimeStr } from "../utils/date";
@@ -19,6 +18,9 @@ import { BtnG, BtnP } from "../components/ui/buttons";
 import { Modal } from "../components/modal/Modal";
 import { ConfirmModal } from "../components/modal/ConfirmModal";
 import { FahrzeugShape, HalterShape, TerminShape } from "../types/propTypes";
+
+/* Wiederkehrendes Muster: Filter-/Sortier-Chips in der Toolbar */
+const CHIP_CLS = "cursor-pointer rounded-lg border px-3.5 py-[7px] text-[12px] shadow-[0_1px_3px_rgba(15,23,42,0.05)] transition-all duration-150 hover:bg-[rgba(0,0,0,0.06)] hover:border-[rgba(0,0,0,0.14)]";
 
 export function BerichteView({ termine, fahrzeuge, halter }) {
   const fzMap = useMemo(() => Object.fromEntries(fahrzeuge.map(f => [f.fahrzeugId, f])), [fahrzeuge]);
@@ -67,32 +69,26 @@ export function BerichteView({ termine, fahrzeuge, halter }) {
   return (
     <div>
       {/* Toolbar */}
-      <div style={{ display: "flex", gap: 10, marginBottom: 20, flexWrap: "wrap", alignItems: "center" }}>
-        <div style={{ position: "relative", flex: "1 1 240px", minWidth: 200, maxWidth: 360 }}>
-          <Search size={13} style={{ position: "absolute", left: 11, top: "50%", transform: "translateY(-50%)", color: C.t4 }} />
-          <Inp value={q} onChange={e => setQ(e.target.value)} placeholder="Suche..." style={{ paddingLeft: 34 }} />
+      <div className="mb-5 flex flex-wrap items-center gap-2.5">
+        <div className="relative min-w-[200px] max-w-[360px] flex-[1_1_240px]">
+          <Search size={13} className="absolute left-[11px] top-1/2 -translate-y-1/2 text-t4" />
+          <Inp value={q} onChange={e => setQ(e.target.value)} placeholder="Suche..." className="pl-[34px]" />
         </div>
-        <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
+        <div className="flex flex-wrap gap-[5px]">
           {[["all", "Alle"], ["bestanden", "Bestanden"], ["failed", "Nicht bestanden"], ["nachp", "Nachprüfung"], ["maengel", "Mit Mängeln"], ["hm", "Hauptmängel"]].map(([k, l]) => (
-            <button key={k} onClick={() => setFilter(k)} className="btn-ghost" style={{
-              background: filter === k ? C.blue : C.surface,
-              border: `1px solid ${filter === k ? C.blue : C.line}`,
-              borderRadius: 8, padding: "7px 14px",
-              color: filter === k ? "#fff" : C.t3,
-              cursor: "pointer", fontSize: 12, fontWeight: filter === k ? 600 : 400,
-              boxShadow: "0 1px 3px rgba(15,23,42,0.05)",
-            }}>{l}</button>
+            <button key={k} onClick={() => setFilter(k)}
+              className={`${CHIP_CLS} ${filter === k ? "border-blue bg-blue font-semibold text-white" : "border-line bg-surface font-normal text-t3"}`}>{l}</button>
           ))}
         </div>
-        <button onClick={() => setSortDir(d => d === "desc" ? "asc" : "desc")} className="btn-ghost"
-          style={{ background: C.surface, border: `1px solid ${C.line}`, borderRadius: 8, padding: "7px 14px", color: C.t2, cursor: "pointer", fontSize: 12, display: "flex", alignItems: "center", gap: 5, fontWeight: 500, boxShadow: "0 1px 3px rgba(15,23,42,0.05)" }}>
+        <button onClick={() => setSortDir(d => d === "desc" ? "asc" : "desc")}
+          className={`${CHIP_CLS} flex items-center gap-[5px] border-line bg-surface font-medium text-t2`}>
           {sortDir === "desc" ? <ChevronDown size={13} /> : <ChevronUp size={13} />} Datum
         </button>
-        <span style={{ fontSize: 11, color: C.t4, fontFamily: C.mono, marginLeft: "auto" }}>{filtered.length} Einträge</span>
+        <span className="ml-auto font-mono text-[11px] text-t4">{filtered.length} Einträge</span>
       </div>
 
       {/* List */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+      <div className="flex flex-col gap-[5px]">
         {filtered.map(t => {
           const fz = fzMap[t.fahrzeugId];
           const h = fz ? halterMap[fz.halterId] : null;
@@ -100,29 +96,30 @@ export function BerichteView({ termine, fahrzeuge, halter }) {
           const art = PRUEFUNG_ARTEN.find(a => a.id === t.prueftCode);
           const pr = PRUEFER.find(p => p.id === t.prueferKuerzel);
           return (
-            <div key={t.terminId} className="fz-card" style={{ background: C.surface, border: `1px solid ${C.line}`, borderRadius: 12, padding: "14px 18px", display: "flex", alignItems: "center", gap: 14, boxShadow: "0 2px 6px rgba(15,23,42,0.05)", flexWrap: "wrap" }}>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 4 }}>
-                  <span style={{ fontSize: 14, fontWeight: 700, color: C.t1, fontFamily: C.mono, letterSpacing: "0.05em" }}>{fz?.kennzeichen || "—"}</span>
-                  <span style={{ fontSize: 12, color: C.t3 }}>{fz?.hersteller} {fz?.modell}</span>
+            <div key={t.terminId}
+              className="flex flex-wrap items-center gap-3.5 rounded-xl border border-line bg-surface px-[18px] py-3.5 shadow-[0_2px_6px_rgba(15,23,42,0.05)] transition-all duration-[0.18s] hover:-translate-y-0.5 hover:shadow-[0_8px_28px_rgba(0,0,0,0.10)]">
+              <div className="min-w-0 flex-1">
+                <div className="mb-1 flex flex-wrap items-center gap-2">
+                  <span className="font-mono text-[14px] font-bold tracking-[0.05em] text-t1">{fz?.kennzeichen || "—"}</span>
+                  <span className="text-[12px] text-t3">{fz?.hersteller} {fz?.modell}</span>
                   <StatusPill status={t.statusCode} />
                   {hasHm && <HauptmangelBadge />}
                 </div>
-                <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-                  <span style={{ fontSize: 11, color: C.t4, fontFamily: C.mono }}>{fmtDate(t.datum)} · {toTimeStr(t.uhrzeit)}</span>
-                  <span style={{ fontSize: 11, color: C.t4 }}>{art?.label || t.prueftCode}</span>
-                  <span style={{ fontSize: 11, color: C.t4 }}>{pr?.name || t.prueferKuerzel}</span>
-                  <span style={{ fontSize: 11, color: C.t4 }}>{h?.name}</span>
+                <div className="flex flex-wrap gap-3">
+                  <span className="font-mono text-[11px] text-t4">{fmtDate(t.datum)} · {toTimeStr(t.uhrzeit)}</span>
+                  <span className="text-[11px] text-t4">{art?.label || t.prueftCode}</span>
+                  <span className="text-[11px] text-t4">{pr?.name || t.prueferKuerzel}</span>
+                  <span className="text-[11px] text-t4">{h?.name}</span>
                 </div>
-                {t.maengel?.length > 0 && <div style={{ marginTop: 5, display: "flex", gap: 3, flexWrap: "wrap" }}>{t.maengel.map(m => <MangelPill key={m.mangelId} kat={m.kategorieCode} />)}</div>}
+                {t.maengel?.length > 0 && <div className="mt-[5px] flex flex-wrap gap-[3px]">{t.maengel.map(m => <MangelPill key={m.mangelId} kat={m.kategorieCode} />)}</div>}
               </div>
-              <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+              <div className="flex shrink-0 gap-1.5">
                 <button onClick={() => setPreview(t)}
-                  style={{ display: "flex", alignItems: "center", gap: 5, background: C.glass, border: `1px solid ${C.line}`, borderRadius: 7, padding: "6px 11px", color: C.t3, cursor: "pointer", fontSize: 11 }}>
+                  className="flex cursor-pointer items-center gap-[5px] rounded-[7px] border border-line bg-glass px-[11px] py-1.5 text-[11px] text-t3">
                   <Eye size={11} />Vorschau
                 </button>
                 <button onClick={() => exportPdf(t)}
-                  style={{ display: "flex", alignItems: "center", gap: 5, background: "rgba(75,140,247,0.08)", border: `1px solid rgba(75,140,247,0.22)`, borderRadius: 7, padding: "6px 11px", color: C.blueL, cursor: "pointer", fontSize: 11, fontWeight: 600 }}>
+                  className="flex cursor-pointer items-center gap-[5px] rounded-[7px] border border-[rgba(75,140,247,0.22)] bg-[rgba(75,140,247,0.08)] px-[11px] py-1.5 text-[11px] font-semibold text-blue-l">
                   <FileText size={11} />PDF
                 </button>
               </div>
@@ -136,10 +133,10 @@ export function BerichteView({ termine, fahrzeuge, halter }) {
       <AnimatePresence>
         {preview && (
           <Modal title={`Bericht: ${fzMap[preview.fahrzeugId]?.kennzeichen || ""}`} onClose={() => setPreview(null)} width={720}>
-            <pre style={{ background: C.bg, border: `1px solid ${C.line}`, borderRadius: 8, padding: 16, fontSize: 11, color: C.t2, fontFamily: C.mono, overflowX: "auto", whiteSpace: "pre-wrap", maxHeight: 500, overflowY: "auto", lineHeight: 1.6 }}>
+            <pre className="max-h-[500px] overflow-y-auto overflow-x-auto whitespace-pre-wrap rounded-lg border border-line bg-bg p-4 font-mono text-[11px] leading-[1.6] text-t2">
               {buildBerichtText(preview, fzMap[preview.fahrzeugId], halterMap[fzMap[preview.fahrzeugId]?.halterId])}
             </pre>
-            <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 16, paddingTop: 12, borderTop: `1px solid ${C.line}` }}>
+            <div className="mt-4 flex justify-end gap-2.5 border-t border-line pt-3">
               <BtnG onClick={() => setPreview(null)}>Schließen</BtnG>
               <BtnP onClick={() => exportPdf(preview)} icon={Printer}>PDF erzeugen</BtnP>
             </div>
