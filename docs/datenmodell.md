@@ -180,6 +180,12 @@ Die Kardinalitäten stehen direkt an den Verbindungslinien (`1`, `0..1` bzw.
 | **STATUS** | Zustand eines Termins im Workflow |
 | **MANGEL_KATEGORIE** | Einstufung eines Mangels (OM, GM, EM, GfM) inklusive Wirkung auf das Prüfergebnis |
 
+Zusätzlich existiert die Entität **BENUTZER** (Login-Konto mit Kürzel, Name,
+Rolle empfang/pruefer/chef und Passwort-Hash). Sie ist bewusst **nicht** im
+ER-Diagramm der Fachdomäne eingezeichnet, weil sie keine Beziehungen zu den
+Fachentitäten hat — sie dient ausschließlich der Authentifizierung und
+Autorisierung an der API.
+
 ### 1.3 Beziehungen und Kardinalitäten
 
 | Beziehung | Kardinalität | Erläuterung |
@@ -266,7 +272,12 @@ MANGEL_KATEGORIE(kategorie_code, bezeichnung, blockiert_bestanden)
 
 MANGEL(mangel_id, termin_id↗TERMIN, code_stvzo?, beschreibung,
       kategorie_code↗MANGEL_KATEGORIE, behoben, erfasst_am)
+
+BENUTZER(benutzer_id, kuerzel, name, rolle, passwort_hash, aktiv, erstellt_am)
 ```
+
+`BENUTZER` steht ohne Fremdschlüssel neben den Fachrelationen (Login-Konten
+für die API, Rollen empfang/pruefer/chef per CHECK-Constraint).
 
 **Legende:**
 
@@ -287,6 +298,7 @@ MANGEL(mangel_id, termin_id↗TERMIN, code_stvzo?, beschreibung,
 | TERMIN | `termin_id` | `(fahrzeug_id, datum, uhrzeit)` |
 | MANGEL_KATEGORIE | `kategorie_code` | - |
 | MANGEL | `mangel_id` | - |
+| BENUTZER | `benutzer_id` | `kuerzel` |
 
 ### 2.4 Referentielle Integrität
 
@@ -316,8 +328,17 @@ MANGEL(mangel_id, termin_id↗TERMIN, code_stvzo?, beschreibung,
 ## 3. Physisches Modell - MariaDB-Implementierung
 
 Dieses Kapitel beschreibt die konkrete Realisierung in MariaDB. Die technische
-Quelle ist `server/db.js`; die Express-API ruft beim Start `ensureDatabase()`
-auf und erstellt Datenbank, Tabellen und Stammdaten idempotent.
+Quelle sind `server/migrations.js` (Tabellen-DDL) und `server/db.js` (Pool,
+Seeds, Trigger); die Express-API ruft beim Start `ensureDatabase()` auf:
+
+- **Schema per versionierten Migrationen** (ADR-011): jede Migration läuft
+  genau einmal pro Datenbank und wird in der Tabelle `schema_migration`
+  protokolliert (`version` PK, `name`, `applied_at`). Das `MIGRATIONS`-Array
+  ist append-only (aktuell: 1 initial-schema, 2 hu-richtlinie-kategorien,
+  3 benutzer-tabelle); `GET_LOCK` serialisiert konkurrierende Prozess-Starts,
+  einen Down-Pfad gibt es bewusst nicht (Rollback = Backup, docs/backup.md).
+- **Stammdaten-Seeds und der WF-01-Trigger** bleiben Desired-State und werden
+  bei jedem Boot idempotent angewendet (`INSERT IGNORE` / `CREATE OR REPLACE`).
 
 ### 3.1 DDL - Tabellen-Definitionen
 
@@ -426,6 +447,27 @@ CREATE TABLE mangel (
     FOREIGN KEY (kategorie_code) REFERENCES mangel_kategorie(kategorie_code)
     ON DELETE RESTRICT ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Login-Konten (Migration 3) — keine FKs zu den Fachtabellen
+CREATE TABLE benutzer (
+  benutzer_id    CHAR(36) PRIMARY KEY,
+  kuerzel        VARCHAR(20) NOT NULL,
+  name           VARCHAR(120) NOT NULL,
+  rolle          VARCHAR(20) NOT NULL,
+  passwort_hash  VARCHAR(255) NOT NULL,
+  aktiv          BOOLEAN NOT NULL DEFAULT TRUE,
+  erstellt_am    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY benutzer_kuerzel_unique (kuerzel),
+  CONSTRAINT benutzer_rolle_check
+    CHECK (rolle IN ('empfang', 'pruefer', 'chef'))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Migrations-Protokoll (vom Framework selbst angelegt)
+CREATE TABLE schema_migration (
+  version     INT PRIMARY KEY,
+  name        VARCHAR(120) NOT NULL,
+  applied_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 ```
 
 ### 3.2 Indizes
@@ -493,9 +535,13 @@ VALUES
 
 Die Kategorien folgen der **HU-Richtlinie nach § 29 StVZO Anlage VIII Nr. 3**.
 Frühere Versionen des Schemas verwendeten zusätzliche Codes (`LM`, `HM`) mit
-abweichender `blockiert_bestanden`-Belegung; diese sind durch
-`migrateCategories()` in `server/db.js` per `ON UPDATE CASCADE` migriert worden
-(siehe ADR-003).
+abweichender `blockiert_bestanden`-Belegung; diese werden durch **Migration 2**
+(`hu-richtlinie-kategorien` in `server/migrations.js`) per `ON UPDATE CASCADE`
+migriert (siehe ADR-003 und ADR-011).
+
+Zusätzlich legt der Boot drei Default-Benutzer (`empfang`, `MW`, `chef`) per
+`INSERT IGNORE` an — mit dem Passwort aus `DEFAULT_USER_PASSWORT` (Fallback
+`start123`); bestehende Konten werden dabei nie überschrieben.
 
 ### 3.5 Beispielabfragen
 
@@ -591,3 +637,4 @@ React/Vite -> src/db/apiClient.ts -> Express API -> server/db.js -> MariaDB
 | 2.0 | 2026-05-13 | Drei-Schichten-Modell mit ER, 3NF und physischem SQL-Modell |
 | 3.0 | 2026-05-17 | Persistenz-Dokumentation auf MariaDB/Express umgestellt |
 | 3.1 | 2026-05-17 | Entfernte Modelltabellen und Chen-ER-Diagramm wiederhergestellt |
+| 3.2 | 2026-07-05 | `benutzer`- und `schema_migration`-Tabelle ergänzt; Schema-Aufbau auf versionierte Migrationen (ADR-011) umgestellt |

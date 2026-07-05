@@ -168,7 +168,7 @@ const clusters = [
   { id: 'layout',    label: 'Layout',                x: 260,  y: 50,  w: 200, h: 320 },
   { id: 'views',     label: 'Views (Pages)',         x: 480,  y: 50,  w: 230, h: 460 },
   { id: 'modals',    label: 'Feature Modals',        x: 730,  y: 50,  w: 220, h: 590 },
-  { id: 'state',     label: 'State + Compat Layer',  x: 970,  y: 50,  w: 230, h: 470 },
+  { id: 'state',     label: 'State + Auth',          x: 970,  y: 50,  w: 230, h: 470 },
   { id: 'db',        label: 'API + MariaDB Layer', x: 1220, y: 50, w: 260, h: 700 },
   { id: 'domain',    label: 'Domain · Utils · Constants', x: 1500, y: 50, w: 240, h: 870 },
   { id: 'ui',        label: 'UI Primitives',         x: 1760, y: 50,  w: 200, h: 720 },
@@ -196,26 +196,26 @@ const nodes = [
     tag: ['overview', 'all'],
     critical: true,
   }),
-  N('App', 'entry', 'App.jsx', 'shell · view switch', 30, 225, 200, 64, 'client', {
-    role: 'Top-level shell: holds active view in state, mounts Sidebar/Topbar, lazy-loads the four views; binds the compat store.',
-    plain: 'The frame around everything. Tracks which page you are on, draws the sidebar and top bar, and swaps in the right page in the middle.',
-    path: 'src/App.jsx:32',
-    notes: ['line:5, useStoreCompat aliased AS useStore', 'line:35, useStore() drives all data', 'line:48, blocking spinner until S.ready', 'lines:10-13, all 4 views React.lazy + Suspense'],
+  N('App', 'entry', 'App.jsx', 'auth gate · shell · view switch', 30, 225, 200, 64, 'client', {
+    role: 'Auth-Gate + top-level shell: checks the login state (useAuth) before mounting AppShell, holds active view in state, mounts Sidebar/Topbar, lazy-loads the four views; uses useDb directly.',
+    plain: 'The frame around everything. First decides whether you need to log in, then tracks which page you are on, draws the sidebar and top bar, and swaps in the right page in the middle.',
+    path: 'src/App.jsx:29',
+    notes: ['Auth-Gate: useAuth() → LoginView solange kein Benutzer feststeht', 'AppShell: useDb() drives all data (DB-Shape direkt, kein Compat-Layer mehr)', 'dedizierter Fehler-Screen bei S.error, Spinner bis S.ready', 'all 4 views React.lazy + Suspense'],
     tag: ['overview', 'tagesplan', 'fahrzeuge', 'statistik', 'berichte', 'all'],
     critical: true,
   }),
-  N('theme', 'entry', 'styles/theme.js', 'colors + globals', 30, 305, 200, 56, 'client', {
-    role: 'Exports the color palette (C) and global CSS string used across the app.',
-    plain: 'A single file with every color and shared style. Every component reads from here so the look stays consistent.',
+  N('theme', 'entry', 'styles/theme.js', 'runtime colors', 30, 305, 200, 56, 'client', {
+    role: 'Exports the color palette (C) as JS object for runtime-computed styles (Recharts colors, sonner toast font).',
+    plain: 'A single file with the color palette as JavaScript values, for the places where CSS classes cannot reach (charts, dynamic styles).',
     path: 'src/styles/theme.js',
-    notes: ['used by every visual component', 'C.blue / C.red / C.amber / C.sb*', 'GLOBAL_CSS injected from App.jsx'],
+    notes: ['JS-Quelle nur noch für Laufzeit-Farben (Charts, dynamische Styles)', 'muss synchron zu den @theme-Tokens in src/index.css bleiben'],
     tag: ['overview', 'all'],
   }),
-  N('index-css', 'entry', 'index.css', 'CSS reset', 30, 377, 200, 52, 'client', {
-    role: 'Tailwind v4 reset + base imported once by main.jsx.',
-    plain: 'A few basic style rules that wipe browser defaults.',
+  N('index-css', 'entry', 'index.css', 'Tailwind 4 + tokens', 30, 377, 200, 52, 'client', {
+    role: 'Tailwind 4 entry with the @theme design tokens (colors, fonts) — the styling source of truth, imported once by main.jsx.',
+    plain: 'The central style file: imports Tailwind and defines every color as a design token.',
     path: 'src/index.css',
-    notes: ['Tailwind 4.2 baseline'],
+    notes: ['@import "tailwindcss"', '@theme-Tokens sind die Quelle der Wahrheit für Farben', 'src/styles/theme.js spiegelt dieselbe Palette als JS-Objekt'],
     tag: ['overview', 'all'],
   }),
 
@@ -224,7 +224,7 @@ const nodes = [
     role: 'Left navigation rail with nav buttons, HU warning chips, today KPIs, and a context-aware reset/load-demo button.',
     plain: 'The dark vertical menu on the left. Jumps between pages, shows today\'s counts and overdue inspections, and lets you load demo data or wipe everything.',
     path: 'src/layout/Sidebar.jsx:10',
-    notes: ['line:10, props: view, setView, fahrzeuge, termine, resetAll, loadDemo', 'lines:135-149, "Beispieldaten laden" only when DB empty', 'lines:152-167, "Alle Daten löschen" with window.confirm', 'mode toggle from old demo/normal scheme is GONE (single mode now)'],
+    notes: ['props: view, setView, fahrzeuge, termine, resetAllData, loadDemoData', '"Beispieldaten laden" / "Alle Daten löschen" mit window.confirm', 'Admin-Aktionen sind per useRechte().darfAdmin rollen-gegated'],
     tag: ['overview', 'navigation', 'all'],
   }),
   N('Topbar', 'layout', 'Topbar.jsx', 'header bar', 270, 200, 180, 56, 'route', {
@@ -246,16 +246,16 @@ const nodes = [
   N('TagesplanView', 'views', 'TagesplanView.jsx', 'daily schedule', 490, 100, 210, 80, 'route', {
     role: 'Day view: time-slot timeline + table mode, KPIs, context menu, opens TerminModal and MaengelModal.',
     plain: 'The main "today\'s appointments" page. Shows every half-hour slot, lets you book a vehicle, walk it through testing.',
-    path: 'src/views/TagesplanView.jsx:87',
-    notes: ['receives addTr/updTr/delTr/addMangel/delMangel as props', 'advance() moves status GEPLANT→IN_PRUEFUNG→BESTANDEN/NICHT_BESTANDEN', 'filters termine.filter(t => t.datum === isoDate()) - normalization done in compat layer'],
+    path: 'src/views/TagesplanView.jsx',
+    notes: ['receives addTermin/updTermin/updTerminStatus/delTermin/addMangel/delMangel as props (DB-Shape von useDb)', 'Status-Workflow Geplant → In Prüfung → Bestanden/Nicht bestanden', 'filtert termine auf das heutige Datum (t.datum === isoDate())', 'Status-/Mängel-Aktionen sind per useRechte() rollen-gegated'],
     tag: ['overview', 'tagesplan', 'termine', 'all'],
     critical: true,
   }),
   N('FahrzeugeView', 'views', 'FahrzeugeView.jsx', 'vehicle directory', 490, 195, 210, 76, 'route', {
     role: 'Vehicle grid + searchable filter + sliding detail drawer with full inspection history.',
     plain: 'The vehicles page. Tile per car/truck with plate + owner, filterable, drawer with full history per vehicle.',
-    path: 'src/views/FahrzeugeView.jsx:24',
-    notes: ['receives addFz/updFz/delFz as props', 'getHuStatus computes overdue color', 'sees `besitzer` (legacy field) — actually halter.name under the hood'],
+    path: 'src/views/FahrzeugeView.jsx',
+    notes: ['receives addFahrzeugMitHalter/updFahrzeug/updHalter/delFahrzeug as props', 'getHuStatus computes overdue color', 'arbeitet direkt mit halter-Liste + halterId (kein Legacy-besitzer-Feld mehr)'],
     tag: ['overview', 'fahrzeuge', 'all'],
   }),
   N('StatistikView', 'views', 'StatistikView.jsx', 'KPIs + recharts', 490, 290, 210, 76, 'route', {
@@ -268,8 +268,8 @@ const nodes = [
   N('BerichteView', 'views', 'BerichteView.jsx', 'report search + print', 490, 385, 210, 80, 'route', {
     role: 'Lists every inspection, lets you search/filter, shows a text preview and renders a printable HTML/PDF TÜV report.',
     plain: 'The reports page. Searchable list of every inspection plus preview and print/PDF export of a formal report.',
-    path: 'src/views/BerichteView.jsx:22',
-    notes: ['buildBericht() returns the text preview', 'buildBerichtHtml() builds the printable A4 report', 'window.print() opens the browser print/PDF workflow'],
+    path: 'src/views/BerichteView.jsx',
+    notes: ['Bericht-HTML kommt aus src/features/bericht/reportHtml.js', 'Druck wird vom Opener-Fenster getriggert — CSP erlaubt keine Inline-Scripts im generierten Dokument', 'Browser-Print-Dialog übernimmt den PDF-Export'],
     tag: ['overview', 'berichte', 'all'],
   }),
 
@@ -278,7 +278,7 @@ const nodes = [
     role: 'Form for creating or editing an inspection appointment; UI-side enforces the EM/GfM→Bestanden block AND warns on same-day-same-prueftype duplicates.',
     plain: 'Popup to book a vehicle into a slot or edit a booking. Refuses "passed" if a serious defect is on file. Asks for confirmation if the same car already has the same Prüfart booked the same day.',
     path: 'src/features/termin/TerminModal.jsx:15',
-    notes: ['bestanden_gesperrt = hatHauptmangel(initial.mängel) (alias hatBlockierendenMangel)', 'validate blocks BESTANDEN with EM/GfM (§29 StVZO)', 'window.confirm() before save if same fahrzeugId + datum + prueftCode already exists (UX soft-rule, not a DB constraint — same-day Nachprüfung edge case stays possible)', 'onSave bubbles to addTr/updTr in useStoreCompat'],
+    notes: ['Bestanden gesperrt via hatBlockierendenMangel(termin.maengel) (Alias hatHauptmangel)', 'validate blocks BESTANDEN with EM/GfM (§29 StVZO)', 'window.confirm() before save if same fahrzeugId + datum + prueftCode already exists (UX soft-rule, not a DB constraint — same-day Nachprüfung edge case stays possible)', 'onSave bubbles to addTermin/updTermin (useDb)'],
     tag: ['overview', 'tagesplan', 'termine', 'all'],
     critical: true,
   }),
@@ -319,20 +319,20 @@ const nodes = [
     tag: ['tagesplan', 'termine', 'all'],
   }),
 
-  /* ── State + Compat Layer ── */
-  N('useStoreCompat', 'state', 'useStoreCompat.ts', 'old-API adapter', 980, 95, 210, 96, 'service', {
-    role: 'Adapter from the legacy view shape (fahrzeug.id, .besitzer, termin.mängel embedded) to the API-backed MariaDB data model. Views see the OLD shape.',
-    plain: 'A translator. The pages were written with names like "besitzer". This file makes the new API data talk to them in their old language so we did not have to rewrite every page.',
-    path: 'src/hooks/useStoreCompat.ts:46',
-    notes: ['exposes the OLD useStore() shape: fahrzeuge / termine / addFz / addTr etc.', 'reads via useDb() under the hood', 'splits incoming form data: writes besitzer/telefon/email through API into halter table, links via halterId', 'normDateStr keeps local date strings stable', 'roadmap: this file is temporary — views can later use useDb directly'],
-    tag: ['overview', 'tagesplan', 'termine', 'fahrzeuge', 'maengel', 'data', 'all'],
+  /* ── State + Auth ── */
+  N('AuthContext', 'state', 'AuthContext.tsx', 'login state + Rechte', 980, 95, 210, 96, 'service', {
+    role: 'React context for the login state: GET /api/auth/me on mount, login()/logout(), token in localStorage via apiClient; useRechte() derives UI permissions from the role (mirrors server/auth.js — enforcement stays server-side).',
+    plain: 'Keeps track of who is logged in. Asks the server "who am I?" on start, hands the token to every API call, and tells the UI which buttons the current role may see.',
+    path: 'src/auth/AuthContext.tsx',
+    notes: ['Zustaende: laden → anmeldung (LoginView) → eingeloggt', 'Token via api.setAuthToken(); 401 auf Fachroute → automatischer Logout', 'useRechte(): darfStatusSetzen/darfMaengel/darfLoeschen/darfAdmin (fail-closed)', 'reine UI-Ausblendung — durchgesetzt wird serverseitig (requireAuth, 401/403)'],
+    tag: ['overview', 'data', 'all'],
     critical: true,
   }),
   N('useDb', 'state', 'useDb.ts', 'API-backed React hook', 980, 205, 210, 96, 'service', {
-    role: 'React hook over apiClient.ts: loads halter/fahrzeuge/termine/mängel, exposes CRUD, applies optimistic updates, refresh()es from the Express API. Polls every 5 sec for multi-user live-sync (US-16).',
+    role: 'React hook over apiClient.ts: loads halter/fahrzeuge/termine (inkl. maengel), exposes CRUD in DB shape (terminId, statusCode, ...), applies optimistic updates, refresh()es from the Express API. Polls every 5 sec for multi-user live-sync (US-16). Views use it directly — the former compat layer is gone.',
     plain: 'The state manager for the app. It asks the API for data, updates the UI, and re-loads data after writes. Also pulls fresh data every 5 seconds (paused when the tab is in the background) so multiple workstations stay in sync without anyone hitting reload.',
-    path: 'src/hooks/useDb.ts:53',
-    notes: ['mount effect calls api.initDatabase() via /api/health', 'refresh() laedt halter + fahrzeuge + termine?include=maengel in 3 parallelen HTTP-Requests (statt 14 wie vorher — N+1 fix)', 'writes call apiClient functions wrapped in tracked() — writeInFlight-Counter blockiert Polling, solange API-Writes laufen', 'multi-user live-sync: 5-Sekunden-Polling (US-16) — pausiert wenn document.visibilityState !== visible ODER writeInFlight > 0'],
+    path: 'src/hooks/useDb.ts:65',
+    notes: ['mount effect calls api.initDatabase() via /api/health', 'refresh() laedt halter + fahrzeuge + termine?include=maengel in 3 parallelen HTTP-Requests (statt 14 wie vorher — N+1 fix)', 'writes call apiClient functions wrapped in tracked() — writeInFlight-Counter blockiert Polling, solange API-Writes laufen', 'multi-user live-sync: 5-Sekunden-Polling (US-16) — pausiert wenn document.visibilityState !== visible ODER writeInFlight > 0', 'addFahrzeugMitHalter: Halter-Dedupe per Name (case-insensitive), wiederverwendet oder legt neu an'],
     tag: ['overview', 'data', 'tagesplan', 'fahrzeuge', 'maengel', 'all'],
     critical: true,
   }),
@@ -361,34 +361,34 @@ const nodes = [
     critical: true,
   }),
   N('server-index', 'db', 'server/index.js', 'Express REST API', 1230, 188, 240, 88, 'db', {
-    role: 'Express API with CRUD routes for halter, fahrzeuge, termine, maengel plus health/admin endpoints. Maps snake_case DB rows to camelCase frontend objects.',
-    plain: 'The backend controller. Receives browser requests, checks rules, talks to MariaDB, and sends JSON back.',
+    role: 'Express API with auth endpoints, role-gated CRUD routes for halter, fahrzeuge, termine, maengel plus health/admin endpoints. Hardened: helmet CSP, production rate limits, DB-error mapping without SQL leaks. Maps snake_case DB rows to camelCase frontend objects.',
+    plain: 'The backend controller. Receives browser requests, checks login/role and rules, talks to MariaDB, and sends JSON back.',
     path: 'server/index.js:1',
-    notes: ['GET /api/health', 'CRUD routes for halter/fahrzeuge/termine/maengel', 'PATCH /api/termine/:id/status enforces WF-01 via SQL JOIN', 'POST /api/admin/demo reloads demo data'],
+    notes: ['POST /api/auth/login + GET /api/auth/me; requireAuth(recht) gated per Endpunkt (Rollen empfang/pruefer/chef)', 'GET /api/health mit echtem DB-Ping (503 wenn MariaDB weg)', 'CRUD routes for halter/fahrzeuge/termine/maengel (404 bei unbekannter ID)', 'PATCH /api/termine/:id/status enforces WF-01 via SQL JOIN', 'helmet-CSP (ohne upgrade-insecure-requests); Rate-Limits nur production: 600/min API, 30/15min admin, 10/15min Login', 'DB-Fehler-Mapping: 1062→409, 1452→400, 1451→409, CHECK→400; 500 ohne SQL-Leak', '/api/admin/* verlangt chef-Rolle UND X-Admin-Token (timing-sicherer Vergleich)'],
     tag: ['overview', 'data', 'tagesplan', 'fahrzeuge', 'maengel', 'all'],
     critical: true,
   }),
-  N('server-db', 'db', 'server/db.js', 'MariaDB pool + schema', 1230, 298, 240, 88, 'db', {
-    role: 'Loads .env, creates the MariaDB database if needed, opens a connection pool, creates all 8 tables and seeds lookup tables idempotently.',
-    plain: 'The database setup file. It creates the real MariaDB tables and keeps a pool of connections for the API.',
+  N('server-db', 'db', 'server/db.js', 'pool + migrations + seeds', 1230, 298, 240, 88, 'db', {
+    role: 'Loads .env, creates the MariaDB database if needed, opens a connection pool, runs the versioned migrations (server/migrations.js, ADR-011) and seeds lookup tables + default users idempotently.',
+    plain: 'The database setup file. It runs the schema migrations, seeds the lookup tables and default users, and keeps a pool of connections for the API.',
     path: 'server/db.js:1',
-    notes: ['ensureDatabase() creates database + pool', 'migrate() creates halter, fahrzeug, termin, mangel, status, pruefart, pruefer, mangel_kategorie', 'seedDomainTables() uses INSERT IGNORE'],
+    notes: ['ensureDatabase() creates database + pool, dann runMigrations() + Seeds + Trigger', 'Schema via server/migrations.js: append-only MIGRATIONS (1 initial-schema, 2 hu-richtlinie-kategorien, 3 benutzer-tabelle), protokolliert in schema_migration, GET_LOCK gegen parallele Boots, kein Down-Pfad', 'seedDomainTables() uses INSERT IGNORE — inkl. 3 Default-Benutzer (empfang/MW/chef, Passwort aus DEFAULT_USER_PASSWORT, Fallback start123)', 'migrateTriggers() haelt den WF-01-Trigger per CREATE OR REPLACE aktuell (Desired-State)'],
     tag: ['overview', 'data', 'all'],
     critical: true,
   }),
   N('mariadb', 'db', 'MariaDB', 'central SQL database', 1230, 408, 240, 88, 'db', {
-    role: 'Central relational database tuv_workflow. Stores halter, fahrzeug, termin, mangel and lookup tables with FK, UNIQUE and CHECK constraints.',
+    role: 'Central relational database tuv_workflow. Stores halter, fahrzeug, termin, mangel, lookup tables plus benutzer (login accounts) and schema_migration, with FK, UNIQUE and CHECK constraints.',
     plain: 'The shared database. If user A saves a vehicle, user B reads the same row after refresh because both use this one database.',
     path: 'MARIADB_DATABASE=tuv_workflow',
-    notes: ['InnoDB + utf8mb4', 'FKs: fahrzeug→halter, termin→fahrzeug, mangel→termin', 'UNIQUE: kennzeichen, fin, halter.email', 'CHECK: baujahr and kilometerstand ranges'],
+    notes: ['InnoDB + utf8mb4, 10 Tabellen (8 Fachtabellen + benutzer + schema_migration)', 'FKs: fahrzeug→halter, termin→fahrzeug, mangel→termin', 'UNIQUE: kennzeichen, fin, halter.email, benutzer.kuerzel', 'CHECK: baujahr/kilometerstand ranges, benutzer.rolle in (empfang, pruefer, chef)'],
     tag: ['overview', 'data', 'all'],
     critical: true,
   }),
   N('env-example', 'db', '.env.example', 'runtime config', 1230, 520, 240, 64, 'db', {
-    role: 'Documents MARIADB_HOST, MARIADB_PORT, MARIADB_USER, MARIADB_PASSWORD, MARIADB_DATABASE, API_PORT and VITE_API_BASE_URL.',
+    role: 'Documents MARIADB_*, API_PORT, VITE_API_BASE_URL plus the security settings NODE_ENV, ADMIN_TOKEN, AUTH_ENABLED, AUTH_SECRET, DEFAULT_USER_PASSWORT and ALLOWED_ORIGINS.',
     plain: 'The template for local secrets and ports. Real passwords live in .env, not in Git.',
     path: '.env.example',
-    notes: ['.env is gitignored', 'API defaults to 8787', 'Vite proxies /api in local dev'],
+    notes: ['.env is gitignored', 'API defaults to 8787', 'production verweigert den Boot ohne ADMIN_TOKEN', 'Vite proxies /api in local dev (VITE_API_PROXY_TARGET überschreibbar)'],
     tag: ['data', 'all'],
   }),
   N('mariadb-doc', 'db', 'docs/mariadb-setup.md', 'setup guide', 1230, 606, 240, 64, 'db', {
@@ -411,7 +411,7 @@ const nodes = [
     role: 'uid(), isoDate(), addDays(), fmtDate(), fmtDateLong(), dayName(), dayShort() — pure.',
     plain: 'Small date helpers used everywhere: format a date as German DD.MM.YYYY, add days, generate a unique ID.',
     path: 'src/utils/date.js',
-    notes: ['de-DE Intl.DateTimeFormat', 'uid = timestamp36 + random36', 'isoDate() builds LOCAL date string — must match useStoreCompat normDateStr (timezone bug fix)'],
+    notes: ['de-DE Intl.DateTimeFormat', 'uid = timestamp36 + random36', 'isoDate() builds LOCAL date string (timezone bug fix — kein UTC-Shift über Mitternacht)'],
     tag: ['overview', 'all'],
   }),
   N('utils-mangel', 'domain', 'utils/mangel.js', '1-liner', 1510, 256, 220, 52, 'service', {
@@ -465,9 +465,9 @@ const nodes = [
   }),
   N('types-propTypes', 'domain', 'types/propTypes.js', 'shared shapes', 1510, 770, 220, 60, 'service', {
     role: 'FahrzeugShape, TerminShape, MangelShape — runtime PropTypes for component contracts.',
-    plain: 'Definitions of what a Vehicle/Appointment/Defect/Toast object looks like. Lets React warn when something is missing.',
+    plain: 'Definitions of what a Vehicle/Appointment/Defect object looks like. Lets React warn when something is missing.',
     path: 'src/types/propTypes.js',
-    notes: ['describes the LEGACY useStore shape — matches what useStoreCompat outputs', 'kat is one-of OM/GM/EM/GfM (aligned with DB and HU-Richtlinie as of 2026-05-19)'],
+    notes: ['beschreibt das DB-Shape von useDb (fahrzeugId, terminId, kategorieCode, ...)', 'kategorieCode is one-of OM/GM/EM/GfM (aligned with DB and HU-Richtlinie)'],
     tag: ['overview', 'all'],
   }),
   N('fetch-api', 'domain', 'Fetch API', 'HTTP JSON', 1510, 850, 220, 60, 'service', {
@@ -487,10 +487,10 @@ const nodes = [
     tag: ['overview', 'all'],
   }),
   N('MangelPill', 'ui', 'MangelPill.jsx', 'defect tag', 1770, 170, 180, 52, 'service', {
-    role: 'Small monospace tag rendering the defect-category short code (HM/EM/GM…).',
-    plain: 'The short two-letter tag shown next to each defect to flag its severity.',
+    role: 'Small monospace tag rendering the defect-category short code (OM/GM/EM/GfM).',
+    plain: 'The short tag shown next to each defect to flag its severity.',
     path: 'src/components/ui/MangelPill.jsx:5',
-    notes: ['reads MANGEL_KATEGORIEN', '5 categories'],
+    notes: ['reads MANGEL_KATEGORIEN', '4 categories (OM/GM/EM/GfM)'],
     tag: ['maengel', 'all'],
   }),
   N('HauptmangelBadge', 'ui', 'HauptmangelBadge.jsx', '"NICHT VERKEHRSSICHER"', 1770, 240, 180, 52, 'service', {
@@ -599,15 +599,14 @@ const nodes = [
 const edges = [
   /* ── Critical spine (boot → user clicks "add Termin" → row in MariaDB) ── */
   { from: 'main',           to: 'App',             kind: 'critical', label: '1 · render <App/>',           tag: ['overview', 'tagesplan', 'termine', 'all'] },
-  { from: 'App',            to: 'useStoreCompat',  kind: 'critical', label: '2 · useStoreCompat as useStore', tag: ['overview', 'tagesplan', 'termine', 'data', 'all'] },
+  { from: 'App',            to: 'useDb',           kind: 'critical', label: '2 · useDb() drives data',     tag: ['overview', 'tagesplan', 'termine', 'data', 'all'] },
   { from: 'App',            to: 'TagesplanView',   kind: 'critical', label: '3 · default view',            tag: ['overview', 'tagesplan', 'all'] },
   { from: 'TagesplanView',  to: 'TerminModal',     kind: 'critical', label: '4 · open modal',              tag: ['overview', 'tagesplan', 'termine', 'all'] },
-  { from: 'TerminModal',    to: 'useStoreCompat',  kind: 'critical', label: '5 · addTr (prop callback)',   tag: ['overview', 'tagesplan', 'termine', 'all'] },
-  { from: 'useStoreCompat', to: 'useDb',           kind: 'critical', label: '6 · db.addTermin',            tag: ['overview', 'tagesplan', 'termine', 'data', 'all'] },
-  { from: 'useDb',          to: 'api-client',      kind: 'critical', label: '7 · api.addTermin',           tag: ['overview', 'tagesplan', 'termine', 'data', 'all'] },
-  { from: 'api-client',     to: 'server-index',    kind: 'critical', label: '8 · POST /api/termine',       tag: ['overview', 'tagesplan', 'termine', 'data', 'all'] },
-  { from: 'server-index',   to: 'server-db',       kind: 'critical', label: '9 · db().query(...)',         tag: ['overview', 'tagesplan', 'termine', 'data', 'all'] },
-  { from: 'server-db',      to: 'mariadb',         kind: 'critical', label: '10 · INSERT termin',          tag: ['overview', 'tagesplan', 'termine', 'data', 'all'] },
+  { from: 'TerminModal',    to: 'useDb',           kind: 'critical', label: '5 · addTermin (prop callback)', tag: ['overview', 'tagesplan', 'termine', 'all'] },
+  { from: 'useDb',          to: 'api-client',      kind: 'critical', label: '6 · api.addTermin',           tag: ['overview', 'tagesplan', 'termine', 'data', 'all'] },
+  { from: 'api-client',     to: 'server-index',    kind: 'critical', label: '7 · POST /api/termine',       tag: ['overview', 'tagesplan', 'termine', 'data', 'all'] },
+  { from: 'server-index',   to: 'server-db',       kind: 'critical', label: '8 · db().query(...)',         tag: ['overview', 'tagesplan', 'termine', 'data', 'all'] },
+  { from: 'server-db',      to: 'mariadb',         kind: 'critical', label: '9 · INSERT termin',           tag: ['overview', 'tagesplan', 'termine', 'data', 'all'] },
 
   /* ── Mount edges (App → top-level) ── */
   { from: 'index-html', to: 'main',           kind: 'mount',  label: 'loads',     tag: ['overview', 'all'] },
@@ -637,11 +636,13 @@ const edges = [
   { from: 'api-client', to: 'server-index',   kind: 'normal', label: 'GET /api/health',      tag: ['data', 'all'] },
 
   /* ── Views → State (logical: props from App) ── */
-  { from: 'TagesplanView',  to: 'useStoreCompat',  kind: 'normal', label: 'addTr · updTr · addMangel', tag: ['tagesplan', 'termine', 'maengel', 'all'] },
-  { from: 'FahrzeugeView',  to: 'useStoreCompat',  kind: 'normal', label: 'addFz · updFz · delFz',     tag: ['fahrzeuge', 'all'] },
-  { from: 'StatistikView',  to: 'useStoreCompat',  kind: 'normal', label: 'read-only',                 tag: ['statistik', 'all'] },
-  { from: 'BerichteView',   to: 'useStoreCompat',  kind: 'normal', label: 'read-only',                 tag: ['berichte', 'all'] },
-  { from: 'Sidebar',        to: 'useStoreCompat',  kind: 'normal', label: 'resetAll · loadDemo',       tag: ['navigation', 'all'] },
+  { from: 'TagesplanView',  to: 'useDb',  kind: 'normal', label: 'addTermin · updTerminStatus · addMangel', tag: ['tagesplan', 'termine', 'maengel', 'all'] },
+  { from: 'FahrzeugeView',  to: 'useDb',  kind: 'normal', label: 'addFahrzeugMitHalter · updFahrzeug · delFahrzeug', tag: ['fahrzeuge', 'all'] },
+  { from: 'StatistikView',  to: 'useDb',  kind: 'normal', label: 'read-only',                 tag: ['statistik', 'all'] },
+  { from: 'BerichteView',   to: 'useDb',  kind: 'normal', label: 'read-only',                 tag: ['berichte', 'all'] },
+  { from: 'Sidebar',        to: 'useDb',  kind: 'normal', label: 'resetAllData · loadDemoData', tag: ['navigation', 'all'] },
+  { from: 'App',            to: 'AuthContext', kind: 'normal', label: 'Auth-Gate (useAuth)',   tag: ['overview', 'data', 'all'] },
+  { from: 'AuthContext',    to: 'api-client',  kind: 'api',    label: 'login · me · Token',    tag: ['data', 'all'] },
 
   /* ── View → modal (open) ── */
   { from: 'TagesplanView',  to: 'MaengelModal',   kind: 'normal', label: 'open Mängel',                 tag: ['tagesplan', 'maengel', 'all'] },
@@ -726,21 +727,24 @@ const FIXES = {
   'server-index':     [
     { n: 1, t: 'PATCH /api/termine/:id/status enforces WF-01 by joining mangel with mangel_kategorie (with m.behoben = FALSE).' },
     { n: 2, t: 'POST /api/maengel auto-demotes Termin from Bestanden → Nicht bestanden if added defect is unbehoben EM/GfM.' },
-    { n: 3, t: 'Zentraler Error-Handler mappt SQLSTATE 45000 (vom DB-Trigger trg_termin_wf01_update) auf HTTP 422 mit {ok:false, reason}.' },
+    { n: 3, t: 'Zentraler Error-Handler mappt SQLSTATE 45000 (vom DB-Trigger trg_termin_wf01_update) auf HTTP 422 mit {ok:false, reason}; DB-Constraint-Fehler auf 4xx ohne SQL-Leak.' },
+    { n: 4, t: 'Benutzer-Auth: POST /api/auth/login + GET /api/auth/me, requireAuth(recht) pro Endpunkt (Rollen empfang/pruefer/chef), scrypt + HMAC-SHA256-Token (12h). Default an in production, aus in dev/CI.' },
+    { n: 5, t: 'Härtung: helmet-CSP, Rate-Limits in production (inkl. Login-Brute-Force-Schutz), timing-sicherer ADMIN_TOKEN-Vergleich, Boot-Verweigerung ohne ADMIN_TOKEN in production.' },
   ],
   'server-db':        [
-    { n: 1, t: 'server/db.js creates the MariaDB database, all 8 tables and lookup-table seed data idempotently.' },
+    { n: 1, t: 'Schema läuft jetzt über versionierte Migrationen (server/migrations.js, ADR-011): append-only, protokolliert in schema_migration, GET_LOCK gegen parallele Boots.' },
     { n: 2, t: 'MARIADB_* settings are loaded from .env; credentials stay out of the frontend bundle.' },
-    { n: 3, t: 'migrateCategories() migriert altes Schema (OM/LM/EM/HM/GM) auf HU-Richtlinie (OM/GM/EM/GfM) per ON UPDATE CASCADE — idempotent.' },
+    { n: 3, t: 'Migration 2 (hu-richtlinie-kategorien) migriert altes Schema (OM/LM/EM/HM/GM) auf HU-Richtlinie (OM/GM/EM/GfM) per ON UPDATE CASCADE — einmalig pro DB.' },
     { n: 4, t: 'migrateTriggers() legt trg_termin_wf01_update BEFORE UPDATE ON termin per CREATE OR REPLACE an. SIGNAL SQLSTATE 45000 bei Verstoss.' },
+    { n: 5, t: 'Migration 3 (benutzer-tabelle) + Seed der 3 Default-Benutzer (INSERT IGNORE — bestehende Konten werden nie überschrieben).' },
   ],
-  'useStoreCompat': [
-    { n: 1, t: 'normDateStr fixes timezone bug — formats Date objects via local Y/M/D (was using toISOString → UTC shift past midnight made Termin invisible in TagesplanView)' },
-    { n: 2, t: 'addFz splits incoming form: looks up halter by name (case-insensitive), reuses or creates new halter, links via halterId' },
+  'useDb': [
+    { n: 1, t: 'Der Compat-Layer (useStoreCompat.ts) wurde entfernt — Views nutzen das DB-Shape von useDb direkt (terminId, statusCode, maengel, ...).' },
+    { n: 2, t: 'addFahrzeugMitHalter übernimmt den Halter-Dedupe: lookup by name (case-insensitive), reuses or creates new halter, links via halterId.' },
   ],
   'mariadb':      [
     { n: 1, t: 'UNIQUE on fahrzeug.fin closes the 2-Fahrzeuge-1-VIN bug Fuchs flagged; MariaDB allows multiple NULL values.' },
-    { n: 2, t: '8-table 3NF normalization with halter and mangel as separate entities.' },
+    { n: 2, t: '3NF normalization of the 8 Fachtabellen with halter and mangel as separate entities; dazu benutzer (Login) und schema_migration (Migrations-Protokoll).' },
   ],
 };
 
@@ -829,7 +833,7 @@ const CORE_NODES = new Set([
   'index-html', 'main', 'App',
   'Sidebar', 'Topbar',
   'TagesplanView', 'FahrzeugeView', 'StatistikView', 'BerichteView',
-  'useStoreCompat', 'useDb', 'api-client',
+  'useDb', 'api-client',
   'server-index', 'server-db', 'mariadb',
 ]);
 const CORE_EDGE_KEYS = new Set([
@@ -841,8 +845,7 @@ const CORE_EDGE_KEYS = new Set([
   'App→FahrzeugeView',
   'App→StatistikView',
   'App→BerichteView',
-  'App→useStoreCompat',
-  'useStoreCompat→useDb',
+  'App→useDb',
   'useDb→api-client',
   'api-client→server-index',
   'server-index→server-db',
@@ -1045,47 +1048,49 @@ function showDefault() {
 
       <h2>Datenfluss in drei Schritten</h2>
       <div class="finding good" style="line-height:1.7">
-        <strong>1.</strong> React-UI startet bei <code>index.html</code> → <code>main.jsx</code> → <code>App.jsx</code>.<br>
-        <strong>2.</strong> App nutzt vier Seiten und eine Kompatibilitäts-/State-Brücke (<code>useStoreCompat</code> → <code>useDb</code>).<br>
+        <strong>1.</strong> React-UI startet bei <code>index.html</code> → <code>main.jsx</code> → <code>App.jsx</code> (Auth-Gate: Login vor dem App-Shell).<br>
+        <strong>2.</strong> App nutzt vier Seiten und den State-Hook <code>useDb</code> (DB-Shape direkt, kein Compat-Layer).<br>
         <strong>3.</strong> Daten fließen über den HTTP-Client (<code>apiClient.ts</code>) → Express-Backend (<code>server/index.js</code>) → MariaDB.
       </div>
 
       <h2>Leserichtung</h2>
       <div class="finding">
-        <strong>Links → rechts.</strong> Der grüne, leicht pulsierende Pfad ist die zentrale Daten-Spine: <code>App → useStoreCompat → useDb → apiClient → server/index → server/db → MariaDB</code>. Klick auf jeden Knoten zeigt seine Details hier rechts.
+        <strong>Links → rechts.</strong> Der grüne, leicht pulsierende Pfad ist die zentrale Daten-Spine: <code>App → useDb → apiClient → server/index → server/db → MariaDB</code>. Klick auf jeden Knoten zeigt seine Details hier rechts.
       </div>
 
       <h2>Was bewusst ausgeblendet ist</h2>
       <ul class="notes">
         <li>Feature-Modale (Termin, Fahrzeug, Mängel)</li>
+        <li>Auth-Details (AuthContext, LoginView, Rollen-Gating)</li>
         <li>Validatoren, Utilities, Konstanten</li>
         <li>UI-Primitives (Pills, Badges, Buttons)</li>
         <li>Externe Libraries (Express, MariaDB-Driver, Sonner, Recharts ...)</li>
       </ul>
       <div class="finding">
-        Sobald du den Aufbau verstanden hast, wechsle auf <em>Overview</em> für die volle Karte, <em>Critical path</em> für die 10 roten Hop-Kanten, oder <em>Roadmap &amp; bugs</em> für offene Punkte.
+        Sobald du den Aufbau verstanden hast, wechsle auf <em>Overview</em> für die volle Karte, <em>Critical path</em> für die 9 roten Hop-Kanten, oder <em>Roadmap &amp; bugs</em> für offene Punkte.
       </div>
     `;
     return;
   }
   sideEl.innerHTML = `
-    <h1>Architecture map · MariaDB backend (Stand 2026-05-19)</h1>
-    <div class="role">React 19 + Vite frontend with an Express API and central MariaDB database. Empfohlene Auslieferung: 3-Container Docker-Stack (DB + API + Adminer) per <code>docker compose up -d</code>. Alternative: native MariaDB-Installation, dieselbe App ohne Aenderungen. On-Premise pro Pruefstelle, Daten verlassen die Werkstatt nie. Browser spricht nie direkt mit MariaDB; alles fliesst durch <code>/api</code>.</div>
+    <h1>Architecture map · MariaDB backend (Stand 2026-07-05)</h1>
+    <div class="role">React 19 + Vite frontend with an Express API (Login + Rollen empfang/pruefer/chef) and central MariaDB database. Empfohlene Auslieferung: Docker-Stack (DB + API) per <code>docker compose up -d</code>; Adminer nur optional via <code>--profile tools</code>. Alternative: native MariaDB-Installation, dieselbe App ohne Aenderungen. On-Premise pro Pruefstelle, Daten verlassen die Werkstatt nie. Browser spricht nie direkt mit MariaDB; alles fliesst durch <code>/api</code>.</div>
     <h2>How to read this</h2>
     <div class="finding">
-      Red edges are the 10-hop spine from app boot to a row landing in MariaDB. Click any node to pin it; hover any node to peek. Use the chips at the top to dim everything outside one feature.
+      Red edges are the 9-hop spine from app boot to a row landing in MariaDB. Click any node to pin it; hover any node to peek. Use the chips at the top to dim everything outside one feature.
     </div>
     <h2>Notable findings from this map</h2>
     <div class="finding good"><strong>Single backend gateway</strong><br>Every persistent operation goes through <code>src/db/apiClient.ts</code> and the Express routes in <code>server/index.js</code>. SQL stays server-side in the API/MariaDB layer; database credentials never enter the frontend bundle.</div>
     <div class="finding good"><strong>WF-01 enforced thrice (Defense in Depth)</strong><br>UI layer refuses to set BESTANDEN when an unbehoben EM or GfM exists. API layer double-checks via MariaDB JOIN before the UPDATE. DB-Trigger <code>trg_termin_wf01_update</code> wirft <code>SIGNAL SQLSTATE '45000'</code>, falls jemand UI und API umgeht (direkter SQL-Zugriff). Alle drei Layer respektieren <code>mangel.behoben = TRUE</code>.</div>
-    <div class="finding warn"><strong>Compat layer is technical debt by design</strong><br><code>useStoreCompat.ts</code> exists to keep the existing views unchanged while <code>useDb.ts</code> talks to the Express/MariaDB API. The adapter translates field-by-field between the old view shape and the current API shape.</div>
-    <div class="finding good"><strong>HU-Richtlinie-Konformitaet</strong><br>Frontend, API und DB nutzen dasselbe 4-Kategorien-Schema <code>OM/GM/EM/GfM</code> nach §29 StVZO Anlage VIII Nr. 3. Frueheres Drift zwischen PropTypes (<code>OM/GM/EM/HM/GF</code>) und DB (<code>OM/LM/EM/HM/GM</code>) ist mit der Migration am 2026-05-19 aufgeloest.</div>
-    <div class="finding good"><strong>Docker-Stack fuer On-Premise (empfohlene Variante)</strong><br>Drei Container per <code>docker compose up -d</code>: <code>tuv-mariadb</code> (DB + Binlog), <code>tuv-api</code> (Express), <code>tuv-adminer</code> (Web-DB-Browser auf Port 8080). Jeder Kunde bekommt einen eigenen Stack im LAN. <code>my.cnf</code> aktiviert <code>log_bin</code> + <code>log_bin_trust_function_creators</code> deterministisch — Voraussetzung fuer PITR + DB-Trigger.</div>
+    <div class="finding good"><strong>Login + Rollen, serverseitig durchgesetzt</strong><br><code>POST /api/auth/login</code> liefert einen HMAC-SHA256-Token (12h); <code>requireAuth(recht)</code> gated jeden Endpunkt nach der Rollen-Matrix in <code>server/auth.js</code> (empfang schreibt, pruefer setzt Status + Maengel, chef loescht + Admin). <code>useRechte()</code> im Frontend ist nur UI-Ausblendung. In dev/CI ist Auth per Default aus.</div>
+    <div class="finding good"><strong>Compat layer entfernt</strong><br><code>useStoreCompat.ts</code> existiert nicht mehr — alle Views nutzen das DB-Shape von <code>useDb</code> direkt (<code>terminId</code>, <code>statusCode</code>, <code>maengel</code>, ...). Die Halter-Dedupe-Logik lebt jetzt in <code>useDb.addFahrzeugMitHalter</code>.</div>
+    <div class="finding good"><strong>HU-Richtlinie-Konformitaet</strong><br>Frontend, API und DB nutzen dasselbe 4-Kategorien-Schema <code>OM/GM/EM/GfM</code> nach §29 StVZO Anlage VIII Nr. 3. Frueheres Drift zwischen PropTypes und DB ist per Schema-Migration (Migration 2, <code>server/migrations.js</code>) aufgeloest.</div>
+    <div class="finding good"><strong>Docker-Stack fuer On-Premise (empfohlene Variante)</strong><br><code>docker compose up -d</code> startet <code>tuv-mariadb</code> (DB + Binlog, Port nur an 127.0.0.1) und <code>tuv-api</code> (Express, NODE_ENV default production — verweigert den Boot ohne ADMIN_TOKEN). <code>tuv-adminer</code> nur optional via <code>--profile tools</code>. <code>my.cnf</code> aktiviert <code>log_bin</code> + <code>log_bin_trust_function_creators</code> deterministisch — Voraussetzung fuer PITR + DB-Trigger.</div>
     <div class="finding"><strong>Zweite Variante: manuelle MariaDB-Installation</strong><br>Die App ist <strong>Docker-unabhaengig</strong>. Express + <code>mariadb</code>-Node-Driver sprechen mit jeder MariaDB 11.4, egal ob im Container oder nativ installiert. Fuer Entwickler, alte Werkstatt-PCs ohne Docker oder Setups mit existierender IT-Infrastruktur dokumentiert in <code>docs/mariadb-setup.md</code>. Der Werkstatt-Inhaber muss dann Binlog + <code>log_bin_trust_function_creators</code> selbst setzen.</div>
     <div class="finding good"><strong>Multi-User-Live-Sync via 5-Sek-Polling</strong><br><code>useDb</code> pollt alle 5 Sek mit <code>refresh()</code> — Empfang legt einen Termin an, das Pruefer-Tablet zeigt ihn nach max 5 Sek. Drei Skip-Bedingungen: (a) <code>document.visibilityState !== "visible"</code> (Akku + LAN), (b) <code>writeInFlight &gt; 0</code> (verhindert Race mit eigenem Write), (c) Single <code>refresh()</code> macht nur 3 HTTP-Requests dank <code>?include=maengel</code>-Endpoint (N+1 fix). US-16 done.</div>
     <div class="finding good"><strong>Doppel-Termin-Warnung (UX-Layer)</strong><br><code>TerminModal</code> warnt per <code>window.confirm()</code>, falls gleicher fahrzeugId + datum + prueftCode schon gebucht ist (z.B. 2x HU am 19.05. fuer B-TK 1234). DB-Constraint bleibt nur auf <code>UNIQUE(fahrzeug_id, datum, uhrzeit)</code> — eine Same-Day-Nachpruefung nach gefallener HU bleibt damit moeglich.</div>
     <h2>Filters</h2>
-    <div class="finding">Click a chip to dim everything outside that feature. <strong>"Core Architecture"</strong> is the simplified "first look" — only the entry → views → state → API → DB spine. "Critical path" highlights only the 10 red edges. "Roadmap &amp; bugs" highlights only nodes with green/red badges.</div>
+    <div class="finding">Click a chip to dim everything outside that feature. <strong>"Core Architecture"</strong> is the simplified "first look" — only the entry → views → state → API → DB spine. "Critical path" highlights only the 9 red edges. "Roadmap &amp; bugs" highlights only nodes with green/red badges.</div>
   `;
 }
 
@@ -1155,12 +1160,11 @@ const CORE_NODE_LAYOUT = [
   { id: 'StatistikView', x: 340,  y: 320, w: 240, h: 96 },
   { id: 'BerichteView',  x: 340,  y: 440, w: 240, h: 96 },
   // Data Spine
-  { id: 'useStoreCompat',x: 680,  y: 680, w: 240, h: 120, spine: true },
-  { id: 'useDb',         x: 990,  y: 680, w: 240, h: 120, spine: true },
-  { id: 'api-client',    x: 1300, y: 680, w: 240, h: 120, spine: true },
-  { id: 'server-index',  x: 1610, y: 680, w: 240, h: 120, spine: true },
-  { id: 'server-db',     x: 1920, y: 680, w: 240, h: 120, spine: true },
-  { id: 'mariadb',       x: 2230, y: 680, w: 240, h: 120, spine: true },
+  { id: 'useDb',         x: 680,  y: 680, w: 240, h: 120, spine: true },
+  { id: 'api-client',    x: 990,  y: 680, w: 240, h: 120, spine: true },
+  { id: 'server-index',  x: 1300, y: 680, w: 240, h: 120, spine: true },
+  { id: 'server-db',     x: 1610, y: 680, w: 240, h: 120, spine: true },
+  { id: 'mariadb',       x: 1920, y: 680, w: 240, h: 120, spine: true },
 ];
 
 const CORE_EDGE_LAYOUT = [
@@ -1172,8 +1176,7 @@ const CORE_EDGE_LAYOUT = [
   { from: 'App',            to: 'FahrzeugeView',  label: 'view' },
   { from: 'App',            to: 'StatistikView',  label: 'view' },
   { from: 'App',            to: 'BerichteView',   label: 'view' },
-  { from: 'App',            to: 'useStoreCompat', label: 'uses', spine: true },
-  { from: 'useStoreCompat', to: 'useDb',          label: 'wraps', spine: true },
+  { from: 'App',            to: 'useDb',          label: 'uses',  spine: true },
   { from: 'useDb',          to: 'api-client',     label: 'HTTP',  spine: true },
   { from: 'api-client',     to: 'server-index',   label: '/api',  spine: true },
   { from: 'server-index',   to: 'server-db',      label: 'pool',  spine: true },
@@ -1184,8 +1187,8 @@ const CORE_CLUSTER_LAYOUT = [
   { id: 'core-entry',   x: 30,   y: 350, w: 280,  h: 480, label: 'BROWSER ENTRY',     color: 'client'  },
   { id: 'core-pages',   x: 320,  y: 50,  w: 280,  h: 510, label: 'PAGES',              color: 'route'   },
   { id: 'core-shell',   x: 320,  y: 570, w: 280,  h: 280, label: 'APP SHELL',          color: 'route'   },
-  { id: 'core-bridge',  x: 660,  y: 640, w: 580,  h: 220, label: 'STATE & BRIDGE',     color: 'service' },
-  { id: 'core-backend', x: 1280, y: 640, w: 1200, h: 220, label: 'BACKEND & DATABASE', color: 'db'      },
+  { id: 'core-bridge',  x: 660,  y: 640, w: 590,  h: 220, label: 'STATE & API CLIENT', color: 'service' },
+  { id: 'core-backend', x: 1280, y: 640, w: 900,  h: 220, label: 'BACKEND & DATABASE', color: 'db'      },
 ];
 
 function renderCoreLayout() {

@@ -146,3 +146,23 @@ um ihrer selbst willen** und für **angemessene Komplexität**. Layered
 Architecture ist nicht "besser als" Single-File, sie ist eine andere
 Antwort auf andere Probleme. Unsere Probleme heute rechtfertigen die
 Antwort nicht.
+
+## Nachtrag 2026-07-05 — Zahlen-Update nach Auth-/Migrations-Umbau
+
+Die Kennzahlen aus dem Kontext sind gewachsen, die Entscheidung bleibt:
+
+- `server/index.js` hat jetzt **22 REST-Endpunkte** (u. a. neu:
+  `POST /api/auth/login`, `GET /api/auth/me`) und liegt bei **~800 LOC** —
+  also an der in dieser ADR genannten 800-LOC-Schwelle.
+- Die Struktur ist de facto bereits modularer geworden, ohne das volle
+  Layering einzuführen: `server/auth.js` (Passwort-Hashing, Token,
+  Rollen-Matrix — pure Funktionen, unit-testbar ohne DB),
+  `server/validate.js` (Eingabe-Validierung) und `server/migrations.js`
+  (versionierte Schema-Migrationen, siehe ADR-011) sind eigene Module.
+  `server/db.js` enthält nur noch Pool, Seeds und Trigger; die
+  Kategorie-Migration lebt als Migration 2 in `server/migrations.js`.
+- Fazit: die 800-LOC-Schwelle ist erreicht, aber der Schmerz, den sie
+  vorhersagen sollte, ist durch die Modul-Auslagerungen nicht eingetreten.
+  Eine Aufspaltung von `server/index.js` in Routes/Services/Repositories
+  bleibt der definierte nächste Schritt, falls weitere fachliche Module
+  oder deutlich mehr Endpunkte dazukommen.

@@ -1,7 +1,7 @@
 # Pflichtenheft
 
-Stand: 2026-05-17  
-System: TÜV Prüfstelle Pro mit React/Vite, Express API und MariaDB.
+Stand: 2026-07-05  
+System: TÜV Prüfstelle Pro mit React/Vite, Express API (Login/Rollen) und MariaDB.
 
 ## 1. Ziel
 
@@ -18,11 +18,12 @@ Im Scope:
 - Workflow-Regel: kein `Bestanden` bei blockierenden Mängeln
 - Statistik- und Berichtsansichten
 - PDF-Ausgabe über Browser-Druck
+- Login mit drei Rollen (empfang/pruefer/chef), serverseitig durchgesetzt
 - Lokaler Betrieb mit MariaDB, Express API und Vite
 
 Nicht im Scope:
 
-- Benutzer- und Rollenverwaltung
+- Benutzer-Selbstverwaltung (Passwort ändern, Konten anlegen über die UI)
 - Mandantenfähigkeit
 - amtliche Schnittstellen zu TÜV/KBA
 - Online-Zahlung
@@ -36,12 +37,13 @@ Nicht im Scope:
 | F-02 | Fahrzeuge verwalten | Fahrzeuge können mit Halterbezug gepflegt werden |
 | F-03 | Termine planen | Termine können Fahrzeugen zugeordnet und nach Datum angezeigt werden |
 | F-04 | Status pflegen | Statuswechsel sind über UI und API möglich |
-| F-05 | WF-01 durchsetzen | `Bestanden` wird bei HM/GM verhindert |
+| F-05 | WF-01 durchsetzen | `Bestanden` wird bei nicht behobenem EM/GfM verhindert |
 | F-06 | Mängel erfassen | Mängel können mit Kategorie und Beschreibung gespeichert werden |
 | F-07 | Statistik anzeigen | Kennzahlen und Diagramme basieren auf MariaDB-Daten |
 | F-08 | Berichte erzeugen | Prüfberichte können angezeigt und gedruckt werden |
 | F-09 | Demo-Daten laden | `/api/admin/demo` erzeugt reproduzierbare Beispieldaten |
 | F-10 | Daten zurücksetzen | `/api/admin/reset` entfernt Bewegungsdaten |
+| F-11 | Login und Rollen | `POST /api/auth/login` liefert ein Token; Schreiben/Status/Löschen ist rollenabhängig serverseitig gesperrt (empfang/pruefer/chef) |
 
 ## 4. Nicht-funktionale Anforderungen
 
@@ -55,6 +57,7 @@ Nicht im Scope:
 | NF-06 | Datenschutz | Keine geheimen Zugangsdaten im Frontend-Bundle |
 | NF-07 | Performance | CRUD-Operationen laufen lokal im LAN ohne spuerbare UI-Blockade |
 | NF-08 | Testbarkeit | Build, Typecheck und Vitest sind automatisierbar |
+| NF-09 | API-Härtung | Security-Header (helmet), Rate-Limits in Produktion, timing-sichere Token-Vergleiche, keine SQL-Fehlertexte in Fehlerantworten |
 
 ## 5. Datenhaltung
 
@@ -62,8 +65,9 @@ Die Datenhaltung erfolgt in MariaDB. Das Frontend speichert keine produktiven
 Daten dauerhaft im Browser. Die Express-API:
 
 - erstellt die Datenbank bei Bedarf,
-- erstellt Tabellen bei Bedarf,
-- seedet Stammdaten idempotent,
+- baut und aktualisiert das Schema über versionierte Migrationen
+  (`server/migrations.js`, protokolliert in `schema_migration`, siehe ADR-011),
+- seedet Stammdaten und Default-Benutzer idempotent,
 - mappt Datenbankfelder auf Frontend-Felder,
 - kapselt direkte SQL-Zugriffe vor den Views.
 
@@ -73,8 +77,14 @@ Daten dauerhaft im Browser. Die Express-API:
 - `.env` ist in `.gitignore` ausgeschlossen.
 - Das Frontend bekommt keine Datenbank-Credentials.
 - Die API nutzt parametrisierte Queries.
-- Für produktiven Betrieb sind Authentifizierung, HTTPS, Backups und
-  rollenbasierte Datenbankrechte nachzuziehen.
+- Authentifizierung mit Rollen (empfang/pruefer/chef) ist umgesetzt:
+  scrypt-Passwort-Hashes, HMAC-SHA256-Tokens (12 h), serverseitige
+  Rechteprüfung pro Endpunkt; in Produktion per Default aktiv.
+- API-Härtung: helmet-Security-Header, Rate-Limits in Produktion
+  (inkl. Login-Brute-Force-Schutz), CORS auf LAN begrenzt,
+  Admin-Endpunkte zusätzlich per `X-Admin-Token` geschützt.
+- Für produktiven Betrieb noch nachzuziehen: HTTPS/TLS im LAN,
+  Passwort-Self-Service und rollenbasierte Datenbankrechte.
 
 ## 7. Betrieb
 
@@ -111,17 +121,27 @@ Die API laeuft standardmäßig auf Port `8787`, das Frontend auf Vite-Port
 - `GET /api/fahrzeuge` liefert Daten aus MariaDB.
 - Demo-Daten können geladen und danach in Tagesplan, Fahrzeuge, Statistik und
   Berichte verwendet werden.
-- Ein Termin mit HM/GM kann nicht als `Bestanden` gespeichert werden.
+- Ein Termin mit nicht behobenem EM/GfM kann nicht als `Bestanden`
+  gespeichert werden.
 
 ## 9. Offene Erweiterungen
 
-- Authentifizierung und Benutzerrollen (Phase 2)
+Inzwischen umgesetzt (Stand 2026-07-05):
+
+- Authentifizierung und Benutzerrollen (empfang/pruefer/chef, siehe F-11)
+- Migrationsversionierung für Schema-Änderungen (ADR-011)
+- WF-01-Integrationstests gegen echte MariaDB (lokal per Docker-Stack,
+  in der CI gegen einen MariaDB-Service)
+- Polling-Sync zwischen mehreren Clients (5-Sekunden-Polling in `useDb`, US-16)
+
+Weiterhin offen:
+
 - Backup-/Restore-Konzept teilweise umgesetzt (siehe `docs/backup.md`); Tier-2-
   und Tier-3-Skripte stehen aus
-- Migrationsversionierung für Schema-Änderungen
-- API-Tests gegen eine isolierte Testdatenbank (insbesondere WF-01-Endpunkt)
-- Polling- oder Server-Sent-Events-Sync zwischen mehreren Clients in derselben
-  Prüfstelle (aktuell nur Refresh nach eigenen Schreiboperationen)
+- CRUD-Integrationstests für die übrigen API-Endpunkte gegen eine isolierte
+  Testdatenbank
+- Passwort-Self-Service und Benutzerverwaltung über die UI
+- HTTPS/TLS im LAN
 
 ## 10. Änderungshistorie
 
@@ -129,3 +149,4 @@ Die API laeuft standardmäßig auf Port `8787`, das Frontend auf Vite-Port
 |---|---|---|
 | 3.0 | 2026-05-17 | Dokumentation auf MariaDB/Express umgestellt |
 | 3.1 | 2026-05-17 | On-Premise-Produktmodell, Docker-Compose-Betrieb und Backup-Roadmap ergänzt |
+| 3.2 | 2026-07-05 | Login/Rollen als F-11 aufgenommen, Sicherheit/Erweiterungen an den Ist-Stand angeglichen, WF-01-Kategorien auf EM/GfM korrigiert |

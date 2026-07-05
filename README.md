@@ -56,8 +56,9 @@ der Datenbank, sondern ausschließlich über HTTP-Endpunkte unter `/api`
 ```
 
 Die UI bleibt von SQL entkoppelt. `useDb` verwaltet React-State und ruft
-`apiClient.ts` auf. Die Express-API validiert zentrale Workflow-Regeln, fuehrt
-SQL gegen MariaDB aus und erstellt Tabellen sowie Stammdaten beim Start.
+`apiClient.ts` auf. Die Express-API prüft Login und Rollen, validiert zentrale
+Workflow-Regeln, fuehrt SQL gegen MariaDB aus und baut das Schema beim Start
+über versionierte Migrationen auf (Stammdaten-Seeds bleiben idempotent).
 
 ## Tech Stack
 
@@ -65,7 +66,8 @@ SQL gegen MariaDB aus und erstellt Tabellen sowie Stammdaten beim Start.
 |---|---|---|
 | Frontend | React 19, Vite 8 | SPA und Entwicklungsserver |
 | Sprache | TypeScript für neue Module, JSX für Legacy-Views | Typsicherheit dort, wo Datenformen wichtig sind |
-| API | Express 5, CORS, dotenv | HTTP-Schnittstelle zwischen Browser und DB |
+| API | Express 5, helmet, express-rate-limit, CORS, dotenv | HTTP-Schnittstelle zwischen Browser und DB, Security-Header und Rate-Limits |
+| Auth | `node:crypto` (scrypt, HMAC-SHA256) | Login, Rollen und Token ohne Zusatz-Dependencies |
 | Persistenz | MariaDB, `mariadb` Node.js Driver | Zentrale relationale Datenhaltung |
 | Desktop-Wrapper | Tauri 2 | Desktop-Build aus derselben Frontend-Codebasis |
 | Styling | Tailwind CSS 4 | Utility-first Styling |
@@ -113,7 +115,9 @@ docker compose up -d
 ```
 
 Das startet MariaDB (Port 3306, nur localhost) und die Express-API
-(Port 8787). Tabellen und Stammdaten werden beim ersten Start angelegt.
+(Port 8787). Das Schema wird beim ersten Start über versionierte Migrationen
+angelegt, Stammdaten und Default-Benutzer werden idempotent geseedet
+(Zugangsdaten: siehe [Benutzer & Rollen](#benutzer--rollen)).
 
 Frontend dazu starten:
 
@@ -225,16 +229,21 @@ mit scrypt gehasht (beides `node:crypto`, keine Zusatz-Dependencies).
 
 ## Datenbank
 
-Die physische MariaDB-Struktur wird in `server/db.js` erstellt:
+Die physische MariaDB-Struktur entsteht über versionierte, append-only
+Migrationen in `server/migrations.js` (protokolliert in `schema_migration`,
+siehe ADR-011); Seeds und WF-01-Trigger wendet `server/db.js` bei jedem Start
+idempotent an:
 
 - `halter`
 - `fahrzeug`
 - `termin`
 - `mangel`
 - `status`
-- `prüfart`
-- `prüfer`
+- `pruefart`
+- `pruefer`
 - `mangel_kategorie`
+- `benutzer` (Login-Konten)
+- `schema_migration` (Migrations-Protokoll)
 
 Die wichtigsten Integritätsregeln liegen in MariaDB:
 
@@ -257,9 +266,13 @@ npm run build
 Aktueller Stand dieser Arbeitskopie:
 
 - `npm run lint`, `npm run typecheck` und `npm run build` laufen ohne Fehler.
-- Frontend- und Unit-Tests laufen lokal vollständig.
+- Frontend- und Unit-Tests laufen lokal vollständig — inklusive
+  UI-Flow-Tests (`src/tests/flows/`), Auth-Unit-Tests
+  (`server/tests/auth.test.js`) und serverseitiger Validierungs-Tests
+  (`server/tests/validate.test.js`).
 - Die WF-01-Integrationstests laufen in der GitHub-Actions-CI gegen einen
-  echten MariaDB-Service (siehe `.github/workflows/ci.yml`).
+  echten MariaDB-Service (siehe `.github/workflows/ci.yml`); zusätzlich
+  läuft CodeQL.
 - Ein direkter SQL-Bypass-Test setzt einen laufenden lokalen Compose-Stack
   voraus und wird sonst übersprungen.
 - API-Healthcheck gegen MariaDB erfolgreich; `/api/fahrzeuge` liest Daten
@@ -269,21 +282,25 @@ Aktueller Stand dieser Arbeitskopie:
 
 ```text
 server/
-  db.js                 MariaDB-Konfiguration, Migration und Stammdaten
-  index.js              Express-API mit CRUD- und Admin-Endpunkten
+  db.js                 MariaDB-Pool, Stammdaten-Seeds und WF-01-Trigger
+  migrations.js         Versionierte Schema-Migrationen (ADR-011)
+  auth.js               Passwort-Hashing, Token, Rollen-Matrix
+  validate.js           Serverseitige Eingabe-Validierung
+  index.js              Express-API mit Auth-, CRUD- und Admin-Endpunkten
+  tests/                Server-Tests (validate, auth, WF-01, Boot-Guard)
 
 src/
   db/
     apiClient.ts        HTTP-Client für /api
     types.ts            TypeScript-Datentypen für die Frontend-Schicht
   hooks/
-    useDb.ts            React-State-Hook über apiClient.ts
-    useStoreCompat.ts   Adapter für Legacy-View-Shape
-  views/                Tagesplan, Fahrzeuge, Statistik, Berichte
-  features/             Modale für Fahrzeug, Termin und Mangel
+    useDb.ts            React-State-Hook über apiClient.ts (DB-Shape direkt)
+  auth/                 AuthContext (Login-State, Token, useRechte)
+  views/                Login, Tagesplan, Fahrzeuge, Statistik, Berichte
+  features/             Modale für Fahrzeug, Termin und Mangel + Bericht-Generator
   constants/            Status, Prüfarten, Mängelkatalog, KFZ-Referenzen
   utils/                Validatoren und Datumsfunktionen
-  tests/                Vitest-Tests
+  tests/                Vitest-Tests (inkl. UI-Flow-Tests in tests/flows/)
 
 docs/                   Projekt- und Abgabedokumentation
 docs/decisions/         Architecture Decision Records
@@ -291,7 +308,8 @@ src-tauri/              Tauri/Rust-Desktop-Shell
 .github/workflows/      CI/CD-Pipelines
 ```
 
-Die aktive Persistenz liegt in `server/db.js` und MariaDB.
+Die aktive Persistenz liegt in `server/db.js`/`server/migrations.js` und
+MariaDB.
 
 ## Dokumentation
 

@@ -1,35 +1,31 @@
 # Test Coverage
 
-Stand: 2026-05-19  
-Ausgeführt mit: `npm test` und `npx vitest run --coverage`
+Stand: 2026-07-05  
+Ausgeführt mit: `npm test` (Achtung: reseedet die konfigurierte DB — nie
+gegen einen Produktivstand laufen lassen)
 
 ## 1. Ergebnis der aktuellen Testausfuehrung
 
-```text
-Test Files  8 passed (8)
-Tests       135 passed | 1 skipped (136)
-```
+Die Suite umfasst **231 Tests**:
 
-Die zusätzlichen 11 Tests gegenüber dem Stand vom 17.05. stammen aus
-`server/tests/wf01.test.js` (API-Test für den WF-01-DB-Trigger über
-`PATCH /api/termine/:id/status`) sowie aus Regressionstests für die
-HU-Richtlinie-Kategorien (OM/GM/EM/GfM).
-
-Coverage mit V8:
-
-| Kennzahl | Abdeckung |
+| Bereich | Tests |
 |---|---:|
-| Statements | 95,68 % |
-| Branches | 87,07 % |
-| Functions | 88,46 % |
-| Lines | 98,37 % |
+| Frontend (`src/tests/`, davon 12 UI-Flow-Tests in `src/tests/flows/`) | 167 |
+| Server-Validierung (`server/tests/validate.test.js`) | 38 |
+| Auth-Bausteine (`server/tests/auth.test.js`) | 17 |
+| WF-01-Integration gegen echte MariaDB (`server/tests/wf01.test.js`) | 7 |
+| Boot-Guard (`server/tests/admin-token-boot.test.js`) | 2 |
+| **Gesamt** | **231** |
 
-```text
-Statements   : 95.68% (244/255)
-Branches     : 87.07% (229/263)
-Functions    : 88.46% (46/52)
-Lines        : 98.37% (182/185)
-```
+Die WF-01-Integrationstests laufen in der GitHub-Actions-CI gegen einen
+echten MariaDB-Service; der SQL-Bypass-Test (Layer 3) benötigt lokal den
+Docker-Stack und ist in CI via `TUV_SKIP_SQL_BYPASS=1` ausgenommen.
+Zusätzlich läuft CodeQL als statische Analyse.
+
+Die früher hier dokumentierten V8-Coverage-Prozentwerte stammen vom Stand
+2026-05-19 und sind nach dem Umbau (Auth, Migrationen, UI-Flows) nicht mehr
+aussagekräftig; ein frischer Lauf mit `npx vitest run --coverage` liefert
+die aktuellen Zahlen.
 
 ## 2. Testdateien
 
@@ -42,13 +38,23 @@ Lines        : 98.37% (182/185)
 | `src/tests/components/inputs.test.jsx` | Eingabekomponenten |
 | `src/tests/components/StatusPill.test.jsx` | Statusanzeige |
 | `src/tests/hooks/useToasts.test.js` | Toast-Hook |
+| `src/tests/hooks/useDb.test.ts` | State-Hook: Laden, optimistische Updates, Fehlerpfade, Halter-Dedupe |
+| `src/tests/auth/AuthContext.test.tsx` | Login/Logout-Zustände, Token-Handling, `useRechte()` |
+| `src/tests/flows/*.test.jsx` | UI-Flows mit gemockter API: Login, Fahrzeug-Anlage, Termin-Anlage, WF-01-Status, Rollen-Gating |
+| `server/tests/validate.test.js` | Serverseitige Eingabe-Validierung inkl. UUID-Format für Client-IDs |
+| `server/tests/auth.test.js` | scrypt-Hashing, HMAC-Token (Signatur/Ablauf), Rollen-Matrix |
+| `server/tests/admin-token-boot.test.js` | Boot-Verweigerung ohne `ADMIN_TOKEN` in Produktion |
 | `server/tests/wf01.test.js` | Express-API + MariaDB-Trigger: WF-01 blockiert `Bestanden` bei EM/GfM auf DB-Ebene |
 
 ## 3. Was wird gut abgedeckt?
 
-- Eingabevalidierung für Fahrzeug- und Terminformulare
+- Eingabevalidierung für Fahrzeug- und Terminformulare — im Frontend und
+  serverseitig (`server/validate.js`)
 - Aequivalenzklassen und Grenzwerte bei Kennzeichen, FIN, Baujahr und Kilometerstand
 - Workflow-Regel auf allen drei Ebenen: UI-Guard, API-Guard und MariaDB-Trigger blockieren `Bestanden` bei EM/GfM (siehe `server/tests/wf01.test.js`)
+- Auth-Bausteine: Passwort-Hashing, Token-Signatur und -Ablauf, Rollen-Matrix
+  (fail-closed für unbekannte Rollen)
+- UI-Flows von Login bis WF-01-Statuswechsel mit gemockter API
 - Mängelkatalog: Eintraege, eindeutige Codes, alle vier HU-Richtlinie-Kategorien (OM/GM/EM/GfM)
 - Wiederverwendbare UI-Komponenten
 - Hilfsfunktionen für Datum und Toasts
@@ -76,17 +82,15 @@ Ergebnis:
 - `/api/fahrzeuge` liefert Daten aus MariaDB
 
 Alte Browserdatenbank- und Schema-Tests wurden entfernt, weil sie nicht mehr zur
-aktuellen MariaDB-Architektur gehören. Automatisierte
-Express/MariaDB-Integrationstests sind der nächste sinnvolle Schritt.
+aktuellen MariaDB-Architektur gehören. Der WF-01-Pfad ist inzwischen als
+Integrationstest gegen eine echte MariaDB automatisiert (lokal und in CI);
+CRUD-Integrationstests für die übrigen Endpunkte stehen noch aus.
 
 ## 5. Coverage nach Bereichen
 
-| Bereich | Statements | Branches | Functions | Lines |
-|---|---:|---:|---:|---:|
-| `components/ui` | 89,47 % | 68,42 % | 77,77 % | 94,44 % |
-| `constants` | 86,36 % | 50,00 % | 70,00 % | 88,23 % |
-| `hooks` | 100,00 % | 100,00 % | 66,66 % | 100,00 % |
-| `utils` | 97,05 % | 95,45 % | 100,00 % | 100,00 % |
+Die letzte veröffentlichte Bereichs-Coverage stammt vom Stand 2026-05-19
+(vor Auth-, Migrations- und Flow-Test-Umbau) und wird hier nicht mehr als
+aktuell ausgewiesen. Aktuelle Zahlen: `npx vitest run --coverage`.
 
 ## 6. Befehle
 
@@ -112,16 +116,22 @@ npm run lint
 
 ## 7. Was fehlt noch?
 
-- Vollständige automatisierte Integrationstests gegen eine echte MariaDB-Testdatenbank (`server/tests/wf01.test.js` deckt aktuell den WF-01-Pfad ab, weitere Endpoints folgen)
-- API-Tests für die übrigen Express-Endpunkte (`/api/halter`, `/api/fahrzeuge`, `/api/termine`, `/api/mängel`)
-- Fehlerpfad-Tests für MariaDB-Fehler: UNIQUE, FK, CHECK
+- CRUD-Integrationstests für die übrigen Express-Endpunkte (`/api/halter`,
+  `/api/fahrzeuge`, `/api/termine`, `/api/maengel`) gegen eine echte
+  Testdatenbank — automatisiert ist bislang nur der WF-01-Pfad
+- Passwort-Self-Service existiert nicht (Passwort-Änderung nur manuell in der
+  DB) und ist entsprechend ungetestet
+- Fehlerpfad-Tests für MariaDB-Fehler auf API-Ebene: UNIQUE, FK, CHECK
+  (das Fehler-Mapping in `server/index.js` ist implementiert, aber nicht
+  per Integrationstest abgedeckt)
 - Mehrbenutzer-/Parallelitaets-Tests (Polling-Race-Conditions in `useDb`)
-- Automatisierte E2E-Tests im Browser
+- Automatisierte E2E-Tests im echten Browser (die UI-Flow-Tests laufen in
+  jsdom mit gemockter API)
 
 ## 8. Bewertung
 
-Die Testabdeckung ist für Validatoren, Hilfsfunktionen und zentrale
-UI-Bausteine hoch. Für die MariaDB-Architektur ist der wichtigste nächste
-Schritt, automatisierte Express/MariaDB-Integrationstests aufzubauen. Aktuell
-ist dieser Teil per Smoke-Test geprüft, aber noch nicht vollständig
-automatisiert.
+Die Testabdeckung ist für Validatoren (beidseitig), Auth-Bausteine,
+Hilfsfunktionen, zentrale UI-Bausteine und die wichtigsten UI-Flows hoch.
+Der WF-01-Kern ist end-to-end gegen eine echte MariaDB abgesichert — auch in
+CI. Wichtigste offene Punkte sind CRUD-Integrationstests für die übrigen
+Endpunkte und der fehlende Passwort-Self-Service.

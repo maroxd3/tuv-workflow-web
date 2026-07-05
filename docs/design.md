@@ -1,7 +1,7 @@
 # Design-Dokumentation
 
-Stand: 2026-05-17  
-Aktuelle Architektur: React/Vite Frontend + Express API + MariaDB.
+Stand: 2026-07-05  
+Aktuelle Architektur: React/Vite Frontend + Express API (mit Login/Rollen) + MariaDB.
 
 ## 1. Zielbild
 
@@ -10,15 +10,18 @@ Die Anwendung trennt Benutzeroberfläche, API und relationale Persistenz klar:
 ```mermaid
 flowchart LR
   user[Browser / Tauri WebView]
+  login[LoginView + AuthContext]
   ui[React Views]
-  hook[useDb / useStoreCompat]
+  hook[useDb]
   apiClient[apiClient.ts]
   api[Express API server/index.js]
+  auth[Auth server/auth.js]
   dbmod[MariaDB-Modul server/db.js]
   maria[(MariaDB tuv_workflow)]
 
-  user --> ui --> hook --> apiClient
-  apiClient -->|HTTP JSON /api| api
+  user --> login --> ui --> hook --> apiClient
+  apiClient -->|HTTP JSON /api + Bearer-Token| api
+  api --> auth
   api --> dbmod --> maria
 ```
 
@@ -30,10 +33,12 @@ denselben Datenstand nutzen.
 
 | Schicht | Dateien | Verantwortung |
 |---|---|---|
-| Präsentation | `src/views`, `src/features`, `src/components` | UI, Formulare, Tabellen, Modale, Charts |
-| State/API-Client | `src/hooks/useDb.ts`, `src/hooks/useStoreCompat.ts`, `src/db/apiClient.ts` | React-State, optimistische Updates, HTTP-Aufrufe |
-| Backend-API | `server/index.js` | REST-Endpunkte, Mapping camelCase/snake_case, Workflow-Regeln |
-| Datenbank | `server/db.js`, MariaDB | Tabellen, Fremdschlüssel, Constraints, Stammdaten |
+| Präsentation | `src/views`, `src/features`, `src/components` | UI, Formulare, Tabellen, Modale, Charts; Bericht-HTML in `src/features/bericht/reportHtml.js` |
+| Auth (Frontend) | `src/auth/AuthContext.tsx`, `src/views/LoginView.jsx` | Login-Flow, Token-Speicherung, `useRechte()` für UI-Ausblendungen |
+| State/API-Client | `src/hooks/useDb.ts`, `src/db/apiClient.ts` | React-State, optimistische Updates, HTTP-Aufrufe; Views nutzen das DB-Shape von `useDb` direkt (`terminId`, `statusCode`, `maengel`, ...) |
+| Backend-API | `server/index.js`, `server/validate.js` | REST-Endpunkte, Eingabe-Validierung, Mapping camelCase/snake_case, Workflow-Regeln |
+| Auth (Backend) | `server/auth.js` + `requireAuth` in `server/index.js` | scrypt-Passwort-Hashes, HMAC-SHA256-Token, Rollen-Matrix empfang/pruefer/chef |
+| Datenbank | `server/db.js`, `server/migrations.js`, MariaDB | Versionierte Migrationen (ADR-011), Fremdschlüssel, Constraints, Stammdaten-Seeds, WF-01-Trigger |
 
 ## 3. Datenfluss
 
@@ -74,19 +79,23 @@ Die API liegt unter `/api`:
 | GET/POST/PATCH/DELETE | `/api/fahrzeuge` | Fahrzeuge verwalten |
 | GET/POST/PATCH/DELETE | `/api/termine` | Termine verwalten |
 | PATCH | `/api/termine/:id/status` | Status mit WF-01-Prüfung setzen |
-| GET | `/api/termine/:id/mängel` | Mängel eines Termins laden |
-| POST/DELETE | `/api/mängel` | Mängel anlegen und löschen |
-| POST | `/api/admin/reset` | Bewegungsdaten löschen |
-| POST | `/api/admin/demo` | Demo-Daten neu laden |
+| GET | `/api/termine/:id/maengel` | Mängel eines Termins laden |
+| POST/DELETE | `/api/maengel` | Mängel anlegen und löschen |
+| GET | `/api/count/fahrzeuge` | Fahrzeug-Anzahl (Healthcheck/Sidebar) |
+| POST | `/api/admin/reset` | Bewegungsdaten löschen (chef + `X-Admin-Token`) |
+| POST | `/api/admin/demo` | Demo-Daten neu laden (chef + `X-Admin-Token`) |
 
 Alle fachlichen Endpunkte sind rollen-geschützt (empfang/pruefer/chef, siehe
 README „Benutzer & Rollen"); in development/CI ist die Auth per Default aus.
+PATCH/DELETE auf unbekannte IDs antworten mit 404; bekannte DB-Constraint-
+Fehler werden auf fachliche Statuscodes gemappt (1062→409, 1452→400,
+1451→409, CHECK→400), der 500-Fall leakt keine SQL-Details.
 `vite.config.js` proxyt lokale Frontend-Aufrufe von `/api` an
-`http://127.0.0.1:8787`.
+`http://127.0.0.1:8787` (überschreibbar via `VITE_API_PROXY_TARGET`).
 
 ## 5. Datenbankdesign
 
-MariaDB speichert acht Tabellen:
+MariaDB speichert zehn Tabellen:
 
 - `halter`
 - `fahrzeug`
@@ -96,9 +105,14 @@ MariaDB speichert acht Tabellen:
 - `pruefart`
 - `pruefer`
 - `mangel_kategorie`
+- `benutzer` (Login-Konten mit Rolle, ohne FKs zu den Fachtabellen)
+- `schema_migration` (Protokoll der angewendeten Migrationen)
 
-Die Tabellen sind in 3NF modelliert. Mängel sind nicht als Array im Termin
-eingebettet, sondern eigene Zeilen mit Fremdschlüssel auf `termin`.
+Die Fachtabellen sind in 3NF modelliert. Mängel sind nicht als Array im Termin
+eingebettet, sondern eigene Zeilen mit Fremdschlüssel auf `termin`. Das Schema
+wird über versionierte, append-only Migrationen in `server/migrations.js`
+aufgebaut und aktualisiert (siehe ADR-011); Stammdaten-Seeds und der
+WF-01-Trigger bleiben Desired-State bei jedem Boot (`server/db.js`).
 
 Wichtige Constraints:
 
@@ -170,7 +184,24 @@ flowchart TB
 
 ### Sicherheitsgrenzen
 
-- Keine Authentifizierung im Prototyp - das LAN gilt als vertrauenswuerdige Zone.
-- Auth, HTTPS und Rollen kommen in einer Phase 2 (siehe Backlog US-12).
-- MariaDB-Zugangsdaten liegen ausschließlich in `.env` auf dem Server.
+- **Login mit Rollen** (empfang/pruefer/chef): serverseitig durchgesetzt über
+  `requireAuth` in `server/index.js`; Passwörter als scrypt-Hashes, Tokens
+  HMAC-SHA256-signiert mit 12 h Gültigkeit (`server/auth.js`). In Produktion
+  (`NODE_ENV=production`) ist die Auth per Default aktiv, in development/CI aus
+  (`AUTH_ENABLED` überschreibt in beide Richtungen).
+- **Admin-Endpunkte doppelt geschützt**: chef-Rolle UND `X-Admin-Token`-Header;
+  der Token-Vergleich ist timing-sicher, und in Produktion verweigert der
+  Server ohne `ADMIN_TOKEN` den Start (Fail-fast).
+- **Security-Header via helmet** (CSP ohne `upgrade-insecure-requests`, weil
+  das On-Premise-Deployment über plain HTTP im LAN läuft; keine
+  Inline-Scripts — der Bericht-Druck wird deshalb vom Opener getriggert).
+- **Rate-Limits nur in Produktion**: 600/min auf `/api`, 30/15 min auf
+  `/api/admin`, 10/15 min auf `/api/auth/login` (Brute-Force-Schutz).
+- **CORS** ist auf localhost und RFC-1918-Private-LAN beschränkt
+  (Whitelist via `ALLOWED_ORIGINS` erweiterbar).
+- `/api/health` prüft die DB mit echtem Ping und liefert 503, wenn MariaDB
+  weg ist; Client-generierte IDs müssen UUID-Format haben (`server/validate.js`).
+- MariaDB-Zugangsdaten liegen ausschließlich in `.env` auf dem Server;
+  der MariaDB-Port ist im Docker-Deployment nur an 127.0.0.1 gebunden.
 - Frontend-Bundle enthält keine Datenbank-Credentials.
+- Noch offen: HTTPS/TLS im LAN sowie Passwort-Self-Service für Benutzer.

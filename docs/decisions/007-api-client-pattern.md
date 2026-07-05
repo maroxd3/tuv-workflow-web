@@ -27,3 +27,13 @@ die MariaDB/API-Daten auf die bestehende View-Datenform ab.
 - Neue Datenoperationen brauchen API-Endpunkt plus API-Client-Funktion.
 - Das Frontend kann leichter gemockt getestet werden.
 - SQL bleibt im Backend. Views und Hooks sprechen nur mit dem API-Client.
+
+## Nachtrag 2026-07-05
+
+Der Adapter `useStoreCompat.ts` wurde entfernt: alle Views nutzen inzwischen
+das DB-Shape von `useDb` direkt (`terminId`, `fahrzeugId`, `prueftCode`,
+`statusCode`, `kategorieCode`, `maengel`, `huFaellig`, ...). Die
+Halter-Dedupe-Logik aus dem Compat-Layer lebt jetzt in
+`useDb.addFahrzeugMitHalter`. Der Kern der Entscheidung —
+`apiClient.ts` als einzige HTTP-Schicht, State und optimistische Updates in
+`useDb` — gilt unverändert.

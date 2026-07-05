@@ -40,9 +40,15 @@ copy .env.example .env
 docker compose up -d
 ```
 
-Damit laufen MariaDB (Port 3306) und Express-API (Port 8787). Die API legt
-Datenbank, Tabellen und Stammdaten beim ersten Start automatisch an. Binary
+Damit laufen MariaDB (Port 3306, nur an 127.0.0.1 gebunden) und Express-API
+(Port 8787). Die API legt die Datenbank beim ersten Start automatisch an und
+baut das Schema über versionierte Migrationen auf (`server/migrations.js`,
+protokolliert in der Tabelle `schema_migration`, siehe ADR-011); Stammdaten
+und Default-Benutzer werden bei jedem Start idempotent nachgezogen. Binary
 Logging ist aktiviert (siehe [backup.md](backup.md)).
+
+Hinweis: Im Docker-Deployment läuft die API mit `NODE_ENV=production` — ohne
+gesetzten `ADMIN_TOKEN` in der `.env` verweigert sie absichtlich den Start.
 
 Prüfen:
 
@@ -100,6 +106,10 @@ API_PORT=8787
 VITE_API_BASE_URL=/api
 ```
 
+Dazu kommen die Sicherheits-Variablen `NODE_ENV`, `ADMIN_TOKEN`,
+`AUTH_ENABLED`, `AUTH_SECRET` und `DEFAULT_USER_PASSWORT` — Bedeutung und
+Beispiele stehen kommentiert in `.env.example`.
+
 `.env` wird nicht committet. Die Vorlage liegt in `.env.example`.
 
 ## 5. Lokal starten
@@ -119,7 +129,18 @@ npm run dev
 ```
 
 Die App ist lokal unter `http://localhost:5173` erreichbar. Vite leitet `/api`
-an `http://127.0.0.1:8787` weiter.
+an `http://127.0.0.1:8787` weiter (Ziel überschreibbar via
+`VITE_API_PROXY_TARGET`).
+
+### Login
+
+In Produktion (bzw. mit `AUTH_ENABLED=true`) verlangt die App einen Login.
+Beim ersten Start werden drei Default-Benutzer angelegt: `empfang` (Rolle
+empfang), `MW` (pruefer) und `chef` (chef). Das gemeinsame Default-Passwort
+ist der Wert von `DEFAULT_USER_PASSWORT` aus der `.env` (Fallback:
+`start123`) — **beim Kunden-Setup müssen die Passwörter geändert werden**.
+In development/CI ist die Auth per Default aus; die Requests laufen dann
+ohne Login.
 
 ## 6. Demo-Daten laden
 
@@ -142,7 +163,7 @@ ok        : True
 halter    : 8
 fahrzeuge : 8
 termine   : 13
-mängel   : 12
+maengel   : 12
 ```
 
 ## 7. Prüfen
@@ -175,9 +196,13 @@ SELECT COUNT(*) FROM mangel;
 - `pruefart`
 - `pruefer`
 - `mangel_kategorie`
+- `benutzer` (Login-Konten)
+- `schema_migration` (Migrations-Protokoll)
 
-Die Tabellen und Stammdaten werden beim API-Start durch `server/db.js`
-angelegt. Fachliche CRUD- und Demo-Endpunkte liegen in `server/index.js`.
+Die Tabellen entstehen beim API-Start über versionierte Migrationen in
+`server/migrations.js` (ADR-011); Stammdaten, Default-Benutzer und der
+WF-01-Trigger werden von `server/db.js` idempotent angelegt. Fachliche CRUD-,
+Auth- und Demo-Endpunkte liegen in `server/index.js`.
 
 ## 9. Deployment-Hinweis
 

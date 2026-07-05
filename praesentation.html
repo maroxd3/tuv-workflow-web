@@ -158,7 +158,7 @@
     color: var(--t3);
     margin-bottom: 28px;
     font-weight: 400;
-    max-width: 780px;
+    max-width: 820px;
     line-height: 1.5;
   }
 
@@ -282,6 +282,8 @@
   }
   td.mono { color: var(--cyan); font-family: 'JetBrains Mono', monospace; font-size: 11.5px; }
   td.muted { color: var(--t4); }
+  td.ok  { color: var(--green); font-weight: 700; text-align: center; }
+  td.no  { color: var(--red);   font-weight: 700; text-align: center; }
 
   /* ── Diagrams (ASCII boxes) ── */
   .ascii {
@@ -300,6 +302,7 @@
   .ascii .g { color: var(--green); }
   .ascii .a { color: var(--amber); }
   .ascii .p { color: var(--purple); }
+  .ascii .r { color: var(--red); }
   .ascii .t1 { color: var(--t1); }
 
   /* ── Stats ── */
@@ -341,6 +344,7 @@
   }
   .callout.amber { background: rgba(251,191,36,0.04); border-color: var(--amber); }
   .callout.green { background: rgba(52,211,153,0.04); border-color: var(--green); }
+  .callout.red   { background: rgba(248,113,113,0.04); border-color: var(--red); }
 
   /* ── Agenda ── */
   .agenda { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 36px; margin-top: 14px; }
@@ -365,6 +369,65 @@
     flex-shrink: 0;
   }
 
+  /* ── Defense-Layer-Stack (WF-01) ── */
+  .layer {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 10px 14px;
+    background: rgba(31,41,55,0.5);
+  }
+  .layer .layer-tag {
+    font-size: 9.5px; font-weight: 700; letter-spacing: 0.12em;
+    text-transform: uppercase; font-family: 'JetBrains Mono', monospace;
+    margin-bottom: 3px;
+  }
+  .layer p { font-size: 11.5px; color: var(--t2); line-height: 1.5; }
+  .layer-arrow {
+    text-align: center; color: var(--t4); font-size: 12px;
+    font-family: 'JetBrains Mono', monospace; padding: 2px 0;
+  }
+
+  /* ── Login-Mockup (CSS-Nachbau des echten LoginView) ── */
+  .mock-login {
+    width: 100%; max-width: 320px; margin: 0 auto;
+    background: linear-gradient(180deg, #1A1740 0%, #110E30 100%);
+    border: 1px solid rgba(255,255,255,0.09);
+    border-radius: 16px;
+    padding: 26px 26px 22px;
+    box-shadow: 0 12px 48px rgba(0,0,0,0.45);
+    text-align: center;
+  }
+  .mock-login .logo {
+    width: 44px; height: 44px; margin: 0 auto 10px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #4F46E5, #7C3AED);
+    box-shadow: 0 4px 24px rgba(99,102,241,0.55);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; color: #fff;
+  }
+  .mock-login .title { font-size: 14px; font-weight: 700; color: #F0EEFF; letter-spacing: -0.01em; }
+  .mock-login .sub { font-size: 8.5px; letter-spacing: 0.14em; color: #5450A0; margin: 4px 0 16px; }
+  .mock-login .fld-label {
+    text-align: left; font-size: 8.5px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.1em;
+    color: #9490CC; margin: 8px 0 4px;
+  }
+  .mock-login .fld {
+    height: 30px; border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.09);
+    background: rgba(255,255,255,0.06);
+    color: #F0EEFF; font-size: 11px;
+    display: flex; align-items: center; padding: 0 10px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .mock-login .fld.empty { color: #5450A0; }
+  .mock-login .btn {
+    margin-top: 14px; height: 32px; border-radius: 8px;
+    background: linear-gradient(135deg, #4F46E5, #6366F1);
+    color: #fff; font-size: 12px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+  }
+
   /* ── Print ── */
   @media print {
     body { background: var(--bg-0); }
@@ -385,859 +448,931 @@
   <img src="public/images/werkstatt-hero.png" alt="Prüfstelle Symbolbild — Werkstatt mit KFZ auf Hebebühne und digitaler Prüfung" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center; z-index:0"/>
   <div style="position:absolute; inset:0; background:linear-gradient(90deg, rgba(8,12,22,0.94) 0%, rgba(8,12,22,0.82) 40%, rgba(8,12,22,0.55) 70%, rgba(8,12,22,0.25) 100%); z-index:1; pointer-events:none"></div>
   <div style="position:relative; z-index:2; padding:80px 100px; height:100%; display:flex; flex-direction:column; justify-content:center; align-items:flex-start">
-    <div class="badge">Software-Projekt · IIM-211-01 · SoSe 2026</div>
+    <div class="badge">Software-Projekt · IIM-211-01 · SoSe 2026 · Abschlusspräsentation</div>
     <h1>TÜV <span class="accent">Prüfstelle Pro</span></h1>
-    <div class="lead" style="max-width:640px">Ein digitales Verwaltungssystem für die Abwicklung des kompletten Prüfprozesses einer TÜV-Prüfstelle — von der Terminplanung bis zum Bericht.</div>
+    <div class="lead" style="max-width:660px">Ein On-Premise-Verwaltungssystem für den kompletten Prüfprozess einer TÜV-Prüfstelle — mit Rollen-Login, relationaler Integrität in MariaDB und 231 automatisierten Tests.</div>
     <div class="meta">
       <span class="label">Team</span>
       <strong>Marwan Saleh</strong> &nbsp;&middot;&nbsp; <strong>Oussama Hlayhel</strong><br>
       <span class="label" style="margin-top:8px">Hochschule Hannover · Fakultät II</span>
-      30. April 2026 &nbsp;&middot;&nbsp; <strong>github.com/maroxd3/tuv-workflow-web</strong>
+      Juli 2026 &nbsp;&middot;&nbsp; <strong>github.com/maroxd3/tuv-workflow-web</strong>
     </div>
   </div>
   <div class="brand" style="z-index:3"><span class="dot">●</span> TÜV PRÜFSTELLE PRO</div>
-  <div class="slide-num" style="z-index:3">01 / 19</div>
+  <div class="slide-num" style="z-index:3">01 / 23</div>
 </div>
 
 <!-- ═════════════ 02  AGENDA ═════════════ -->
 <div class="slide">
   <div class="eyebrow">Agenda</div>
-  <h2>Was Sie auf den nächsten 17 Slides erwartet</h2>
-  <div class="lede">Vom Problem über die Architektur bis zur Implementierung — mit explizitem Vorher/Nachher zur Wirkung Ihres Feedbacks.</div>
+  <h2>Was Sie auf den nächsten 21 Slides erwartet</h2>
+  <div class="lede">Vom Problem über Architektur, Datenmodell und Sicherheit bis zur Teststrategie — der komplette Projektstand nach 10 Sprints.</div>
   <div class="agenda">
     <div class="agenda-item"><span class="agenda-num">01</span> Problem &amp; Motivation</div>
-    <div class="agenda-item"><span class="agenda-num">10</span> Datenschutz &amp; Sicherheit (DSGVO)</div>
-    <div class="agenda-item"><span class="agenda-num">02</span> Stakeholder</div>
-    <div class="agenda-item"><span class="agenda-num">11</span> Validierung &amp; UX-Schutz</div>
-    <div class="agenda-item"><span class="agenda-num">03</span> Use-Case-Diagramm</div>
-    <div class="agenda-item"><span class="agenda-num">12</span> Aktivitätsdiagramm — Hauptworkflow</div>
-    <div class="agenda-item"><span class="agenda-num">04</span> Anforderungen (Pflichtenheft)</div>
-    <div class="agenda-item"><span class="agenda-num">13</span> Test-Strategie &amp; Verfahren</div>
-    <div class="agenda-item"><span class="agenda-num">05</span> Performance &amp; Lastprofil</div>
-    <div class="agenda-item"><span class="agenda-num">14</span> Sprint-Methodik &amp; Backlog</div>
-    <div class="agenda-item"><span class="agenda-num">06</span> Architektur &amp; Komponenten</div>
-    <div class="agenda-item"><span class="agenda-num">15</span> Feedback-Wirkung — Vorher/Nachher</div>
-    <div class="agenda-item"><span class="agenda-num">07</span> Datenmodell &amp; Integrität</div>
-    <div class="agenda-item"><span class="agenda-num">16</span> Implementation — App-Screenshots</div>
-    <div class="agenda-item"><span class="agenda-num">08</span> Klassendiagramm / Typmodell</div>
-    <div class="agenda-item"><span class="agenda-num">17</span> Ausblick &amp; Q&amp;A</div>
-    <div class="agenda-item"><span class="agenda-num">09</span> Persistenz: MariaDB-Wahl &amp; Migration</div>
-    <div class="agenda-item" style="visibility:hidden">&nbsp;</div>
+    <div class="agenda-item"><span class="agenda-num">09</span> Benutzer &amp; Login-Sicherheit</div>
+    <div class="agenda-item"><span class="agenda-num">02</span> Rollen &amp; Rechte-Matrix</div>
+    <div class="agenda-item"><span class="agenda-num">10</span> API-Hardening</div>
+    <div class="agenda-item"><span class="agenda-num">03</span> Anwendungsfälle je Akteur</div>
+    <div class="agenda-item"><span class="agenda-num">11</span> Frontend-Qualität</div>
+    <div class="agenda-item"><span class="agenda-num">04</span> Anforderungen &amp; Backlog-Stand</div>
+    <div class="agenda-item"><span class="agenda-num">12</span> Testpyramide — 231 Tests</div>
+    <div class="agenda-item"><span class="agenda-num">05</span> Architektur: On-Premise-Modell</div>
+    <div class="agenda-item"><span class="agenda-num">13</span> UI-Flow-Tests &amp; CI/CodeQL</div>
+    <div class="agenda-item"><span class="agenda-num">06</span> Architektur: Schichten, ein View-Model</div>
+    <div class="agenda-item"><span class="agenda-num">14</span> DSGVO &amp; Backup-Konzept</div>
+    <div class="agenda-item"><span class="agenda-num">07</span> Datenmodell: ER, 3NF, Constraints</div>
+    <div class="agenda-item"><span class="agenda-num">15</span> Methodik, ADRs, Feedback-Wirkung</div>
+    <div class="agenda-item"><span class="agenda-num">08</span> Versionierte Schema-Migrationen</div>
+    <div class="agenda-item"><span class="agenda-num">16</span> Demo, Ausblick &amp; Q&amp;A</div>
+  </div>
+  <div class="callout" style="margin-top:22px; font-size:12px">
+    <strong>Roter Faden:</strong> Jede fachliche Regel wird dort durchgesetzt, wo sie nicht umgangen werden kann — in der Datenbank und im Server. UI-Komfort kommt obendrauf, nicht anstelle.
   </div>
   <div class="brand"><span class="dot">●</span> TÜV PRÜFSTELLE PRO</div>
-  <div class="slide-num">02 / 19</div>
+  <div class="slide-num">02 / 23</div>
 </div>
 
 <!-- ═════════════ 03  PROBLEM & MOTIVATION ═════════════ -->
 <div class="slide">
   <div class="eyebrow">01 · Problem</div>
   <h2>Warum dieses Projekt?</h2>
-  <div class="lede">Die meisten kleinen und mittleren Prüfstellen verwalten ihren Tagesablauf bis heute mit Excel und Papier. Daraus entstehen konkrete operative Schmerzen.</div>
+  <div class="lede">Die meisten kleinen und mittleren Prüfstellen verwalten ihren Tagesablauf bis heute mit Excel und Papier. Daraus entstehen konkrete operative Schmerzen — und ein Datenschutz-Dilemma bei Cloud-Lösungen.</div>
   <div class="grid-2">
     <div>
       <h3>Status quo in der Branche</h3>
       <ul class="bullets red">
-        <li>Termine werden in Excel-Kalendern geführt — kein gemeinsamer Stand zwischen Empfang, Prüfern und Leitung</li>
-        <li>Doppelvergabe von Slots, weil Empfang nicht sofort sieht, dass ein Prüfer bereits auf einem Termin sitzt</li>
+        <li>Termine in Excel-Kalendern — kein gemeinsamer Stand zwischen Empfang, Prüfern und Leitung</li>
+        <li>Doppelvergabe von Slots, weil der Empfang nicht sieht, dass ein Prüfer bereits auf einem Termin sitzt</li>
         <li>Tippfehler bei Kennzeichen, FIN, Halter-Daten — keine strukturelle Prüfung</li>
-        <li>Mängelerfassung als Freitext-Notizen, ohne Bezug zum StVZO-Anlage-VIII-Katalog</li>
-        <li>Berichte werden in Word kopiert, manuell ausgefüllt, sind nicht GoBD-konform</li>
+        <li>Mängelerfassung als Freitext, ohne Bezug zum StVZO-Anlage-VIII-Katalog</li>
+        <li>Keine Zugriffskontrolle: jeder am PC kann alles ändern und löschen</li>
+        <li>Kundendaten in US-Cloud-Tools — heikel für einen Werkstattbetrieb</li>
       </ul>
     </div>
     <div>
-      <h3>Vision von TÜV Prüfstelle Pro</h3>
+      <h3>Antwort: TÜV Prüfstelle Pro</h3>
       <div class="card tone-cyan">
-        <h4>Ein zentrales System für den ganzen Prozess</h4>
-        <p>Tagesplan, Fahrzeug-Stammdaten, Mängelkatalog, Workflow-Steuerung und Berichts-Generierung in einer Anwendung — als Web-App und als native Desktop-App (Tauri).</p>
+        <h4>Ein System für den ganzen Prozess — im eigenen Haus</h4>
+        <p>Tagesplan, Fahrzeug- und Halter-Stammdaten, Mängelkatalog, Workflow-Steuerung, Statistik und Berichte. Läuft komplett im LAN der Prüfstelle: <strong>docker compose up</strong> auf einem Server-PC, Kundendaten verlassen die Werkstatt nie.</p>
       </div>
       <div class="card tone-green" style="margin-top:10px">
-        <h4>Strukturierte Eingabe statt Freitext</h4>
-        <p>Hersteller, Modell und Fahrzeugtyp als abhängige Auswahllisten. Kennzeichen gegen die KBA-Liste validiert. Mängel aus dem § 29 StVZO-Katalog. Tippfehler werden strukturell ausgeschlossen.</p>
+        <h4>Regeln, die nicht umgangen werden können</h4>
+        <p>Kein „Bestanden" bei erheblichem/gefährlichem Mangel (§ 29 StVZO) — abgesichert in UI, API <strong>und</strong> als MariaDB-Trigger. Rollenrechte werden serverseitig erzwungen, nicht nur ausgeblendet.</p>
       </div>
       <div class="card tone-purple" style="margin-top:10px">
-        <h4>Echtzeit-Synchronisation</h4>
-        <p>Statusänderungen eines Prüfers sind beim Empfang sofort sichtbar — keine Doppel-Vergabe mehr.</p>
+        <h4>Mehrbenutzer-Betrieb mit Login</h4>
+        <p>Empfang, Prüfer und Chef arbeiten gleichzeitig auf demselben Datenbestand — Änderungen anderer erscheinen ohne F5 (5-Sekunden-Polling), jede Rolle sieht nur ihre erlaubten Aktionen.</p>
       </div>
     </div>
   </div>
   <div class="brand"><span class="dot">●</span> TÜV PRÜFSTELLE PRO</div>
-  <div class="slide-num">03 / 19</div>
+  <div class="slide-num">03 / 23</div>
 </div>
 
-<!-- ═════════════ 04  STAKEHOLDER ═════════════ -->
+<!-- ═════════════ 04  ROLLEN & RECHTE-MATRIX ═════════════ -->
 <div class="slide">
-  <div class="eyebrow">02 · Stakeholder</div>
-  <h2>Wer arbeitet mit dem System?</h2>
-  <div class="lede">Vier Rollen mit unterschiedlichen Anliegen. Jede UI-Sicht ist auf eine Hauptrolle zugeschnitten.</div>
-  <div class="grid-4">
-    <div class="card tone-cyan">
-      <h4>Prüfingenieur</h4>
-      <p>Führt die HU/AU am Fahrzeug durch. <strong>Will:</strong> Mängel schnell aus dem Katalog erfassen, Status-Wechsel mit einem Klick (Starten/Fertig).</p>
-      <p style="margin-top:8px"><strong>Sicht:</strong> Tagesplan, Mängel-Modal</p>
+  <div class="eyebrow">02 · Rollen</div>
+  <h2>Von Personas zu echten Rollen mit Login</h2>
+  <div class="lede">Empfang, Prüfer und Chef sind keine Beschreibungen mehr, sondern <strong>implementierte Benutzerrollen</strong>: eigene Konten in der <span class="mono">benutzer</span>-Tabelle, Login per Kürzel + Passwort, Rechte serverseitig erzwungen (<span class="mono">requireAuth</span> in <span class="mono">server/index.js</span>).</div>
+  <div class="grid-3">
+    <div class="card tone-amber pad-sm">
+      <h4>Empfang <span class="pill muted" style="margin-left:4px">empfang</span></h4>
+      <p>Terminvergabe &amp; Stammdatenpflege: Halter, Fahrzeuge und Termine anlegen und ändern. <strong>Keine</strong> Prüfungs-Entscheidungen, <strong>nichts</strong> löschen.</p>
     </div>
-    <div class="card tone-green">
-      <h4>Prüfstellenleiter</h4>
-      <p>Plant die Auslastung, überwacht Qualität. <strong>Will:</strong> Tagesübersicht, KPIs, Bestehensquote, Leistung pro Prüfer.</p>
-      <p style="margin-top:8px"><strong>Sicht:</strong> Statistik, Tagesplan-Wochenansicht</p>
+    <div class="card tone-cyan pad-sm">
+      <h4>Prüfer <span class="pill muted" style="margin-left:4px">pruefer</span></h4>
+      <p>Fachliche Ebene: zusätzlich Status setzen (Starten / Ergebnis) und Mängel erfassen/entfernen — Mängel-Rechte hängen bewusst am Status-Recht.</p>
     </div>
-    <div class="card tone-amber">
-      <h4>Empfang / Admin</h4>
-      <p>Pflegt Fahrzeug- und Halter-Daten, vergibt Termine telefonisch. <strong>Will:</strong> Schnelle Suche, Plausibilitäts-Hinweise bei der Eingabe.</p>
-      <p style="margin-top:8px"><strong>Sicht:</strong> Fahrzeuge, Tagesplan-Tabelle</p>
-    </div>
-    <div class="card tone-purple">
-      <h4>Fahrzeughalter</h4>
-      <p>Indirekter Stakeholder. <strong>Will:</strong> Verständlichen, gesetzeskonformen Bericht erhalten.</p>
-      <p style="margin-top:8px"><strong>Sicht:</strong> Berichts-PDF (in Roadmap), heute Text-Export</p>
+    <div class="card tone-purple pad-sm">
+      <h4>Chef <span class="pill muted" style="margin-left:4px">chef</span></h4>
+      <p>Alles — inklusive Löschen von Halter/Fahrzeug/Termin und <span class="mono">/api/admin/*</span> (Demo-Daten, Reset). Admin-Endpunkte verlangen <em>zusätzlich</em> den X-Admin-Token.</p>
     </div>
   </div>
-  <h3 style="margin-top:24px">Lastprofil — Auslegung der App</h3>
-  <div class="stat-grid">
-    <div class="stat"><div class="num">20–30</div><div class="lbl">Prüfungen pro Tag (typisch)</div></div>
-    <div class="stat"><div class="num green">50</div><div class="lbl">Prüfungen pro Tag (HU/AU-Spitze)</div></div>
-    <div class="stat"><div class="num amber">3–5</div><div class="lbl">Aktive Nutzer parallel</div></div>
-    <div class="stat"><div class="num purple">~8 000</div><div class="lbl">Termine pro Jahr / Bestand</div></div>
+  <h3 style="margin-top:20px">Rechte-Matrix — serverseitig durchgesetzt (<span class="mono" style="font-size:12px">ROLLEN_RECHTE</span> in <span class="mono" style="font-size:12px">server/auth.js</span>)</h3>
+  <table>
+    <tr><th>Aktion</th><th style="text-align:center">empfang</th><th style="text-align:center">pruefer</th><th style="text-align:center">chef</th></tr>
+    <tr><td>Lesen (alle GET-Endpunkte)</td><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td></tr>
+    <tr><td>Halter / Fahrzeuge / Termine anlegen + ändern</td><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td></tr>
+    <tr><td>Status setzen (<span class="mono">PATCH /api/termine/:id/status</span>) + Mängel anlegen/löschen</td><td class="no">✗</td><td class="ok">✓</td><td class="ok">✓</td></tr>
+    <tr><td>Halter / Fahrzeuge / Termine löschen &nbsp;·&nbsp; <span class="mono">/api/admin/*</span> (+ X-Admin-Token)</td><td class="no">✗</td><td class="no">✗</td><td class="ok">✓</td></tr>
+  </table>
+  <div class="callout green" style="margin-top:14px; font-size:12px">
+    <strong>Fail-closed:</strong> Unbekannte Rollen erhalten immer <span class="mono">false</span>. Die UI blendet verbotene Buttons zusätzlich aus (<span class="mono">rechteFuerRolle</span> im AuthContext) — aber durchgesetzt wird im Server: 401 ohne gültiges Token, 403 bei unzureichender Rolle.
   </div>
   <div class="brand"><span class="dot">●</span> TÜV PRÜFSTELLE PRO</div>
-  <div class="slide-num">04 / 19</div>
+  <div class="slide-num">04 / 23</div>
 </div>
 
-<!-- ═════════════ 05  USE-CASE-DIAGRAMM ═════════════ -->
+<!-- ═════════════ 05  ANWENDUNGSFÄLLE ═════════════ -->
 <div class="slide">
-  <div class="eyebrow">03 · Use-Case-Diagramm</div>
+  <div class="eyebrow">03 · Anwendungsfälle</div>
   <h2>Akteure und ihre Anwendungsfälle</h2>
-  <div class="lede">Drei interne Akteure mit unterschiedlichen Berechtigungen und ein externer Akteur ohne Systemzugriff. UML-Use-Case-Diagramm vollständig in <span class="mono">docs/design.md § 1.4</span>.</div>
+  <div class="lede">Drei interne Akteure — jetzt deckungsgleich mit den drei Login-Rollen — und ein externer Akteur ohne Systemzugriff. Use-Case-Übersicht vollständig in <span class="mono">docs/design.md</span>.</div>
   <div class="grid-2">
     <div>
-      <div class="card tone-cyan pad-sm">
+      <div class="card tone-amber pad-sm">
         <h4>Empfang / Verwaltung</h4>
         <ul class="bullets" style="margin-top:6px">
-          <li>Termin anlegen, verschieben, löschen</li>
-          <li>Fahrzeug anlegen, suchen, filtern</li>
-          <li>Bericht-Historie durchsehen</li>
+          <li>Termin anlegen, verschieben, kommentieren</li>
+          <li>Fahrzeug + Halter anlegen, suchen, filtern (Halter-Dedupe beim Anlegen)</li>
+          <li>HU-Fälligkeiten und Berichts-Historie einsehen</li>
         </ul>
       </div>
-      <div class="card tone-green pad-sm" style="margin-top:10px">
+      <div class="card tone-cyan pad-sm" style="margin-top:10px">
         <h4>Prüfer (TÜV-Sachverständiger)</h4>
         <ul class="bullets" style="margin-top:6px">
-          <li>Prüfung starten — Status auf <span class="mono">IN_PRUEFUNG</span></li>
-          <li>Mängel nach StVZO Anlage VIII erfassen</li>
-          <li>Prüfergebnis setzen (BESTANDEN / NACHPRÜFUNG / NICHT&nbsp;BESTANDEN)</li>
-          <li>Bericht-PDF erzeugen + an Halter aushändigen</li>
+          <li>Prüfung starten — Status auf <span class="mono">In Prüfung</span></li>
+          <li>Mängel nach StVZO Anlage VIII erfassen (Kategorien OM / GM / EM / GfM)</li>
+          <li>Prüfergebnis setzen — WF-01 blockiert „Bestanden" bei EM/GfM</li>
+          <li>A4-Bericht erzeugen und an Halter aushändigen</li>
         </ul>
       </div>
     </div>
     <div>
       <div class="card tone-purple pad-sm">
-        <h4>Administrator</h4>
+        <h4>Chef / Leitung</h4>
         <ul class="bullets" style="margin-top:6px">
-          <li>Statistik &amp; KPIs einsehen</li>
-          <li>Bestandsquoten je Prüfer</li>
-          <li>Top-10-Mängel pro Zeitraum (7&nbsp;/&nbsp;30&nbsp;/&nbsp;90&nbsp;/&nbsp;365&nbsp;d)</li>
+          <li>Statistik &amp; KPIs: Bestehensquote, Prüfervergleich, Top-Mängel je Zeitraum</li>
+          <li>Datenbestand bereinigen (löschen) — nur diese Rolle</li>
+          <li>Admin-Funktionen: Demo-Daten laden, Reset (Token-geschützt)</li>
         </ul>
       </div>
-      <div class="card tone-amber pad-sm" style="margin-top:10px">
+      <div class="card tone-green pad-sm" style="margin-top:10px">
         <h4>Fahrzeughalter <span style="font-weight:400; color:var(--t3); font-size:11px">— extern, kein Systemzugriff</span></h4>
-        <ul class="bullets" style="margin-top:6px">
-          <li>Erscheint physisch zum Termin</li>
-          <li>Empfängt PDF-Bericht</li>
-          <li>Self-Service-Portal auf Roadmap (außerhalb Semester-Scope)</li>
+        <ul class="bullets green" style="margin-top:6px">
+          <li>Erscheint physisch zum Termin, erhält den Bericht</li>
+          <li>Seit der 3NF-Migration <strong>eigene Entität</strong>: <span class="mono">halter</span>-Tabelle mit FK vom Fahrzeug</li>
         </ul>
       </div>
-      <div class="callout" style="margin-top:14px; font-size:12px; padding:10px 14px; border-left:2px solid var(--cyan); background:rgba(34,211,238,0.05)">
-        <strong>Designentscheidung:</strong> Der Halter ist <em>keine</em> eigene Entität im Prototyp — siehe Klassendiagramm und <span class="mono">datenmodell.md § 6.5</span> für die 3NF-Variante im Produktivbetrieb.
+      <div class="callout" style="margin-top:14px; font-size:12px; padding:10px 14px">
+        <strong>Default-Konten</strong> (Erst-Inbetriebnahme, Seed via <span class="mono">INSERT IGNORE</span>): <span class="mono">empfang</span>, <span class="mono">MW</span> (Prüfer), <span class="mono">chef</span> — gemeinsames Startpasswort aus <span class="mono">DEFAULT_USER_PASSWORT</span>, beim Kunden-Setup zu ändern. Bestehende Konten werden beim Boot nie überschrieben.
       </div>
     </div>
   </div>
   <div class="brand"><span class="dot">●</span> TÜV PRÜFSTELLE PRO</div>
-  <div class="slide-num">05 / 19</div>
+  <div class="slide-num">05 / 23</div>
 </div>
 
-<!-- ═════════════ 06  ANFORDERUNGEN ═════════════ -->
+<!-- ═════════════ 06  ANFORDERUNGEN & BACKLOG ═════════════ -->
 <div class="slide">
-  <div class="eyebrow">04 · Pflichtenheft</div>
-  <h2>Funktionale &amp; nicht-funktionale Anforderungen</h2>
-  <div class="lede">Vollständige Fassung in <span class="mono">docs/pflichtenheft.md</span>. Hier die Struktur und ein Beispiel für jede Kategorie mit Akzeptanzkriterien.</div>
+  <div class="eyebrow">04 · Anforderungen</div>
+  <h2>Pflichtenheft &amp; Backlog — Stand: praktisch alles umgesetzt</h2>
+  <div class="lede">Funktionale und nicht-funktionale Anforderungen in <span class="mono">docs/pflichtenheft.md</span>, Product Backlog mit 17 User Stories in <span class="mono">docs/backlog.md</span>.</div>
   <div class="grid-2">
     <div>
-      <h3>6 Epics · 24 User Stories</h3>
-      <table>
-        <tr><th>Epic</th><th>Kürzel</th><th>Stories</th></tr>
-        <tr><td>Fahrzeugverwaltung</td><td><span class="pill cyan">F-FZ</span></td><td>9</td></tr>
-        <tr><td>Terminverwaltung</td><td><span class="pill cyan">F-TR</span></td><td>6</td></tr>
-        <tr><td>Mängelerfassung</td><td><span class="pill cyan">F-MG</span></td><td>4</td></tr>
-        <tr><td>Prüfergebnis-Workflow</td><td><span class="pill cyan">F-WF</span></td><td>3</td></tr>
-        <tr><td>Berichte</td><td><span class="pill cyan">F-BR</span></td><td>3</td></tr>
-        <tr><td>Statistik</td><td><span class="pill cyan">F-ST</span></td><td>6</td></tr>
+      <h3>Funktional (F-01…F-10) — alle erfüllt</h3>
+      <table style="font-size:12px">
+        <tr><th>Bereich</th><th>Beispiele</th></tr>
+        <tr><td>Stammdaten</td><td>Halter, Fahrzeuge mit Halterbezug pflegen (F-01/02)</td></tr>
+        <tr><td>Termine &amp; Status</td><td>Terminplanung, Statuswechsel über UI + API (F-03/04)</td></tr>
+        <tr><td>Workflow</td><td><strong>WF-01:</strong> kein „Bestanden" bei blockierendem Mangel (F-05)</td></tr>
+        <tr><td>Mängel</td><td>Kategorie + Beschreibung, StVZO-Katalog (F-06)</td></tr>
+        <tr><td>Auswertung</td><td>Statistik aus MariaDB, druckbare Berichte (F-07/08)</td></tr>
+        <tr><td>Betrieb</td><td>Demo-Daten &amp; Reset per Admin-API (F-09/10)</td></tr>
       </table>
-      <h3 style="margin-top:18px">Beispiel — Akzeptanzkriterium F-WF-02</h3>
-      <div class="card tone-amber">
-        <h4>Bestanden bei EM/GfM verboten</h4>
-        <p>Sobald ein Mangel der Kategorie EM (Erheblich) oder GfM (Gefährlich) existiert, darf der Status <strong>nicht</strong> „Bestanden" lauten (§ 29 StVZO, Anlage VIII).</p>
-        <p style="margin-top:6px"><strong>3-Layer-Absicherung (Defense in Depth):</strong> UI-Guard · API-Guard im Express-Server · MariaDB-Trigger (WF-01) — siehe ADR-003.</p>
-      </div>
+      <h3 style="margin-top:14px">Nicht-funktional (NF-01…NF-08)</h3>
+      <p style="font-size:12px; color:var(--t2); line-height:1.6">Datenkonsistenz per FK/UNIQUE/CHECK in MariaDB · Mehrclient-Fähigkeit · zentrale SQL-Schicht · <span class="mono">.env</span>-Konfiguration · keine Credentials im Frontend-Bundle · flüssige CRUD-Bedienung im LAN · automatisierbare Builds &amp; Tests.</p>
     </div>
     <div>
-      <h3>Nicht-funktionale Anforderungen</h3>
-      <table>
-        <tr><th>Kategorie</th><th>Beispiel</th><th>Wert</th></tr>
-        <tr><td>Performance</td><td>Filter im Tagesplan</td><td><span class="mono">&lt; 100 ms</span></td></tr>
-        <tr><td>Performance</td><td>API-Write (POST /api/termine)</td><td><span class="mono">&lt; 200 ms</span></td></tr>
-        <tr><td>Datenintegrität</td><td>Eingabe-Validierung</td><td><span class="pill green">hart</span></td></tr>
-        <tr><td>Datenintegrität</td><td>KBA-Kreis-Code-Liste</td><td><span class="mono">~430</span></td></tr>
-        <tr><td>Datenschutz</td><td>On-Premise</td><td><span class="mono">LAN, kein Cloud</span></td></tr>
-        <tr><td>Wartbarkeit</td><td>ESLint-Config</td><td><span class="pill green">0 Errors</span></td></tr>
-        <tr><td>Usability</td><td>Tastatur-Shortcuts</td><td>Esc, Rechtsklick</td></tr>
-        <tr><td>Portabilität</td><td>Browser + Tauri</td><td>Win/Mac/Linux</td></tr>
+      <h3>Backlog US-01…US-17</h3>
+      <table style="font-size:11.5px">
+        <tr><th>Story</th><th>Status</th></tr>
+        <tr><td>US-01…10 — CRUD, WF-01, Statistik, Berichte, MariaDB, Health, <span class="mono">.env</span></td><td><span class="pill green">done</span></td></tr>
+        <tr><td>US-12 — Login + Rollen, serverseitig erzwungen</td><td><span class="pill green">done</span></td></tr>
+        <tr><td>US-13 — Integrationstests gegen echte MariaDB (CI)</td><td><span class="pill green">done</span></td></tr>
+        <tr><td>US-14 — versionierte DB-Migrationen (ADR-011)</td><td><span class="pill green">done</span></td></tr>
+        <tr><td>US-15 — Docker-Compose-Deployment mit Production-Defaults</td><td><span class="pill green">done</span></td></tr>
+        <tr><td>US-16 — Live-Sync per 5-Sekunden-Polling</td><td><span class="pill green">done</span></td></tr>
+        <tr><td>US-17 — Kundendaten bleiben on-premise</td><td><span class="pill green">done</span></td></tr>
+        <tr><td>US-11 — 3-Tier-Backup: Konzept + Binlog done, Cron-Skripte offen</td><td><span class="pill amber">in Arbeit</span></td></tr>
       </table>
-      <h3 style="margin-top:18px">Abgrenzung — was nicht enthalten ist</h3>
-      <p style="font-size:12.5px; color:var(--t3); line-height:1.6">Multi-User-Auth, KBA-HSN/TSN-Integration, Foto-Dokumentation, Hardware-Anbindung (OBD), Abrechnung. Roadmap auf Slide 15.</p>
+      <div class="callout green" style="margin-top:14px; font-size:12px">
+        <strong>Bemerkenswert:</strong> Alle „offenen Erweiterungen" aus Pflichtenheft § 9 (Stand 17.05.) — Auth &amp; Rollen, Migrationsversionierung, API-Tests gegen Testdatenbank, Client-Sync — wurden in Sprint 9/10 tatsächlich umgesetzt. Einzig die Backup-Automatisierung ist noch Konzept.
+      </div>
     </div>
   </div>
   <div class="brand"><span class="dot">●</span> TÜV PRÜFSTELLE PRO</div>
-  <div class="slide-num">06 / 19</div>
+  <div class="slide-num">06 / 23</div>
 </div>
 
-<!-- ═════════════ 07  PERFORMANCE-BUDGET ═════════════ -->
+<!-- ═════════════ 07  ARCHITEKTUR: ON-PREMISE ═════════════ -->
 <div class="slide">
-  <div class="eyebrow">05 · NF-PF Performance</div>
-  <h2>Wie schnell muss die App reagieren — und warum?</h2>
-  <div class="lede">Performance-Budgets sind keine Bauchgefühle. Sie folgen aus dem Lastprofil und der Forschung zur menschlichen Wahrnehmung.</div>
-  <div class="grid-2">
-    <div>
-      <h3>Reaktionszeit-Schwellen (nach Nielsen)</h3>
-      <table>
-        <tr><th>Schwelle</th><th>Wirkung</th><th>Bewertung</th></tr>
-        <tr><td><span class="mono">&lt; 50 ms</span></td><td>Vom Mensch nicht von Null-Latenz unterscheidbar</td><td><span class="pill red">Über-Spec</span></td></tr>
-        <tr><td><span class="mono">≈ 100 ms</span></td><td>Aktion fühlt sich „direkt" an — keine Verzögerung spürbar</td><td><span class="pill green">Sweet Spot</span></td></tr>
-        <tr><td><span class="mono">≈ 200 ms</span></td><td>System reagiert, aber Gefühl direkter Manipulation geht verloren</td><td><span class="pill amber">Zu lasch</span></td></tr>
-        <tr><td><span class="mono">&gt; 1 000 ms</span></td><td>Aufmerksamkeit driftet ab</td><td><span class="pill red">Inakzeptabel</span></td></tr>
-      </table>
-      <div class="callout" style="margin-top:14px">
-        <strong>Konsequenz:</strong> NF-PF-02 (Tagesplan-Filter) auf <strong>&lt; 100 ms p95</strong> festgelegt — das ist die ergonomische Grenze, ab der Eingabe-Reaktion direkt wirkt.
-      </div>
-    </div>
-    <div>
-      <h3>Test-Methodik (für alle NF-PF-Werte)</h3>
-      <div class="card tone-green">
-        <h4>1. Synthetik-Lastdaten</h4>
-        <p>500 Termine + 200 Fahrzeuge — das 10-fache der typischen Praxis-Last.</p>
-      </div>
-      <div class="card tone-green" style="margin-top:8px">
-        <h4>2. Vitest <span class="mono">bench()</span></h4>
-        <p>100 Durchläufe pro Filter-Funktion, p95-Auswertung.</p>
-      </div>
-      <div class="card tone-green" style="margin-top:8px">
-        <h4>3. React Profiler</h4>
-        <p>Render-Zeit nach <span class="mono">setFilter()</span> via <span class="mono">performance.now()</span>.</p>
-      </div>
-      <div class="card tone-green" style="margin-top:8px">
-        <h4>4. Definiertes Referenzgerät</h4>
-        <p>Intel i5-8250U / 8 GB RAM / Chrome stable — Mid-Tier-Hardware der Zielgruppe.</p>
-      </div>
-      <h3 style="margin-top:14px">Andere NF-PF-Werte</h3>
-      <ul class="bullets">
-        <li><strong>Navigation zwischen Views:</strong> &lt; 150 ms — Framer-Motion-Transition liegt bei 180 ms, niedriger nicht wahrnehmbar</li>
-        <li><strong>API-Write (POST /api/…):</strong> &lt; 200 ms — lokales LAN, MariaDB im selben Docker-Compose</li>
-        <li><strong>Statistik-Aufbau:</strong> &lt; 500 ms für 1 000 Termine — Recharts-Budget</li>
-      </ul>
-    </div>
-  </div>
-  <div class="brand"><span class="dot">●</span> TÜV PRÜFSTELLE PRO</div>
-  <div class="slide-num">07 / 19</div>
-</div>
-
-<!-- ═════════════ 08  ARCHITEKTUR ═════════════ -->
-<div class="slide">
-  <div class="eyebrow">06 · Architektur</div>
-  <h2>Komponentenstruktur &amp; Technologie-Entscheidungen</h2>
-  <div class="lede">3-Schichten-Architektur mit klarer Trennung von Präsentation, Logik und Infrastruktur. Jede Tech-Wahl ist im Design-Doc gegen Alternativen begründet.</div>
-  <div class="asym-r">
-    <div>
-      <div class="ascii"><span class="c">┌─────────── PRÄSENTATION (Browser) ──┐</span>
-│  TagesplanView   FahrzeugeView      │
-│  StatistikView   BerichteView       │
-│       │            │                │
-│       ▼            ▼                │
-│       <span class="c">App.jsx</span> · Routing + Layout      │
-<span class="c">└─────────────────────────────────────┘</span>
-              │  useDb-Hook (5s-Polling)
-              ▼
-<span class="g">┌─────────────── LOGIK ───────────────┐</span>
-│   useDb          apiClient.ts       │
-│   useToasts      validators.js      │
-│   utils/mangel   kfzReferenz        │
-<span class="g">└─────────────────────────────────────┘</span>
-              │  HTTP/JSON  /api
-              ▼
-<span class="a">┌──── INFRASTRUKTUR (lokales LAN) ────┐</span>
-│   Express API     (Port 8787)       │
-│   MariaDB         (Port 3306)       │
-│   docker-compose  (binlog enabled)  │
-│   Tauri 2         (Desktop-Wrapper) │
-<span class="a">└─────────────────────────────────────┘</span></div>
-    </div>
-    <div>
-      <h3>Tech-Entscheidungen mit Begründung</h3>
-      <table>
-        <tr><th>Wahl</th><th>Alternative</th><th>Warum</th></tr>
-        <tr><td><strong>React 19</strong></td><td>Next.js</td><td>SPA reicht — kein SSR/SEO nötig</td></tr>
-        <tr><td><strong>Vite</strong></td><td>Webpack, Parcel</td><td>Schnellster DX, HMR &lt; 200 ms</td></tr>
-        <tr><td><strong>Tauri 2</strong></td><td>Electron</td><td>~6 MB statt ~150 MB</td></tr>
-        <tr><td><strong>MariaDB</strong></td><td>Firestore (verworfen), PostgreSQL</td><td>On-Premise + ACID + Trigger (siehe Slide 09)</td></tr>
-        <tr><td><strong>Express + Drizzle</strong></td><td>tRPC, PostgREST</td><td>Schmaler REST-Layer, kein ORM-Magic</td></tr>
-        <tr><td><strong>Docker-Compose</strong></td><td>Bare-Metal Install</td><td>Reproducible deploy bei jedem Kunden</td></tr>
-        <tr><td><strong>Recharts</strong></td><td>Chart.js, D3</td><td>React-nativ, deklarativ</td></tr>
-        <tr><td><strong>Custom Hook (useDb)</strong></td><td>Redux, Zustand</td><td>~20 Komponenten — Redux Overkill</td></tr>
-        <tr><td><strong>TS-graduell</strong></td><td>Voll-TS, JS+PropTypes</td><td>Neue Files TS, alte JSX bleiben (siehe ADR-005)</td></tr>
-      </table>
-      <h3 style="margin-top:14px">Entwurfsprinzipien</h3>
-      <ul class="bullets">
-        <li><strong>Single Responsibility</strong> — jede Komponente eine Aufgabe</li>
-        <li><strong>Composition over Configuration</strong></li>
-        <li><strong>Custom Hooks isolieren Logik</strong> — UI bleibt deklarativ</li>
-        <li><strong>Defense in Depth</strong> bei Business-Regeln</li>
-      </ul>
-    </div>
-  </div>
-  <div class="brand"><span class="dot">●</span> TÜV PRÜFSTELLE PRO</div>
-  <div class="slide-num">08 / 19</div>
-</div>
-
-<!-- ═════════════ 09  DATENMODELL ═════════════ -->
-<div class="slide">
-  <div class="eyebrow">07 · Datenmodell</div>
-  <h2>Entitäten, Beziehungen &amp; Integritätsbedingungen</h2>
-  <div class="lede">Drei Kern-Entitäten in 1:N-Beziehung. Integrität wird auf vier Ebenen durchgesetzt — nicht nur Kardinalitäten.</div>
+  <div class="eyebrow">05 · Architektur</div>
+  <h2>On-Premise: Die Prüfstelle betreibt ihren eigenen Server</h2>
+  <div class="lede">Ein Befehl — <span class="mono">docker compose up -d</span> — startet MariaDB und die Express-API auf einem Server-PC im Werkstatt-LAN. Kundendaten verlassen die Werkstatt nie; Internetausfall beeinträchtigt den Betrieb nicht.</div>
   <div class="asym-l">
     <div>
-      <h3>ER-Diagramm</h3>
-      <div class="ascii">  <span class="c">FAHRZEUG</span> ────┐ <span class="g">1 : N</span> ┌──&gt; <span class="c">TERMIN</span> ────┐ <span class="g">1 : N</span> ┌──&gt; <span class="a">MANGEL</span>
-              └────────────┘                └────────────┘
-                                              <span class="t1">(eigene Tabelle, FK termin_id)</span>
+      <div class="ascii">        Prüfstelle — lokales Netzwerk, <span class="g">ohne Internet betreibbar</span>
 
-<span class="c">FAHRZEUG</span> {                   <span class="c">TERMIN</span> {
-  id <span class="g">PK</span>                       id <span class="g">PK</span>
-  kennzeichen <span class="g">UK</span>              fahrzeug_id <span class="g">FK</span>
-  fin <span class="g">UK</span>                       datum, uhrzeit
-  hersteller* modell*          art (HU, AU, …)
-  baujahr [1885..year+1]       prüfer
-  typ <span class="g">FK→FAHRZEUG_TYPEN</span>        status <span class="g">FK→STATUS</span>
-  kmStand [0..3 000 000]       notiz
-  besitzer telefon email     }
-  hu_faellig                 <span class="a">MANGEL</span> {
-}                              id <span class="g">PK</span>
-                               termin_id <span class="g">FK</span>
-                               code text
-                               kategorie_code <span class="g">FK</span>
-                               behoben
-                             }</div>
-      <p style="font-size:11.5px; color:var(--t4); margin-top:8px"><strong style="color:var(--t2)">Designentscheidung:</strong> Mangel als eigene Tabelle mit FK auf <span class="mono">termin_id</span> (3NF). Frühere Firestore-Variante hatte Mangel embedded — verworfen mit Migration auf MariaDB. Siehe <span class="mono">ADR-002</span> + <span class="mono">ADR-008</span> (keine eingebetteten Arrays).</p>
+        <span class="c">┌──────────────────────────────────────────────┐</span>
+        <span class="c">│ Server-PC          docker compose up -d      │</span>
+        <span class="c">│</span>   ├── MariaDB 11.4    <span class="a">127.0.0.1:3306</span>        <span class="c">│</span>
+        <span class="c">│</span>   │     Binlog aktiv (Backup-Tier 1)        <span class="c">│</span>
+        <span class="c">│</span>   ├── Express-API      <span class="g">Port 8787</span> (+ dist/)   <span class="c">│</span>
+        <span class="c">│</span>   └── Adminer          nur per <span class="a">--profile tools</span><span class="c">│</span>
+        <span class="c">└──────────────────────────────────────────────┘</span>
+                            ▲
+                            │ HTTP/JSON  /api  (Bearer-Token)
+              ┌─────────────┼─────────────┐
+              │             │             │
+        <span class="a">┌─────┴────┐</span>  <span class="c">┌─────┴────┐</span>  <span class="p">┌─────┴────┐</span>
+        <span class="a">│ Empfang  │</span>  <span class="c">│ Prüfer   │</span>  <span class="p">│  Chef    │</span>
+        <span class="a">│ Browser  │</span>  <span class="c">│ Browser  │</span>  <span class="p">│ Browser  │</span>
+        <span class="a">└──────────┘</span>  <span class="c">└──────────┘</span>  <span class="p">└──────────┘</span></div>
+      <p style="font-size:11.5px; color:var(--t4); margin-top:10px">Auslieferungspaket pro Kunde: <span class="mono">docker-compose.yml</span> + <span class="mono">.env</span>-Vorlage + <span class="mono">docs/backup.md</span> — Details in <span class="mono">design.md § 7</span>.</p>
+    </div>
+    <div>
+      <h3>Deployment-Härtung ab Werk</h3>
+      <div class="card tone-green pad-sm">
+        <h4>DB-Port nur localhost</h4>
+        <p>MariaDB bindet an <span class="mono">127.0.0.1:3306</span> — die API erreicht sie übers interne Docker-Netz, das Werkstatt-WLAN nie direkt.</p>
+      </div>
+      <div class="card tone-amber pad-sm" style="margin-top:8px">
+        <h4>Production ist der Default</h4>
+        <p><span class="mono">NODE_ENV=production</span> im Compose — damit greifen Fail-fast-Guards, Rate-Limits und Login-Pflicht automatisch beim Kunden.</p>
+      </div>
+      <div class="card tone-purple pad-sm" style="margin-top:8px">
+        <h4>Adminer nicht standardmäßig</h4>
+        <p>Das DB-Web-UI startet nur mit <span class="mono">--profile tools</span> — offenes Port-8080-Adminer wäre unnötige Angriffsfläche.</p>
+      </div>
+      <div class="card tone-cyan pad-sm" style="margin-top:8px">
+        <h4>Single-Container-Frontend</h4>
+        <p>Express liefert das gebaute React-Bundle aus <span class="mono">dist/</span> mit aus — keine separate Webserver-Instanz nötig.</p>
+      </div>
+    </div>
+  </div>
+  <div class="brand"><span class="dot">●</span> TÜV PRÜFSTELLE PRO</div>
+  <div class="slide-num">07 / 23</div>
+</div>
+
+<!-- ═════════════ 08  ARCHITEKTUR: SCHICHTEN ═════════════ -->
+<div class="slide">
+  <div class="eyebrow">05 · Architektur</div>
+  <h2>Schichten — ein View-Model von SQL bis View</h2>
+  <div class="lede">Klare Trennung: Views kennen kein SQL, der Server kennt kein React. Der frühere Kompatibilitäts-Adapter (<span class="mono">useStoreCompat</span>) wurde in Sprint 10 eliminiert — die DB-Feldnamen (camelCase-Spiegel der Tabellen) sind jetzt das <strong>einzige</strong> Datenmodell der App.</div>
+  <div class="asym-r">
+    <div>
+      <div class="ascii"><span class="c">┌────────── PRÄSENTATION (Browser / Tauri) ─────────┐</span>
+│  TagesplanView · FahrzeugeView · StatistikView    │
+│  BerichteView  · <span class="t1">LoginView</span>                        │
+<span class="c">└───────────────────────────────────────────────────┘</span>
+        │ props/context
+        ▼
+<span class="g">┌────────────────── LOGIK / STATE ──────────────────┐</span>
+│  AuthContext (Token, Rolle, Rechte)               │
+│  useDb.ts  — optimistische Updates + Rollback,    │
+│              5s-Polling mit Write-Suppression     │
+│  apiClient.ts — HTTP + Bearer-Token               │
+<span class="g">└───────────────────────────────────────────────────┘</span>
+        │ HTTP/JSON  /api  (<span class="t1">22 Endpunkte</span>)
+        ▼
+<span class="a">┌────────────────── EXPRESS-API ────────────────────┐</span>
+│  requireAuth(Rolle) → validate.js → SQL           │
+│  Transaktionen (withTransaction) · Error-Mapping  │
+<span class="a">└───────────────────────────────────────────────────┘</span>
+        │ mariadb-Driver (Pool, parametrisiert)
+        ▼
+<span class="p">┌────────────────── MARIADB 11.4 ───────────────────┐</span>
+│  10 Tabellen · FKs · CHECKs · UNIQUEs · Trigger   │
+<span class="p">└───────────────────────────────────────────────────┘</span></div>
+    </div>
+    <div>
+      <h3>Tech-Entscheidungen (je ein ADR)</h3>
+      <table style="font-size:11.5px">
+        <tr><th>Wahl</th><th>Statt</th><th>Warum</th></tr>
+        <tr><td><strong>MariaDB</strong></td><td>Firestore</td><td>FKs, Trigger, ACID, on-premise (ADR-001)</td></tr>
+        <tr><td><strong>Express 5 + mariadb-Driver</strong></td><td>ORM / tRPC</td><td>expliztes SQL, kein Magic (ADR-004)</td></tr>
+        <tr><td><strong>Monolithischer Server</strong></td><td>Schichten-Zoo</td><td>818 Zeilen, 2-Personen-Team (ADR-009)</td></tr>
+        <tr><td><strong>API-Client-Pattern</strong></td><td>fetch in Views</td><td>ein HTTP-Ort, testbar (ADR-007)</td></tr>
+        <tr><td><strong>TypeScript graduell</strong></td><td>Big-Bang</td><td>neue Module TS, Views JSX (ADR-005)</td></tr>
+        <tr><td><strong>React 19 + Vite 8</strong></td><td>Next.js</td><td>SPA reicht, kein SSR/SEO nötig</td></tr>
+        <tr><td><strong>Tauri 2</strong></td><td>Electron</td><td>Desktop-Build, ~6 statt ~150 MB</td></tr>
+      </table>
+      <div class="callout" style="margin-top:12px; font-size:12px">
+        <strong>Warum „ein View-Model" wichtig ist:</strong> Vorher übersetzte ein Adapter zwischen Legacy-View-Shape und DB-Shape — jede neue Spalte musste zweimal gepflegt werden. Jetzt fließt dieselbe Datenform (<span class="mono">terminId, statusCode, …</span>) durch alle Schichten.
+      </div>
+    </div>
+  </div>
+  <div class="brand"><span class="dot">●</span> TÜV PRÜFSTELLE PRO</div>
+  <div class="slide-num">08 / 23</div>
+</div>
+
+<!-- ═════════════ 09  DATENMODELL: ER / 3NF ═════════════ -->
+<div class="slide">
+  <div class="eyebrow">06 · Datenmodell</div>
+  <h2>ER-Modell in dritter Normalform</h2>
+  <div class="lede">Vier Kern-Entitäten in 1:N-Ketten, vier Stammdaten-Tabellen als FK-Ziele, plus <span class="mono">benutzer</span> für das Login. Keine eingebetteten Arrays, keine Redundanz — Mängel und Halter sind eigene Tabellen (ADR-002, ADR-008).</div>
+  <div class="asym-l">
+    <div>
+      <div class="ascii"><span class="g">HALTER</span> ──1:N──&gt; <span class="c">FAHRZEUG</span> ──1:N──&gt; <span class="c">TERMIN</span> ──1:N──&gt; <span class="a">MANGEL</span>
+ (RESTRICT)        (CASCADE)          (CASCADE)
+
+<span class="c">FAHRZEUG</span> {                    <span class="c">TERMIN</span> {
+  fahrzeug_id <span class="g">PK</span>                termin_id <span class="g">PK</span>
+  kennzeichen <span class="g">UNIQUE</span>            fahrzeug_id <span class="g">FK</span>
+  fin <span class="g">UNIQUE</span> (wenn gesetzt)     datum, uhrzeit <span class="g">UK(fzg,datum,zeit)</span>
+  hersteller, modell, typ       prueft_code  <span class="g">FK→PRUEFART</span> (12)
+  baujahr  <span class="a">CHECK 1885..2100</span>     pruefer_kuerzel <span class="g">FK→PRUEFER</span>
+  km-Stand <span class="a">CHECK 0..3 Mio</span>       status_code  <span class="g">FK→STATUS</span> (7)
+  hu_faellig <span class="g">INDEX</span>              notiz
+  halter_id <span class="g">FK</span>                }
+}
+<span class="a">MANGEL</span> {                      <span class="p">BENUTZER</span> {
+  mangel_id <span class="g">PK</span>                  benutzer_id <span class="g">PK</span>
+  termin_id <span class="g">FK</span>                  kuerzel <span class="g">UNIQUE</span>
+  code_stvzo, beschreibung      rolle <span class="a">CHECK ∈ {empfang,pruefer,chef}</span>
+  kategorie_code <span class="g">FK→MANGEL_KATEGORIE</span> (4)   passwort_hash (scrypt)
+  behoben BOOL                  aktiv BOOL
+}                             }</div>
     </div>
     <div>
       <h3>Integrität auf 4 Ebenen</h3>
       <div class="card tone-cyan pad-sm">
         <h4>1. Entitäts-Integrität</h4>
-        <p>UID-Primärschlüssel · Kennzeichen unique (case-insensitive) · FIN unique</p>
+        <p>UUID-Primärschlüssel · Kennzeichen, FIN, Halter-E-Mail und Benutzer-Kürzel UNIQUE · Termin-Slot pro Fahrzeug eindeutig</p>
       </div>
       <div class="card tone-green pad-sm" style="margin-top:8px">
         <h4>2. Referentielle Integrität</h4>
-        <p><span class="mono">termin.fahrzeugId</span> verweist auf existierendes Fahrzeug · Cascade-Delete</p>
+        <p>FK-Kette Halter→Fahrzeug→Termin→Mangel: <span class="mono">ON DELETE CASCADE</span> nach unten, <span class="mono">RESTRICT</span> für Halter mit Fahrzeugen, <span class="mono">SET NULL</span> für Prüfer</p>
       </div>
       <div class="card tone-amber pad-sm" style="margin-top:8px">
         <h4>3. Workflow-Integrität</h4>
-        <p>BESTANDEN nicht zulässig bei EM/GfM (§ 29 StVZO) · 3-Layer-Defense: UI · API · MariaDB-Trigger (ADR-003)</p>
+        <p>Kein „Bestanden" bei unbehobenem EM/GfM — DB-Trigger als letzte Schicht (Slide 12)</p>
       </div>
       <div class="card tone-purple pad-sm" style="margin-top:8px">
         <h4>4. Wertebereichs-Integrität</h4>
-        <p>Regex (Tel, E-Mail) · Range (kmStand 0–3M, Baujahr 1885–heute+1) · KBA-Liste · Hersteller/Modell-Whitelist · ISO-3779 FIN-Prüfziffer (weich)</p>
+        <p>CHECKs (Baujahr, km, Rolle) · Stammdaten-FKs statt freier Strings für Status, Prüfart, Prüfer, Kategorie · Frontend/Server-Validatoren (KBA-Liste, FIN, Regex) obendrauf</p>
       </div>
     </div>
   </div>
   <div class="brand"><span class="dot">●</span> TÜV PRÜFSTELLE PRO</div>
-  <div class="slide-num">09 / 19</div>
+  <div class="slide-num">09 / 23</div>
 </div>
 
-<!-- ═════════════ 10  KLASSENDIAGRAMM ═════════════ -->
+<!-- ═════════════ 10  PHYSISCHES SCHEMA ═════════════ -->
 <div class="slide">
-  <div class="eyebrow">08 · Klassendiagramm</div>
-  <h2>Typmodell &amp; Modellierungsentscheidungen</h2>
-  <div class="lede">JavaScript hat keine Klassen im klassischen Sinn — das Datenmodell ist als Object-Schema mit PropTypes-Validation umgesetzt. UML-Notation für Lesbarkeit.</div>
+  <div class="eyebrow">06 · Datenmodell</div>
+  <h2>Physisches Schema: 8 Fachtabellen + <span style="color:var(--purple)">benutzer</span> + <span style="color:var(--purple)">schema_migration</span></h2>
+  <div class="lede">Alle Tabellen InnoDB / utf8mb4, angelegt durch die versionierten Migrationen in <span class="mono">server/migrations.js</span>. Vollständiges DDL in <span class="mono">docs/datenmodell.md</span>.</div>
+  <table style="font-size:11.5px">
+    <tr><th>Tabelle</th><th>Zweck</th><th>Constraints &amp; Indizes (Auswahl)</th></tr>
+    <tr><td class="mono">halter</td><td>Fahrzeughalter (eigene Entität, 3NF)</td><td>E-Mail UNIQUE · Index auf Name · FK-Ziel für Fahrzeug (RESTRICT)</td></tr>
+    <tr><td class="mono">fahrzeug</td><td>Fahrzeug-Stammdaten</td><td>Kennzeichen + FIN UNIQUE · CHECK Baujahr 1885–2100, km 0–3 Mio · Indizes hu_faellig, halter_id</td></tr>
+    <tr><td class="mono">termin</td><td>Prüftermine</td><td>UNIQUE (fahrzeug, datum, uhrzeit) · 4 FKs · Index (datum, uhrzeit) · WF-01-Trigger</td></tr>
+    <tr><td class="mono">mangel</td><td>Einzelmängel mit StVZO-Code</td><td>FK termin (CASCADE) + kategorie (RESTRICT) · Indizes termin_id, kategorie_code</td></tr>
+    <tr><td class="mono">status</td><td>7 Termin-Status inkl. Endzustand-Flag</td><td>PK status_code — FK-Ziel, ON UPDATE CASCADE</td></tr>
+    <tr><td class="mono">pruefart</td><td>12 Prüfarten (HU, AU, SP, § 21 …)</td><td>PK prueft_code — Seed idempotent per INSERT IGNORE</td></tr>
+    <tr><td class="mono">pruefer</td><td>Sachverständige mit Qualifikation</td><td>PK pruefer_kuerzel — Termin-FK mit ON DELETE SET NULL</td></tr>
+    <tr><td class="mono">mangel_kategorie</td><td>OM / GM / EM / GfM + <span class="mono">blockiert_bestanden</span></td><td>Fachlogik <strong>als Datum</strong>: der WF-01-Trigger liest das Flag, kein Hardcoding</td></tr>
+    <tr><td class="mono" style="color:var(--purple)">benutzer</td><td>Login-Konten der 3 Rollen</td><td>kuerzel UNIQUE · CHECK rolle ∈ {empfang, pruefer, chef} · scrypt-Hash, aktiv-Flag</td></tr>
+    <tr><td class="mono" style="color:var(--purple)">schema_migration</td><td>Buchführung der Migrationen</td><td>version PK · name · applied_at — „Welchen Stand hat diese Kundendatenbank?"</td></tr>
+  </table>
+  <div class="callout" style="margin-top:14px; font-size:12px">
+    <strong>Designprinzip:</strong> Endliche Wertemengen (Status, Kategorien, Prüfarten) sind FK-Tabellen statt Strings oder Enums im Code — die Datenbank kennt die fachlichen Regeln selbst. Das Flag <span class="mono">blockiert_bestanden</span> macht den WF-01-Trigger datengetrieben.
+  </div>
+  <div class="brand"><span class="dot">●</span> TÜV PRÜFSTELLE PRO</div>
+  <div class="slide-num">10 / 23</div>
+</div>
+
+<!-- ═════════════ 11  SCHEMA-MIGRATIONEN ═════════════ -->
+<div class="slide">
+  <div class="eyebrow">07 · Schema-Evolution</div>
+  <h2>Versionierte Migrationen — ADR-011</h2>
+  <div class="lede">Das alte Muster „<span class="mono">CREATE TABLE IF NOT EXISTS</span> bei jedem Boot" konnte neue Tabellen anlegen, aber bestehende <strong>nie verändern</strong>. Im On-Premise-Modell fatal: jede Prüfstelle betreibt ihre DB über Jahre — Software-Updates müssen das Schema beim Kunden nachziehen.</div>
   <div class="grid-2">
     <div>
-      <div class="ascii" style="font-size:9.5px; line-height:1.42; padding:14px 18px"><span class="c">«entity» Fahrzeug</span>
-─────────────────────────
-+ id : string             <span class="g">«PK»</span>
-+ kennzeichen : string    <span class="g">«UK»</span>
-+ fin : string            &lt;optional&gt;
-+ hersteller : string     <span class="g">«required»</span>
-+ modell : string         <span class="g">«required»</span>
-+ baujahr : int           <span class="g">[1885..year+1]</span>
-+ typ : FahrzeugTyp       <span class="g">«FK»</span>
-+ kmStand : int           <span class="g">[0..3 000 000]</span>
-+ besitzer, telefon, email, hu_faellig
-
-<span class="c">«entity» Termin</span>
-─────────────────────────
-+ id : string             <span class="g">«PK»</span>
-+ fahrzeugId : string     <span class="g">«FK»</span>
-+ datum, uhrzeit, art : PruefArt
-+ status : Status
-+ mängel : <span class="a">Mangel[]</span>      <span class="g">«1:N via FK»</span>
-─────────────────────────
-+ statusWechsel(neu) : void
-   <span class="a">guard: kein BESTANDEN bei EM/GfM</span>
-   <span class="a">(3-Layer: UI · API · DB-Trigger)</span>
-
-<span class="a">«value» Mangel</span>
-─────────────────────────
-+ code : string           <span class="g">«StVZO Anlage VIII»</span>
-+ text : string
-+ kat : <span class="g">{OM, GM, EM, GfM}</span>
-+ behoben : bool</div>
+      <h3>Das Framework (~60 Zeilen, <span class="mono" style="font-size:12px">server/migrations.js</span>)</h3>
+      <div class="card tone-cyan pad-sm">
+        <h4>Buchführung in <span style="text-transform:none">schema_migration</span></h4>
+        <p>Jede Migration läuft <strong>genau einmal</strong> pro Datenbank und wird mit Version, Name und Zeitstempel protokolliert. Beim Boot werden nur noch nicht protokollierte Versionen angewendet.</p>
+      </div>
+      <div class="card tone-amber pad-sm" style="margin-top:8px">
+        <h4>Append-only</h4>
+        <p>Ausgelieferte Migrationen werden nie editiert — Bestandskunden haben sie bereits protokolliert und würden die Änderung nie sehen. Neue Änderung = neue Version.</p>
+      </div>
+      <div class="card tone-green pad-sm" style="margin-top:8px">
+        <h4>GET_LOCK gegen konkurrierende Boots</h4>
+        <p><span class="mono">GET_LOCK('tuv_schema_migration', 30)</span> serialisiert parallele Prozess-Starts (z. B. Container-Restart während ein zweiter Prozess migriert).</p>
+      </div>
+      <div class="card tone-purple pad-sm" style="margin-top:8px">
+        <h4>Kein Down-Pfad</h4>
+        <p>Rollback läuft über das Backup-Konzept (Binlog + Dumps), nicht über Reverse-Migrationen — die wären ungetesteter Code für einen Pfad, den es betrieblich nicht gibt.</p>
+      </div>
     </div>
     <div>
-      <h3 style="margin-bottom:6px">Modellierungs-Entscheidungen</h3>
-      <div class="card tone-cyan pad-sm" style="padding:10px 14px">
-        <h4 style="margin-bottom:2px">Fahrzeug + Termin als Entitäten</h4>
-        <p style="font-size:11.5px; line-height:1.45">Beide haben eigenständigen Lebenszyklus — ein Fahrzeug existiert auch nach allen Prüfungen weiter. Klassische 1:N-Beziehung.</p>
-      </div>
-      <div class="card tone-amber pad-sm" style="margin-top:6px; padding:10px 14px">
-        <h4 style="margin-bottom:2px">Mangel als eigene Tabelle (3NF)</h4>
-        <p style="font-size:11.5px; line-height:1.45">In MariaDB als <span class="mono">mangel(id, termin_id FK, code, kategorie_code FK, …)</span>. Frühere Firestore-Variante war embedded — verworfen nach Feedback-Runde Frau Fuchs (13.05.) zugunsten 3NF. Siehe ADR-002 + ADR-008.</p>
-      </div>
-      <div class="card tone-purple pad-sm" style="margin-top:6px; padding:10px 14px">
-        <h4 style="margin-bottom:2px">STATUS &amp; MANGEL_KATEGORIE als Enums (FK-Tabellen)</h4>
-        <p style="font-size:11.5px; line-height:1.45">Endliche, nicht änderbare Mengen. STATUS hat 7 Werte. MANGEL_KATEGORIE: <strong>4 Werte gemäß HU-Richtlinie</strong> — OM (Ohne Mangel), GM (Geringer), EM (Erheblich, blockiert), GfM (Gefährlich, blockiert).</p>
-      </div>
-      <div class="card tone-green pad-sm" style="margin-top:6px; padding:10px 14px">
-        <h4 style="margin-bottom:2px">Halter eingebettet, nicht eigene Entität</h4>
-        <p style="font-size:11.5px; line-height:1.45">Im Prototyp pro Fahrzeug ein Halter — kein Bedarf an Aggregation. <strong>Im Produktivbetrieb 3NF</strong> (eigene Halter-Tabelle, US-12 abhängig). SQL-Entwurf in <span class="mono">datenmodell.md § 6.5</span>.</p>
-      </div>
-    </div>
-  </div>
-  <div class="brand"><span class="dot">●</span> TÜV PRÜFSTELLE PRO</div>
-  <div class="slide-num">10 / 19</div>
-</div>
-
-<!-- ═════════════ 11  PERSISTENZ DISKUSSION ═════════════ -->
-<div class="slide">
-  <div class="eyebrow">09 · Persistenz-Entscheidung</div>
-  <h2>Warum MariaDB statt Firestore</h2>
-  <div class="lede">Sprint&nbsp;1–5 lief auf Firestore. Nach Feedback Frau Fuchs (13.&nbsp;Mai) zur Datenmodellierung und auf Wunsch eines on-premise-fähigen Produktivpfads wurde komplett auf MariaDB umgestellt. Beide Seiten der Diskussion und die finale Wahl.</div>
-  <div class="grid-2">
-    <div class="card tone-cyan">
-      <h4>Pro Firestore (verworfen)</h4>
-      <ul class="bullets">
-        <li>Echtzeit-Sync via <span class="mono">onSnapshot</span> ohne WebSocket-Server</li>
-        <li>Kein eigenes Backend nötig — passend für 2-Personen-Sprint-Tempo</li>
-        <li>Eingebaute Offline-Persistence im Browser</li>
-        <li>Eingebettete Mängel passen zum NoSQL-Zugriffsmuster</li>
-        <li>Auto-Sharding, keine manuelle Replikation</li>
-        <li>Firebase-Ökosystem (Auth, Storage, Functions verfügbar)</li>
-      </ul>
-    </div>
-    <div class="card tone-blue">
-      <h4>Pro MariaDB (gewählt)</h4>
-      <ul class="bullets">
-        <li>Schema-Enforcement &amp; Foreign Keys als DB-Constraint</li>
-        <li>SQL-Aggregationen für Reporting (GROUP BY, Window-Functions)</li>
-        <li>Volle ACID-Transaktionen, keine Operationen-Limits</li>
-        <li>Native JOINs statt Client-side-Aggregation</li>
-        <li><strong>DB-Trigger</strong> für WF-01 (Bestanden-Sperre) — Regel ist von der UI nicht umgehbar</li>
-        <li><strong>On-Premise</strong> im LAN der Prüfstelle — Kundendaten verlassen den Werkstattrechner nie</li>
-      </ul>
-    </div>
-  </div>
-  <div class="callout amber" style="margin-top:18px">
-    <strong>Was den Ausschlag gegeben hat:</strong> Frau-Fuchs-Feedback zur 3NF-Modellierung am 13.&nbsp;5. + der Wunsch nach echter On-Premise-Fähigkeit (kein Cloud-Vendor). Firestore war für den Sprint-Scope eine gute Wahl, ist aber bei strukturierten Werkstatt-Daten + Berichts-Anforderung + Datenschutz-Empfindlichkeit eines Werkstatt-Betriebs der schlechtere Fit. Die Migration war eine bewusste Entscheidung gegen den Sprint-Comfort.
-  </div>
-  <div class="callout green" style="margin-top:10px">
-    <strong>Migration durchgeführt</strong> zwischen 12.–17.&nbsp;Mai (Welle&nbsp;1: PGlite als Zwischenschritt, Welle&nbsp;2: MariaDB-Server + Express-API + Docker-Compose). Begründung in <span class="mono">docs/decisions/ADR-001</span> (zentrale Persistenz), <span class="mono">ADR-002</span> (3NF-Normalisierung), <span class="mono">ADR-008</span> (keine eingebetteten Arrays). Live-Sync (vorher Firestore-Echtzeit) ersetzt durch 5-Sek-Polling im <span class="mono">useDb</span>-Hook (US-16).
-  </div>
-  <div class="brand"><span class="dot">●</span> TÜV PRÜFSTELLE PRO</div>
-  <div class="slide-num">11 / 19</div>
-</div>
-
-<!-- ═════════════ 12  DATENSCHUTZ ═════════════ -->
-<div class="slide">
-  <div class="eyebrow">10 · Datenschutz &amp; Sicherheit</div>
-  <h2>DSGVO im On-Premise-Betrieb</h2>
-  <div class="lede">Mit der MariaDB-Migration verlassen Kundendaten den Werkstattrechner nicht mehr. Was das vereinfacht, was an Verantwortung dazukommt, und welche Lücken bestehen bleiben.</div>
-  <div class="grid-3">
-    <div class="card tone-amber">
-      <h4>Verarbeitete personenbezogene Daten</h4>
-      <ul class="bullets amber">
-        <li>Halter-Name / Firma</li>
-        <li>Telefon &amp; E-Mail</li>
-        <li>Kennzeichen (Halter-Bezug)</li>
-        <li>FIN (eindeutige Fahrzeug-ID)</li>
-        <li>Indirekt: Mängel-Historie</li>
-      </ul>
-      <p style="margin-top:8px"><strong>DSGVO-Klassifikation:</strong> Allgemeine personenbezogene Daten (Art. 4 Nr. 1) — keine besonderen Kategorien.</p>
-    </div>
-    <div class="card tone-green">
-      <h4>Aktuelle Maßnahmen (MariaDB on-premise)</h4>
-      <ul class="bullets green">
-        <li><strong>Kein Cloud-Zugriff</strong> — MariaDB läuft im LAN der Prüfstelle, kein Internet nötig</li>
-        <li>Kein Auftragsverarbeitungsvertrag mit Dritten — Werkstatt ist alleinige verantwortliche Stelle</li>
-        <li>TLS optional über Reverse-Proxy für interne Verbindungen</li>
-        <li>Cascade-Delete als FK-Constraint: Halter-Daten verschwinden mit dem Fahrzeug</li>
-        <li>Keine externen Tracker / Analytics — Frontend lädt nichts von außen</li>
-      </ul>
-    </div>
-    <div class="card tone-red">
-      <h4>Offene Punkte + Roadmap</h4>
-      <ul class="bullets red">
-        <li><strong>Auth fehlt</strong> (US-12) — Server-side Auth mit Rollen Prüfer/Leiter/Admin</li>
-        <li><strong>Audit-Log</strong> — MariaDB-Trigger + Audit-Tabelle</li>
-        <li><strong>Backup-Skripte</strong> (US-11) — Binlog-basiert (docker-compose hat binlog enabled), Skripte noch offen</li>
-        <li><strong>Löschkonzept</strong> — Halter-Daten nach 10 Jahren (GoBD) anonymisieren</li>
-      </ul>
-    </div>
-  </div>
-  <div class="callout">
-    <strong>Trade-off der On-Premise-Wahl:</strong> Die Werkstatt trägt jetzt selbst die Verantwortung für DB-Backup, Server-Updates und LAN-Sicherheit (vorher bei Google). Dafür entfällt der Auftragsverarbeitungsvertrag, und Kundendaten sind nachweislich nicht in der Cloud. Für die Zielgruppe (kleine/mittlere Prüfstellen, sensible Halter-Daten) ist das der bessere Kompromiss — Doku in <span class="mono">docs/mariadb-setup.md</span>.
-  </div>
-  <div class="brand"><span class="dot">●</span> TÜV PRÜFSTELLE PRO</div>
-  <div class="slide-num">12 / 19</div>
-</div>
-
-<!-- ═════════════ 13  VALIDIERUNG & UX ═════════════ -->
-<div class="slide">
-  <div class="eyebrow">11 · Validierung</div>
-  <h2>Drei Verteidigungslinien gegen ungültige Daten</h2>
-  <div class="lede">Defense in Depth: UX-Strukturierung &gt; Hard-Validation &gt; Soft-Warning. Tippfehler werden strukturell ausgeschlossen, nicht erst durch Fehlermeldungen abgefangen.</div>
-  <div class="grid-3">
-    <div class="card tone-cyan">
-      <h4>Linie 1 · UX-Strukturierung</h4>
-      <p><strong>Cascading Dropdowns</strong> für Hersteller → Modell → Typ.</p>
-      <ul class="bullets" style="margin-top:8px">
-        <li>~25 Marken im Hersteller-Dropdown</li>
-        <li>Modell-Dropdown filtert auf Marke</li>
-        <li>Typ-Dropdown filtert auf Marke</li>
-        <li>„Sonstiger"-Modus mit Freitext</li>
-      </ul>
-      <p style="margin-top:8px; color:var(--cyan); font-size:12px"><strong>Effekt:</strong> Tippfehler („Vw" vs. „VW") und Mismatches („BMW Polo") sind strukturell unmöglich.</p>
-    </div>
-    <div class="card tone-green">
-      <h4>Linie 2 · Hard-Validation</h4>
-      <ul class="bullets green">
-        <li><strong>Kennzeichen:</strong> Format + KBA-Liste (~430 Codes) + Saison-Suffix <span class="mono">MM-MM</span></li>
-        <li><strong>FIN:</strong> 17 Zeichen, keine I/O/Q</li>
-        <li><strong>kmStand:</strong> 0 ≤ n ≤ 3 000 000</li>
-        <li><strong>Telefon:</strong> Regex, keine Buchstaben</li>
-        <li><strong>E-Mail:</strong> Standard-Regex</li>
-        <li><strong>Baujahr:</strong> 1885 ≤ n ≤ Jahr+1</li>
-        <li><strong>Workflow:</strong> kein BESTANDEN bei EM/GfM (3-Layer: UI · API · DB-Trigger)</li>
-      </ul>
-    </div>
-    <div class="card tone-amber">
-      <h4>Linie 3 · Soft-Warning</h4>
-      <ul class="bullets amber">
-        <li><strong>FIN-Prüfziffer ISO 3779:</strong> Position 9 muss zur Berechnung passen</li>
-      </ul>
-      <p style="margin-top:8px; font-size:12.5px"><strong>Bewusst weich,</strong> weil Pre-1981 / Nicht-Nordamerika-Fahrzeuge keine Prüfziffer tragen — Sonderfälle (Oldtimer, Importe) sollen markiert, nicht abgewiesen werden.</p>
-      <p style="margin-top:8px; font-size:12px"><strong>Beispiel:</strong> <span class="mono">BLABLUBB12343...</span> erfüllt das Format, scheitert an der Prüfziffer → Hinweis.</p>
-    </div>
-  </div>
-  <div class="callout">
-    <strong>Warum drei Linien?</strong> UX schützt 95 % der Eingaben strukturell. Hard-Validation greift im Sonstiger-Modus, bei programmatischen Aufrufen oder beim Editieren von Altdaten. Soft-Warnings markieren grenzwertige Fälle, ohne Sonderfälle zu blockieren. Auch wenn eine Linie umgangen wird, greift die nächste.
-  </div>
-  <div class="brand"><span class="dot">●</span> TÜV PRÜFSTELLE PRO</div>
-  <div class="slide-num">13 / 19</div>
-</div>
-
-<!-- ═════════════ 14  AKTIVITAETSDIAGRAMM ═════════════ -->
-<div class="slide">
-  <div class="eyebrow">12 · Aktivitätsdiagramm</div>
-  <h2>Hauptworkflow Termin → Bericht</h2>
-  <div class="lede">Fachlicher Ablauf einer Hauptuntersuchung — von der Halter-Anmeldung bis zum ausgehändigten PDF-Bericht. Verzweigungen am Mängel-Status nach § 29 StVZO. Vollständig in <span class="mono">design.md § 5.1</span>.</div>
-  <div class="grid-2">
-    <div>
-      <div class="ascii" style="font-size:11px; line-height:1.35; padding:14px 16px"><span class="c">[1]</span> Halter erscheint zum Termin
-   ↓
-<span class="c">[2]</span> Empfang ruft Termin auf · Daten ergänzen
-   ↓
-<span class="c">[3]</span> Prüfung starten · Status → <span class="a">IN_PRUEFUNG</span>
-   ↓
-<span class="c">[4]</span> Prüfung nach <span class="g">StVZO Anlage VIII</span>
-   ↓
-<span class="c">[5]</span> Mängel?  ──nein──→ <span class="g">BESTANDEN</span>  ────────┐
-   │ ja                                          │
-   ▼                                             │
-<span class="c">[6]</span> Erfassen:  Code + Kat <span class="a">OM/GM/EM/GfM</span>      │
-   ↓                                             │
-<span class="c">[7]</span> ≥1 GfM?   ──ja──→ <span style="color:var(--red)">NICHT_BESTANDEN</span> ──┐  │
-   │ nein                                     │  │
-   ▼                                          │  │
-<span class="c">[8]</span> ≥1 EM?  ──ja──→ <span class="a">NACHPRÜFUNG</span> ─────────┐ │  │
-   │ nein                                    │ │  │
-   ▼                                         │ │  │
-<span class="c">[9]</span> <span class="g">BESTANDEN</span> ─────────────────────────────┘ │  │
-                                              ↓ ↓  ↓
-                            <span class="c">[10] PDF-Bericht erzeugen</span>
-                                Ref <span class="g">TPP-NDS-2026-XXXXXXX</span>
-                                              ↓
-                            <span class="c">[11] Bericht an Halter ausgehändigt</span></div>
-    </div>
-    <div>
-      <h3 style="margin-bottom:6px">Drei Schlüssel-Entscheidungspunkte</h3>
-      <div class="card tone-red pad-sm" style="padding:10px 14px">
-        <h4 style="margin-bottom:2px">≥1 Gefährlicher Mangel → Verkehrsunsicher</h4>
-        <p style="font-size:11.5px; line-height:1.45">Höchste Stufe nach § 29 StVZO Anlage VIII. Fahrzeug ist verkehrsunsicher, darf nicht weitergeführt werden. „Bestanden" ist <strong>nicht wählbar</strong> — 3-Layer-Defense (UI · Express-API · MariaDB-Trigger), siehe ADR-003.</p>
-      </div>
-      <div class="card tone-amber pad-sm" style="margin-top:6px; padding:10px 14px">
-        <h4 style="margin-bottom:2px">≥1 Erheblicher Mangel → Nachprüfung (nicht bestanden)</h4>
-        <p style="font-size:11.5px; line-height:1.45">HU gilt als <strong>nicht bestanden</strong> — „Bestanden" ist gleichermaßen blockiert (gleicher 3-Layer wie bei GfM). Unterschied zu GfM: Fahrzeug ist fahrtüchtig; Halter kann den EM beheben und innerhalb 1 Monat zur Nachprüfung erneut vorfahren — ohne neue Anmeldung.</p>
-      </div>
-      <div class="card tone-green pad-sm" style="margin-top:6px; padding:10px 14px">
-        <h4 style="margin-bottom:2px">Bericht-PDF zwingend</h4>
-        <p style="font-size:11.5px; line-height:1.45">Egal welches Ergebnis — jede Prüfung erzeugt einen Bericht im A4-Behörden-Vordruck-Stil. Halter erhält ihn als rechtsverbindliches Dokument.</p>
-      </div>
-      <div class="callout green" style="margin-top:14px; font-size:11.5px">
-        <strong>Status-Codes</strong> entsprechen 1:1 dem <span class="mono">STATUS</span>-Enum in <span class="mono">constants/mangel.js</span> und der <span class="mono">status</span>-Tabelle in MariaDB — keine Doppel-Definition.
-      </div>
-    </div>
-  </div>
-  <div class="brand"><span class="dot">●</span> TÜV PRÜFSTELLE PRO</div>
-  <div class="slide-num">14 / 19</div>
-</div>
-
-<!-- ═════════════ 15  TEST-STRATEGIE ═════════════ -->
-<div class="slide">
-  <div class="eyebrow">13 · Tests</div>
-  <h2>Test-Strategie &amp; Auswahl der Testfälle</h2>
-  <div class="lede">Tests sind nicht zufällig — jeder Testfall folgt einem etablierten Verfahren. Coverage ist ein Nebenprodukt, nicht das Ziel.</div>
-  <div class="grid-2">
-    <div>
-      <h3>Testpyramide (nach Mike Cohn)</h3>
-      <div class="ascii">       ╱ <span class="a">e2e</span> ╲   wenige, langsam, teuer
-      ╱────────╲    <span class="a">(noch nicht)</span>
-     ╱<span class="c"> Component</span>╲   mittel, RTL + jsdom
-    ╱────────────╲
-   ╱   <span class="g">Unit + DB</span>    ╲   viele, schnell, isoliert
-  ╱────────────────╲    <span class="g">135 grün ✓</span></div>
-      <h3 style="margin-top:14px">Was wir bewusst nicht testen</h3>
-      <table>
-        <tr><th>Bereich</th><th>Begründung</th></tr>
-        <tr><td>Framer-Motion-Animationen</td><td>Visuell, nicht funktional</td></tr>
-        <tr><td>Browser-E2E (Playwright)</td><td>Eigene CI-Stage, im Sprint-Scope offen</td></tr>
-        <tr><td>Print-PDF-Rendering</td><td>Browser-spezifisch, manuell verifiziert</td></tr>
-        <tr><td>Recharts-Rendering</td><td>Visual-Regression-Setup eigen</td></tr>
+      <h3>Die 3 Migrationen</h3>
+      <table style="font-size:11.5px">
+        <tr><th>V</th><th>Name</th><th>Inhalt</th></tr>
+        <tr><td class="mono">1</td><td class="mono">initial-schema</td><td>8 Fachtabellen — mit IF NOT EXISTS, damit Bestandsinstallationen sie als No-op durchlaufen</td></tr>
+        <tr><td class="mono">2</td><td class="mono">hu-richtlinie-kategorien</td><td>Alt-Kategorien → OM/GM/EM/GfM; FK <span class="mono">ON UPDATE CASCADE</span> benennt Mangel-Zeilen mit um</td></tr>
+        <tr><td class="mono">3</td><td class="mono">benutzer-tabelle</td><td>Login-Konten für die 3 Rollen (CHECK auf Rolle)</td></tr>
       </table>
+      <div class="callout amber" style="margin-top:12px; font-size:12px">
+        <strong>Warum kein Flyway/Liquibase?</strong> MariaDB hat <strong>kein transaktionales DDL</strong> — der Hauptvorteil schwerer Frameworks (atomare Migrationen) existiert dort gar nicht. Was bleibt, ist Buchführung + Reihenfolge: 60 Zeilen. Konsequenz: jede Migration muss idempotent wiederholbar sein, falls sie mittendrin abbricht.
+      </div>
+      <div class="callout green" style="margin-top:10px; font-size:12px">
+        <strong>Zweigleisig by design:</strong> Schema-Änderungen sind versioniert; <strong>Seeds und der WF-01-Trigger sind Desired-State</strong> (INSERT IGNORE / CREATE OR REPLACE, idempotent bei jedem Boot) — eine Trigger-Korrektur erreicht alle Instanzen, ohne eine Migrations-Version zu verbrauchen.
+      </div>
+    </div>
+  </div>
+  <div class="brand"><span class="dot">●</span> TÜV PRÜFSTELLE PRO</div>
+  <div class="slide-num">11 / 23</div>
+</div>
+
+<!-- ═════════════ 12  WF-01 DEFENSE IN DEPTH ═════════════ -->
+<div class="slide">
+  <div class="eyebrow">08 · Workflow-Integrität</div>
+  <h2>WF-01: „Bestanden" ist bei EM/GfM unmöglich — beweisbar</h2>
+  <div class="lede">§ 29 StVZO: mit unbehobenem erheblichen oder gefährlichen Mangel gibt es keine Plakette. Diese Regel ist dreifach abgesichert (ADR-003) — und die dritte Schicht wird per Integrationstest mit echtem SQL-Bypass bewiesen.</div>
+  <div class="grid-2">
+    <div>
+      <div class="layer" style="border-top:2px solid var(--cyan)">
+        <div class="layer-tag" style="color:var(--cyan)">Schicht 1 · UI-Guard (React)</div>
+        <p><span class="mono">hatBlockierendenMangel()</span> sperrt den „Bestanden"-Button, bevor ein Request entsteht — sofortiges Feedback für den Prüfer.</p>
+      </div>
+      <div class="layer-arrow">│ umgehbar per direktem API-Call ▼</div>
+      <div class="layer" style="border-top:2px solid var(--green)">
+        <div class="layer-tag" style="color:var(--green)">Schicht 2 · API-Guard (Express)</div>
+        <p><span class="mono">PATCH /api/termine/:id/status</span> prüft per JOIN gegen <span class="mono">mangel_kategorie.blockiert_bestanden</span> und <span class="mono">behoben = FALSE</span> → antwortet <span class="mono">{ok:false, reason}</span>.</p>
+      </div>
+      <div class="layer-arrow">│ umgehbar per generischem PATCH oder SQL-Client ▼</div>
+      <div class="layer" style="border-top:2px solid var(--red)">
+        <div class="layer-tag" style="color:var(--red)">Schicht 3 · DB-Trigger (MariaDB)</div>
+        <p><span class="mono">trg_termin_wf01_update</span> — <span class="mono">BEFORE UPDATE ON termin</span> wirft <span class="mono">SIGNAL SQLSTATE '45000'</span>. Der Express-Error-Handler mappt das auf <strong>HTTP 422</strong>. Von keiner Anwendung umgehbar.</p>
+      </div>
+      <div class="callout" style="margin-top:12px; font-size:11.5px">
+        <strong>Plus Auto-Demotion:</strong> Wird ein unbehobener blockierender Mangel zu einem bereits „Bestanden"-Termin erfasst, setzt die API den Termin <strong>transaktional</strong> (Mangel-INSERT + Status-UPDATE atomar) auf „Nicht bestanden" zurück.
+      </div>
+    </div>
+    <div>
+      <h3>Der Beweis: 7 Integrationstests (<span class="mono" style="font-size:12px">server/tests/wf01.test.js</span>)</h3>
+      <table style="font-size:11.5px">
+        <tr><th>Test</th><th>Zeigt</th></tr>
+        <tr><td><strong>Layer 3:</strong> direkter SQL-UPDATE via <span class="mono">docker exec</span></td><td>Trigger lehnt ab — <strong>Bypass an UI + API vorbei scheitert</strong></td></tr>
+        <tr><td><strong>Layer 2:</strong> generischer PATCH-Endpoint</td><td>HTTP 422 aus dem Trigger-Mapping</td></tr>
+        <tr><td><strong>Layer 1:</strong> Status-Endpoint</td><td>sauberes <span class="mono">ok:false</span> mit Begründung</td></tr>
+        <tr><td>Happy Path ohne Mangel</td><td>„Bestanden" funktioniert normal</td></tr>
+        <tr><td><span class="mono">behoben = TRUE</span>-Semantik</td><td>behobene Mängel blockieren nicht mehr</td></tr>
+        <tr><td>Auto-Demotion (2 Fälle)</td><td>unbehoben → demote; behoben → bleibt „Bestanden"</td></tr>
+      </table>
+      <div class="callout green" style="margin-top:12px; font-size:12px">
+        <strong>Läuft in der CI gegen eine echte MariaDB</strong> (GitHub-Actions-Service-Container). Nur der SQL-Bypass-Test braucht den lokalen Docker-Stack und wird in CI übersprungen — die übrigen sechs laufen bei jedem Push.
+      </div>
+    </div>
+  </div>
+  <div class="brand"><span class="dot">●</span> TÜV PRÜFSTELLE PRO</div>
+  <div class="slide-num">12 / 23</div>
+</div>
+
+<!-- ═════════════ 13  BENUTZER & LOGIN-SICHERHEIT ═════════════ -->
+<div class="slide">
+  <div class="eyebrow">09 · Sicherheit</div>
+  <h2>Login ohne Zusatz-Dependencies — <span class="mono" style="font-size:26px">node:crypto</span> reicht</h2>
+  <div class="lede">Bewusste Entscheidung: kein bcrypt, kein jsonwebtoken. Das On-Premise-Deployment soll ohne native Build-Toolchain auskommen, und <span class="mono">server/auth.js</span> bleibt als reines Funktionsmodul ohne DB-Zugriff unit-testbar (17 Tests).</div>
+  <div class="asym-l">
+    <div>
+      <div class="card tone-cyan pad-sm">
+        <h4>Passwörter: scrypt mit Parametern im Hash</h4>
+        <p>Format <span class="mono">scrypt$N$r$p$salt$hash</span> (N=16384). Die Parameter stehen im Hash selbst — sie können später erhöht werden, ohne Alt-Hashes zu invalidieren. Plausibilitätsgrenzen beim Parsen verhindern Speicher-Bomben aus manipulierten DB-Werten.</p>
+      </div>
+      <div class="card tone-green pad-sm" style="margin-top:8px">
+        <h4>Token: HMAC-SHA256, 12 h gültig</h4>
+        <p>JWT-artig, aber ohne Header-Segment — der Algorithmus ist fest, ein <span class="mono">alg=none</span>-Downgrade ist strukturell unmöglich. Payload: Kürzel, Name, Rolle, Ablauf.</p>
+      </div>
+      <div class="card tone-amber pad-sm" style="margin-top:8px">
+        <h4>Timing-sicher an jeder Vergleichsstelle</h4>
+        <p><span class="mono">timingSafeEqual</span> für Passwort-, Token- und Admin-Token-Vergleich (beide Seiten vorher gehasht → gleich lange Buffer). Unbekannte Kürzel rechnen trotzdem ein scrypt gegen einen Dummy-Hash durch — die Antwortzeit verrät nicht, welche Konten existieren.</p>
+      </div>
+      <div class="card tone-purple pad-sm" style="margin-top:8px">
+        <h4>Keine User-Enumeration, kein Brute-Force</h4>
+        <p>Eine gemeinsame 401-Meldung für „Kürzel unbekannt" und „Passwort falsch" · Login-Rate-Limit 10 Versuche / 15 min in Produktion.</p>
+      </div>
+    </div>
+    <div>
+      <div class="mock-login">
+        <div class="logo">🛡</div>
+        <div class="title">TÜV Prüfstelle Pro</div>
+        <div class="sub">ANMELDUNG · VERWALTUNGSSYSTEM</div>
+        <div class="fld-label">Kürzel</div>
+        <div class="fld">chef</div>
+        <div class="fld-label">Passwort</div>
+        <div class="fld">••••••••</div>
+        <div class="btn">Anmelden</div>
+      </div>
+      <p style="font-size:10.5px; color:var(--t4); text-align:center; margin-top:8px">Login-Screen (<span class="mono" style="font-size:10px">src/views/LoginView.jsx</span>) — CSS-Nachbau</p>
+      <div class="callout" style="margin-top:10px; font-size:11.5px">
+        <span class="mono">AUTH_ENABLED</span>: <strong>an</strong> bei <span class="mono">NODE_ENV=production</span>, <strong>aus</strong> in Dev/CI (Requests laufen als Dev-Chef, Integrationstests unverändert). <span class="mono">GET /api/auth/me</span> verrät dem Frontend beim Start, ob Login verlangt wird.
+      </div>
+    </div>
+  </div>
+  <div class="brand"><span class="dot">●</span> TÜV PRÜFSTELLE PRO</div>
+  <div class="slide-num">13 / 23</div>
+</div>
+
+<!-- ═════════════ 14  API-HARDENING ═════════════ -->
+<div class="slide">
+  <div class="eyebrow">10 · Sicherheit</div>
+  <h2>API-Hardening — Ergebnis eines externen Code-Reviews (ADR-010)</h2>
+  <div class="lede">Nach einem Security-Review wurde eine Hardening-Roadmap abgearbeitet. Grundsatz: <em>lieber loud broken als silently insecure</em> — Fehlkonfiguration soll den Start verweigern, nicht still unsicher laufen.</div>
+  <div class="grid-3">
+    <div class="card tone-cyan pad-sm">
+      <h4>helmet + CSP</h4>
+      <p>Security-Header ab Werk. CSP verbietet <strong>Inline-Scripts</strong> (deshalb triggert der Berichts-Druck vom Opener statt per <span class="mono">&lt;script&gt;</span>); <span class="mono">upgrade-insecure-requests</span> entfernt — das LAN-Modell läuft bewusst über HTTP.</p>
+    </div>
+    <div class="card tone-green pad-sm">
+      <h4>Rate-Limits (Produktion)</h4>
+      <p><span class="mono">/api</span> 600/min · <span class="mono">/api/admin</span> 30/15 min · <span class="mono">/api/auth/login</span> 10/15 min. In Dev/CI aus, damit Integrationstests nicht anschlagen.</p>
+    </div>
+    <div class="card tone-amber pad-sm">
+      <h4>CORS: nur LAN</h4>
+      <p>Statt Wildcard: localhost + private RFC-1918-Netze (10.x, 172.16–31.x, 192.168.x) + explizite <span class="mono">ALLOWED_ORIGINS</span>-Whitelist.</p>
+    </div>
+    <div class="card tone-purple pad-sm">
+      <h4>Fehler-Semantik ohne SQL-Leak</h4>
+      <p>Zentrales Mapping: Duplikat → <strong>409</strong> · fehlende Referenz → <strong>400</strong> · CHECK-Verstoß → <strong>400</strong> · Trigger-SIGNAL → <strong>422</strong>. 500er geben <strong>keine</strong> <span class="mono">err.message</span> an Clients — SQL-Texte leaken Schema-Details; Details nur ins Server-Log.</p>
+    </div>
+    <div class="card tone-red pad-sm">
+      <h4>Fail-fast-Boot-Guards</h4>
+      <p>Production ohne <span class="mono">ADMIN_TOKEN</span> oder Auth ohne Secret → <span class="mono">process.exit(1)</span> mit klarer FATAL-Meldung. Beide Guards sind mit 2 echten Prozess-Tests abgedeckt.</p>
+    </div>
+    <div class="card tone-blue pad-sm">
+      <h4>Minimierte Angriffsfläche</h4>
+      <p>DB-Port nur <span class="mono">127.0.0.1</span> · Adminer nur per Compose-Profil · Admin-Endpunkte doppelt geschützt (Chef-Rolle <strong>und</strong> X-Admin-Token) · <span class="mono">express.json</span> auf 1 MB begrenzt · durchgängig parametrisierte Queries.</p>
+    </div>
+  </div>
+  <div class="callout green" style="margin-top:16px; font-size:12px">
+    <strong>Health mit Substanz:</strong> <span class="mono">GET /api/health</span> prüft die DB per <span class="mono">SELECT 1</span> — sonst meldet der Endpoint „ok", während MariaDB längst weg ist. Multi-Step-Writes (Mangel + Demotion, Demo-Seed, Reset) laufen in echten Transaktionen (<span class="mono">withTransaction</span>: COMMIT/ROLLBACK).
+  </div>
+  <div class="brand"><span class="dot">●</span> TÜV PRÜFSTELLE PRO</div>
+  <div class="slide-num">14 / 23</div>
+</div>
+
+<!-- ═════════════ 15  FRONTEND-QUALITÄT ═════════════ -->
+<div class="slide">
+  <div class="eyebrow">11 · Frontend</div>
+  <h2>Frontend-Qualität: Tokens, Optimistic UI, Live-Sync</h2>
+  <div class="lede">In Sprint 10 wurde das Styling auf <strong>Tailwind CSS 4</strong> migriert — die UI blieb pixelgleich, aber die Design-Sprache hat jetzt eine einzige Quelle der Wahrheit.</div>
+  <div class="grid-2">
+    <div>
+      <h3>Design-Tokens statt Streu-Styles</h3>
+      <div class="ascii" style="font-size:10.5px; line-height:1.5">/* src/index.css — Quelle der Wahrheit */
+<span class="c">@theme</span> {
+  --color-surface:  #FFFFFF;
+  --color-sb:       #1A1740;   /* Sidebar-Indigo */
+  --color-blue:     #4F46E5;   /* Primär-Akzent  */
+  --color-green:    #059669;
+  --color-red:      #DC2626;
+  --font-mono: 'JetBrains Mono', …;
+}</div>
+      <p style="font-size:12px; color:var(--t2); line-height:1.6; margin-top:10px">Tailwind-4-<span class="mono">@theme</span>-Tokens erzeugen die Utility-Klassen (<span class="mono">bg-surface</span>, <span class="mono">text-sb-t1</span> …). <span class="mono">src/styles/theme.js</span> spiegelt dieselbe Palette als JS-Objekt für Recharts und dynamische Styles — dokumentiert synchron zu halten.</p>
+      <h3 style="margin-top:14px">Login-Screen &amp; Rollen-Gating</h3>
+      <p style="font-size:12px; color:var(--t2); line-height:1.6">Ohne gültiges Token rendert die App nur den LoginView — die App-Shell (inkl. <span class="mono">useDb</span>-Polling) bleibt ungemountet. Nach Login blendet <span class="mono">rechteFuerRolle()</span> verbotene Aktionen aus; die Topbar zeigt Name + Rolle.</p>
+    </div>
+    <div>
+      <h3>useDb: Schreiben fühlt sich sofort an</h3>
+      <div class="card tone-cyan pad-sm">
+        <h4>Optimistische Updates mit Rollback</h4>
+        <p>Jeder Write patcht den React-State <strong>sofort</strong> (UI reagiert ohne Wartezeit) und merkt sich den Vorzustand. Lehnt der Server ab (z. B. WF-01, 409-Duplikat), wird der State zurückgerollt und ein Fehler-Toast gezeigt.</p>
+      </div>
+      <div class="card tone-green pad-sm" style="margin-top:8px">
+        <h4>5-Sekunden-Polling mit Write-Suppression (US-16)</h4>
+        <p>Der Empfang legt einen Termin an → das Prüfer-Tablet sieht ihn ohne F5. Das Polling pausiert, (a) wenn der Tab im Hintergrund ist (Page-Visibility-API) und (b) solange eine eigene Write-Operation läuft (<span class="mono">writeInFlight</span>-Zähler) — sonst könnte ein Poll-Tick mit altem DB-Stand den laufenden Write überschreiben.</p>
+      </div>
+      <div class="card tone-purple pad-sm" style="margin-top:8px">
+        <h4>N+1 eliminiert</h4>
+        <p><span class="mono">GET /api/termine?include=maengel</span> lädt Termine + Mängel in <strong>2 SQL-Queries</strong> statt 1 + N HTTP-Roundtrips.</p>
+      </div>
+    </div>
+  </div>
+  <div class="brand"><span class="dot">●</span> TÜV PRÜFSTELLE PRO</div>
+  <div class="slide-num">15 / 23</div>
+</div>
+
+<!-- ═════════════ 16  TESTPYRAMIDE ═════════════ -->
+<div class="slide">
+  <div class="eyebrow">12 · Tests</div>
+  <h2>Testpyramide mit echten Zahlen: 231 Tests grün</h2>
+  <div class="lede">Jeder Testfall folgt einem etablierten Entwurfsverfahren — Coverage ist Nebenprodukt, nicht Ziel. Vitest 4 + React Testing Library, DB-Tests gegen echte MariaDB.</div>
+  <div class="grid-2">
+    <div>
+      <div class="ascii" style="font-size:11px">          ╱ <span class="r">Prozess</span> ╲        <span class="r">2</span>  Boot-Guard-Tests (echter node-Spawn)
+         ╱───────────╲
+        ╱ <span class="a">Integration</span> ╲      <span class="a">7</span>  WF-01 gegen echte MariaDB
+       ╱───────────────╲        (inkl. SQL-Bypass-Beweis)
+      ╱   <span class="p">UI-Flows</span>      ╲   <span class="p">12</span>  Login · Rollen-Gating · WF-01
+     ╱───────────────────╲      Fahrzeug-Anlage · Termin
+    ╱  <span class="c">Komponenten/Hooks</span>  ╲ <span class="c">49</span>  Buttons, Inputs, StatusPill,
+   ╱───────────────────────╲    useDb, useToasts, AuthContext
+  ╱        <span class="g">Unit</span>             ╲ <span class="g">161</span> Validatoren (71 + 38), Auth (17),
+ ╱───────────────────────────╲   Datum (22), Mangel-Logik (13)</div>
+      <p style="font-size:11.5px; color:var(--t4); margin-top:10px">Zählung aus den Test-Dateien in <span class="mono">src/tests/</span> und <span class="mono">server/tests/</span> — 18 Dateien, 231 Testfälle.</p>
     </div>
     <div>
       <h3>Testentwurfsverfahren</h3>
       <div class="card tone-cyan pad-sm">
-        <h4>1. Äquivalenzklassen-Methode</h4>
-        <p>Eingaben werden in Klassen partitioniert; pro Klasse 1 Repräsentant. Beispiel <span class="mono">validateKmStand</span>: gültig-typisch / leer / negativ / nicht-int / zu-groß = 5 Klassen.</p>
+        <h4>1. Äquivalenzklassen</h4>
+        <p>Eingaben partitioniert, pro Klasse ein Repräsentant — z. B. <span class="mono">validateKmStand</span>: gültig / leer / negativ / nicht-int / zu groß.</p>
       </div>
       <div class="card tone-green pad-sm" style="margin-top:8px">
         <h4>2. Grenzwertanalyse</h4>
-        <p>An den Rändern: gerade-innen, Rand, gerade-außen. <span class="mono">validateBaujahr</span>: 1884 (out), 1885 (in), Jahr+1 (in), Jahr+2 (out).</p>
+        <p>An den Rändern: <span class="mono">validateBaujahr</span> mit 1884 (out), 1885 (in), Jahr+1 (in), Jahr+2 (out).</p>
       </div>
       <div class="card tone-amber pad-sm" style="margin-top:8px">
-        <h4>3. Entscheidungstabelle</h4>
-        <p>Bei Workflow-Regeln. <span class="mono">validateStatusWechsel</span>: 7 Status × 5 Mängel-Konstellationen → 8 nicht-redundante Kombinationen.</p>
+        <h4>3. Entscheidungstabellen</h4>
+        <p>Für Workflow-Regeln: Status × Mängel-Konstellationen, nur nicht-redundante Kombinationen.</p>
       </div>
       <div class="card tone-purple pad-sm" style="margin-top:8px">
-        <h4>4. Regression aus Fehlermeldungen</h4>
-        <p>Jeder identifizierte Bug erhält einen Test, bevor er gefixt wird. Verhindert Wieder-Regression.</p>
+        <h4>4. Security-Fälle als Unit-Tests</h4>
+        <p><span class="mono">server/tests/auth.test.js</span> (17): kaputte Hashes, manipulierte scrypt-Parameter, gefälschte/abgelaufene Tokens, fail-closed für unbekannte Rollen.</p>
       </div>
-      <div class="stat-grid" style="grid-template-columns: 1fr 1fr 1fr; margin-top:14px">
-        <div class="stat"><div class="num">135</div><div class="lbl">Tests grün</div></div>
-        <div class="stat"><div class="num green">8</div><div class="lbl">Test-Files (inkl. WF-01 API-Tests)</div></div>
+      <div class="stat-grid" style="grid-template-columns:1fr 1fr 1fr; margin-top:12px">
+        <div class="stat"><div class="num">231</div><div class="lbl">Tests grün</div></div>
+        <div class="stat"><div class="num green">18</div><div class="lbl">Test-Dateien</div></div>
         <div class="stat"><div class="num purple">0</div><div class="lbl">ESLint-Errors</div></div>
       </div>
     </div>
   </div>
   <div class="brand"><span class="dot">●</span> TÜV PRÜFSTELLE PRO</div>
-  <div class="slide-num">15 / 19</div>
+  <div class="slide-num">16 / 23</div>
 </div>
 
-<!-- ═════════════ 16  VORGEHEN ═════════════ -->
+<!-- ═════════════ 17  UI-FLOW-TESTS & CI ═════════════ -->
 <div class="slide">
-  <div class="eyebrow">14 · Vorgehensmodell</div>
-  <h2>Sprint-Methodik, DoD &amp; Backlog</h2>
-  <div class="lede">Wir arbeiten in 2-Wochen-Sprints mit Product Backlog, Sprint Backlog und teamübergreifender Definition of Done. Stories nach MoSCoW priorisiert.</div>
+  <div class="eyebrow">13 · Tests &amp; CI</div>
+  <h2>UI-Flow-Tests + Pipeline: jeder Push wird bewiesen</h2>
+  <div class="lede">Die 12 Flow-Tests rendern die echte App-Shell mit gemocktem API-Client und klicken die kritischen Pfade durch — inklusive Login, Rollen-Gating und WF-01 <em>durch die UI</em>.</div>
   <div class="grid-2">
     <div>
-      <h3>Sprint-Historie (8 Sprints)</h3>
-      <table>
-        <tr><th>Sprint</th><th>Fokus</th><th>SP</th><th>Status</th></tr>
-        <tr><td>1</td><td>Setup, Tooling, Theme</td><td class="muted">—</td><td><span class="pill green">Done</span></td></tr>
-        <tr><td>2</td><td>Fahrzeug-CRUD &amp; Suche</td><td>15</td><td><span class="pill green">Done</span></td></tr>
-        <tr><td>3</td><td>Tagesplan &amp; Termine</td><td>15</td><td><span class="pill green">Done</span></td></tr>
-        <tr><td>4</td><td>Mängel, Berichte, Statistik</td><td>37</td><td><span class="pill green">Done</span></td></tr>
-        <tr><td>5</td><td>Validierung, UX, Doku, PDF, Mobile</td><td>63</td><td><span class="pill green">Done</span></td></tr>
-        <tr><td>6</td><td>Security, Code-Splitting, CI</td><td>12</td><td><span class="pill green">Done</span></td></tr>
-        <tr><td>7</td><td>PGlite → MariaDB-Migration + Express-API + ADRs</td><td>34</td><td><span class="pill green">Done</span></td></tr>
-        <tr><td>8</td><td>WF-01-Trigger, Docker, Live-Sync (US-16), Politur</td><td>22</td><td><span class="pill green">Done</span></td></tr>
+      <h3>12 Flow-Tests (<span class="mono" style="font-size:12px">src/tests/flows/</span>)</h3>
+      <table style="font-size:11.5px">
+        <tr><th>Flow</th><th>Prüft u. a.</th></tr>
+        <tr><td><strong>Login</strong> (3)</td><td>401 → LoginView, App-Shell ungemountet · Erfolg → Topbar zeigt Benutzer · falsche Daten → Fehlermeldung</td></tr>
+        <tr><td><strong>Rollen-Gating</strong> (2)</td><td>empfang: keine Lösch-/Status-Buttons · chef: alles sichtbar</td></tr>
+        <tr><td><strong>WF-01 via UI</strong> (3)</td><td>EM-Mangel sperrt „Bestanden" (kein API-Call) · Server-Ablehnung → Toast + Status bleibt · Gegenprobe ok:true</td></tr>
+        <tr><td><strong>Fahrzeug-Anlage</strong> (3)</td><td>Pflichtfeld-Fehler · KBA-Kreiscode-Validierung · korrekte DB-Felder an die API</td></tr>
+        <tr><td><strong>Termin anlegen</strong> (1)</td><td>Modal → <span class="mono">addTermin</span> → erscheint im Tagesplan</td></tr>
       </table>
-      <h3 style="margin-top:14px">Beispiel-Story (US-06, MoSCoW: M)</h3>
-      <div class="card tone-cyan pad-sm">
-        <p style="font-size:12.5px"><em>„Als Prüfer möchte ich daran gehindert werden, unplausible Hersteller-Modell-Typ-Kombinationen einzugeben (z. B. ‚BMW Polo'), damit Stammdaten konsistent bleiben."</em></p>
-        <p style="margin-top:6px; font-size:11.5px; color:var(--t4)"><strong>Prio:</strong> Must · <strong>SP:</strong> 8 · <strong>Sprint 5</strong></p>
+      <div class="callout" style="margin-top:12px; font-size:11.5px">
+        Dazu <strong>7 WF-01-Integrationstests</strong> gegen echte MariaDB und <strong>2 Boot-Guard-Prozesstests</strong>, die einen echten <span class="mono">node server/index.js</span> spawnen und <span class="mono">exit(1)</span> erwarten.
       </div>
     </div>
     <div>
-      <h3>Definition of Done (10 Punkte, teamübergreifend)</h3>
-      <div class="card pad-sm">
-        <ol style="font-size:12px; color:var(--t2); line-height:1.85; padding-left:22px">
-          <li>Alle Akzeptanzkriterien der Story erfüllt</li>
-          <li>Code in Feature-Branch, Pull Request erstellt</li>
-          <li>Mindestens ein Reviewer hat approved</li>
-          <li><span class="mono">npm run lint</span> — 0 Errors</li>
-          <li><span class="mono">npm run test</span> — alle Tests grün</li>
-          <li>Neue Business-Regel = neue Vitest-Tests (Äquivalenz + Grenzwerte)</li>
-          <li>Keine hartkodierten Strings — Konstanten-Module</li>
-          <li>PropTypes-Validation für neue Komponenten</li>
-          <li>Merge in <span class="mono">main</span> per Squash-Merge</li>
-          <li>Manueller Smoke-Test im Browser &amp; Tauri-Desktop-Build</li>
-        </ol>
-      </div>
-      <div class="callout green" style="margin-top:14px">
-        <strong>Velocity-Bilanz:</strong> 198 SP über sieben produktive Sprints (Sprint 2–8). Sprint 5 (UX-/Doku-Sprint nach Frau Fuchs' Feedback Runde 1) war mit 63 SP der Schwerpunkt-Sprint. Sprint 7 (MariaDB-Migration nach Datenmodell-Feedback 13.&nbsp;5.) war der größte Refactoring-Sprint. Sprint 8 hat den Abgabestand finalisiert.
+      <h3>CI-Pipeline (<span class="mono" style="font-size:12px">.github/workflows/ci.yml</span>)</h3>
+      <div class="ascii" style="font-size:11px">on: push / pull_request (master)
+
+<span class="c">┌─ MariaDB 11.4 als Service-Container ─┐</span>
+│  echte DB, Healthcheck-gated         │
+<span class="c">└──────────────────────────────────────┘</span>
+   1. npm ci
+   2. <span class="g">npm run lint</span>        (0 Errors)
+   3. <span class="g">npm run typecheck</span>
+   4. API-Boot im Hintergrund
+      → Migrationen + Seeds + Trigger
+      → Warten auf /api/health
+   5. <span class="g">npm test</span>            (231 Tests,
+      inkl. WF-01 gegen Service-DB)
+   6. <span class="g">npm run build</span>  →  dist/-Artifact</div>
+      <div class="callout green" style="margin-top:12px; font-size:12px">
+        <strong>Zusätzlich CodeQL</strong> (<span class="mono">codeql.yml</span>): statische Sicherheitsanalyse auf jedem Push — ergänzt die Tests um automatisches Scanning auf bekannte Schwachstellen-Muster.
       </div>
     </div>
   </div>
   <div class="brand"><span class="dot">●</span> TÜV PRÜFSTELLE PRO</div>
-  <div class="slide-num">16 / 19</div>
+  <div class="slide-num">17 / 23</div>
 </div>
 
-<!-- ═════════════ 17  VORHER/NACHHER FEEDBACK-WIRKUNG ═════════════ -->
+<!-- ═════════════ 18  DSGVO / ON-PREMISE ═════════════ -->
+<div class="slide">
+  <div class="eyebrow">14 · Datenschutz</div>
+  <h2>DSGVO im On-Premise-Betrieb</h2>
+  <div class="lede">Kundendaten verlassen den Werkstattrechner nicht. Was das vereinfacht, was inzwischen umgesetzt ist — und was ehrlicherweise noch offen bleibt.</div>
+  <div class="grid-3">
+    <div class="card tone-amber">
+      <h4>Verarbeitete personenbezogene Daten</h4>
+      <ul class="bullets amber">
+        <li>Halter-Name / Firma, Anschrift</li>
+        <li>Telefon &amp; E-Mail</li>
+        <li>Kennzeichen (Halter-Bezug)</li>
+        <li>FIN (eindeutige Fahrzeug-ID)</li>
+        <li>Indirekt: Mängel-Historie</li>
+      </ul>
+      <p style="margin-top:8px"><strong>Klassifikation:</strong> allgemeine personenbezogene Daten (Art. 4 Nr. 1 DSGVO) — keine besonderen Kategorien.</p>
+    </div>
+    <div class="card tone-green">
+      <h4>Umgesetzte Maßnahmen</h4>
+      <ul class="bullets green">
+        <li><strong>Kein Cloud-Zugriff</strong> — MariaDB im LAN, kein Auftragsverarbeiter, kein AVV nötig</li>
+        <li><strong>Zugriffskontrolle:</strong> Login + Rollen, Löschen nur für Chef</li>
+        <li>DB-Port nur localhost, Admin-Aktionen Token-geschützt</li>
+        <li>Cascade-Delete: abhängige Daten verschwinden mit dem Fahrzeug; Halter mit Fahrzeugen sind lösch-geschützt (RESTRICT)</li>
+        <li>Keine externen Tracker — das Frontend lädt nichts von außen</li>
+        <li>Keine SQL-Fehlertexte an Clients (Datenminimierung auch bei Fehlern)</li>
+      </ul>
+    </div>
+    <div class="card tone-red">
+      <h4>Offen (ehrlich)</h4>
+      <ul class="bullets red">
+        <li><strong>Audit-Log</strong> — wer hat wann was geändert (<span class="mono">req.benutzer</span> ist als Ansatzpunkt schon in jedem Request)</li>
+        <li><strong>Löschkonzept</strong> — Anonymisierung nach Aufbewahrungsfristen</li>
+        <li><strong>Backup-Automatisierung</strong> — Konzept + Binlog stehen, Cron-Skripte fehlen</li>
+        <li><strong>HTTPS</strong> — im LAN-Modell bewusst nicht umgesetzt; nötig, sobald Netzwerkgrenzen überschritten werden</li>
+      </ul>
+    </div>
+  </div>
+  <div class="callout" style="margin-top:16px">
+    <strong>Trade-off der On-Premise-Wahl:</strong> Die Werkstatt trägt Verantwortung für Backups, Updates und LAN-Sicherheit selbst — dafür ist sie alleinige verantwortliche Stelle und Kundendaten sind nachweislich nicht in der Cloud. Für kleine Prüfstellen mit sensiblen Halter-Daten der bessere Kompromiss.
+  </div>
+  <div class="brand"><span class="dot">●</span> TÜV PRÜFSTELLE PRO</div>
+  <div class="slide-num">18 / 23</div>
+</div>
+
+<!-- ═════════════ 19  BACKUP-KONZEPT ═════════════ -->
+<div class="slide">
+  <div class="eyebrow">14 · Betrieb</div>
+  <h2>Backup: 3-Tier-Strategie nach der 3-2-1-Regel</h2>
+  <div class="lede">3 Kopien, 2 Medien, 1 außer Haus — ausgelegt gegen vier Bedrohungsszenarien: Plattentod, versehentliches Löschen, Ransomware, Brand/Diebstahl. Vollständig in <span class="mono">docs/backup.md</span>.</div>
+  <div class="asym-l">
+    <div>
+      <div class="ascii" style="font-size:11px"><span class="g">TIER 1 — Hot · Binary Logs (kontinuierlich)</span>
+  MariaDB schreibt jede Änderung ins Binlog
+  → <span class="t1">Point-in-Time-Recovery sekundengenau</span>, 14 Tage
+  bereits aktiv: docker/mariadb/my.cnf im Compose
+            │  alle 6 Stunden
+            ▼
+<span class="a">TIER 2 — Warm · verschlüsselter mysqldump</span>
+  AES-256, zweite Festplatte / NAS in der Werkstatt
+  Rotation: 7 täglich + 4 wöchentlich + 12 monatlich
+            │  täglich, nachts
+            ▼
+<span class="c">TIER 3 — Cold · Offsite (Hetzner Storage Box, DE)</span>
+  Konto gehört dem <span class="t1">Werkstatt-Inhaber</span>, nicht uns
+  90 Tage rollierend, verschlüsselt VOR dem Upload</div>
+    </div>
+    <div>
+      <h3>Warum so und nicht einfacher?</h3>
+      <div class="card tone-green pad-sm">
+        <h4>Binlog schlägt Cron-Dump</h4>
+        <p>Ein versehentlich gelöschter Termin lässt sich auf den Stand <strong>1 Minute vor dem Löschen</strong> zurückrollen — ein 6-Stunden-Dump allein verlöre bis zu 6 Stunden Arbeit.</p>
+      </div>
+      <div class="card tone-amber pad-sm" style="margin-top:8px">
+        <h4>Verschlüsselung vor dem Verlassen des Geräts</h4>
+        <p>Der Schlüssel liegt nicht auf dem Server — selbst ein kompromittiertes Offsite-Konto gibt keine Halter-Daten preis.</p>
+      </div>
+      <div class="card tone-red pad-sm" style="margin-top:8px">
+        <h4>Status (US-11)</h4>
+        <p><span class="pill green">done</span> Konzept, Bedrohungsmodell, Binlog aktiv, <span class="mono">./backups</span>-Volume gemountet<br><span class="pill amber">offen</span> Tier-2-Cron-Skript und Tier-3-Sync — bewusst priorisiert hinter Auth/Migrationen/Tests</p>
+      </div>
+    </div>
+  </div>
+  <div class="callout green" style="margin-top:14px; font-size:12px">
+    <strong>Zusammenspiel mit den Migrationen:</strong> Das Backup-Konzept ist zugleich der Rollback-Pfad des Migrations-Systems (ADR-011) — statt ungetesteter Down-Migrationen wird im Fehlerfall aus Binlog + Dump wiederhergestellt.
+  </div>
+  <div class="brand"><span class="dot">●</span> TÜV PRÜFSTELLE PRO</div>
+  <div class="slide-num">19 / 23</div>
+</div>
+
+<!-- ═════════════ 20  METHODIK: SPRINTS, ADRS, KI ═════════════ -->
+<div class="slide">
+  <div class="eyebrow">15 · Methodik</div>
+  <h2>10 Sprints, 11 ADRs, transparente KI-Nutzung</h2>
+  <div class="lede">Iterative Entwicklung mit dokumentierten Entscheidungen — inklusive der Sackgassen (Firestore) und eines abgearbeiteten externen Code-Reviews.</div>
+  <div class="grid-2">
+    <div>
+      <h3>Sprint-Historie (<span class="mono" style="font-size:12px">docs/backlog.md</span>)</h3>
+      <table style="font-size:11px">
+        <tr><th>Sprint</th><th>Fokus</th></tr>
+        <tr><td>1–4</td><td>Setup · Fahrzeug/Halter-CRUD · Tagesplan · Mängel, Berichte, Statistik</td></tr>
+        <tr><td>5–6</td><td>Validierung, UX, Mobile, PDF · Doku &amp; Stabilisierung (Feedback-Runde 1)</td></tr>
+        <tr><td>7–8</td><td>Relationales Datenmodell + Tests · <strong>MariaDB-Backend</strong> (Migration weg von Firestore)</td></tr>
+        <tr><td>9</td><td>On-Premise-Modell, Docker Compose, Backup-Konzept</td></tr>
+        <tr><td>10</td><td><strong>Hardening + Reife:</strong> Benutzer/Rollen, versionierte Migrationen, helmet/Rate-Limits, 404/409-Semantik, ein View-Model, Tailwind 4, UI-Flow-Tests</td></tr>
+      </table>
+      <h3 style="margin-top:14px">KI-Nutzung — offengelegt</h3>
+      <p style="font-size:12px; color:var(--t2); line-height:1.6"><span class="mono">docs/ki-nutzung.md</span> dokumentiert Werkzeuge (Claude, ChatGPT, Copilot), typische Prompt-Muster, den <strong>Validierungs-Schritt pro Einsatzbereich</strong> und die Trennung KI-Beitrag / Eigenleistung — wie in Feedback-Runde 1 gefordert. Domänenwissen (§ 29 StVZO, Werkstatt-Abläufe) stammt vom Team.</p>
+    </div>
+    <div>
+      <h3>ADR-Praxis: Entscheidungen mit Begründung</h3>
+      <table style="font-size:11px">
+        <tr><th>ADR</th><th>Entscheidung</th></tr>
+        <tr><td class="mono">001/004</td><td>MariaDB als zentrale Persistenz · Express + mariadb-Driver</td></tr>
+        <tr><td class="mono">002/008</td><td>3NF-Normalisierung · keine eingebetteten Arrays</td></tr>
+        <tr><td class="mono">003</td><td>WF-01 dreischichtig durchsetzen</td></tr>
+        <tr><td class="mono">005/007/009</td><td>TS graduell · API-Client-Pattern · monolithischer Server</td></tr>
+        <tr><td class="mono">006</td><td>Firebase Hosting — <span class="pill amber">superseded</span> durch On-Premise (010)</td></tr>
+        <tr><td class="mono">010</td><td>Hardening-Roadmap nach externem Review (7/8 umgesetzt)</td></tr>
+        <tr><td class="mono">011</td><td>Versionierte Schema-Migrationen</td></tr>
+      </table>
+      <div class="callout" style="margin-top:12px; font-size:12px">
+        <strong>ADRs beschreiben getroffene Entscheidungen, keine Wunscharchitektur</strong> — inklusive Status „superseded", wenn eine frühere Wahl (Cloud-Hosting) bewusst revidiert wurde. Der Weg ist nachvollziehbar, nicht nur das Ergebnis.
+      </div>
+    </div>
+  </div>
+  <div class="brand"><span class="dot">●</span> TÜV PRÜFSTELLE PRO</div>
+  <div class="slide-num">20 / 23</div>
+</div>
+
+<!-- ═════════════ 21  FEEDBACK-WIRKUNG ═════════════ -->
 <div class="slide">
   <div class="eyebrow">15 · Feedback-Wirkung</div>
-  <h2>Was sich nach Feedback-Runde 1 geändert hat</h2>
-  <div class="lede">Vor / Nach-Vergleich der wichtigsten Änderungen aus Sprint&nbsp;5–8 (zwei Feedback-Runden Frau Fuchs). Detaillierte Liste aller Änderungen unter <span class="mono">docs/nacharbeit_fuchs.html</span>.</div>
-  <table style="width:100%; border-collapse:collapse; font-size:11.5px; line-height:1.45; margin-top:8px">
-    <tr style="background:rgba(148,163,184,0.06)">
-      <th style="text-align:left; padding:8px 10px; border-bottom:1px solid var(--line); font-weight:700; color:var(--t1); text-transform:uppercase; font-size:10px; letter-spacing:0.06em">Bereich</th>
-      <th style="text-align:left; padding:8px 10px; border-bottom:1px solid var(--line); font-weight:700; color:var(--amber); text-transform:uppercase; font-size:10px; letter-spacing:0.06em">Vorher</th>
-      <th style="text-align:left; padding:8px 10px; border-bottom:1px solid var(--line); font-weight:700; color:var(--green); text-transform:uppercase; font-size:10px; letter-spacing:0.06em">Nachher</th>
-    </tr>
+  <h2>Was sich seit Feedback-Runde 1 geändert hat</h2>
+  <div class="lede">Vorher/Nachher der wichtigsten Punkte — vom Datenmodell-Feedback (13. 5.) bis zum finalen Hardening-Sprint. Details in <span class="mono">docs/nacharbeit_fuchs.html</span>.</div>
+  <table style="font-size:11.5px; margin-top:4px">
     <tr>
-      <td style="padding:8px 10px; border-bottom:1px solid var(--line); color:var(--t1); font-weight:600; vertical-align:top">"BMW Polo"-Eingabe</td>
-      <td style="padding:8px 10px; border-bottom:1px solid var(--line); color:var(--t3); vertical-align:top">Soft-Warning, Save war möglich</td>
-      <td style="padding:8px 10px; border-bottom:1px solid var(--line); color:var(--t2); vertical-align:top">Strukturell unmöglich durch Cascading-Dropdowns (Hersteller→Modell→Typ)</td>
+      <th>Bereich</th>
+      <th style="color:var(--amber)">Vorher</th>
+      <th style="color:var(--green)">Nachher</th>
     </tr>
-    <tr>
-      <td style="padding:8px 10px; border-bottom:1px solid var(--line); color:var(--t1); font-weight:600; vertical-align:top">"Bestanden" trotz blockierendem Mangel</td>
-      <td style="padding:8px 10px; border-bottom:1px solid var(--line); color:var(--t3); vertical-align:top">Möglich, kein Workflow-Schutz</td>
-      <td style="padding:8px 10px; border-bottom:1px solid var(--line); color:var(--t2); vertical-align:top"><strong>3-Layer-Defense:</strong> UI-Guard im React, API-Guard im Express, MariaDB-Trigger (WF-01). Regel ist von der UI nicht umgehbar.</td>
-    </tr>
-    <tr>
-      <td style="padding:8px 10px; border-bottom:1px solid var(--line); color:var(--t1); font-weight:600; vertical-align:top">Pflichtenheft</td>
-      <td style="padding:8px 10px; border-bottom:1px solid var(--line); color:var(--t3); vertical-align:top">Existierte nicht</td>
-      <td style="padding:8px 10px; border-bottom:1px solid var(--line); color:var(--t2); vertical-align:top">280 Zeilen mit Lastprofil, Performance-Begründung, Datenschutz-Konzept</td>
-    </tr>
-    <tr>
-      <td style="padding:8px 10px; border-bottom:1px solid var(--line); color:var(--t1); font-weight:600; vertical-align:top">Datenbank-Wahl</td>
-      <td style="padding:8px 10px; border-bottom:1px solid var(--line); color:var(--t3); vertical-align:top">Firestore (NoSQL, Cloud) — ohne harte Begründung</td>
-      <td style="padding:8px 10px; border-bottom:1px solid var(--line); color:var(--t2); vertical-align:top"><strong>Migration auf MariaDB</strong> nach 3NF-Feedback (13.&nbsp;5.) — 10 ADRs dokumentieren Wahl. Mangel jetzt eigene Tabelle (FK <span class="mono">termin_id</span>) statt embedded.</td>
-    </tr>
-    <tr>
-      <td style="padding:8px 10px; border-bottom:1px solid var(--line); color:var(--t1); font-weight:600; vertical-align:top">Mangel-Kategorien</td>
-      <td style="padding:8px 10px; border-bottom:1px solid var(--line); color:var(--t3); vertical-align:top">5 Werte (inkl. HM "Hauptmangel") — nicht HU-Richtlinie</td>
-      <td style="padding:8px 10px; border-bottom:1px solid var(--line); color:var(--t2); vertical-align:top"><strong>4 Werte gemäß HU-Richtlinie</strong> OM/GM/EM/GfM. Schema-Migration via <span class="mono">ON UPDATE CASCADE</span> auf <span class="mono">mangel.kategorie_code</span>.</td>
-    </tr>
-    <tr>
-      <td style="padding:8px 10px; border-bottom:1px solid var(--line); color:var(--t1); font-weight:600; vertical-align:top">Deployment-Modell</td>
-      <td style="padding:8px 10px; border-bottom:1px solid var(--line); color:var(--t3); vertical-align:top">Firebase Hosting + Cloud-DB (EU-Region)</td>
-      <td style="padding:8px 10px; border-bottom:1px solid var(--line); color:var(--t2); vertical-align:top"><strong>On-Premise per Docker-Compose</strong>: MariaDB + Express-API + Adminer im LAN der Prüfstelle. Kundendaten verlassen die Werkstatt nie.</td>
-    </tr>
-    <tr>
-      <td style="padding:8px 10px; border-bottom:1px solid var(--line); color:var(--t1); font-weight:600; vertical-align:top">"Warum 100 ms?"</td>
-      <td style="padding:8px 10px; border-bottom:1px solid var(--line); color:var(--t3); vertical-align:top">Pauschal Nielsen zitiert</td>
-      <td style="padding:8px 10px; border-bottom:1px solid var(--line); color:var(--t2); vertical-align:top">Vergleichstabelle 50&thinsp;/&thinsp;100&thinsp;/&thinsp;200&thinsp;/&thinsp;1000&thinsp;ms + p95-Test-Methode</td>
-    </tr>
-    <tr>
-      <td style="padding:8px 10px; border-bottom:1px solid var(--line); color:var(--t1); font-weight:600; vertical-align:top">ESLint</td>
-      <td style="padding:8px 10px; border-bottom:1px solid var(--line); color:var(--t3); vertical-align:top">187 Errors</td>
-      <td style="padding:8px 10px; border-bottom:1px solid var(--line); color:var(--t2); vertical-align:top"><strong>0 Errors</strong>, PropTypes für alle 22 Komponenten, strenge Config</td>
-    </tr>
-    <tr>
-      <td style="padding:8px 10px; color:var(--t1); font-weight:600; vertical-align:top">Bericht-Ausgabe</td>
-      <td style="padding:8px 10px; color:var(--t3); vertical-align:top">ASCII-<span class="mono">.txt</span></td>
-      <td style="padding:8px 10px; color:var(--t2); vertical-align:top">A4-PDF im Behörden-Vordruck-Stil, römisch nummerierte Sektionen</td>
-    </tr>
+    <tr><td><strong>Datenbank</strong></td><td>Firestore (NoSQL, Cloud), Mängel eingebettet</td><td><strong>MariaDB, 3NF:</strong> Halter + Mangel eigene Tabellen mit FKs (ADR-001/002/008)</td></tr>
+    <tr><td><strong>„Bestanden" trotz Mangel</strong></td><td>nur UI-seitig verhindert</td><td><strong>3 Schichten</strong> bis in die DB (Trigger, SIGNAL 45000) + Integrationstest mit SQL-Bypass</td></tr>
+    <tr><td><strong>Zugriffskontrolle</strong></td><td>keine — jeder konnte alles</td><td>Login + 3 Rollen, Rechte-Matrix serverseitig erzwungen (401/403)</td></tr>
+    <tr><td><strong>Schema-Änderungen</strong></td><td><span class="mono">CREATE TABLE IF NOT EXISTS</span> bei jedem Boot</td><td>versionierte Migrationen mit <span class="mono">schema_migration</span>-Buchführung (ADR-011)</td></tr>
+    <tr><td><strong>Mangel-Kategorien</strong></td><td>5 Werte, nicht HU-Richtlinie (EM blockierte nicht — Bug)</td><td>OM/GM/EM/GfM per Migration 2, EM blockiert korrekt</td></tr>
+    <tr><td><strong>„BMW Polo"-Eingabe</strong></td><td>Soft-Warning, Save möglich</td><td>strukturell unmöglich: Cascading-Dropdowns Hersteller→Modell→Typ</td></tr>
+    <tr><td><strong>Tests</strong></td><td>Unit-Tests im Frontend</td><td><strong>231 Tests</strong> auf 5 Ebenen, CI gegen echte MariaDB + CodeQL</td></tr>
+    <tr><td><strong>Transaktionen (TCL)</strong></td><td>Einzel-Statements</td><td>Multi-Step-Writes atomar per <span class="mono">withTransaction</span> (COMMIT/ROLLBACK)</td></tr>
+    <tr><td><strong>KI-Transparenz</strong></td><td>nicht dokumentiert</td><td><span class="mono">docs/ki-nutzung.md</span>: Prompts, Validierung, Abgrenzung Eigenleistung</td></tr>
   </table>
   <div class="callout green" style="margin-top:14px; font-size:11.5px; text-align:center">
-    <strong>Zusammenfassung:</strong> Alle Bug-Beispiele hart blockiert · Datenmodellierung-Feedback (13.&nbsp;5.) komplett umgesetzt · Architektur-Migration Firestore → MariaDB durchgeführt · 10 ADRs dokumentieren die Wege &amp; Sackgassen
+    <strong>Muster:</strong> Jeder Feedback-Punkt wurde nicht nur „gefixt", sondern strukturell gelöst — mit ADR, Migration und Tests, die die Lösung dauerhaft beweisen.
   </div>
   <div class="brand"><span class="dot">●</span> TÜV PRÜFSTELLE PRO</div>
-  <div class="slide-num">17 / 19</div>
+  <div class="slide-num">21 / 23</div>
 </div>
 
-<!-- ═════════════ 18  APP-SCREENSHOTS ═════════════ -->
+<!-- ═════════════ 22  SCREENSHOTS + DEMO ═════════════ -->
 <div class="slide">
   <div class="eyebrow">16 · Implementation</div>
-  <h2>So sieht die App aus</h2>
-  <div class="lede">Vier Hauptansichten der Live-App auf <span class="mono">tuv-workflow.web.app</span>. Alle Screenshots aus dem laufenden Production-Build.</div>
-  <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:8px">
+  <h2>So sieht die App aus — gleich live</h2>
+  <div class="lede">Die vier Hauptansichten. Die UI blieb durch die Tailwind-Migration pixelgleich; neu davor liegt der Login-Screen (Slide 13).</div>
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:4px">
     <div style="border:1px solid var(--line); border-radius:8px; overflow:hidden; background:rgba(11,16,32,0.7)">
-      <div style="padding:8px 12px; font-size:10.5px; color:var(--cyan); font-family:'JetBrains Mono', monospace; border-bottom:1px solid var(--line); letter-spacing:0.04em; text-transform:uppercase">Tagesplan</div>
-      <img src="public/screenshots/tagesplan.png" alt="Tagesplan-Ansicht" style="width:100%; display:block; min-height:220px; max-height:240px; object-fit:cover; object-position:top" onerror="this.style.display='none';this.parentNode.innerHTML+='<div style=\'padding:60px 20px; text-align:center; color:var(--t4); font-size:11px\'>Screenshot wird automatisch generiert oder manuell ergänzt</div>'">
-      <div style="padding:8px 12px; font-size:11.5px; color:var(--t2); line-height:1.45">Echtzeit-Termin-Übersicht mit Status-Pills, Schnell-Aktionen pro Slot, Klick zum Anlegen.</div>
+      <div style="padding:7px 12px; font-size:10.5px; color:var(--cyan); font-family:'JetBrains Mono', monospace; border-bottom:1px solid var(--line); letter-spacing:0.04em; text-transform:uppercase">Tagesplan</div>
+      <img src="public/screenshots/tagesplan.png" alt="Tagesplan-Ansicht" style="width:100%; display:block; min-height:190px; max-height:205px; object-fit:cover; object-position:top">
+      <div style="padding:7px 12px; font-size:11px; color:var(--t2); line-height:1.45">Termin-Übersicht mit Status-Pills und Schnell-Aktionen — Status-Buttons nur für Prüfer/Chef sichtbar.</div>
     </div>
     <div style="border:1px solid var(--line); border-radius:8px; overflow:hidden; background:rgba(11,16,32,0.7)">
-      <div style="padding:8px 12px; font-size:10.5px; color:var(--amber); font-family:'JetBrains Mono', monospace; border-bottom:1px solid var(--line); letter-spacing:0.04em; text-transform:uppercase">Mängelerfassung</div>
-      <img src="public/screenshots/mängel.png" alt="Mängelerfassung-Modal" style="width:100%; display:block; min-height:220px; max-height:240px; object-fit:cover; object-position:top" onerror="this.style.display='none';this.parentNode.innerHTML+='<div style=\'padding:60px 20px; text-align:center; color:var(--t4); font-size:11px\'>Screenshot wird automatisch generiert oder manuell ergänzt</div>'">
-      <div style="padding:8px 12px; font-size:11.5px; color:var(--t2); line-height:1.45">StVZO-Anlage-VIII-Katalog mit Schweregrad-Pills, Live-Validierung der "Bestanden"-Sperre.</div>
+      <div style="padding:7px 12px; font-size:10.5px; color:var(--amber); font-family:'JetBrains Mono', monospace; border-bottom:1px solid var(--line); letter-spacing:0.04em; text-transform:uppercase">Mängelerfassung</div>
+      <img src="public/screenshots/maengel.png" alt="Mängelerfassung-Modal" style="width:100%; display:block; min-height:190px; max-height:205px; object-fit:cover; object-position:top">
+      <div style="padding:7px 12px; font-size:11px; color:var(--t2); line-height:1.45">StVZO-Katalog mit Kategorien OM/GM/EM/GfM — „Bestanden"-Sperre live sichtbar.</div>
     </div>
     <div style="border:1px solid var(--line); border-radius:8px; overflow:hidden; background:rgba(11,16,32,0.7)">
-      <div style="padding:8px 12px; font-size:10.5px; color:var(--green); font-family:'JetBrains Mono', monospace; border-bottom:1px solid var(--line); letter-spacing:0.04em; text-transform:uppercase">PDF-Bericht</div>
-      <img src="public/screenshots/bericht.png" alt="PDF-Bericht-Vorschau" style="width:100%; display:block; min-height:220px; max-height:240px; object-fit:cover; object-position:top" onerror="this.style.display='none';this.parentNode.innerHTML+='<div style=\'padding:60px 20px; text-align:center; color:var(--t4); font-size:11px\'>Screenshot wird automatisch generiert oder manuell ergänzt</div>'">
-      <div style="padding:8px 12px; font-size:11.5px; color:var(--t2); line-height:1.45">A4-Behörden-Vordruck-Stil mit Siegel-Logo, Ref-Nr., römisch nummerierten Sektionen, Stempel-Feld.</div>
+      <div style="padding:7px 12px; font-size:10.5px; color:var(--green); font-family:'JetBrains Mono', monospace; border-bottom:1px solid var(--line); letter-spacing:0.04em; text-transform:uppercase">PDF-Bericht</div>
+      <img src="public/screenshots/bericht.png" alt="PDF-Bericht-Vorschau" style="width:100%; display:block; min-height:190px; max-height:205px; object-fit:cover; object-position:top">
+      <div style="padding:7px 12px; font-size:11px; color:var(--t2); line-height:1.45">A4-Behörden-Vordruck-Stil mit Ref-Nr. und Stempel-Feld, Druck über den Browser.</div>
     </div>
     <div style="border:1px solid var(--line); border-radius:8px; overflow:hidden; background:rgba(11,16,32,0.7)">
-      <div style="padding:8px 12px; font-size:10.5px; color:var(--purple); font-family:'JetBrains Mono', monospace; border-bottom:1px solid var(--line); letter-spacing:0.04em; text-transform:uppercase">Mobile-Ansicht</div>
-      <img src="public/screenshots/mobile.png" alt="Mobile-Ansicht" style="width:100%; display:block; min-height:220px; max-height:240px; object-fit:cover; object-position:top" onerror="this.style.display='none';this.parentNode.innerHTML+='<div style=\'padding:60px 20px; text-align:center; color:var(--t4); font-size:11px\'>Screenshot wird automatisch generiert oder manuell ergänzt</div>'">
-      <div style="padding:8px 12px; font-size:11.5px; color:var(--t2); line-height:1.45">Sidebar als Overlay, Hamburger-Menu, Touch-Targets ≥ 36 px, Cascading-Dropdowns auch auf Phone.</div>
+      <div style="padding:7px 12px; font-size:10.5px; color:var(--purple); font-family:'JetBrains Mono', monospace; border-bottom:1px solid var(--line); letter-spacing:0.04em; text-transform:uppercase">Mobile-Ansicht</div>
+      <img src="public/screenshots/mobile.png" alt="Mobile-Ansicht" style="width:100%; display:block; min-height:190px; max-height:205px; object-fit:cover; object-position:top">
+      <div style="padding:7px 12px; font-size:11px; color:var(--t2); line-height:1.45">Bedienbar ab 360 px: Sidebar-Overlay, Touch-Targets, Dropdowns auch am Phone.</div>
     </div>
   </div>
+  <div class="callout green" style="margin-top:12px; font-size:12px">
+    <strong>Live-Demo:</strong> <span class="mono">docker compose up -d</span> → Migrationen, Seeds und Trigger laufen automatisch → Login <span class="mono">chef / start123</span> → Demo-Daten per Sidebar-Button (Chef-Rolle + Admin-Token).
+  </div>
   <div class="brand"><span class="dot">●</span> TÜV PRÜFSTELLE PRO</div>
-  <div class="slide-num">18 / 19</div>
+  <div class="slide-num">22 / 23</div>
 </div>
 
-<!-- ═════════════ 19  AUSBLICK + Q&A ═════════════ -->
+<!-- ═════════════ 23  ABSCHLUSS & AUSBLICK ═════════════ -->
 <div class="slide">
-  <div class="eyebrow">17 · Ausblick &amp; Diskussion</div>
-  <h2>Was als Nächstes — und was uns wichtig war</h2>
-  <div class="lede">Was im Semester-Scope bewusst ausgeklammert wurde, und was eine sinnvolle Weiterführung wäre.</div>
+  <div class="eyebrow">16 · Abschluss</div>
+  <h2>Was uns wichtig war — und was als Nächstes käme</h2>
+  <div class="lede">Ein Prototyp, der sich wie ein Produkt verhält: Regeln in der Datenbank, Rechte im Server, Beweise in der CI — und ein ehrlicher Blick auf die Restarbeit.</div>
   <div class="grid-2">
     <div>
-      <h3 style="margin-bottom:6px">Vision für Sprint 7+ <span style="font-weight:400; color:var(--t4); font-size:11px">— außerhalb Semester-Scope</span></h3>
-      <div style="border:1px solid var(--line); border-radius:8px; overflow:hidden; position:relative; margin-bottom:8px">
-        <img src="public/images/vision-dashboard.png" alt="Mockup einer erweiterten Dashboard-Variante mit Analytics, Mängelkatalog und Berichts-Vorschau — Konzept für eine zukünftige Iteration" style="width:100%; display:block"/>
-        <div style="position:absolute; top:8px; left:8px; background:rgba(11,16,32,0.88); border:1px solid var(--amber); padding:4px 9px; border-radius:4px; font-size:9px; font-family:'JetBrains Mono', monospace; color:var(--amber); letter-spacing:0.08em; text-transform:uppercase; font-weight:700">Vision-Mockup · nicht aktueller Stand</div>
+      <h3>Was diesen Stand ausmacht</h3>
+      <div class="stat-grid" style="grid-template-columns:1fr 1fr; gap:10px">
+        <div class="stat"><div class="num">231</div><div class="lbl">Tests grün — Unit bis Integration gegen echte MariaDB</div></div>
+        <div class="stat"><div class="num green">22</div><div class="lbl">REST-Endpunkte, rollen-geschützt</div></div>
+        <div class="stat"><div class="num amber">11</div><div class="lbl">ADRs — inkl. revidierter Entscheidungen</div></div>
+        <div class="stat"><div class="num purple">3×3</div><div class="lbl">3 Rollen · 3 Migrationen · 3 WF-01-Schichten</div></div>
       </div>
-      <p style="font-size:11px; color:var(--t3); line-height:1.5">
-        Server-side Auth + Rollen Prüfer/Leiter/Admin (US-12) · automatisierte Backup-Skripte auf Binlog-Basis (US-11 abschließen) · API-Integrationstests mit Testdatenbank (US-13) · versionierte DB-Migrationen mit Flyway o. ä. (US-14) · KBA-HSN/TSN-Integration via DAT/Schwacke · digitale Signatur auf PDF · Foto-Dokumentation · OBD-II-Hardware.
-      </p>
+      <ul class="bullets" style="margin-top:14px">
+        <li><strong>Defense in Depth</strong> — fachliche Regeln bis in den DB-Trigger</li>
+        <li><strong>On-Premise ernst gemeint</strong> — Deployment, Backup-Konzept und Schema-Evolution für Bestandskunden mitgedacht</li>
+        <li><strong>Sicherheit ohne Buzzwords</strong> — timing-sichere Vergleiche, Fail-fast-Guards, keine SQL-Leaks</li>
+      </ul>
     </div>
     <div>
-      <h3 style="margin-bottom:6px">Was diesen Prototyp ausmacht</h3>
-      <div class="stat-grid" style="grid-template-columns: 1fr 1fr; gap:10px">
-        <div class="stat"><div class="num">135+</div><div class="lbl">Tests grün</div></div>
-        <div class="stat"><div class="num green">0</div><div class="lbl">Lint-Errors</div></div>
-        <div class="stat"><div class="num amber">9</div><div class="lbl">ADRs dokumentiert</div></div>
-        <div class="stat"><div class="num purple">3</div><div class="lbl">WF-01-Layer (UI/API/DB)</div></div>
+      <h3>Ausblick — bewusst offen gelassen</h3>
+      <div style="border:1px solid var(--line); border-radius:8px; overflow:hidden; position:relative; margin-bottom:10px">
+        <img src="public/images/vision-dashboard.png" alt="Mockup einer erweiterten Dashboard-Variante — Konzept für eine zukünftige Iteration" style="width:100%; display:block; max-height:180px; object-fit:cover; object-position:top"/>
+        <div style="position:absolute; top:8px; left:8px; background:rgba(11,16,32,0.88); border:1px solid var(--amber); padding:4px 9px; border-radius:4px; font-size:9px; font-family:'JetBrains Mono', monospace; color:var(--amber); letter-spacing:0.08em; text-transform:uppercase; font-weight:700">Vision-Mockup · nicht aktueller Stand</div>
       </div>
-      <h3 style="margin-top:14px; margin-bottom:6px">Live, Repository &amp; Doku</h3>
-      <div class="card tone-cyan pad-sm" style="padding:10px 14px">
-        <p style="font-size:12px"><strong>Web-App:</strong> <span class="mono">tuv-workflow.web.app</span></p>
-        <p style="font-size:12px; margin-top:3px"><strong>Repository:</strong> <span class="mono">github.com/maroxd3/tuv-workflow-web</span></p>
-        <p style="font-size:12px; margin-top:3px"><strong>Doku:</strong> 7&nbsp;Markdown + 2&nbsp;HTML, 5 UML-Diagramme · 95&nbsp;% Test-Coverage</p>
-      </div>
-      <div class="callout green" style="margin-top:10px; text-align:center; font-size:13px; padding:10px 14px">
-        <strong>Vielen Dank für Ihre Aufmerksamkeit — wir freuen uns auf Ihre Fragen.</strong>
+      <ul class="bullets amber" style="font-size:12px">
+        <li><strong>HTTPS</strong> — im LAN-Modell bewusst nicht umgesetzt; Pflicht, sobald Zugriff über Netzwerkgrenzen kommt</li>
+        <li><strong>Passwort-Self-Service</strong> — Änderung läuft heute über die DB, ein Endpunkt fehlt</li>
+        <li><strong>CRUD-Integrationstests</strong> gegen die Docker-MariaDB (WF-01 und Validierung sind abgedeckt)</li>
+        <li>Backup-Cron-Skripte · Audit-Log · KBA/HSN-TSN-Anbindung · Foto-Doku</li>
+      </ul>
+      <div class="callout green" style="margin-top:12px; text-align:center; font-size:13px; padding:10px 14px">
+        <strong>Vielen Dank für Ihre Aufmerksamkeit — wir freuen uns auf Ihre Fragen.</strong><br>
+        <span style="font-size:11px; color:var(--t3)">github.com/maroxd3/tuv-workflow-web · Doku in <span class="mono">docs/</span> · 11 ADRs in <span class="mono">docs/decisions/</span></span>
       </div>
     </div>
   </div>
   <div class="brand"><span class="dot">●</span> TÜV PRÜFSTELLE PRO</div>
-  <div class="slide-num">19 / 19</div>
+  <div class="slide-num">23 / 23</div>
 </div>
 
 </body>

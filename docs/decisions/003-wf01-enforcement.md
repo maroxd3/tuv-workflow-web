@@ -99,3 +99,13 @@ keine Zeile mehr betroffen.
   jetzt single source of truth für Label, Farbe und `blockiert`-Flag im UI.
   `hatHauptmangel` ist Alias für `hatBlockierendenMangel` (Backwards-Compat
   für bestehende Views).
+
+## Nachtrag 2026-07-05
+
+Die oben beschriebene Kategorie-Migration (`migrateCategories()` in
+`server/db.js`) wurde in das versionierte Migrations-Framework überführt:
+sie lebt jetzt als **Migration 2 (`hu-richtlinie-kategorien`) in
+`server/migrations.js`** und läuft genau einmal pro Datenbank (protokolliert
+in `schema_migration`, siehe ADR-011). Der WF-01-Trigger bleibt bewusst
+außerhalb der Migrationen: `migrateTriggers()` in `server/db.js` deklariert
+ihn weiterhin bei jedem Server-Start idempotent per `CREATE OR REPLACE`.

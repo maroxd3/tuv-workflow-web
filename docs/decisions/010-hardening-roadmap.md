@@ -216,3 +216,36 @@ Business-Architektur'."** Mit 7 von 8 fixed plus ADR-010 als
 Dokumentation der bewusst deferred-en Punkte ist diese Bewertung
 explizit eingelöst — und der eine deferred Punkt wäre für eine
 Produktiv-Auslieferung in einer Folge-Iteration der erste Schritt.
+
+## Nachtrag 2026-07-05 — Status-Abgleich nach dem Auth-/Migrations-Umbau
+
+Seit dem Review sind weitere Härtungs-Punkte umgesetzt, die über die
+ursprünglichen 8 hinausgehen bzw. deferred waren:
+
+- **Auth/Rollen umgesetzt** (war Phase 2): Login via
+  `POST /api/auth/login`, Rollen empfang/pruefer/chef mit serverseitiger
+  Rechteprüfung (`requireAuth` in `server/index.js`, Rollen-Matrix in
+  `server/auth.js`), scrypt-Passwort-Hashes, HMAC-SHA256-Tokens (12 h),
+  `benutzer`-Tabelle mit drei Seed-Konten. In Produktion per Default aktiv
+  (`AUTH_ENABLED`), Admin-Endpunkte verlangen chef-Rolle UND `X-Admin-Token`.
+- **Weitere Härtung**: helmet-Security-Header (CSP ohne
+  `upgrade-insecure-requests`), Rate-Limits in Produktion (600/min API,
+  30/15 min Admin, 10/15 min Login), timing-sicherer Admin-Token-Vergleich,
+  DB-Fehler-Mapping auf fachliche 4xx ohne SQL-Leak, 404 bei PATCH/DELETE
+  auf unbekannte IDs, `/api/health` mit echtem DB-Ping (503 bei DB-Ausfall),
+  UUID-Format-Pflicht für Client-IDs (`server/validate.js`).
+- **Versionierte Schema-Migrationen** eingeführt (siehe ADR-011,
+  `server/migrations.js` mit `schema_migration`-Protokoll).
+- **Punkt 6 (UI-Fehler-Zustand)**: inhaltlich unverändert gültig, aber die
+  dort erwähnte Datei `useStoreCompat.ts` existiert nicht mehr — `App.jsx`
+  liest `error`/`refresh` heute direkt aus `useDb`.
+- **Punkt 7 (Halter-Heuristik)**: bleibt bewusst bestehen; die
+  Namens-Dedupe-Logik lebt jetzt in `useDb.addFahrzeugMitHalter`
+  (der Compat-Layer wurde entfernt). Das Halter-Auswahl-Modal bleibt
+  Phase 2.
+- **Tests**: die Suite ist auf 231 Tests gewachsen (u. a. 38
+  Server-Validate-, 17 Auth- und 12 UI-Flow-Tests); CI fährt weiterhin
+  eine echte MariaDB als Service, zusätzlich läuft CodeQL.
+
+Weiterhin offen: Halter-UX-Refactor (Punkt 7), Polling-Window (Punkt 5
+Phase 2), Backup-Skripte, HTTPS im LAN, Passwort-Self-Service.
