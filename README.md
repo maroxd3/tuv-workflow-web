@@ -190,6 +190,39 @@ Vorteile dieses Modells:
 Auslieferung an einen Kunden: `docker-compose.yml`, `.env`-Vorlage und
 `docs/backup.md` werden übergeben, ein Server-PC bekommt Docker installiert.
 
+## Benutzer & Rollen
+
+Die API kennt drei Rollen und legt beim ersten Start drei Default-Benutzer
+an (Login per `POST /api/auth/login` mit `{ kuerzel, passwort }`):
+
+| Kürzel | Name | Rolle |
+|---|---|---|
+| `empfang` | Empfang | empfang |
+| `MW` | Marwan Saleh | pruefer |
+| `chef` | Chef | chef |
+
+Das Default-Passwort für alle drei ist der Wert von `DEFAULT_USER_PASSWORT`
+aus der `.env` (Fallback: `start123`). **Beim Kunden-Setup müssen die
+Passwörter geändert werden** — der Default greift nur beim Anlegen.
+
+Rechte-Matrix (serverseitig durchgesetzt):
+
+| Aktion | empfang | pruefer | chef |
+|---|---|---|---|
+| Lesen (alle GET-Endpunkte) | ✅ | ✅ | ✅ |
+| Halter/Fahrzeuge/Termine anlegen + ändern | ✅ | ✅ | ✅ |
+| Status setzen (`PATCH /api/termine/:id/status`) | ❌ | ✅ | ✅ |
+| Mängel anlegen/löschen | ❌ | ✅ | ✅ |
+| Halter/Fahrzeuge/Termine löschen | ❌ | ❌ | ✅ |
+| `/api/admin/*` (zusätzlich `X-Admin-Token` nötig) | ❌ | ❌ | ✅ |
+
+`AUTH_ENABLED` steuert, ob Login verlangt wird: Default **aus** in
+Entwicklung/CI (alles läuft wie bisher, Requests laufen als Dev-Chef),
+Default **an** bei `NODE_ENV=production`. `GET /api/auth/me` verrät dem
+Frontend, ob Auth aktiv ist und welche Rolle der Token trägt.
+Tokens sind HMAC-SHA256-signiert und 12 Stunden gültig; Passwörter werden
+mit scrypt gehasht (beides `node:crypto`, keine Zusatz-Dependencies).
+
 ## Datenbank
 
 Die physische MariaDB-Struktur wird in `server/db.js` erstellt:

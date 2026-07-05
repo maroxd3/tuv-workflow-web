@@ -15,6 +15,17 @@ import {
   validateStatusUpdate,
   validateMangel,
 } from "./validate.js";
+import {
+  hashPassword,
+  verifyPassword,
+  signToken,
+  verifyToken,
+  darfSchreiben,
+  darfStatusSetzen,
+  darfLoeschen,
+  ROLLEN_RECHTE,
+  TOKEN_GUELTIGKEIT_MS,
+} from "./auth.js";
 
 const app = express();
 const port = Number(process.env.API_PORT || 8787);
@@ -40,6 +51,31 @@ if (NODE_ENV === "production" && !ADMIN_TOKEN) {
   );
   process.exit(1);
 }
+
+// Benutzer-Auth (Rollen empfang/pruefer/chef): default AN in Produktion,
+// AUS in dev/CI (die Integrationstests laufen ohne Login). AUTH_ENABLED
+// in der .env ueberschreibt den Default explizit in beide Richtungen.
+const AUTH_ENABLED = process.env.AUTH_ENABLED != null && process.env.AUTH_ENABLED !== ""
+  ? process.env.AUTH_ENABLED === "true"
+  : NODE_ENV === "production";
+
+// Token-Signatur-Secret: eigenes AUTH_SECRET, Fallback ADMIN_TOKEN (in
+// Produktion ist der eh Pflicht, siehe Guard oben). Fail-fast wie beim
+// ADMIN_TOKEN-Guard: mit leerem Secret waeren alle Tokens faelschbar —
+// lieber loud broken als silently insecure.
+const AUTH_SECRET = process.env.AUTH_SECRET || ADMIN_TOKEN;
+if (AUTH_ENABLED && !AUTH_SECRET) {
+  console.error(
+    "[server] FATAL: AUTH_SECRET (oder ADMIN_TOKEN als Fallback) must be set " +
+    "when AUTH_ENABLED=true. Ohne Secret koennte jeder im LAN gueltige " +
+    "Login-Tokens faelschen. Setze AUTH_SECRET in .env (>= 32 Zeichen).",
+  );
+  process.exit(1);
+}
+// Bei ausgeschalteter Auth (dev ohne ADMIN_TOKEN) braucht /api/auth/login
+// trotzdem irgendein Signatur-Secret — rein kosmetisch, die Tokens werden
+// dann von keiner Middleware verlangt.
+const TOKEN_SECRET = AUTH_SECRET || "dev-modus-ohne-secret";
 
 function isAllowedOrigin(origin) {
   if (!origin) return true;
@@ -86,6 +122,15 @@ if (NODE_ENV === "production") {
     standardHeaders: true,
     legacyHeaders: false,
   }));
+  // Login-Brute-Force-Schutz: 10 Versuche pro 15 Minuten. Deutlich enger
+  // als das generelle /api-Limit — Passwort-Raten ist der einzige Angriff,
+  // der von vielen Requests profitiert.
+  app.use("/api/auth/login", rateLimit({
+    windowMs: 15 * 60_000,
+    limit: 10,
+    standardHeaders: true,
+    legacyHeaders: false,
+  }));
 }
 
 app.use(cors({
@@ -118,6 +163,51 @@ function requireAdminToken(req, res, next) {
     return res.status(401).json({ ok: false, error: "Admin-Token erforderlich oder ungültig" });
   }
   next();
+}
+
+// ── Benutzer-Auth-Middleware ──────────────────────────────────────────
+// Bei AUTH_ENABLED=false (dev/CI-Default) laeuft jeder Request als
+// Dev-Chef durch — die Integrationstests (wf01.test.js) und lokale
+// Entwicklung funktionieren unveraendert ohne Login.
+const DEV_BENUTZER = { kuerzel: "dev", name: "Dev-Modus", rolle: "chef" };
+
+// Extrahiert das Bearer-Token aus dem Authorization-Header.
+function bearerToken(req) {
+  const header = req.header("Authorization") || "";
+  return header.startsWith("Bearer ") ? header.slice("Bearer ".length) : "";
+}
+
+// Rechte-Stufen der requireAuth-Middleware, gemappt auf die Rollen-Matrix
+// in server/auth.js. "lesen" verlangt nur eine bekannte Rolle; "status"
+// deckt auch die Maengel-Endpunkte ab (pruefer-Level, siehe auth.js).
+const RECHT_CHECK = {
+  lesen: (rolle) => rolle in ROLLEN_RECHTE,
+  schreiben: darfSchreiben,
+  status: darfStatusSetzen,
+  loeschen: darfLoeschen,
+};
+
+// requireAuth(recht): 401 ohne/mit ungueltigem oder abgelaufenem Token,
+// 403 bei gueltigem Token ohne ausreichende Rolle. Der geprueft Benutzer
+// landet als req.benutzer im Request (z. B. fuer spaeteres Audit-Logging).
+function requireAuth(recht) {
+  const darf = RECHT_CHECK[recht];
+  if (!darf) throw new Error(`requireAuth: unbekanntes Recht "${recht}"`);
+  return (req, res, next) => {
+    if (!AUTH_ENABLED) {
+      req.benutzer = DEV_BENUTZER;
+      return next();
+    }
+    const payload = verifyToken(bearerToken(req), TOKEN_SECRET);
+    if (!payload) {
+      return res.status(401).json({ ok: false, error: "Anmeldung erforderlich (Token fehlt, ist ungültig oder abgelaufen)" });
+    }
+    if (!darf(payload.rolle)) {
+      return res.status(403).json({ ok: false, error: "Keine Berechtigung für diese Aktion" });
+    }
+    req.benutzer = { kuerzel: payload.kuerzel, name: payload.name, rolle: payload.rolle };
+    next();
+  };
 }
 
 const bool = (v) => Boolean(Number(v));
@@ -221,12 +311,68 @@ app.get("/api/health", async (_req, res) => {
   }
 });
 
-app.get("/api/halter", asyncRoute(async (_req, res) => {
+// ── Auth-Endpunkte ────────────────────────────────────────────────────
+
+// Dummy-Hash fuer unbekannte Kuerzel: der Login rechnet dann trotzdem ein
+// scrypt durch, damit die Antwortzeit nicht verraet, ob das Kuerzel
+// existiert (User-Enumeration ueber Timing). Lazy initialisiert, um den
+// Boot nicht mit einem unnoetigen scrypt zu belasten.
+let dummyHash = null;
+function timingDummyHash() {
+  if (!dummyHash) dummyHash = hashPassword("timing-dummy");
+  return dummyHash;
+}
+
+// Login ist bewusst NICHT hinter requireAuth (sonst koennte sich niemand
+// anmelden) und funktioniert auch bei AUTH_ENABLED=false — das Frontend
+// kann den Login-Flow so im Dev-Modus durchspielen.
+app.post("/api/auth/login", asyncRoute(async (req, res) => {
+  const kuerzel = typeof req.body?.kuerzel === "string" ? req.body.kuerzel : "";
+  const passwort = typeof req.body?.passwort === "string" ? req.body.passwort : "";
+
+  const row = kuerzel
+    ? await one("SELECT * FROM benutzer WHERE kuerzel = ? AND aktiv = TRUE", [kuerzel])
+    : null;
+  // Eine gemeinsame 401-Meldung fuer "Kuerzel unbekannt" und "Passwort
+  // falsch" — sonst liesse sich per Fehlermeldung durchprobieren, welche
+  // Konten existieren (User-Enumeration).
+  const passt = verifyPassword(passwort, row ? row.passwort_hash : timingDummyHash());
+  if (!row || !passt) {
+    return res.status(401).json({ ok: false, error: "Kürzel oder Passwort falsch" });
+  }
+
+  const token = signToken({
+    kuerzel: row.kuerzel,
+    name: row.name,
+    rolle: row.rolle,
+    exp: Date.now() + TOKEN_GUELTIGKEIT_MS,
+  }, TOKEN_SECRET);
+  res.json({ token, benutzer: { kuerzel: row.kuerzel, name: row.name, rolle: row.rolle } });
+}));
+
+// Wer bin ich? Das Frontend fragt beim Start, ob Auth verlangt wird und
+// welche Rolle der gespeicherte Token traegt (fuer UI-Ausblendungen —
+// durchgesetzt werden die Rechte serverseitig von requireAuth).
+app.get("/api/auth/me", (req, res) => {
+  if (!AUTH_ENABLED) {
+    return res.json({ authRequired: false, benutzer: DEV_BENUTZER });
+  }
+  const payload = verifyToken(bearerToken(req), TOKEN_SECRET);
+  if (!payload) {
+    return res.status(401).json({ ok: false, error: "Anmeldung erforderlich (Token fehlt, ist ungültig oder abgelaufen)" });
+  }
+  res.json({
+    authRequired: true,
+    benutzer: { kuerzel: payload.kuerzel, name: payload.name, rolle: payload.rolle },
+  });
+});
+
+app.get("/api/halter", requireAuth("lesen"), asyncRoute(async (_req, res) => {
   const rows = await db().query("SELECT * FROM halter ORDER BY name");
   res.json(rows.map(toHalter));
 }));
 
-app.post("/api/halter", check(validateHalter), asyncRoute(async (req, res) => {
+app.post("/api/halter", requireAuth("schreiben"), check(validateHalter), asyncRoute(async (req, res) => {
   const id = req.body.halterId || randomUUID();
   await db().query(
     "INSERT INTO halter (halter_id, name, telefon, email, anschrift) VALUES (?, ?, ?, ?, ?)",
@@ -235,7 +381,7 @@ app.post("/api/halter", check(validateHalter), asyncRoute(async (req, res) => {
   res.status(201).json(toHalter(await one("SELECT * FROM halter WHERE halter_id = ?", [id])));
 }));
 
-app.patch("/api/halter/:id", check(validateHalter), asyncRoute(async (req, res) => {
+app.patch("/api/halter/:id", requireAuth("schreiben"), check(validateHalter), asyncRoute(async (req, res) => {
   const patch = clean({
     name: req.body.name,
     telefon: req.body.telefon,
@@ -254,18 +400,18 @@ app.patch("/api/halter/:id", check(validateHalter), asyncRoute(async (req, res) 
   res.json(toHalter(row));
 }));
 
-app.delete("/api/halter/:id", asyncRoute(async (req, res) => {
+app.delete("/api/halter/:id", requireAuth("loeschen"), asyncRoute(async (req, res) => {
   const result = await db().query("DELETE FROM halter WHERE halter_id = ?", [req.params.id]);
   if (!result.affectedRows) return res.status(404).json({ ok: false, error: "Halter nicht gefunden" });
   res.status(204).end();
 }));
 
-app.get("/api/fahrzeuge", asyncRoute(async (_req, res) => {
+app.get("/api/fahrzeuge", requireAuth("lesen"), asyncRoute(async (_req, res) => {
   const rows = await db().query("SELECT * FROM fahrzeug ORDER BY kennzeichen");
   res.json(rows.map(toFahrzeug));
 }));
 
-app.post("/api/fahrzeuge", check(validateFahrzeug), asyncRoute(async (req, res) => {
+app.post("/api/fahrzeuge", requireAuth("schreiben"), check(validateFahrzeug), asyncRoute(async (req, res) => {
   const id = req.body.fahrzeugId || randomUUID();
   await db().query(
     `INSERT INTO fahrzeug
@@ -288,7 +434,7 @@ app.post("/api/fahrzeuge", check(validateFahrzeug), asyncRoute(async (req, res) 
   res.status(201).json(toFahrzeug(await one("SELECT * FROM fahrzeug WHERE fahrzeug_id = ?", [id])));
 }));
 
-app.patch("/api/fahrzeuge/:id", check(validateFahrzeug), asyncRoute(async (req, res) => {
+app.patch("/api/fahrzeuge/:id", requireAuth("schreiben"), check(validateFahrzeug), asyncRoute(async (req, res) => {
   const map = {
     kennzeichen: "kennzeichen",
     fin: "fin",
@@ -315,13 +461,13 @@ app.patch("/api/fahrzeuge/:id", check(validateFahrzeug), asyncRoute(async (req, 
   res.json(toFahrzeug(row));
 }));
 
-app.delete("/api/fahrzeuge/:id", asyncRoute(async (req, res) => {
+app.delete("/api/fahrzeuge/:id", requireAuth("loeschen"), asyncRoute(async (req, res) => {
   const result = await db().query("DELETE FROM fahrzeug WHERE fahrzeug_id = ?", [req.params.id]);
   if (!result.affectedRows) return res.status(404).json({ ok: false, error: "Fahrzeug nicht gefunden" });
   res.status(204).end();
 }));
 
-app.get("/api/termine", asyncRoute(async (req, res) => {
+app.get("/api/termine", requireAuth("lesen"), asyncRoute(async (req, res) => {
   // Optionaler Zeitraum-Filter: ?from=YYYY-MM-DD&to=YYYY-MM-DD
   // Skalierungs-Vorbereitung: bei vielen tausend Terminen lohnt sich der
   // Pull "letzte 7 Tage + naechste 30 Tage" statt "alles". Ohne Parameter
@@ -368,7 +514,7 @@ app.get("/api/termine", asyncRoute(async (req, res) => {
   res.json(termine);
 }));
 
-app.post("/api/termine", check(validateTermin), asyncRoute(async (req, res) => {
+app.post("/api/termine", requireAuth("schreiben"), check(validateTermin), asyncRoute(async (req, res) => {
   const id = req.body.terminId || randomUUID();
   await db().query(
     `INSERT INTO termin
@@ -388,7 +534,7 @@ app.post("/api/termine", check(validateTermin), asyncRoute(async (req, res) => {
   res.status(201).json(toTermin(await one("SELECT * FROM termin WHERE termin_id = ?", [id])));
 }));
 
-app.patch("/api/termine/:id", check(validateTermin), asyncRoute(async (req, res) => {
+app.patch("/api/termine/:id", requireAuth("schreiben"), check(validateTermin), asyncRoute(async (req, res) => {
   const map = {
     fahrzeugId: "fahrzeug_id",
     datum: "datum",
@@ -412,7 +558,7 @@ app.patch("/api/termine/:id", check(validateTermin), asyncRoute(async (req, res)
   res.json(toTermin(row));
 }));
 
-app.patch("/api/termine/:id/status", check(validateStatusUpdate), asyncRoute(async (req, res) => {
+app.patch("/api/termine/:id/status", requireAuth("status"), check(validateStatusUpdate), asyncRoute(async (req, res) => {
   const neuerStatus = req.body.statusCode;
   if (neuerStatus === "Bestanden") {
     const blocker = await one(
@@ -436,18 +582,19 @@ app.patch("/api/termine/:id/status", check(validateStatusUpdate), asyncRoute(asy
   res.json({ ok: true, termin: toTermin(row) });
 }));
 
-app.delete("/api/termine/:id", asyncRoute(async (req, res) => {
+app.delete("/api/termine/:id", requireAuth("loeschen"), asyncRoute(async (req, res) => {
   const result = await db().query("DELETE FROM termin WHERE termin_id = ?", [req.params.id]);
   if (!result.affectedRows) return res.status(404).json({ ok: false, error: "Termin nicht gefunden" });
   res.status(204).end();
 }));
 
-app.get("/api/termine/:id/maengel", asyncRoute(async (req, res) => {
+app.get("/api/termine/:id/maengel", requireAuth("lesen"), asyncRoute(async (req, res) => {
   const rows = await db().query("SELECT * FROM mangel WHERE termin_id = ?", [req.params.id]);
   res.json(rows.map(toMangel));
 }));
 
-app.post("/api/maengel", check(validateMangel), asyncRoute(async (req, res) => {
+// Maengel: pruefer-Level (== "status"-Recht, siehe Rollen-Matrix in auth.js)
+app.post("/api/maengel", requireAuth("status"), check(validateMangel), asyncRoute(async (req, res) => {
   const id = req.body.mangelId || randomUUID();
   const istBehoben = Boolean(req.body.behoben);
 
@@ -500,18 +647,20 @@ app.post("/api/maengel", check(validateMangel), asyncRoute(async (req, res) => {
   res.status(201).json({ mangel, terminDemoted });
 }));
 
-app.delete("/api/maengel/:id", asyncRoute(async (req, res) => {
+app.delete("/api/maengel/:id", requireAuth("status"), asyncRoute(async (req, res) => {
   const result = await db().query("DELETE FROM mangel WHERE mangel_id = ?", [req.params.id]);
   if (!result.affectedRows) return res.status(404).json({ ok: false, error: "Mangel nicht gefunden" });
   res.status(204).end();
 }));
 
-app.get("/api/count/fahrzeuge", asyncRoute(async (_req, res) => {
+app.get("/api/count/fahrzeuge", requireAuth("lesen"), asyncRoute(async (_req, res) => {
   const row = await one("SELECT COUNT(*) AS count FROM fahrzeug");
   res.json({ count: Number(row?.count ?? 0) });
 }));
 
-app.post("/api/admin/reset", requireAdminToken, asyncRoute(async (_req, res) => {
+// Admin-Endpunkte: chef-Rolle ("loeschen"-Recht) UND weiterhin der
+// X-Admin-Token-Header — zwei unabhaengige Schutzschichten.
+app.post("/api/admin/reset", requireAuth("loeschen"), requireAdminToken, asyncRoute(async (_req, res) => {
   // Transaktion: alle vier DELETEs sind logisch atomar. Wenn z.B. der
   // halter-DELETE wegen FK-RESTRICT fehlschlaegt (sollte nicht passieren
   // weil mangel/termin/fahrzeug schon weg sind), bleibt nichts halb
@@ -614,7 +763,7 @@ async function seedFullDemoData() {
   });
 }
 
-app.post("/api/admin/demo", requireAdminToken, asyncRoute(async (_req, res) => {
+app.post("/api/admin/demo", requireAuth("loeschen"), requireAdminToken, asyncRoute(async (_req, res) => {
   res.json(await seedFullDemoData());
 }));
 // ── Statisches Frontend (Single-Container-Deployment) ────────────────

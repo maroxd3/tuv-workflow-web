@@ -68,6 +68,8 @@ Die API liegt unter `/api`:
 | Methode | Pfad | Zweck |
 |---|---|---|
 | GET | `/api/health` | API-/DB-Verfügbarkeit prüfen |
+| POST | `/api/auth/login` | Login (kuerzel + passwort → signiertes Token) |
+| GET | `/api/auth/me` | Eingeloggten Benutzer + Rolle abfragen |
 | GET/POST/PATCH/DELETE | `/api/halter` | Halter verwalten |
 | GET/POST/PATCH/DELETE | `/api/fahrzeuge` | Fahrzeuge verwalten |
 | GET/POST/PATCH/DELETE | `/api/termine` | Termine verwalten |
@@ -77,6 +79,8 @@ Die API liegt unter `/api`:
 | POST | `/api/admin/reset` | Bewegungsdaten löschen |
 | POST | `/api/admin/demo` | Demo-Daten neu laden |
 
+Alle fachlichen Endpunkte sind rollen-geschützt (empfang/pruefer/chef, siehe
+README „Benutzer & Rollen"); in development/CI ist die Auth per Default aus.
 `vite.config.js` proxyt lokale Frontend-Aufrufe von `/api` an
 `http://127.0.0.1:8787`.
 

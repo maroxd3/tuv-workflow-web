@@ -56,6 +56,11 @@ services:
       # /api/admin/* waere still oeffentlich gewesen.
       NODE_ENV: ${NODE_ENV:-production}
       ADMIN_TOKEN: ${ADMIN_TOKEN:-}
+      # Benutzer-Login (Rollen empfang/pruefer/chef): bei production per
+      # Default aktiv. AUTH_SECRET faellt auf ADMIN_TOKEN zurueck.
+      AUTH_ENABLED: ${AUTH_ENABLED:-}
+      AUTH_SECRET: ${AUTH_SECRET:-}
+      DEFAULT_USER_PASSWORT: ${DEFAULT_USER_PASSWORT:-}
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-}
     ports:
       - "8787:8787"
