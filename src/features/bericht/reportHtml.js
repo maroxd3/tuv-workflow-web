@@ -2,8 +2,11 @@
  * Bericht-Builder fuer die BerichteView.
  *
  * Aus der View extrahiert, damit die Komponente lesbar bleibt:
- *  - buildBerichtText(t, fz): Plain-Text-Bericht (Vorschau-Modal)
- *  - buildBerichtHtml(t, fz): druckfertiges A4-HTML fuer das Print-Popup
+ *  - buildBerichtText(t, fz, halter): Plain-Text-Bericht (Vorschau-Modal)
+ *  - buildBerichtHtml(t, fz, halter): druckfertiges A4-HTML fuer das Print-Popup
+ *
+ * t/fz kommen in DB-Form (statusCode, prueftCode, maengel, kilometerstand,
+ * ...); der Halter wird separat uebergeben (Fahrzeug traegt nur halterId).
  *
  * WICHTIG (CSP): Das erzeugte HTML darf KEIN Inline-<script> enthalten —
  * das Popup erbt die Content-Security-Policy des Openers und blockt
@@ -14,14 +17,14 @@
 import { STATUS } from "../../constants/status";
 import { PRUEFUNG_ARTEN, PRUEFER } from "../../constants/pruefung";
 import { MANGEL_KATEGORIEN } from "../../constants/mangel";
-import { fmtDate } from "../../utils/date";
+import { fmtDate, toTimeStr } from "../../utils/date";
 import { hatBlockierendenMangel, istBlockierenderMangel } from "../../utils/mangel";
 
-export function buildBerichtText(t, fz) {
-  const art = PRUEFUNG_ARTEN.find(a => a.id === t.art);
-  const pr = PRUEFER.find(p => p.id === t.pruefer);
-  const mangelText = t.mängel?.length > 0
-    ? t.mängel.map(m => `  [${MANGEL_KATEGORIEN[m.kat]?.kurz || m.kat}] ${m.code.padEnd(8)} ${m.text}`).join("\n")
+export function buildBerichtText(t, fz, halter) {
+  const art = PRUEFUNG_ARTEN.find(a => a.id === t.prueftCode);
+  const pr = PRUEFER.find(p => p.id === t.prueferKuerzel);
+  const mangelText = t.maengel?.length > 0
+    ? t.maengel.map(m => `  [${MANGEL_KATEGORIEN[m.kategorieCode]?.kurz || m.kategorieCode}] ${(m.codeStvzo ?? "FR").padEnd(8)} ${m.beschreibung}`).join("\n")
     : "  Keine Mängel festgestellt.";
   return `
 ╔══════════════════════════════════════════════════════════════════════╗
@@ -30,12 +33,12 @@ export function buildBerichtText(t, fz) {
 ╚══════════════════════════════════════════════════════════════════════╝
 
 PRÜFINFORMATIONEN
-  Referenz-Nummer:   ${t.id.toUpperCase()}
-  Prüfdatum:         ${fmtDate(t.datum)}  ${t.uhrzeit} Uhr
-  Prüfart:           ${art?.label || t.art}
+  Referenz-Nummer:   ${t.terminId.toUpperCase()}
+  Prüfdatum:         ${fmtDate(t.datum)}  ${toTimeStr(t.uhrzeit) || "—"} Uhr
+  Prüfart:           ${art?.label || t.prueftCode}
   Rechtsgrundlage:   ${art?.code || "StVZO"}
-  Prüfer:            ${pr?.name || t.pruefer} (${pr?.zert || "—"})
-  Ergebnis:          *** ${t.status.toUpperCase()} ***
+  Prüfer:            ${pr?.name || t.prueferKuerzel} (${pr?.zert || "—"})
+  Ergebnis:          *** ${t.statusCode.toUpperCase()} ***
   Geplante Dauer:    ${art?.dauer || "—"} Minuten
 
 ══════════════════════════════════════════════════════════════════════════
@@ -47,15 +50,15 @@ FAHRZEUGDATEN
   Baujahr:           ${fz?.baujahr || "—"}
   Farbe:             ${fz?.farbe || "—"}
   FIN (17-stellig):  ${fz?.fin || "—"}
-  Kilometerstand:    ${fz?.kmStand ? fz.kmStand.toLocaleString("de-DE") + " km" : "—"}
-  HU fällig:         ${fz?.hu_faellig ? fmtDate(fz.hu_faellig) : "—"}
+  Kilometerstand:    ${fz?.kilometerstand ? fz.kilometerstand.toLocaleString("de-DE") + " km" : "—"}
+  HU fällig:         ${fz?.huFaellig ? fmtDate(fz.huFaellig) : "—"}
 
 ══════════════════════════════════════════════════════════════════════════
 
 FAHRZEUGHALTER
-  Name / Firma:      ${fz?.besitzer || "—"}
-  Telefon:           ${fz?.telefon || "—"}
-  E-Mail:            ${fz?.email || "—"}
+  Name / Firma:      ${halter?.name || "—"}
+  Telefon:           ${halter?.telefon || "—"}
+  E-Mail:            ${halter?.email || "—"}
 
 ══════════════════════════════════════════════════════════════════════════
 
@@ -63,7 +66,7 @@ MÄNGELKATEGORIEN (nach §29 StVZO / HU-Richtlinie)
   OM = Ohne Mangel | GM = Geringer Mangel
   EM = Erheblicher Mangel (nicht bestanden) | GfM = Gefährlicher Mangel
 
-FESTGESTELLTE MÄNGEL (${t.mängel?.length || 0})
+FESTGESTELLTE MÄNGEL (${t.maengel?.length || 0})
 ${mangelText}
 
 ══════════════════════════════════════════════════════════════════════════
@@ -83,13 +86,13 @@ RECHTLICHER HINWEIS
 `.trim();
 }
 
-export function buildBerichtHtml(t, fz) {
-  const art = PRUEFUNG_ARTEN.find(a => a.id === t.art);
-  const pr = PRUEFER.find(p => p.id === t.pruefer);
-  const hatHm = hatBlockierendenMangel(t.mängel);
-  const isPassed = t.status === STATUS.BESTANDEN;
-  const isFailed = t.status === STATUS.NICHT_BESTANDEN;
-  const isNachp = t.status === STATUS.NACHPRUEFUNG;
+export function buildBerichtHtml(t, fz, halter) {
+  const art = PRUEFUNG_ARTEN.find(a => a.id === t.prueftCode);
+  const pr = PRUEFER.find(p => p.id === t.prueferKuerzel);
+  const hatHm = hatBlockierendenMangel(t.maengel);
+  const isPassed = t.statusCode === STATUS.BESTANDEN;
+  const isFailed = t.statusCode === STATUS.NICHT_BESTANDEN;
+  const isNachp = t.statusCode === STATUS.NACHPRUEFUNG;
   const verkehr = isPassed ? "GEGEBEN" : (isFailed || hatHm) ? "NICHT GEGEBEN" : isNachp ? "MIT EINSCHRÄNKUNGEN" : "ZU PRÜFEN";
   const resultColor = isPassed ? "#15803d" : (isFailed || hatHm) ? "#991b1b" : "#a16207";
   const resultLight = isPassed ? "#dcfce7" : (isFailed || hatHm) ? "#fee2e2" : "#fef3c7";
@@ -99,20 +102,20 @@ export function buildBerichtHtml(t, fz) {
   const erstelltDatum = new Date().toLocaleDateString("de-DE", {
     day: "2-digit", month: "2-digit", year: "numeric",
   });
-  const refNr = `TPP-NDS-${new Date().getFullYear()}-${t.id.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 8)}`;
+  const refNr = `TPP-NDS-${new Date().getFullYear()}-${t.terminId.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 8)}`;
   const escape = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;" }[c]));
-  const km = fz?.kmStand ? fz.kmStand.toLocaleString("de-DE") + " km" : "—";
-  const naechsteHu = fz?.hu_faellig ? fmtDate(fz.hu_faellig) : "—";
+  const km = fz?.kilometerstand ? fz.kilometerstand.toLocaleString("de-DE") + " km" : "—";
+  const naechsteHu = fz?.huFaellig ? fmtDate(fz.huFaellig) : "—";
 
-  const maengelRows = t.mängel?.length > 0
-    ? t.mängel.map((m, i) => {
-        const kat = MANGEL_KATEGORIEN[m.kat] || { kurz: m.kat, label: "Unbekannt" };
+  const maengelRows = t.maengel?.length > 0
+    ? t.maengel.map((m, i) => {
+        const kat = MANGEL_KATEGORIEN[m.kategorieCode] || { kurz: m.kategorieCode, label: "Unbekannt" };
         const isHm = istBlockierenderMangel(m);
         return `<tr>
           <td class="num">${i + 1}.</td>
           <td class="kat ${isHm ? "kat-hm" : ""}"><strong>${escape(kat.kurz)}</strong></td>
-          <td class="mono">${escape(m.code)}</td>
-          <td>${escape(m.text)}${m.behoben ? " <span class=\"behoben\">[behoben]</span>" : ""}</td>
+          <td class="mono">${escape(m.codeStvzo ?? "FR")}</td>
+          <td>${escape(m.beschreibung)}${m.behoben ? " <span class=\"behoben\">[behoben]</span>" : ""}</td>
         </tr>`;
       }).join("")
     : `<tr><td colspan="4" class="muted center">– Keine Mängel festgestellt –</td></tr>`;
@@ -499,7 +502,7 @@ export function buildBerichtHtml(t, fz) {
   <div class="doc-title">
     <div class="typ">Amtliche Prüfung nach § 29 Straßenverkehrs-Zulassungs-Ordnung</div>
     <h1>P r ü f b e r i c h t</h1>
-    <div class="subt">${escape(art?.label || t.art)} &nbsp;·&nbsp; ${escape(art?.code || "§ 29 StVZO")} i. V. m. Anlage VIII Nr. 1.2</div>
+    <div class="subt">${escape(art?.label || t.prueftCode)} &nbsp;·&nbsp; ${escape(art?.code || "§ 29 StVZO")} i. V. m. Anlage VIII Nr. 1.2</div>
   </div>
 
   <div class="result">
@@ -507,11 +510,11 @@ export function buildBerichtHtml(t, fz) {
       <div>
         <div class="lbl">Verkehrssicherheit</div>
         <div class="verkehr">${escape(verkehr)}</div>
-        <div class="status">Status: ${escape(t.status)}</div>
+        <div class="status">Status: ${escape(t.statusCode)}</div>
       </div>
       <div class="meta">
-        <div class="label">Prüfdatum</div><strong>${escape(fmtDate(t.datum))}</strong> &nbsp; ${escape(t.uhrzeit)} Uhr<br>
-        <div class="label" style="margin-top:4px">Prüfingenieur</div><strong>${escape(pr?.name || t.pruefer)}</strong>${pr?.zert ? ` (Zert. ${escape(pr.zert)})` : ""}<br>
+        <div class="label">Prüfdatum</div><strong>${escape(fmtDate(t.datum))}</strong> &nbsp; ${escape(toTimeStr(t.uhrzeit) || "—")} Uhr<br>
+        <div class="label" style="margin-top:4px">Prüfingenieur</div><strong>${escape(pr?.name || t.prueferKuerzel)}</strong>${pr?.zert ? ` (Zert. ${escape(pr.zert)})` : ""}<br>
         <div class="label" style="margin-top:4px">Nächste HU fällig</div><strong>${escape(naechsteHu)}</strong>
       </div>
     </div>
@@ -537,16 +540,16 @@ export function buildBerichtHtml(t, fz) {
     <h2>II. Fahrzeughalter / Auftraggeber</h2>
     <div class="body">
       <div class="form-grid">
-        <div class="lbl">Name / Firma</div><div class="val strong">${escape(fz?.besitzer || "—")}</div>
-        <div class="lbl">Telefon</div><div class="val mono">${escape(fz?.telefon || "—")}</div>
-        <div class="lbl">E-Mail</div><div class="val">${escape(fz?.email || "—")}</div>
+        <div class="lbl">Name / Firma</div><div class="val strong">${escape(halter?.name || "—")}</div>
+        <div class="lbl">Telefon</div><div class="val mono">${escape(halter?.telefon || "—")}</div>
+        <div class="lbl">E-Mail</div><div class="val">${escape(halter?.email || "—")}</div>
         <div class="lbl"></div><div class="val"></div>
       </div>
     </div>
   </section>
 
   <section>
-    <h2>III. Festgestellte Mängel — ${t.mängel?.length || 0} Eintrag${(t.mängel?.length || 0) === 1 ? "" : "e"} (StVZO Anlage VIII)</h2>
+    <h2>III. Festgestellte Mängel — ${t.maengel?.length || 0} Eintrag${(t.maengel?.length || 0) === 1 ? "" : "e"} (StVZO Anlage VIII)</h2>
     <div class="body" style="padding: 8px 10px">
       <table class="maengel">
         <thead>

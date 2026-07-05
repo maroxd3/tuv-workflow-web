@@ -2,7 +2,7 @@ import { lazy, Suspense, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Toaster } from "sonner";
 import { C, GLOBAL_CSS } from "./styles/theme";
-import { useStoreCompat as useStore } from "./hooks/useStoreCompat";
+import { useDb } from "./hooks/useDb";
 import { useToasts } from "./hooks/useToasts";
 import { useIsMobile } from "./hooks/useIsMobile";
 import { Sidebar } from "./layout/Sidebar";
@@ -33,7 +33,7 @@ export default function App() {
   const [view, setView] = useState("tagesplan");
   const [sidebarOpen, setSidebarOpen] = useState(!isMobile);
   const { add: toast } = useToasts();
-  const S = useStore();
+  const S = useDb();
 
   /* Auf Mobil-Geräten Sidebar nach einem View-Wechsel automatisch schließen,
      damit der Content sofort sichtbar ist. */
@@ -140,8 +140,8 @@ export default function App() {
             <Sidebar
               view={view} setView={handleSetView}
               fahrzeuge={S.fahrzeuge} termine={S.termine}
-              resetAll={S.resetAll}
-              loadDemo={S.loadDemo}
+              resetAllData={S.resetAllData}
+              loadDemoData={S.loadDemoData}
             />
           </motion.div>
         )}
@@ -164,21 +164,24 @@ export default function App() {
               <Suspense fallback={<ViewFallback />}>
                 {view === "tagesplan" && (
                   <TagesplanView
-                    fahrzeuge={S.fahrzeuge} termine={S.termine}
-                    addTr={S.addTr} updTr={S.updTr} delTr={S.delTr}
+                    fahrzeuge={S.fahrzeuge} halter={S.halter} termine={S.termine}
+                    addTermin={S.addTermin} updTermin={S.updTermin}
+                    updTerminStatus={S.updTerminStatus} delTermin={S.delTermin}
                     addMangel={S.addMangel} delMangel={S.delMangel}
                     toast={toast}
                   />
                 )}
                 {view === "fahrzeuge" && (
                   <FahrzeugeView
-                    fahrzeuge={S.fahrzeuge} termine={S.termine}
-                    addFz={S.addFz} updFz={S.updFz} delFz={S.delFz}
+                    fahrzeuge={S.fahrzeuge} halter={S.halter} termine={S.termine}
+                    addFahrzeugMitHalter={S.addFahrzeugMitHalter}
+                    updFahrzeug={S.updFahrzeug} updHalter={S.updHalter}
+                    delFahrzeug={S.delFahrzeug}
                     toast={toast}
                   />
                 )}
                 {view === "statistik" && <StatistikView termine={S.termine} fahrzeuge={S.fahrzeuge} />}
-                {view === "berichte" && <BerichteView termine={S.termine} fahrzeuge={S.fahrzeuge} />}
+                {view === "berichte" && <BerichteView termine={S.termine} fahrzeuge={S.fahrzeuge} halter={S.halter} />}
               </Suspense>
             </motion.div>
           </AnimatePresence>

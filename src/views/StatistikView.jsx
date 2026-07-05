@@ -12,7 +12,7 @@ import { C } from "../styles/theme";
 import { STATUS } from "../constants/status";
 import { PRUEFUNG_ARTEN, PRUEFER } from "../constants/pruefung";
 import { MANGEL_KATEGORIEN, MANGEL_KATALOG_BY_CODE } from "../constants/mangel";
-import { isoDate } from "../utils/date";
+import { isoDate, toIsoDateStr } from "../utils/date";
 import { Kpi } from "../components/ui/Kpi";
 import { MangelPill } from "../components/ui/MangelPill";
 import { FahrzeugShape, TerminShape } from "../types/propTypes";
@@ -75,38 +75,41 @@ export function StatistikView({ termine, fahrzeuge }) {
 
   /* ── Core stats ── */
   const s = useMemo(() => {
-    const inRange = termine.filter(t => t.datum >= cutoff);
-    const best = inRange.filter(t => t.status === STATUS.BESTANDEN).length;
-    const fail = inRange.filter(t => t.status === STATUS.NICHT_BESTANDEN).length;
+    const inRange = termine.filter(t => toIsoDateStr(t.datum) >= cutoff);
+    const best = inRange.filter(t => t.statusCode === STATUS.BESTANDEN).length;
+    const fail = inRange.filter(t => t.statusCode === STATUS.NICHT_BESTANDEN).length;
     const passR = (best + fail) > 0 ? Math.round(best / (best + fail) * 100) : 0;
-    const allM = termine.flatMap(t => t.mängel || []);
-    const mKat = Object.fromEntries(Object.keys(MANGEL_KATEGORIEN).map(k => [k, allM.filter(m => m.kat === k).length]));
+    const allM = termine.flatMap(t => t.maengel || []);
+    const mKat = Object.fromEntries(Object.keys(MANGEL_KATEGORIEN).map(k => [k, allM.filter(m => m.kategorieCode === k).length]));
     const byP = Object.fromEntries(PRUEFER.map(p => {
-      const pt = inRange.filter(t => t.pruefer === p.id);
-      const b = pt.filter(t => t.status === STATUS.BESTANDEN).length;
-      const f = pt.filter(t => t.status === STATUS.NICHT_BESTANDEN).length;
+      const pt = inRange.filter(t => t.prueferKuerzel === p.id);
+      const b = pt.filter(t => t.statusCode === STATUS.BESTANDEN).length;
+      const f = pt.filter(t => t.statusCode === STATUS.NICHT_BESTANDEN).length;
       return [p.id, { total: pt.length, best: b, fail: f, rate: (b + f) > 0 ? Math.round(b / (b + f) * 100) : 0 }];
     }));
-    const byArt = Object.fromEntries(PRUEFUNG_ARTEN.map(a => [a.id, inRange.filter(t => t.art === a.id).length]));
+    const byArt = Object.fromEntries(PRUEFUNG_ARTEN.map(a => [a.id, inRange.filter(t => t.prueftCode === a.id).length]));
     const mCount = {};
-    allM.forEach(m => { mCount[m.code] = (mCount[m.code] || 0) + 1; });
+    // codeStvzo null = Freitext-Mangel → Anzeige-Code "FR"
+    allM.forEach(m => { const code = m.codeStvzo ?? "FR"; mCount[code] = (mCount[code] || 0) + 1; });
     const top10 = Object.entries(mCount).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([code, cnt]) => {
       const tmpl = MANGEL_KATALOG_BY_CODE[code];
       return { code, cnt, text: tmpl?.text || code, kat: tmpl?.kat || "EM" };
     });
-    const huFaellig = fahrzeuge.filter(f => f.hu_faellig && new Date(f.hu_faellig) <= new Date(now + 30 * 86400000) && new Date(f.hu_faellig) >= new Date(now)).length;
-    const huUeberr = fahrzeuge.filter(f => f.hu_faellig && new Date(f.hu_faellig) < new Date(now)).length;
+    const huFaellig = fahrzeuge.filter(f => f.huFaellig && new Date(f.huFaellig) <= new Date(now + 30 * 86400000) && new Date(f.huFaellig) >= new Date(now)).length;
+    const huUeberr = fahrzeuge.filter(f => f.huFaellig && new Date(f.huFaellig) < new Date(now)).length;
     return { total: inRange.length, best, fail, passR, allM: allM.length, mKat, byP, byArt, top10, huFaellig, huUeberr };
   }, [termine, fahrzeuge, cutoff, now]);
 
   /* ── Trend data (daily pass rate) ── */
   const trendData = useMemo(() => {
     const map = {};
-    termine.filter(t => t.datum >= cutoff).forEach(t => {
-      if (!map[t.datum]) map[t.datum] = { best: 0, fail: 0, total: 0 };
-      if (t.status === STATUS.BESTANDEN) map[t.datum].best++;
-      else if (t.status === STATUS.NICHT_BESTANDEN) map[t.datum].fail++;
-      map[t.datum].total++;
+    termine.forEach(t => {
+      const tag = toIsoDateStr(t.datum);
+      if (tag < cutoff) return;
+      if (!map[tag]) map[tag] = { best: 0, fail: 0, total: 0 };
+      if (t.statusCode === STATUS.BESTANDEN) map[tag].best++;
+      else if (t.statusCode === STATUS.NICHT_BESTANDEN) map[tag].fail++;
+      map[tag].total++;
     });
     return Object.entries(map).sort(([a], [b]) => a.localeCompare(b)).map(([date, d]) => ({
       label: new Date(date).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" }),

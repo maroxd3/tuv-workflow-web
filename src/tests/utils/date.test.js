@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { isoDate, addDays, fmtDate, fmtDateLong, dayName, dayShort } from '../../utils/date';
+import { isoDate, addDays, fmtDate, fmtDateLong, dayName, dayShort, toIsoDateStr, toTimeStr } from '../../utils/date';
 
 describe('isoDate', () => {
   it('formats today as YYYY-MM-DD', () => {
@@ -76,6 +76,41 @@ describe('dayName', () => {
 
   it('returns correct name for Sunday', () => {
     expect(dayName('2024-01-07')).toBe('Sonntag');
+  });
+});
+
+describe('toIsoDateStr — DB-Wert (String | Date) → "yyyy-mm-dd"', () => {
+  it('schneidet ISO-Strings auf den Datum-Anteil', () => {
+    expect(toIsoDateStr('2026-07-10')).toBe('2026-07-10');
+    expect(toIsoDateStr('2026-07-10T08:00:00.000Z')).toBe('2026-07-10');
+  });
+
+  it('formatiert Date-Objekte in LOKAL-Zeit (nicht UTC)', () => {
+    // new Date(y, m, d) ist lokal Mitternacht — in Zeitzonen westlich von
+    // UTC würde eine UTC-Formatierung hier den Vortag liefern.
+    expect(toIsoDateStr(new Date(2026, 6, 10))).toBe('2026-07-10');
+  });
+
+  it('liefert "" für null/undefined', () => {
+    expect(toIsoDateStr(null)).toBe('');
+    expect(toIsoDateStr(undefined)).toBe('');
+  });
+});
+
+describe('toTimeStr — DB-Wert (String | Date) → "HH:MM"', () => {
+  it('schneidet Sekunden ab', () => {
+    expect(toTimeStr('08:30:00')).toBe('08:30');
+    expect(toTimeStr('08:30')).toBe('08:30');
+  });
+
+  it('formatiert Date-Objekte mit Zero-Padding', () => {
+    expect(toTimeStr(new Date(2026, 6, 10, 8, 5))).toBe('08:05');
+  });
+
+  it('liefert null für leere Werte', () => {
+    expect(toTimeStr(null)).toBeNull();
+    expect(toTimeStr(undefined)).toBeNull();
+    expect(toTimeStr('')).toBeNull();
   });
 });
 

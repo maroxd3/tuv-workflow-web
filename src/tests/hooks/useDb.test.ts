@@ -127,10 +127,10 @@ describe("useDb — initialer Load", () => {
     expect(result.current.error).toBeNull();
     expect(result.current.halter).toEqual([HALTER_1]);
     expect(result.current.fahrzeuge).toEqual([FZ_1]);
-    // maengel (API-Form) wird auf mängel (App-Form) gemappt
+    // Termine kommen mit eingebettetem maengel-Array (includeMaengel) an
     expect(result.current.termine).toHaveLength(1);
     expect(result.current.termine[0].terminId).toBe(TERMIN_1.terminId);
-    expect(result.current.termine[0].mängel).toEqual([MANGEL_1]);
+    expect(result.current.termine[0].maengel).toEqual([MANGEL_1]);
   });
 
   it("setzt error, wenn die API beim Start nicht erreichbar ist", async () => {
@@ -213,6 +213,127 @@ describe("useDb — addFahrzeug (Optimistic Insert + Rollback)", () => {
   });
 });
 
+describe("useDb — addFahrzeugMitHalter (Halter-Dedupe)", () => {
+  const fzInput = {
+    kennzeichen: "H-NE 999",
+    fin: null,
+    hersteller: "Audi",
+    modell: "A4",
+    baujahr: 2021,
+    farbe: "Rot",
+    typ: "PKW",
+    kilometerstand: 50000,
+    huFaellig: "2027-01-01",
+  };
+
+  it("legt neuen Halter an und ruft addFahrzeug mit dessen halterId auf", async () => {
+    const { result } = await renderReadyHook();
+
+    apiMock.addHalter.mockImplementation(async (h) => ({
+      halterId: h.halterId!,
+      name: h.name,
+      telefon: h.telefon ?? null,
+      email: h.email ?? null,
+      anschrift: h.anschrift ?? null,
+      erfasstAm: "2026-07-05T10:00:00.000Z",
+    }));
+    apiMock.addFahrzeug.mockImplementation(async (f) => ({
+      ...fzInput,
+      ...f,
+      fahrzeugId: f.fahrzeugId!,
+      halterId: f.halterId,
+      erfasstAm: "2026-07-05T10:00:00.000Z",
+    }) as Fahrzeug);
+
+    let neu!: Fahrzeug;
+    await act(async () => {
+      neu = await result.current.addFahrzeugMitHalter(fzInput, {
+        name: "Neue Person",
+        telefon: "0511 998877",
+        email: "neu@person.de",
+      });
+    });
+
+    expect(apiMock.addHalter).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: "Neue Person",
+        telefon: "0511 998877",
+        email: "neu@person.de",
+      }),
+    );
+    expect(apiMock.updHalter).not.toHaveBeenCalled();
+    // Exakte DB-Feldnamen + halterId des frisch angelegten Halters
+    const neueHalterId = apiMock.addHalter.mock.calls[0][0].halterId;
+    expect(apiMock.addFahrzeug).toHaveBeenCalledWith(
+      expect.objectContaining({
+        kennzeichen: "H-NE 999",
+        kilometerstand: 50000,
+        huFaellig: "2027-01-01",
+        halterId: neueHalterId,
+      }),
+    );
+    expect(neu.halterId).toBe(neueHalterId);
+  });
+
+  it("Halter-Dedupe: gleicher Name (case-insensitive, getrimmt) reused halterId", async () => {
+    const { result } = await renderReadyHook();
+
+    apiMock.addFahrzeug.mockImplementation(async (f) => ({
+      ...fzInput,
+      ...f,
+      fahrzeugId: f.fahrzeugId!,
+      erfasstAm: "2026-07-05T10:00:00.000Z",
+    }) as Fahrzeug);
+
+    await act(async () => {
+      await result.current.addFahrzeugMitHalter(fzInput, {
+        name: "  klaus müller ", // existiert bereits als "Klaus Müller"
+        telefon: HALTER_1.telefon,
+        email: HALTER_1.email,
+      });
+    });
+
+    expect(apiMock.addHalter).not.toHaveBeenCalled();
+    expect(apiMock.updHalter).not.toHaveBeenCalled(); // Kontaktdaten identisch → kein Silent-Update
+    expect(apiMock.addFahrzeug).toHaveBeenCalledWith(
+      expect.objectContaining({ halterId: HALTER_1.halterId }),
+    );
+  });
+
+  it("Halter-Dedupe: abweichende Kontaktdaten werden still beim Halter ergänzt", async () => {
+    const { result } = await renderReadyHook();
+
+    apiMock.updHalter.mockImplementation(async (id, p) => ({
+      ...HALTER_1,
+      ...p,
+      halterId: id,
+    }) as Halter);
+    apiMock.addFahrzeug.mockImplementation(async (f) => ({
+      ...fzInput,
+      ...f,
+      fahrzeugId: f.fahrzeugId!,
+      erfasstAm: "2026-07-05T10:00:00.000Z",
+    }) as Fahrzeug);
+
+    await act(async () => {
+      await result.current.addFahrzeugMitHalter(fzInput, {
+        name: "Klaus Müller",
+        telefon: "0176 0000000", // neu
+        email: HALTER_1.email,
+      });
+    });
+
+    expect(apiMock.addHalter).not.toHaveBeenCalled();
+    expect(apiMock.updHalter).toHaveBeenCalledWith(HALTER_1.halterId, {
+      telefon: "0176 0000000",
+      email: HALTER_1.email,
+    });
+    expect(apiMock.addFahrzeug).toHaveBeenCalledWith(
+      expect.objectContaining({ halterId: HALTER_1.halterId }),
+    );
+  });
+});
+
 describe("useDb — updTermin (Optimistic Patch + Rollback)", () => {
   it("Patch erscheint sofort, wird bei API-Fehler zurückgerollt", async () => {
     const { result } = await renderReadyHook();
@@ -236,7 +357,7 @@ describe("useDb — updTermin (Optimistic Patch + Rollback)", () => {
 
     await expect(p).rejects.toThrow("HTTP 500");
     expect(result.current.termine[0].notiz).toBe(TERMIN_1.notiz); // Rollback
-    expect(result.current.termine[0].mängel).toEqual([MANGEL_1]); // Mängel unversehrt
+    expect(result.current.termine[0].maengel).toEqual([MANGEL_1]); // Mängel unversehrt
   });
 
   it("Erfolgsfall: Server-Ergebnis wird in den Termin gemergt", async () => {
@@ -249,7 +370,7 @@ describe("useDb — updTermin (Optimistic Patch + Rollback)", () => {
     });
 
     expect(result.current.termine[0].notiz).toBe("vom Server");
-    expect(result.current.termine[0].mängel).toEqual([MANGEL_1]);
+    expect(result.current.termine[0].maengel).toEqual([MANGEL_1]);
   });
 });
 
@@ -311,7 +432,7 @@ describe("useDb — addMangel (Erfolgsfall: Server-Ergebnis mergen)", () => {
     );
     const termin = result.current.termine[0];
     // Server-Version (mit codeStvzo + Server-Timestamp) ersetzt den optimistischen Eintrag
-    expect(termin.mängel).toEqual([MANGEL_1, serverMangel]);
+    expect(termin.maengel).toEqual([MANGEL_1, serverMangel]);
     // terminDemoted: true → Status wurde auf "Nicht bestanden" gesetzt (WF-01)
     expect(termin.statusCode).toBe("Nicht bestanden");
   });
@@ -328,7 +449,7 @@ describe("useDb — addMangel (Erfolgsfall: Server-Ergebnis mergen)", () => {
     });
     const abgefangen = p.catch(() => {});
 
-    expect(result.current.termine[0].mängel).toHaveLength(2); // optimistisch drin
+    expect(result.current.termine[0].maengel).toHaveLength(2); // optimistisch drin
 
     await act(async () => {
       d.reject(new Error("422 Validation"));
@@ -336,6 +457,6 @@ describe("useDb — addMangel (Erfolgsfall: Server-Ergebnis mergen)", () => {
     });
 
     await expect(p).rejects.toThrow("422 Validation");
-    expect(result.current.termine[0].mängel).toEqual([MANGEL_1]); // Rollback
+    expect(result.current.termine[0].maengel).toEqual([MANGEL_1]); // Rollback
   });
 });

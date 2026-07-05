@@ -13,34 +13,34 @@ describe('hatBlockierendenMangel', () => {
   });
 
   it('returns false when only non-blocking defects (OM, GM)', () => {
-    expect(hatBlockierendenMangel([{ kat: 'OM' }, { kat: 'GM' }])).toBe(false);
+    expect(hatBlockierendenMangel([{ kategorieCode: 'OM' }, { kategorieCode: 'GM' }])).toBe(false);
   });
 
   it('returns true for EM (Erheblicher Mangel)', () => {
-    expect(hatBlockierendenMangel([{ kat: 'GM' }, { kat: 'EM' }])).toBe(true);
+    expect(hatBlockierendenMangel([{ kategorieCode: 'GM' }, { kategorieCode: 'EM' }])).toBe(true);
   });
 
   it('returns true for GfM (Gefährlicher Mangel)', () => {
-    expect(hatBlockierendenMangel([{ kat: 'EM' }, { kat: 'GfM' }])).toBe(true);
+    expect(hatBlockierendenMangel([{ kategorieCode: 'EM' }, { kategorieCode: 'GfM' }])).toBe(true);
   });
 
   it('returns true even if EM is the only defect', () => {
-    expect(hatBlockierendenMangel([{ kat: 'EM' }])).toBe(true);
+    expect(hatBlockierendenMangel([{ kategorieCode: 'EM' }])).toBe(true);
   });
 
   it('returns true even if GfM is the only defect', () => {
-    expect(hatBlockierendenMangel([{ kat: 'GfM' }])).toBe(true);
+    expect(hatBlockierendenMangel([{ kategorieCode: 'GfM' }])).toBe(true);
   });
 
   it('ignores behoben=true Maengel', () => {
-    expect(hatBlockierendenMangel([{ kat: 'EM', behoben: true }])).toBe(false);
-    expect(hatBlockierendenMangel([{ kat: 'GfM', behoben: true }])).toBe(false);
+    expect(hatBlockierendenMangel([{ kategorieCode: 'EM', behoben: true }])).toBe(false);
+    expect(hatBlockierendenMangel([{ kategorieCode: 'GfM', behoben: true }])).toBe(false);
   });
 
   it('counts unbehoben blocking defect even alongside behoben blocking one', () => {
     expect(hatBlockierendenMangel([
-      { kat: 'EM', behoben: true },
-      { kat: 'EM', behoben: false },
+      { kategorieCode: 'EM', behoben: true },
+      { kategorieCode: 'EM', behoben: false },
     ])).toBe(true);
   });
 

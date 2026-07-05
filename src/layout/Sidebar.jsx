@@ -5,18 +5,18 @@ import { Shield, Trash2, Sparkles, AlertOctagon, AlertTriangle } from "lucide-re
 import { C } from "../styles/theme";
 import { STATUS } from "../constants/status";
 import { NAV } from "../constants/nav";
-import { isoDate, fmtDate } from "../utils/date";
+import { isoDate, fmtDate, toIsoDateStr } from "../utils/date";
 import { ConfirmModal } from "../components/modal/ConfirmModal";
 import { FahrzeugShape, TerminShape } from "../types/propTypes";
 
-export function Sidebar({ view, setView, fahrzeuge, termine, resetAll, loadDemo }) {
+export function Sidebar({ view, setView, fahrzeuge, termine, resetAllData, loadDemoData }) {
   const today = isoDate();
-  const todayTr = termine.filter(t => t.datum === today);
-  const offenTr = todayTr.filter(t => t.status === STATUS.GEPLANT || t.status === STATUS.IN_PRUEFUNG);
+  const todayTr = termine.filter(t => toIsoDateStr(t.datum) === today);
+  const offenTr = todayTr.filter(t => t.statusCode === STATUS.GEPLANT || t.statusCode === STATUS.IN_PRUEFUNG);
   const [now] = useState(() => Date.now());
   const [confirmReset, setConfirmReset] = useState(false); // ersetzt window.confirm
-  const huWarn = fahrzeuge.filter(f => f.hu_faellig && new Date(f.hu_faellig) < new Date(now + 30 * 86400000) && new Date(f.hu_faellig) >= new Date(now)).length;
-  const huUeberr = fahrzeuge.filter(f => f.hu_faellig && new Date(f.hu_faellig) < new Date(now)).length;
+  const huWarn = fahrzeuge.filter(f => f.huFaellig && new Date(f.huFaellig) < new Date(now + 30 * 86400000) && new Date(f.huFaellig) >= new Date(now)).length;
+  const huUeberr = fahrzeuge.filter(f => f.huFaellig && new Date(f.huFaellig) < new Date(now)).length;
 
   return (
     <div style={{
@@ -126,7 +126,7 @@ export function Sidebar({ view, setView, fahrzeuge, termine, resetAll, loadDemo 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, marginBottom: 12 }}>
           {[
             ["Termine", todayTr.length, "#3B82F6"],
-            ["Erledigt", todayTr.filter(t => t.status === STATUS.BESTANDEN || t.status === STATUS.NICHT_BESTANDEN).length, "#10B981"],
+            ["Erledigt", todayTr.filter(t => t.statusCode === STATUS.BESTANDEN || t.statusCode === STATUS.NICHT_BESTANDEN).length, "#10B981"],
             ["Ausstehend", offenTr.length, "#F59E0B"],
             ["Fahrzeuge", fahrzeuge.length, C.sbT2],
           ].map(([l, v, c]) => (
@@ -139,7 +139,7 @@ export function Sidebar({ view, setView, fahrzeuge, termine, resetAll, loadDemo 
         {fahrzeuge.length === 0 && termine.length === 0 ? (
           <button
             onClick={() => {
-              if (loadDemo) loadDemo();
+              if (loadDemoData) loadDemoData();
             }}
             style={{
               width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
@@ -173,7 +173,7 @@ export function Sidebar({ view, setView, fahrzeuge, termine, resetAll, loadDemo 
             msg="Wirklich alle Fahrzeuge und Termine löschen? Die App startet danach leer (Live-Modus)."
             onConfirm={() => {
               setConfirmReset(false);
-              resetAll();
+              resetAllData();
             }}
             onCancel={() => setConfirmReset(false)}
           />
@@ -188,6 +188,6 @@ Sidebar.propTypes = {
   setView: PropTypes.func.isRequired,
   fahrzeuge: PropTypes.arrayOf(FahrzeugShape).isRequired,
   termine: PropTypes.arrayOf(TerminShape).isRequired,
-  resetAll: PropTypes.func.isRequired,
-  loadDemo: PropTypes.func,
+  resetAllData: PropTypes.func.isRequired,
+  loadDemoData: PropTypes.func,
 };

@@ -6,36 +6,44 @@ import { C } from "../../styles/theme";
 import { STATUS } from "../../constants/status";
 import { FAHRZEUG_TYPEN, TIME_SLOTS } from "../../constants/fahrzeug";
 import { PRUEFUNG_ARTEN, PRUEFER } from "../../constants/pruefung";
-import { isoDate, fmtDate } from "../../utils/date";
+import { isoDate, fmtDate, toIsoDateStr, toTimeStr } from "../../utils/date";
 import { Modal } from "../../components/modal/Modal";
 import { ConfirmModal } from "../../components/modal/ConfirmModal";
 import { Inp, Sel, Fld } from "../../components/ui/inputs";
 import { BtnG, BtnP } from "../../components/ui/buttons";
-import { FahrzeugShape, TerminShape } from "../../types/propTypes";
+import { FahrzeugShape, HalterShape, TerminShape } from "../../types/propTypes";
 import { hatHauptmangel } from "../../utils/mangel";
 import { validateTerminDatum } from "../../utils/validators";
 
-export function TerminModal({ fahrzeuge, termine = [], initial = {}, onSave, onClose }) {
-  const bestanden_gesperrt = hatHauptmangel(initial.mängel);
-  const [form, setForm] = useState({
-    fahrzeugId: fahrzeuge[0]?.id || "", datum: isoDate(), uhrzeit: "08:00",
-    art: "HU", pruefer: PRUEFER[0].id, status: STATUS.GEPLANT, notiz: "", ...initial,
-  });
+export function TerminModal({ fahrzeuge, halter = [], termine = [], initial = {}, onSave, onClose }) {
+  const bestanden_gesperrt = hatHauptmangel(initial.maengel);
+  // initial kann ein DB-Termin sein: datum/uhrzeit ggf. als Date bzw.
+  // "HH:MM:SS" → fuer die Inputs auf "yyyy-mm-dd"/"HH:MM" normalisieren.
+  const [form, setForm] = useState(() => ({
+    fahrzeugId: initial.fahrzeugId ?? (fahrzeuge[0]?.fahrzeugId || ""),
+    datum: initial.datum ? toIsoDateStr(initial.datum) : isoDate(),
+    uhrzeit: toTimeStr(initial.uhrzeit) ?? "08:00",
+    prueftCode: initial.prueftCode ?? "HU",
+    prueferKuerzel: initial.prueferKuerzel ?? PRUEFER[0].id,
+    statusCode: initial.statusCode ?? STATUS.GEPLANT,
+    notiz: initial.notiz ?? "",
+  }));
   const [err, setErr] = useState({});
   const [dupWarn, setDupWarn] = useState(null); // Duplikat-Rueckfrage (ersetzt window.confirm)
   const f = k => e => setForm(p => ({ ...p, [k]: e.target.value }));
-  const isEdit = !!initial.id;
-  const selFz = fahrzeuge.find(fz => fz.id === form.fahrzeugId);
-  const selArt = PRUEFUNG_ARTEN.find(a => a.id === form.art);
-  const selP = PRUEFER.find(p => p.id === form.pruefer);
+  const isEdit = !!initial.terminId;
+  const selFz = fahrzeuge.find(fz => fz.fahrzeugId === form.fahrzeugId);
+  const selArt = PRUEFUNG_ARTEN.find(a => a.id === form.prueftCode);
+  const selP = PRUEFER.find(p => p.id === form.prueferKuerzel);
+  const halterName = fz => halter.find(h => h.halterId === fz.halterId)?.name || "";
 
   function validate() {
     const e = {};
     if (!form.fahrzeugId) e.fahrzeugId = "Bitte Fahrzeug wählen";
     const eDatum = validateTerminDatum(form.datum);
     if (eDatum) e.datum = eDatum;
-    if (form.status === STATUS.BESTANDEN && bestanden_gesperrt) {
-      e.status = "Bestanden nicht möglich — Hauptmangel vorhanden (§ 29 StVZO)";
+    if (form.statusCode === STATUS.BESTANDEN && bestanden_gesperrt) {
+      e.statusCode = "Bestanden nicht möglich — Hauptmangel vorhanden (§ 29 StVZO)";
     }
     setErr(e);
     return Object.keys(e).length === 0;
@@ -48,14 +56,14 @@ export function TerminModal({ fahrzeuge, termine = [], initial = {}, onSave, onC
     // Werkstatt-Realitaet ist es meistens ein Tippfehler des Empfangs.
     const duplicate = termine.find((t) =>
       t.fahrzeugId === form.fahrzeugId &&
-      t.datum === form.datum &&
-      t.art === form.art &&
-      t.id !== initial.id,
+      toIsoDateStr(t.datum) === form.datum &&
+      t.prueftCode === form.prueftCode &&
+      t.terminId !== initial.terminId,
     );
     if (duplicate) {
       setDupWarn(
         `${selFz?.kennzeichen || "Dieses Fahrzeug"} hat am ${fmtDate(form.datum)} ` +
-        `bereits eine Prüfung der Art "${selArt?.label || form.art}" um ${duplicate.uhrzeit}. ` +
+        `bereits eine Prüfung der Art "${selArt?.label || form.prueftCode}" um ${toTimeStr(duplicate.uhrzeit)}. ` +
         `Trotzdem zusätzlich anlegen?`,
       );
       return;
@@ -69,7 +77,7 @@ export function TerminModal({ fahrzeuge, termine = [], initial = {}, onSave, onC
         <Fld label="Fahrzeug *" error={err.fahrzeugId}>
           <Sel value={form.fahrzeugId} onChange={f("fahrzeugId")}>
             <option value="">— Fahrzeug wählen —</option>
-            {fahrzeuge.map(fz => <option key={fz.id} value={fz.id}>{fz.kennzeichen} · {fz.hersteller} {fz.modell} ({fz.besitzer})</option>)}
+            {fahrzeuge.map(fz => <option key={fz.fahrzeugId} value={fz.fahrzeugId}>{fz.kennzeichen} · {fz.hersteller} {fz.modell} ({halterName(fz)})</option>)}
           </Sel>
         </Fld>
         {selFz && (
@@ -80,8 +88,8 @@ export function TerminModal({ fahrzeuge, termine = [], initial = {}, onSave, onC
             <span style={{ fontFamily: C.mono, fontWeight: 700, color: C.blueL, fontSize: 13 }}>{selFz.kennzeichen}</span>
             <span style={{ color: C.t3, fontSize: 12 }}>{FAHRZEUG_TYPEN.find(t => t.id === selFz.typ)?.icon} {selFz.typ}</span>
             <span style={{ color: C.t3, fontSize: 12 }}>{selFz.baujahr || "—"}</span>
-            <span style={{ color: C.t3, fontSize: 12 }}>{selFz.kmStand?.toLocaleString("de-DE")} km</span>
-            {selFz.hu_faellig && <span style={{ color: new Date(selFz.hu_faellig) < new Date() ? C.redL : C.t3, fontSize: 12 }}>HU: {fmtDate(selFz.hu_faellig)}</span>}
+            <span style={{ color: C.t3, fontSize: 12 }}>{selFz.kilometerstand?.toLocaleString("de-DE")} km</span>
+            {selFz.huFaellig && <span style={{ color: new Date(selFz.huFaellig) < new Date() ? C.redL : C.t3, fontSize: 12 }}>HU: {fmtDate(selFz.huFaellig)}</span>}
           </div>
         )}
         <div className="grid-resp-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
@@ -94,17 +102,17 @@ export function TerminModal({ fahrzeuge, termine = [], initial = {}, onSave, onC
             </Sel>
           </Fld>
           <Fld label="Art der Prüfung">
-            <Sel value={form.art} onChange={f("art")}>
+            <Sel value={form.prueftCode} onChange={f("prueftCode")}>
               {PRUEFUNG_ARTEN.map(a => <option key={a.id} value={a.id}>{a.label}</option>)}
             </Sel>
           </Fld>
           <Fld label="Prüfer / Sachverständiger">
-            <Sel value={form.pruefer} onChange={f("pruefer")}>
+            <Sel value={form.prueferKuerzel} onChange={f("prueferKuerzel")}>
               {PRUEFER.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
             </Sel>
           </Fld>
-          <Fld label="Status" error={bestanden_gesperrt && form.status === STATUS.BESTANDEN ? "Bestanden nicht möglich — Hauptmangel vorhanden" : undefined}>
-            <Sel value={form.status} onChange={f("status")}>
+          <Fld label="Status" error={bestanden_gesperrt && form.statusCode === STATUS.BESTANDEN ? "Bestanden nicht möglich — Hauptmangel vorhanden" : undefined}>
+            <Sel value={form.statusCode} onChange={f("statusCode")}>
               {Object.values(STATUS).map(s => {
                 const disabled = s === STATUS.BESTANDEN && bestanden_gesperrt;
                 return <option key={s} disabled={disabled}>{s}{disabled ? " (gesperrt: Hauptmangel)" : ""}</option>;
@@ -156,6 +164,7 @@ export function TerminModal({ fahrzeuge, termine = [], initial = {}, onSave, onC
 
 TerminModal.propTypes = {
   fahrzeuge: PropTypes.arrayOf(FahrzeugShape).isRequired,
+  halter: PropTypes.arrayOf(HalterShape),
   termine: PropTypes.arrayOf(TerminShape),
   initial: PropTypes.object,
   onSave: PropTypes.func.isRequired,

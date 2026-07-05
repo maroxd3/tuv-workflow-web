@@ -7,7 +7,7 @@ import {
 import { C } from "../styles/theme";
 import { STATUS } from "../constants/status";
 import { PRUEFUNG_ARTEN, PRUEFER } from "../constants/pruefung";
-import { fmtDate } from "../utils/date";
+import { fmtDate, toIsoDateStr, toTimeStr } from "../utils/date";
 import { hatHauptmangel } from "../utils/mangel";
 import { buildBerichtHtml, buildBerichtText } from "../features/bericht/reportHtml";
 import { StatusPill } from "../components/ui/StatusPill";
@@ -18,10 +18,11 @@ import { Inp } from "../components/ui/inputs";
 import { BtnG, BtnP } from "../components/ui/buttons";
 import { Modal } from "../components/modal/Modal";
 import { ConfirmModal } from "../components/modal/ConfirmModal";
-import { FahrzeugShape, TerminShape } from "../types/propTypes";
+import { FahrzeugShape, HalterShape, TerminShape } from "../types/propTypes";
 
-export function BerichteView({ termine, fahrzeuge }) {
-  const fzMap = useMemo(() => Object.fromEntries(fahrzeuge.map(f => [f.id, f])), [fahrzeuge]);
+export function BerichteView({ termine, fahrzeuge, halter }) {
+  const fzMap = useMemo(() => Object.fromEntries(fahrzeuge.map(f => [f.fahrzeugId, f])), [fahrzeuge]);
+  const halterMap = useMemo(() => Object.fromEntries(halter.map(h => [h.halterId, h])), [halter]);
   const [filter, setFilter] = useState("all");
   const [q, setQ] = useState("");
   const [sortDir, setSortDir] = useState("desc");
@@ -30,19 +31,22 @@ export function BerichteView({ termine, fahrzeuge }) {
 
   const filtered = useMemo(() =>
     termine.filter(t => {
-      if (filter === "bestanden" && t.status !== STATUS.BESTANDEN) return false;
-      if (filter === "failed" && t.status !== STATUS.NICHT_BESTANDEN) return false;
-      if (filter === "nachp" && t.status !== STATUS.NACHPRUEFUNG) return false;
-      if (filter === "maengel" && (!t.mängel || t.mängel.length === 0)) return false;
-      if (filter === "hm" && !hatHauptmangel(t.mängel)) return false;
-      if (q) { const ql = q.toLowerCase(); const fz = fzMap[t.fahrzeugId]; return (fz?.kennzeichen || "").toLowerCase().includes(ql) || (fz?.besitzer || "").toLowerCase().includes(ql) || (t.art || "").toLowerCase().includes(ql); }
+      if (filter === "bestanden" && t.statusCode !== STATUS.BESTANDEN) return false;
+      if (filter === "failed" && t.statusCode !== STATUS.NICHT_BESTANDEN) return false;
+      if (filter === "nachp" && t.statusCode !== STATUS.NACHPRUEFUNG) return false;
+      if (filter === "maengel" && (!t.maengel || t.maengel.length === 0)) return false;
+      if (filter === "hm" && !hatHauptmangel(t.maengel)) return false;
+      if (q) { const ql = q.toLowerCase(); const fz = fzMap[t.fahrzeugId]; const h = fz ? halterMap[fz.halterId] : null; return (fz?.kennzeichen || "").toLowerCase().includes(ql) || (h?.name || "").toLowerCase().includes(ql) || (t.prueftCode || "").toLowerCase().includes(ql); }
       return true;
-    }).sort((a, b) => sortDir === "desc" ? b.datum.localeCompare(a.datum) : a.datum.localeCompare(b.datum)),
-    [termine, filter, q, sortDir, fzMap]
+    }).sort((a, b) => sortDir === "desc"
+      ? toIsoDateStr(b.datum).localeCompare(toIsoDateStr(a.datum))
+      : toIsoDateStr(a.datum).localeCompare(toIsoDateStr(b.datum))),
+    [termine, filter, q, sortDir, fzMap, halterMap]
   );
 
   function exportPdf(t) {
-    const html = buildBerichtHtml(t, fzMap[t.fahrzeugId]);
+    const fz = fzMap[t.fahrzeugId];
+    const html = buildBerichtHtml(t, fz, fz ? halterMap[fz.halterId] : null);
     const w = window.open("", "_blank", "width=900,height=1200");
     if (!w) {
       setPopupBlocked(true);
@@ -91,25 +95,26 @@ export function BerichteView({ termine, fahrzeuge }) {
       <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
         {filtered.map(t => {
           const fz = fzMap[t.fahrzeugId];
-          const hasHm = hatHauptmangel(t.mängel);
-          const art = PRUEFUNG_ARTEN.find(a => a.id === t.art);
-          const pr = PRUEFER.find(p => p.id === t.pruefer);
+          const h = fz ? halterMap[fz.halterId] : null;
+          const hasHm = hatHauptmangel(t.maengel);
+          const art = PRUEFUNG_ARTEN.find(a => a.id === t.prueftCode);
+          const pr = PRUEFER.find(p => p.id === t.prueferKuerzel);
           return (
-            <div key={t.id} className="fz-card" style={{ background: C.surface, border: `1px solid ${C.line}`, borderRadius: 12, padding: "14px 18px", display: "flex", alignItems: "center", gap: 14, boxShadow: "0 2px 6px rgba(15,23,42,0.05)", flexWrap: "wrap" }}>
+            <div key={t.terminId} className="fz-card" style={{ background: C.surface, border: `1px solid ${C.line}`, borderRadius: 12, padding: "14px 18px", display: "flex", alignItems: "center", gap: 14, boxShadow: "0 2px 6px rgba(15,23,42,0.05)", flexWrap: "wrap" }}>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 4 }}>
                   <span style={{ fontSize: 14, fontWeight: 700, color: C.t1, fontFamily: C.mono, letterSpacing: "0.05em" }}>{fz?.kennzeichen || "—"}</span>
                   <span style={{ fontSize: 12, color: C.t3 }}>{fz?.hersteller} {fz?.modell}</span>
-                  <StatusPill status={t.status} />
+                  <StatusPill status={t.statusCode} />
                   {hasHm && <HauptmangelBadge />}
                 </div>
                 <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-                  <span style={{ fontSize: 11, color: C.t4, fontFamily: C.mono }}>{fmtDate(t.datum)} · {t.uhrzeit}</span>
-                  <span style={{ fontSize: 11, color: C.t4 }}>{art?.label || t.art}</span>
-                  <span style={{ fontSize: 11, color: C.t4 }}>{pr?.name || t.pruefer}</span>
-                  <span style={{ fontSize: 11, color: C.t4 }}>{fz?.besitzer}</span>
+                  <span style={{ fontSize: 11, color: C.t4, fontFamily: C.mono }}>{fmtDate(t.datum)} · {toTimeStr(t.uhrzeit)}</span>
+                  <span style={{ fontSize: 11, color: C.t4 }}>{art?.label || t.prueftCode}</span>
+                  <span style={{ fontSize: 11, color: C.t4 }}>{pr?.name || t.prueferKuerzel}</span>
+                  <span style={{ fontSize: 11, color: C.t4 }}>{h?.name}</span>
                 </div>
-                {t.mängel?.length > 0 && <div style={{ marginTop: 5, display: "flex", gap: 3, flexWrap: "wrap" }}>{t.mängel.map(m => <MangelPill key={m.id} kat={m.kat} />)}</div>}
+                {t.maengel?.length > 0 && <div style={{ marginTop: 5, display: "flex", gap: 3, flexWrap: "wrap" }}>{t.maengel.map(m => <MangelPill key={m.mangelId} kat={m.kategorieCode} />)}</div>}
               </div>
               <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
                 <button onClick={() => setPreview(t)}
@@ -132,7 +137,7 @@ export function BerichteView({ termine, fahrzeuge }) {
         {preview && (
           <Modal title={`Bericht: ${fzMap[preview.fahrzeugId]?.kennzeichen || ""}`} onClose={() => setPreview(null)} width={720}>
             <pre style={{ background: C.bg, border: `1px solid ${C.line}`, borderRadius: 8, padding: 16, fontSize: 11, color: C.t2, fontFamily: C.mono, overflowX: "auto", whiteSpace: "pre-wrap", maxHeight: 500, overflowY: "auto", lineHeight: 1.6 }}>
-              {buildBerichtText(preview, fzMap[preview.fahrzeugId])}
+              {buildBerichtText(preview, fzMap[preview.fahrzeugId], halterMap[fzMap[preview.fahrzeugId]?.halterId])}
             </pre>
             <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 16, paddingTop: 12, borderTop: `1px solid ${C.line}` }}>
               <BtnG onClick={() => setPreview(null)}>Schließen</BtnG>
@@ -161,4 +166,5 @@ export function BerichteView({ termine, fahrzeuge }) {
 BerichteView.propTypes = {
   termine: PropTypes.arrayOf(TerminShape).isRequired,
   fahrzeuge: PropTypes.arrayOf(FahrzeugShape).isRequired,
+  halter: PropTypes.arrayOf(HalterShape).isRequired,
 };

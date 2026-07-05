@@ -22,12 +22,20 @@ import type {
   Mangel,
 } from "../db/types";
 
+// Halter-Kontaktdaten wie das Fahrzeug-Formular sie liefert —
+// Grundlage fuer den Halter-Dedupe in addFahrzeugMitHalter.
+export interface HalterKontakt {
+  name: string;
+  telefon?: string | null;
+  email?: string | null;
+}
+
 export interface UseDbResult {
   ready: boolean;
   error: string | null;
   halter: Halter[];
   fahrzeuge: Fahrzeug[];
-  termine: (Termin & { mängel: Mangel[] })[];
+  termine: (Termin & { maengel: Mangel[] })[];
   refresh: () => Promise<void>;
   // Halter
   addHalter: (h: NeuerHalter) => Promise<Halter>;
@@ -35,6 +43,10 @@ export interface UseDbResult {
   delHalter: (id: string) => Promise<void>;
   // Fahrzeug
   addFahrzeug: (f: NeuesFahrzeug) => Promise<Fahrzeug>;
+  addFahrzeugMitHalter: (
+    f: Omit<NeuesFahrzeug, "halterId">,
+    halterDaten: HalterKontakt,
+  ) => Promise<Fahrzeug>;
   updFahrzeug: (id: string, p: Partial<NeuesFahrzeug>) => Promise<Fahrzeug | null>;
   delFahrzeug: (id: string) => Promise<void>;
   // Termin
@@ -84,7 +96,7 @@ export function useDb(): UseDbResult {
       ]);
       setHalterList(h);
       setFahrzeuge(f);
-      setTermine(tWith.map((tr) => ({ ...tr, mängel: tr.maengel })));
+      setTermine(tWith);
       setError(null);
       setReady(true);
     } catch (e) {
@@ -241,6 +253,45 @@ export function useDb(): UseDbResult {
     }
   }, [refresh]);
 
+  // ── Fahrzeug + Halter in einem Schritt (mit Halter-Dedupe) ──────────
+  // Das Fahrzeug-Formular erfasst Halter-Kontaktdaten mit. Existiert ein
+  // Halter mit diesem Namen bereits (case-insensitive, getrimmt), wird er
+  // wiederverwendet statt dupliziert; abweichende Kontaktdaten werden
+  // still beim bestehenden Halter ergaenzt. Heuristik: gleicher Name —
+  // fuer Produktiv waere ein explizites Halter-Auswahl-Modal sauberer.
+  const addFahrzeugMitHalter = useCallback(
+    async (f: Omit<NeuesFahrzeug, "halterId">, halterDaten: HalterKontakt) => {
+      const name = (halterDaten.name ?? "").trim();
+      let halterId: string;
+
+      const existing = halterList.find(
+        (h) => h.name.trim().toLowerCase() === name.toLowerCase(),
+      );
+      if (existing) {
+        halterId = existing.halterId;
+        if (
+          (halterDaten.telefon && halterDaten.telefon !== existing.telefon) ||
+          (halterDaten.email && halterDaten.email !== existing.email)
+        ) {
+          await updHalter(existing.halterId, {
+            telefon: halterDaten.telefon || existing.telefon,
+            email: halterDaten.email || existing.email,
+          });
+        }
+      } else {
+        const h = await addHalter({
+          name: name || "(unbekannt)",
+          telefon: halterDaten.telefon || null,
+          email: halterDaten.email || null,
+        });
+        halterId = h.halterId;
+      }
+
+      return addFahrzeug({ ...f, halterId });
+    },
+    [halterList, addHalter, updHalter, addFahrzeug],
+  );
+
   const updFahrzeug = useCallback(async (id: string, p: Partial<NeuesFahrzeug>) => {
     let previous: Fahrzeug[] | null = null;
     setFahrzeuge((current) => {
@@ -299,7 +350,7 @@ export function useDb(): UseDbResult {
       statusCode: t.statusCode ?? "Geplant",
       notiz: t.notiz ?? null,
       erfasstAm: new Date(),
-      mängel: [],
+      maengel: [],
     } as UseDbResult["termine"][number];
 
     setTermine((current) => [optimisticTermin, ...current]);
@@ -308,7 +359,7 @@ export function useDb(): UseDbResult {
       const r = await tracked(() => api.addTermin({ ...t, terminId: optimisticTermin.terminId }));
       setTermine((current) =>
         current.map((tr) =>
-          tr.terminId === optimisticTermin.terminId ? { ...r, mängel: [] } : tr,
+          tr.terminId === optimisticTermin.terminId ? { ...r, maengel: [] } : tr,
         ),
       );
       return r;
@@ -408,7 +459,7 @@ export function useDb(): UseDbResult {
       previous = current;
       return current.map((tr) =>
         tr.terminId === optimisticMangel.terminId
-          ? { ...tr, mängel: [...tr.mängel, optimisticMangel] }
+          ? { ...tr, maengel: [...tr.maengel, optimisticMangel] }
           : tr,
       );
     });
@@ -421,7 +472,7 @@ export function useDb(): UseDbResult {
           return {
             ...tr,
             statusCode: r.terminDemoted ? "Nicht bestanden" : tr.statusCode,
-            mängel: tr.mängel.map((item) =>
+            maengel: tr.maengel.map((item) =>
               item.mangelId === optimisticMangel.mangelId ? r.mangel : item,
             ),
           };
@@ -441,7 +492,7 @@ export function useDb(): UseDbResult {
       previous = current;
       return current.map((tr) => ({
         ...tr,
-        mängel: tr.mängel.filter((m) => m.mangelId !== id),
+        maengel: tr.maengel.filter((m) => m.mangelId !== id),
       }));
     });
 
@@ -462,7 +513,7 @@ export function useDb(): UseDbResult {
     termine,
     refresh,
     addHalter, updHalter, delHalter,
-    addFahrzeug, updFahrzeug, delFahrzeug,
+    addFahrzeug, addFahrzeugMitHalter, updFahrzeug, delFahrzeug,
     addTermin, updTermin, delTermin, updTerminStatus,
     addMangel, delMangel,
     resetAllData, loadDemoData,

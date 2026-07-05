@@ -20,14 +20,14 @@ export function MaengelModal({ termin, fahrzeug, onAdd, onDel, onStatus, onClose
   const [gruppeOpen, setGruppeOpen] = useState({});
 
   // Bereits erfasste Katalog-Codes (fuer den "schon hinzugefuegt"-Haken).
-  // "FR" ausschliessen: ALLE Freitext-Maengel kommen mit code "FR" zurueck —
+  // codeStvzo === null ausschliessen: das sind Freitext-Maengel ("FR") —
   // sie duerfen weder untereinander noch gegen Katalog-Eintraege dedupen.
   const addedCodes = useMemo(
-    () => new Set((termin.mängel ?? []).map(m => m.code).filter(c => c !== "FR")),
-    [termin.mängel],
+    () => new Set((termin.maengel ?? []).map(m => m.codeStvzo).filter(c => c !== null)),
+    [termin.maengel],
   );
-  const hasHM = hatHauptmangel(termin.mängel);
-  const mCount = termin.mängel?.length || 0;
+  const hasHM = hatHauptmangel(termin.maengel);
+  const mCount = termin.maengel?.length || 0;
 
   const groups = useMemo(() => {
     const q = search.toLowerCase();
@@ -41,16 +41,31 @@ export function MaengelModal({ termin, fahrzeug, onAdd, onDel, onStatus, onClose
 
   function addVorlage(v) {
     if (addedCodes.has(v.code)) return;
-    onAdd(termin.id, { code: v.code, text: v.text, kat: v.kat, behoben: false });
+    onAdd({
+      terminId: termin.terminId,
+      codeStvzo: v.code,
+      beschreibung: v.text,
+      kategorieCode: v.kat,
+      behoben: false,
+    });
   }
 
   function addCustom() {
     if (!custom.text.trim()) return;
-    onAdd(termin.id, { code: custom.code || "FR", text: custom.text, kat: custom.kat, behoben: false });
+    // Freitext-Mangel: kein StVZO-Code → codeStvzo null ("FR" ist nur
+    // die Anzeige-Konvention, kein echter Katalog-Code).
+    const code = custom.code.trim();
+    onAdd({
+      terminId: termin.terminId,
+      codeStvzo: code && code !== "FR" ? code : null,
+      beschreibung: custom.text,
+      kategorieCode: custom.kat,
+      behoben: false,
+    });
     setCustom({ code: "", text: "", kat: "EM" });
   }
 
-  const art = PRUEFUNG_ARTEN.find(a => a.id === termin.art);
+  const art = PRUEFUNG_ARTEN.find(a => a.id === termin.prueftCode);
 
   return (
     <Modal title="Mängelerfassung" sub={`${fahrzeug?.kennzeichen || ""} · ${fahrzeug?.hersteller || ""} ${fahrzeug?.modell || ""} · ${art?.label || ""}`} onClose={onClose} width={860}>
@@ -69,17 +84,17 @@ export function MaengelModal({ termin, fahrzeug, onAdd, onDel, onStatus, onClose
             </div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 4, maxHeight: 280, overflowY: "auto" }}>
-              {termin.mängel?.map(m => {
-                const mc = MANGEL_KATEGORIEN[m.kat];
+              {termin.maengel?.map(m => {
+                const mc = MANGEL_KATEGORIEN[m.kategorieCode];
                 return (
-                  <div key={m.id}
+                  <div key={m.mangelId}
                     style={{ display: "flex", alignItems: "flex-start", gap: 8, background: C.surfaceHigh, border: `1px solid ${mc?.border || C.line}`, borderRadius: 8, padding: "8px 10px" }}>
-                    <MangelPill kat={m.kat} />
+                    <MangelPill kat={m.kategorieCode} />
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 10, fontFamily: C.mono, color: C.t4 }}>{m.code}</div>
-                      <div style={{ fontSize: 12, color: C.t2, lineHeight: 1.4 }}>{m.text}</div>
+                      <div style={{ fontSize: 10, fontFamily: C.mono, color: C.t4 }}>{m.codeStvzo ?? "FR"}</div>
+                      <div style={{ fontSize: 12, color: C.t2, lineHeight: 1.4 }}>{m.beschreibung}</div>
                     </div>
-                    <button onClick={() => onDel(termin.id, m.id)}
+                    <button onClick={() => onDel(m.mangelId)}
                       aria-label="Mangel entfernen" title="Mangel entfernen"
                       style={{ background: "none", border: "none", cursor: "pointer", color: C.t4, flexShrink: 0, padding: 2 }}>
                       <X size={12} />
@@ -103,7 +118,7 @@ export function MaengelModal({ termin, fahrzeug, onAdd, onDel, onStatus, onClose
               </div>
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                 {Object.entries(MANGEL_KATEGORIEN).filter(([k]) => k !== "OM").map(([k, v]) => {
-                  const cnt = termin.mängel?.filter(m => m.kat === k).length || 0;
+                  const cnt = termin.maengel?.filter(m => m.kategorieCode === k).length || 0;
                   if (!cnt) return null;
                   return <span key={k} style={{ fontFamily: C.mono, fontSize: 10, color: v.color }}>{cnt}×{v.kurz}</span>;
                 })}
@@ -116,10 +131,10 @@ export function MaengelModal({ termin, fahrzeug, onAdd, onDel, onStatus, onClose
             <div style={{ fontSize: 10, fontWeight: 700, color: C.t4, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8 }}>Prüfergebnis setzen</div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
               {[STATUS.BESTANDEN, STATUS.NICHT_BESTANDEN, STATUS.IN_PRUEFUNG, STATUS.NACHPRUEFUNG, STATUS.ABGEBROCHEN, STATUS.NICHT_ERSCHIENEN].map(s => {
-                const sc = STATUS_CFG[s]; const act = termin.status === s;
+                const sc = STATUS_CFG[s]; const act = termin.statusCode === s;
                 const blocked = s === STATUS.BESTANDEN && hasHM;
                 return (
-                  <button key={s} onClick={() => { if (!blocked) onStatus(termin.id, s); }}
+                  <button key={s} onClick={() => { if (!blocked) onStatus(termin.terminId, s); }}
                     disabled={blocked}
                     title={blocked ? "Bestanden nicht möglich — Hauptmangel vorhanden (§ 29 StVZO)" : undefined}
                     style={{

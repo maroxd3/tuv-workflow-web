@@ -74,8 +74,8 @@ describe("validateKennzeichen", () => {
 
 describe("validateKennzeichenUnique", () => {
   const fahrzeuge = [
-    { id: "a", kennzeichen: "B-TK 1234" },
-    { id: "b", kennzeichen: "HH-AB 5678" },
+    { fahrzeugId: "a", kennzeichen: "B-TK 1234" },
+    { fahrzeugId: "b", kennzeichen: "HH-AB 5678" },
   ];
 
   it("erlaubt neues, nicht vergebenes Kennzeichen", () => {
@@ -100,9 +100,9 @@ describe("validateKennzeichenUnique", () => {
 
 describe("validateFinUnique", () => {
   const fahrzeuge = [
-    { id: "a", fin: "WBA3A5C50CF256985" },
-    { id: "b", fin: "WVWZZZ1KZ5W315264" },
-    { id: "c", fin: "" }, // Fahrzeug ohne FIN — soll nicht matchen
+    { fahrzeugId: "a", fin: "WBA3A5C50CF256985" },
+    { fahrzeugId: "b", fin: "WVWZZZ1KZ5W315264" },
+    { fahrzeugId: "c", fin: "" }, // Fahrzeug ohne FIN — soll nicht matchen
   ];
 
   it("erlaubt neue FIN", () => {
@@ -318,7 +318,7 @@ describe("validateFahrzeug — Integration aller Einzel-Validatoren", () => {
     kennzeichen: "B-TK 1234",
     hersteller: "BMW",
     modell: "320d",
-    besitzer: "Klaus Müller",
+    halterName: "Klaus Müller",
     typ: "PKW",
   };
 
@@ -331,20 +331,20 @@ describe("validateFahrzeug — Integration aller Einzel-Validatoren", () => {
     expect(e.kennzeichen).toBeDefined();
     expect(e.hersteller).toBeDefined();
     expect(e.modell).toBeDefined();
-    expect(e.besitzer).toBeDefined();
+    expect(e.halterName).toBeDefined();
     expect(e.typ).toBeDefined();
   });
 
   it("erkennt Duplikat-Kennzeichen beim Neu-Anlegen", () => {
-    const existing = [{ id: "x", kennzeichen: "B-TK 1234" }];
+    const existing = [{ fahrzeugId: "x", kennzeichen: "B-TK 1234" }];
     const e = validateFahrzeug(base, existing);
     expect(e.kennzeichen).toMatch(/vergeben/);
   });
 
   it("erkennt Kombination negativer KM + Buchstaben in Telefon + falsche Email", () => {
-    const schlecht = { ...base, kmStand: "-5", telefon: "abc", email: "kein@email" };
+    const schlecht = { ...base, kilometerstand: "-5", telefon: "abc", email: "kein@email" };
     const e = validateFahrzeug(schlecht, []);
-    expect(e.kmStand).toBeDefined();
+    expect(e.kilometerstand).toBeDefined();
     expect(e.telefon).toBeDefined();
     expect(e.email).toBeDefined();
   });
@@ -356,33 +356,33 @@ describe("validateStatusWechsel — blockiert Bestanden bei blockierenden Mänge
   });
 
   it("erlaubt Bestanden bei nur geringen Mängeln (GM)", () => {
-    expect(validateStatusWechsel(STATUS.BESTANDEN, [{ kat: "OM" }])).toBeNull();
-    expect(validateStatusWechsel(STATUS.BESTANDEN, [{ kat: "GM" }])).toBeNull();
+    expect(validateStatusWechsel(STATUS.BESTANDEN, [{ kategorieCode: "OM" }])).toBeNull();
+    expect(validateStatusWechsel(STATUS.BESTANDEN, [{ kategorieCode: "GM" }])).toBeNull();
   });
 
   it("blockiert Bestanden bei erheblichem Mangel (EM)", () => {
-    expect(validateStatusWechsel(STATUS.BESTANDEN, [{ kat: "EM" }]))
+    expect(validateStatusWechsel(STATUS.BESTANDEN, [{ kategorieCode: "EM" }]))
       .toMatch(/erheblicher|gefährlicher/);
   });
 
   it("blockiert Bestanden bei gefährlichem Mangel (GfM)", () => {
-    expect(validateStatusWechsel(STATUS.BESTANDEN, [{ kat: "GfM" }]))
+    expect(validateStatusWechsel(STATUS.BESTANDEN, [{ kategorieCode: "GfM" }]))
       .toMatch(/gefährlicher/);
   });
 
   it("blockiert auch bei gemischten Mängeln (ein EM oder GfM reicht)", () => {
-    const maengel = [{ kat: "OM" }, { kat: "GM" }, { kat: "EM" }];
+    const maengel = [{ kategorieCode: "OM" }, { kategorieCode: "GM" }, { kategorieCode: "EM" }];
     expect(validateStatusWechsel(STATUS.BESTANDEN, maengel)).not.toBeNull();
   });
 
   it("ignoriert behoben=true Mängel", () => {
-    expect(validateStatusWechsel(STATUS.BESTANDEN, [{ kat: "EM", behoben: true }])).toBeNull();
-    expect(validateStatusWechsel(STATUS.BESTANDEN, [{ kat: "GfM", behoben: true }])).toBeNull();
+    expect(validateStatusWechsel(STATUS.BESTANDEN, [{ kategorieCode: "EM", behoben: true }])).toBeNull();
+    expect(validateStatusWechsel(STATUS.BESTANDEN, [{ kategorieCode: "GfM", behoben: true }])).toBeNull();
   });
 
   it("greift nicht bei anderen Zielstatus", () => {
-    expect(validateStatusWechsel(STATUS.NICHT_BESTANDEN, [{ kat: "EM" }])).toBeNull();
-    expect(validateStatusWechsel(STATUS.NACHPRUEFUNG, [{ kat: "EM" }])).toBeNull();
+    expect(validateStatusWechsel(STATUS.NICHT_BESTANDEN, [{ kategorieCode: "EM" }])).toBeNull();
+    expect(validateStatusWechsel(STATUS.NACHPRUEFUNG, [{ kategorieCode: "EM" }])).toBeNull();
     expect(validateStatusWechsel(STATUS.GEPLANT, [])).toBeNull();
   });
 });
@@ -419,7 +419,7 @@ describe("validateHerstellerModellKonsistenz — harte Konsistenzprüfung", () =
       kennzeichen: "B-XX 1234",
       hersteller: "BMW",
       modell: "Polo",
-      besitzer: "Test",
+      halterName: "Test",
       typ: "PKW",
     }, []);
     expect(errs.modell).toMatch(/Polo/);
@@ -430,7 +430,7 @@ describe("validateHerstellerModellKonsistenz — harte Konsistenzprüfung", () =
       kennzeichen: "B-XX 1234",
       hersteller: "Volkswagen",
       modell: "Golf",
-      besitzer: "Test",
+      halterName: "Test",
       typ: "Motorrad",
     }, []);
     expect(errs.typ).toMatch(/Motorrad/);
@@ -441,7 +441,7 @@ describe("validateHerstellerModellKonsistenz — harte Konsistenzprüfung", () =
       kennzeichen: "B-XX 1234",
       hersteller: "BMW",
       modell: "",
-      besitzer: "Test",
+      halterName: "Test",
       typ: "PKW",
     }, []);
     expect(errs.modell).toBe("Pflichtfeld");

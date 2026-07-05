@@ -18,6 +18,29 @@ export const addDays = (ds, n) => {
   return isoDate(d);
 };
 
+// ── DB-Wert-Normalisierung ─────────────────────────────────────────────
+// Die API/der mariadb-Treiber liefert date/time-Werte je nach Quelle als
+// String ODER Date-Objekt. Die Views vergleichen stets gegen
+// "yyyy-mm-dd"-Strings (datum) und "HH:MM"-Strings (uhrzeit) — diese
+// Helfer normalisieren einen DB-Wert genau dafür.
+
+// "2026-07-10T…" | Date → "2026-07-10" (LOKAL-Zeit, nicht UTC — sonst
+// springt das Datum um Mitternacht eine Zeitzone in den Vortag und
+// matchet z. B. TagesplanView's isoDate()-Filter nicht mehr).
+export const toIsoDateStr = (d) => {
+  if (typeof d === "string") return d.slice(0, 10);
+  if (d instanceof Date) return isoDate(d);
+  return "";
+};
+
+// "08:30:00" | Date → "08:30"; leere Werte → null
+export const toTimeStr = (u) => {
+  if (u === null || u === undefined || u === "") return null;
+  if (typeof u === "string") return u.slice(0, 5);
+  if (u instanceof Date) return `${pad(u.getHours())}:${pad(u.getMinutes())}`;
+  return null;
+};
+
 export const fmtDate = iso => {
   if (!iso) return "—";
   const d = new Date(iso);

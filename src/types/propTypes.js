@@ -1,15 +1,36 @@
 import PropTypes from "prop-types";
 
+/**
+ * PropTypes-Shapes in DB-Form (siehe src/db/types.ts).
+ *
+ * datum/uhrzeit/erfasstAm koennen je nach API-Quelle als String ODER
+ * Date-Objekt ankommen — Views normalisieren mit toIsoDateStr/toTimeStr
+ * aus src/utils/date.js.
+ */
+
+const dateOrString = PropTypes.oneOfType([PropTypes.string, PropTypes.instanceOf(Date)]);
+
+export const HalterShape = PropTypes.shape({
+  halterId: PropTypes.string.isRequired,
+  name: PropTypes.string.isRequired,
+  telefon: PropTypes.string,
+  email: PropTypes.string,
+  anschrift: PropTypes.string,
+  erfasstAm: dateOrString,
+});
+
 export const MangelShape = PropTypes.shape({
-  id: PropTypes.string.isRequired,
-  code: PropTypes.string.isRequired,
-  text: PropTypes.string.isRequired,
-  kat: PropTypes.oneOf(["OM", "GM", "EM", "GfM"]).isRequired,
+  mangelId: PropTypes.string.isRequired,
+  terminId: PropTypes.string,
+  codeStvzo: PropTypes.string, // null = Freitext-Mangel ("FR")
+  beschreibung: PropTypes.string.isRequired,
+  kategorieCode: PropTypes.oneOf(["OM", "GM", "EM", "GfM"]).isRequired,
   behoben: PropTypes.bool,
+  erfasstAm: dateOrString,
 });
 
 export const FahrzeugShape = PropTypes.shape({
-  id: PropTypes.string.isRequired,
+  fahrzeugId: PropTypes.string.isRequired,
   kennzeichen: PropTypes.string.isRequired,
   fin: PropTypes.string,
   hersteller: PropTypes.string,
@@ -17,23 +38,21 @@ export const FahrzeugShape = PropTypes.shape({
   baujahr: PropTypes.number,
   farbe: PropTypes.string,
   typ: PropTypes.string,
-  kmStand: PropTypes.number,
-  besitzer: PropTypes.string,
-  telefon: PropTypes.string,
-  email: PropTypes.string,
-  createdAt: PropTypes.string,
-  hu_faellig: PropTypes.string,
+  kilometerstand: PropTypes.number,
+  huFaellig: dateOrString,
+  halterId: PropTypes.string.isRequired,
+  erfasstAm: dateOrString,
 });
 
 export const TerminShape = PropTypes.shape({
-  id: PropTypes.string.isRequired,
+  terminId: PropTypes.string.isRequired,
   fahrzeugId: PropTypes.string.isRequired,
-  datum: PropTypes.string.isRequired,
-  uhrzeit: PropTypes.string,
-  art: PropTypes.string,
-  pruefer: PropTypes.string,
-  status: PropTypes.string.isRequired,
+  datum: dateOrString.isRequired,
+  uhrzeit: dateOrString,
+  prueftCode: PropTypes.string,
+  prueferKuerzel: PropTypes.string,
+  statusCode: PropTypes.string.isRequired,
   notiz: PropTypes.string,
-  mängel: PropTypes.arrayOf(MangelShape),
-  createdAt: PropTypes.string,
+  maengel: PropTypes.arrayOf(MangelShape),
+  erfasstAm: dateOrString,
 });

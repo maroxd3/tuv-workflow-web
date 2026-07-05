@@ -14,17 +14,25 @@ import { validateFahrzeug, checkFinPruefziffer } from "../../utils/validators";
 const SONSTIGER = "__SONSTIGER__";
 
 export function FahrzeugModal({ initial = {}, fahrzeuge = [], onSave, onClose }) {
+  // Feldnamen in DB-Form (kilometerstand, huFaellig; Halter-Felder flach
+  // als halterName/telefon/email). Nullable DB-Werte → "" fuer die Inputs.
   const [form, setForm] = useState({
-    kennzeichen: "", fin: "", hersteller: "", modell: "",
-    farbe: "", typ: "PKW", besitzer: "", telefon: "", email: "",
-    hu_faellig: "",
-    ...initial,
+    kennzeichen: initial.kennzeichen ?? "",
+    fin: initial.fin ?? "",
+    hersteller: initial.hersteller ?? "",
+    modell: initial.modell ?? "",
+    farbe: initial.farbe ?? "",
+    typ: initial.typ ?? "PKW",
+    halterName: initial.halterName ?? "",
+    telefon: initial.telefon ?? "",
+    email: initial.email ?? "",
+    huFaellig: initial.huFaellig ?? "",
     baujahr: initial.baujahr ? String(initial.baujahr) : "",
-    kmStand: initial.kmStand ? String(initial.kmStand) : "",
+    kilometerstand: initial.kilometerstand ? String(initial.kilometerstand) : "",
   });
   const [err, setErr] = useState({});
   const f = k => e => setForm(p => ({ ...p, [k]: e.target.value }));
-  const isEdit = !!initial.id;
+  const isEdit = !!initial.fahrzeugId;
 
   const finWarnung = useMemo(() => checkFinPruefziffer(form.fin), [form.fin]);
 
@@ -66,7 +74,7 @@ export function FahrzeugModal({ initial = {}, fahrzeuge = [], onSave, onClose })
     : FAHRZEUG_TYPEN;
 
   function save() {
-    const e = validateFahrzeug(form, fahrzeuge, isEdit ? initial.id : null);
+    const e = validateFahrzeug(form, fahrzeuge, isEdit ? initial.fahrzeugId : null);
     setErr(e);
     if (Object.keys(e).length > 0) return;
     onSave({
@@ -74,13 +82,13 @@ export function FahrzeugModal({ initial = {}, fahrzeuge = [], onSave, onClose })
       kennzeichen: form.kennzeichen.trim().toUpperCase().replace(/\s+/g, " "),
       hersteller: form.hersteller.trim(),
       modell: form.modell.trim(),
-      besitzer: form.besitzer.trim(),
+      halterName: form.halterName.trim(),
       telefon: form.telefon.trim(),
       email: form.email.trim().toLowerCase(),
       fin: form.fin.trim().toUpperCase(),
       farbe: form.farbe.trim(),
       baujahr: form.baujahr ? +form.baujahr : null,
-      kmStand: form.kmStand ? +form.kmStand : null,
+      kilometerstand: form.kilometerstand ? +form.kilometerstand : null,
     });
   }
 
@@ -136,11 +144,11 @@ export function FahrzeugModal({ initial = {}, fahrzeuge = [], onSave, onClose })
         <Fld label="Farbe">
           <Inp value={form.farbe} onChange={f("farbe")} placeholder="Sophistograu Metallic" />
         </Fld>
-        <Fld label="Kilometerstand (km)" error={err.kmStand}>
-          <Inp value={form.kmStand} onChange={f("kmStand")} placeholder="87420" type="number" error={err.kmStand} />
+        <Fld label="Kilometerstand (km)" error={err.kilometerstand}>
+          <Inp value={form.kilometerstand} onChange={f("kilometerstand")} placeholder="87420" type="number" error={err.kilometerstand} />
         </Fld>
-        <Fld label="HU fällig (Datum)" error={err.hu_faellig}>
-          <Inp value={form.hu_faellig} onChange={f("hu_faellig")} type="date" error={err.hu_faellig} />
+        <Fld label="HU fällig (Datum)" error={err.huFaellig}>
+          <Inp value={form.huFaellig} onChange={f("huFaellig")} type="date" error={err.huFaellig} />
         </Fld>
         {finWarnung && (
           <div style={{
@@ -162,8 +170,8 @@ export function FahrzeugModal({ initial = {}, fahrzeuge = [], onSave, onClose })
             marginBottom: 14, display: "flex", alignItems: "center", gap: 6,
           }}><User size={11} />Fahrzeughalter</div>
           <div className="grid-resp-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-            <Fld label="Name / Firma *" error={err.besitzer}>
-              <Inp value={form.besitzer} onChange={f("besitzer")} placeholder="Klaus Müller" error={err.besitzer} />
+            <Fld label="Name / Firma *" error={err.halterName}>
+              <Inp value={form.halterName} onChange={f("halterName")} placeholder="Klaus Müller" error={err.halterName} />
             </Fld>
             <Fld label="Telefon" error={err.telefon}>
               <Inp value={form.telefon} onChange={f("telefon")} placeholder="0176 1234567" error={err.telefon} />

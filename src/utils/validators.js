@@ -48,7 +48,7 @@ export function validateKennzeichenUnique(raw, fahrzeuge = [], excludeId = null)
   const v = (raw || "").trim().toUpperCase().replace(/\s+/g, " ");
   if (!v) return null;
   const duplicate = fahrzeuge.some(f =>
-    f.id !== excludeId &&
+    f.fahrzeugId !== excludeId &&
     (f.kennzeichen || "").trim().toUpperCase().replace(/\s+/g, " ") === v
   );
   return duplicate ? "Kennzeichen bereits vergeben" : null;
@@ -71,7 +71,7 @@ export function validateFinUnique(raw, fahrzeuge = [], excludeId = null) {
   const v = (raw || "").trim().toUpperCase();
   if (!v) return null;
   const duplicate = fahrzeuge.some(f =>
-    f.id !== excludeId &&
+    f.fahrzeugId !== excludeId &&
     (f.fin || "").trim().toUpperCase() === v
   );
   return duplicate ? "FIN bereits an anderem Fahrzeug vergeben" : null;
@@ -154,7 +154,7 @@ export function validateFahrzeug(form, allFahrzeuge = [], editId = null) {
 
   if (!form.hersteller?.trim()) errors.hersteller = "Pflichtfeld";
   if (!form.modell?.trim()) errors.modell = "Pflichtfeld";
-  if (!form.besitzer?.trim()) errors.besitzer = "Pflichtfeld";
+  if (!form.halterName?.trim()) errors.halterName = "Pflichtfeld";
 
   const eTyp = validateFahrzeugtyp(form.typ);
   if (eTyp) errors.typ = eTyp;
@@ -169,8 +169,8 @@ export function validateFahrzeug(form, allFahrzeuge = [], editId = null) {
     if (eFinUnique) errors.fin = eFinUnique;
   }
 
-  const eKm = validateKmStand(form.kmStand);
-  if (eKm) errors.kmStand = eKm;
+  const eKm = validateKmStand(form.kilometerstand);
+  if (eKm) errors.kilometerstand = eKm;
 
   const eTel = validateTelefon(form.telefon);
   if (eTel) errors.telefon = eTel;
@@ -178,8 +178,8 @@ export function validateFahrzeug(form, allFahrzeuge = [], editId = null) {
   const eMail = validateEmail(form.email);
   if (eMail) errors.email = eMail;
 
-  const eHu = validateHuDatum(form.hu_faellig);
-  if (eHu) errors.hu_faellig = eHu;
+  const eHu = validateHuDatum(form.huFaellig);
+  if (eHu) errors.huFaellig = eHu;
 
   /* Hersteller-Modell-Typ-Konsistenz: nur prüfen, wenn die Pflichtfelder
      gesetzt sind — sonst überschreiben wir z. B. den "Pflichtfeld"-Fehler. */

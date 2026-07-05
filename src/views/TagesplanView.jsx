@@ -10,7 +10,7 @@ import { C } from "../styles/theme";
 import { STATUS, STATUS_CFG } from "../constants/status";
 import { TIME_SLOTS } from "../constants/fahrzeug";
 import { PRUEFUNG_ARTEN, PRUEFER } from "../constants/pruefung";
-import { isoDate, addDays, parseIsoLocal, fmtDate, fmtDateLong, dayName, dayShort } from "../utils/date";
+import { isoDate, addDays, parseIsoLocal, fmtDate, fmtDateLong, dayName, dayShort, toIsoDateStr, toTimeStr } from "../utils/date";
 import { hatHauptmangel } from "../utils/mangel";
 import { StatusPill } from "../components/ui/StatusPill";
 import { MangelPill } from "../components/ui/MangelPill";
@@ -21,7 +21,7 @@ import { IconBtn, BtnP } from "../components/ui/buttons";
 import { ConfirmModal } from "../components/modal/ConfirmModal";
 import { TerminModal } from "../features/termin/TerminModal";
 import { MaengelModal } from "../features/mangel/MaengelModal";
-import { FahrzeugShape, TerminShape } from "../types/propTypes";
+import { FahrzeugShape, HalterShape, TerminShape } from "../types/propTypes";
 
 function ContextMenu({ menu, onClose, onNewTr, onEdit, onDelete, onMaengel, onAdvance }) {
   const ref = useRef();
@@ -38,12 +38,12 @@ function ContextMenu({ menu, onClose, onNewTr, onEdit, onDelete, onMaengel, onAd
 
   const items = menu.termin
     ? [
-        menu.termin.status === STATUS.GEPLANT && { icon: <Play size={13} />, label: "Starten", color: C.blue, action: () => { onAdvance(menu.termin); onClose(); } },
-        menu.termin.status === STATUS.IN_PRUEFUNG && { icon: <CheckCheck size={13} />, label: "Abschließen", color: C.green, action: () => { onAdvance(menu.termin); onClose(); } },
+        menu.termin.statusCode === STATUS.GEPLANT && { icon: <Play size={13} />, label: "Starten", color: C.blue, action: () => { onAdvance(menu.termin); onClose(); } },
+        menu.termin.statusCode === STATUS.IN_PRUEFUNG && { icon: <CheckCheck size={13} />, label: "Abschließen", color: C.green, action: () => { onAdvance(menu.termin); onClose(); } },
         { icon: <Pencil size={13} />, label: "Bearbeiten", color: C.t2, action: () => { onEdit(menu.termin); onClose(); } },
-        { icon: <ClipboardList size={13} />, label: "Mängel erfassen", color: C.amber, action: () => { onMaengel(menu.termin.id); onClose(); } },
+        { icon: <ClipboardList size={13} />, label: "Mängel erfassen", color: C.amber, action: () => { onMaengel(menu.termin.terminId); onClose(); } },
         "divider",
-        { icon: <Trash2 size={13} />, label: "Löschen", color: C.red, action: () => { onDelete(menu.termin.id); onClose(); } },
+        { icon: <Trash2 size={13} />, label: "Löschen", color: C.red, action: () => { onDelete(menu.termin.terminId); onClose(); } },
       ].filter(Boolean)
     : [
         { icon: <Plus size={13} />, label: `Termin anlegen — ${menu.slot}`, color: C.blue, action: () => { onNewTr(menu.slot); onClose(); } },
@@ -84,7 +84,7 @@ function ContextMenu({ menu, onClose, onNewTr, onEdit, onDelete, onMaengel, onAd
   );
 }
 
-export function TagesplanView({ fahrzeuge, termine, addTr, updTr, delTr, addMangel, delMangel, toast }) {
+export function TagesplanView({ fahrzeuge, halter, termine, addTermin, updTermin, updTerminStatus, delTermin, addMangel, delMangel, toast }) {
   const [date, setDate] = useState(isoDate());
   const [showTrModal, setShowTrModal] = useState(false);
   const [editTr, setEditTr] = useState(null);
@@ -95,26 +95,28 @@ export function TagesplanView({ fahrzeuge, termine, addTr, updTr, delTr, addMang
   const [viewMode, setViewMode] = useState("timeline");
   const [tableScope, setTableScope] = useState("day");
 
-  const fzMap = useMemo(() => Object.fromEntries(fahrzeuge.map(f => [f.id, f])), [fahrzeuge]);
+  const fzMap = useMemo(() => Object.fromEntries(fahrzeuge.map(f => [f.fahrzeugId, f])), [fahrzeuge]);
+  const halterMap = useMemo(() => Object.fromEntries(halter.map(h => [h.halterId, h])), [halter]);
   const dayTr = useMemo(() =>
-    termine.filter(t => t.datum === date).sort((a, b) => a.uhrzeit.localeCompare(b.uhrzeit)),
+    termine.filter(t => toIsoDateStr(t.datum) === date)
+      .sort((a, b) => (toTimeStr(a.uhrzeit) || "").localeCompare(toTimeStr(b.uhrzeit) || "")),
     [termine, date]
   );
   const tableTr = useMemo(() => {
     const source = tableScope === "all" ? termine : dayTr;
     return [...source].sort((a, b) =>
-      `${a.datum || ""} ${a.uhrzeit || ""}`.localeCompare(`${b.datum || ""} ${b.uhrzeit || ""}`)
+      `${toIsoDateStr(a.datum)} ${toTimeStr(a.uhrzeit) || ""}`.localeCompare(`${toIsoDateStr(b.datum)} ${toTimeStr(b.uhrzeit) || ""}`)
     );
   }, [dayTr, tableScope, termine]);
   const statsTr = viewMode === "table" && tableScope === "all" ? tableTr : dayTr;
-  const maengelTr = maengelId ? termine.find(t => t.id === maengelId) : null;
+  const maengelTr = maengelId ? termine.find(t => t.terminId === maengelId) : null;
 
   const stats = useMemo(() => ({
     total: statsTr.length,
-    bestanden: statsTr.filter(t => t.status === STATUS.BESTANDEN).length,
-    failed: statsTr.filter(t => t.status === STATUS.NICHT_BESTANDEN).length,
-    offen: statsTr.filter(t => t.status === STATUS.GEPLANT || t.status === STATUS.IN_PRUEFUNG).length,
-    hm: statsTr.filter(t => hatHauptmangel(t.mängel)).length,
+    bestanden: statsTr.filter(t => t.statusCode === STATUS.BESTANDEN).length,
+    failed: statsTr.filter(t => t.statusCode === STATUS.NICHT_BESTANDEN).length,
+    offen: statsTr.filter(t => t.statusCode === STATUS.GEPLANT || t.statusCode === STATUS.IN_PRUEFUNG).length,
+    hm: statsTr.filter(t => hatHauptmangel(t.maengel)).length,
   }), [statsTr]);
   const passRate = (stats.bestanden + stats.failed) > 0 ? Math.round(stats.bestanden / (stats.bestanden + stats.failed) * 100) : null;
 
@@ -132,10 +134,32 @@ export function TagesplanView({ fahrzeuge, termine, addTr, updTr, delTr, addMang
   async function saveTr(form) {
     try {
       if (editTr) {
-        await updTr(editTr.id, form);
+        // Status-Wechsel IMMER über die Guard-Funktion (WF-01): bei
+        // Ablehnung (blockierender Mangel offen / API-Block) kein
+        // weiterer Patch, sondern sichtbare Fehlermeldung als Toast.
+        const r = await updTerminStatus(editTr.terminId, form.statusCode);
+        if (!r.ok) {
+          toast(r.reason || "Status-Wechsel abgelehnt", "error");
+          return;
+        }
+        await updTermin(editTr.terminId, {
+          datum: form.datum,
+          uhrzeit: form.uhrzeit || null,
+          prueftCode: form.prueftCode,
+          prueferKuerzel: form.prueferKuerzel || null,
+          notiz: form.notiz || null,
+        });
         toast("Termin aktualisiert", "success");
       } else {
-        await addTr(form);
+        await addTermin({
+          fahrzeugId: form.fahrzeugId,
+          datum: form.datum,
+          uhrzeit: form.uhrzeit || null,
+          prueftCode: form.prueftCode,
+          prueferKuerzel: form.prueferKuerzel || null,
+          statusCode: form.statusCode || STATUS.GEPLANT,
+          notiz: form.notiz || null,
+        });
         toast("Termin angelegt", "success");
       }
       setShowTrModal(false); setEditTr(null);
@@ -145,15 +169,19 @@ export function TagesplanView({ fahrzeuge, termine, addTr, updTr, delTr, addMang
   }
 
   async function advance(t) {
-    const hasHM = hatHauptmangel(t.mängel);
-    const next = t.status === STATUS.GEPLANT
+    const hasHM = hatHauptmangel(t.maengel);
+    const next = t.statusCode === STATUS.GEPLANT
       ? STATUS.IN_PRUEFUNG
-      : t.status === STATUS.IN_PRUEFUNG
+      : t.statusCode === STATUS.IN_PRUEFUNG
         ? (hasHM ? STATUS.NICHT_BESTANDEN : STATUS.BESTANDEN)
         : null;
     if (!next) return;
     try {
-      await updTr(t.id, { status: next });
+      const r = await updTerminStatus(t.terminId, next);
+      if (!r.ok) {
+        toast(r.reason || "Status-Wechsel abgelehnt", "error");
+        return;
+      }
       toast(`→ ${next}`, hasHM && next === STATUS.NICHT_BESTANDEN ? "warn" : "success");
     } catch (e) {
       toast(e?.message || "Status-Wechsel abgelehnt", "error");
@@ -212,7 +240,7 @@ export function TagesplanView({ fahrzeuge, termine, addTr, updTr, delTr, addMang
       {/* Week mini-nav */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 4 }}>
         {weekDays.map(d => {
-          const cnt = termine.filter(t => t.datum === d).length;
+          const cnt = termine.filter(t => toIsoDateStr(t.datum) === d).length;
           const isToday = d === isoDate(); const isSel = d === date;
           return (
             <button key={d} onClick={() => setDate(d)}
@@ -247,7 +275,7 @@ export function TagesplanView({ fahrzeuge, termine, addTr, updTr, delTr, addMang
           </div>
           <div>
             {TIME_SLOTS.map(slot => {
-              const slotTr = dayTr.filter(t => t.uhrzeit === slot);
+              const slotTr = dayTr.filter(t => toTimeStr(t.uhrzeit) === slot);
               return (
                 <div key={slot} onContextMenu={e => openCtx(e, slot)} style={{ display: "flex", borderBottom: `1px solid ${C.line}`, minHeight: slotTr.length ? undefined : 40 }}>
                   <div style={{ width: 68, flexShrink: 0, padding: "12px 16px 12px 20px", textAlign: "right", borderRight: `1px solid ${C.line}` }}>
@@ -270,13 +298,14 @@ export function TagesplanView({ fahrzeuge, termine, addTr, updTr, delTr, addMang
                       </button>
                     ) : slotTr.map(t => {
                       const fz = fzMap[t.fahrzeugId];
-                      const sc = STATUS_CFG[t.status] || STATUS_CFG[STATUS.GEPLANT];
-                      const hmV = hatHauptmangel(t.mängel);
-                      const art = PRUEFUNG_ARTEN.find(a => a.id === t.art);
-                      const pruefer = PRUEFER.find(p => p.id === t.pruefer);
-                      const canAdv = t.status === STATUS.GEPLANT || t.status === STATUS.IN_PRUEFUNG;
+                      const fzHalter = fz ? halterMap[fz.halterId] : null;
+                      const sc = STATUS_CFG[t.statusCode] || STATUS_CFG[STATUS.GEPLANT];
+                      const hmV = hatHauptmangel(t.maengel);
+                      const art = PRUEFUNG_ARTEN.find(a => a.id === t.prueftCode);
+                      const pruefer = PRUEFER.find(p => p.id === t.prueferKuerzel);
+                      const canAdv = t.statusCode === STATUS.GEPLANT || t.statusCode === STATUS.IN_PRUEFUNG;
                       return (
-                        <motion.div key={t.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}
+                        <motion.div key={t.terminId} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}
                           onContextMenu={e => { e.stopPropagation(); openCtx(e, slot, t); }}
                           className="termin-row"
                           style={{ background: C.surface, border: `1px solid ${sc.border}`, borderLeft: `3px solid ${sc.dot}`, borderRadius: 10, padding: "11px 14px", display: "flex", alignItems: "center", gap: 12, cursor: "context-menu", boxShadow: "0 1px 4px rgba(15,23,42,0.06)", flexWrap: "wrap" }}>
@@ -284,17 +313,17 @@ export function TagesplanView({ fahrzeuge, termine, addTr, updTr, delTr, addMang
                             <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 5 }}>
                               <span style={{ fontSize: 15, fontWeight: 700, color: C.t1, fontFamily: C.mono, letterSpacing: "0.05em" }}>{fz?.kennzeichen || "—"}</span>
                               <span style={{ fontSize: 12, color: C.t3 }}>{fz?.hersteller} {fz?.modell}</span>
-                              <StatusPill status={t.status} />
+                              <StatusPill status={t.statusCode} />
                               {hmV && <HauptmangelBadge />}
                             </div>
                             <div style={{ display: "flex", gap: 14, flexWrap: "wrap", alignItems: "center" }}>
-                              <span style={{ fontSize: 11, color: C.t3 }}>{art?.label || t.art}</span>
+                              <span style={{ fontSize: 11, color: C.t3 }}>{art?.label || t.prueftCode}</span>
                               <span style={{ fontSize: 11, color: C.t4 }}>·</span>
-                              <span style={{ fontSize: 11, color: C.t3 }}>{pruefer?.name || t.pruefer}</span>
+                              <span style={{ fontSize: 11, color: C.t3 }}>{pruefer?.name || t.prueferKuerzel}</span>
                               <span style={{ fontSize: 11, color: C.t4 }}>·</span>
-                              <span style={{ fontSize: 11, color: C.t3 }}>{fz?.besitzer}</span>
-                              {t.mängel?.length > 0 && (
-                                <span style={{ fontSize: 11, color: C.amberL, fontFamily: C.mono }}>{t.mängel.length} Mangel{t.mängel.length !== 1 ? "..." : ""}</span>
+                              <span style={{ fontSize: 11, color: C.t3 }}>{fzHalter?.name}</span>
+                              {t.maengel?.length > 0 && (
+                                <span style={{ fontSize: 11, color: C.amberL, fontFamily: C.mono }}>{t.maengel.length} Mangel{t.maengel.length !== 1 ? "..." : ""}</span>
                               )}
                               {art?.dauer && <span style={{ fontSize: 10, color: C.t4 }}>~{art.dauer} min</span>}
                             </div>
@@ -305,12 +334,12 @@ export function TagesplanView({ fahrzeuge, termine, addTr, updTr, delTr, addMang
                                 className="btn-primary"
                                 style={{ display: "flex", alignItems: "center", gap: 4, background: "linear-gradient(135deg,#2563EB,#3B82F6)", border: "none", borderRadius: 6, padding: "5px 10px", color: "#fff", cursor: "pointer", fontSize: 10, fontWeight: 700, fontFamily: C.mono, boxShadow: "0 2px 6px rgba(37,99,235,0.3)" }}>
                                 <ArrowRight size={11} />
-                                {t.status === STATUS.GEPLANT ? "Starten" : "Fertig"}
+                                {t.statusCode === STATUS.GEPLANT ? "Starten" : "Fertig"}
                               </button>
                             )}
-                            <IconBtn onClick={() => setMaengelId(t.id)} icon={<ClipboardList size={13} />} color={C.amberL} title="Mängel erfassen" />
+                            <IconBtn onClick={() => setMaengelId(t.terminId)} icon={<ClipboardList size={13} />} color={C.amberL} title="Mängel erfassen" />
                             <IconBtn onClick={() => { setEditTr(t); setShowTrModal(true); }} icon={<Pencil size={13} />} color={C.t3} title="Bearbeiten" />
-                            <IconBtn onClick={() => setConfirmDel(t.id)} icon={<Trash2 size={13} />} color={C.redL} danger title="Löschen" />
+                            <IconBtn onClick={() => setConfirmDel(t.terminId)} icon={<Trash2 size={13} />} color={C.redL} danger title="Löschen" />
                           </div>
                         </motion.div>
                       );
@@ -361,31 +390,31 @@ export function TagesplanView({ fahrzeuge, termine, addTr, updTr, delTr, addMang
                 )}
                 {tableTr.map((t, i) => {
                   const fz = fzMap[t.fahrzeugId];
-                  const art = PRUEFUNG_ARTEN.find(a => a.id === t.art);
-                  const pr = PRUEFER.find(p => p.id === t.pruefer);
-                  const hmV = hatHauptmangel(t.mängel);
+                  const art = PRUEFUNG_ARTEN.find(a => a.id === t.prueftCode);
+                  const pr = PRUEFER.find(p => p.id === t.prueferKuerzel);
+                  const hmV = hatHauptmangel(t.maengel);
                   return (
-                    <tr key={t.id} style={{ borderBottom: `1px solid ${C.line}`, background: i % 2 === 0 ? C.glass : "transparent" }}>
+                    <tr key={t.terminId} style={{ borderBottom: `1px solid ${C.line}`, background: i % 2 === 0 ? C.glass : "transparent" }}>
                       <td style={{ padding: "10px 14px", fontFamily: C.mono, fontSize: 12, color: C.t2, whiteSpace: "nowrap" }}>{fmtDate(t.datum)}</td>
-                      <td style={{ padding: "10px 14px", fontFamily: C.mono, fontSize: 12, color: C.t2, whiteSpace: "nowrap" }}>{t.uhrzeit}</td>
+                      <td style={{ padding: "10px 14px", fontFamily: C.mono, fontSize: 12, color: C.t2, whiteSpace: "nowrap" }}>{toTimeStr(t.uhrzeit)}</td>
                       <td style={{ padding: "10px 14px", fontFamily: C.mono, fontWeight: 700, fontSize: 13, color: C.t1 }}>{fz?.kennzeichen || "—"}</td>
                       <td style={{ padding: "10px 14px", fontSize: 12, color: C.t3 }}>{fz?.hersteller} {fz?.modell}</td>
-                      <td style={{ padding: "10px 14px", fontSize: 11, color: C.t3, whiteSpace: "nowrap" }}>{art?.label || t.art}</td>
-                      <td style={{ padding: "10px 14px", fontSize: 11, color: C.t3 }}>{pr?.name || t.pruefer}</td>
-                      <td style={{ padding: "10px 14px" }}><StatusPill status={t.status} /></td>
+                      <td style={{ padding: "10px 14px", fontSize: 11, color: C.t3, whiteSpace: "nowrap" }}>{art?.label || t.prueftCode}</td>
+                      <td style={{ padding: "10px 14px", fontSize: 11, color: C.t3 }}>{pr?.name || t.prueferKuerzel}</td>
+                      <td style={{ padding: "10px 14px" }}><StatusPill status={t.statusCode} /></td>
                       <td style={{ padding: "10px 14px" }}>
-                        {t.mängel?.length > 0 ? (
+                        {t.maengel?.length > 0 ? (
                           <div style={{ display: "flex", gap: 3, flexWrap: "wrap" }}>
-                            {t.mängel.map(m => <MangelPill key={m.id} kat={m.kat} />)}
+                            {t.maengel.map(m => <MangelPill key={m.mangelId} kat={m.kategorieCode} />)}
                             {hmV && <span style={{ fontSize: 9, color: C.redL, fontWeight: 700 }}>EM/GfM</span>}
                           </div>
                         ) : <span style={{ fontSize: 11, color: C.t4 }}>—</span>}
                       </td>
                       <td style={{ padding: "10px 14px" }}>
                         <div style={{ display: "flex", gap: 4 }}>
-                          <IconBtn sm onClick={() => setMaengelId(t.id)} icon={<ClipboardList size={11} />} color={C.amberL} title="Mängel erfassen" />
+                          <IconBtn sm onClick={() => setMaengelId(t.terminId)} icon={<ClipboardList size={11} />} color={C.amberL} title="Mängel erfassen" />
                           <IconBtn sm onClick={() => { setEditTr(t); setShowTrModal(true); }} icon={<Pencil size={11} />} color={C.t3} title="Bearbeiten" />
-                          <IconBtn sm onClick={() => setConfirmDel(t.id)} icon={<Trash2 size={11} />} color={C.redL} danger title="Löschen" />
+                          <IconBtn sm onClick={() => setConfirmDel(t.terminId)} icon={<Trash2 size={11} />} color={C.redL} danger title="Löschen" />
                         </div>
                       </td>
                     </tr>
@@ -415,21 +444,25 @@ export function TagesplanView({ fahrzeuge, termine, addTr, updTr, delTr, addMang
             const id = confirmDel;
             setConfirmDel(null);
             try {
-              await delTr(id);
+              await delTermin(id);
               toast("Termin gelöscht", "info");
             } catch (e) {
               toast(e?.message || "Löschen fehlgeschlagen", "error");
             }
           }}
           onCancel={() => setConfirmDel(null)} />}
-        {showTrModal && <TerminModal fahrzeuge={fahrzeuge} termine={termine}
+        {showTrModal && <TerminModal fahrzeuge={fahrzeuge} halter={halter} termine={termine}
           initial={editTr ? { ...editTr } : { datum: date, ...(newTrInit || {}) }}
           onSave={saveTr} onClose={() => { setShowTrModal(false); setEditTr(null); setNewTrInit(null); }} />}
         {maengelTr && <MaengelModal termin={maengelTr} fahrzeug={fzMap[maengelTr.fahrzeugId]}
           onAdd={addMangel} onDel={delMangel}
           onStatus={async (id, s) => {
             try {
-              await updTr(id, { status: s });
+              const r = await updTerminStatus(id, s);
+              if (!r.ok) {
+                toast(r.reason || "Status-Wechsel abgelehnt", "error");
+                return;
+              }
               toast(`Status: ${s}`, "success");
             } catch (e) {
               toast(e?.message || "Status-Wechsel abgelehnt", "error");
@@ -458,10 +491,12 @@ ContextMenu.propTypes = {
 
 TagesplanView.propTypes = {
   fahrzeuge: PropTypes.arrayOf(FahrzeugShape).isRequired,
+  halter: PropTypes.arrayOf(HalterShape).isRequired,
   termine: PropTypes.arrayOf(TerminShape).isRequired,
-  addTr: PropTypes.func.isRequired,
-  updTr: PropTypes.func.isRequired,
-  delTr: PropTypes.func.isRequired,
+  addTermin: PropTypes.func.isRequired,
+  updTermin: PropTypes.func.isRequired,
+  updTerminStatus: PropTypes.func.isRequired,
+  delTermin: PropTypes.func.isRequired,
   addMangel: PropTypes.func.isRequired,
   delMangel: PropTypes.func.isRequired,
   toast: PropTypes.func.isRequired,
