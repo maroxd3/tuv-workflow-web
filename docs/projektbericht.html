@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Projektbericht — TÜV Prüfstelle Pro</title>
+<style>
+  :root {
+    --ink: #1a1a1a;
+    --muted: #555;
+    --line: #ccc;
+    --accent: #00404f;
+    --accent-light: #e8f1f3;
+    --code-bg: #f5f5f2;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { font-size: 11pt; }
+  body {
+    font-family: Georgia, "Times New Roman", serif;
+    color: var(--ink);
+    line-height: 1.55;
+    background: #e9e9e6;
+  }
+  .sheet {
+    max-width: 21cm;
+    margin: 0 auto;
+    background: #fff;
+    padding: 2.2cm 2.4cm;
+  }
+  @media print {
+    body { background: #fff; }
+    .sheet { max-width: none; margin: 0; padding: 0; }
+    @page { size: A4; margin: 20mm 22mm; }
+    .pb { break-before: page; }
+    h2 { break-after: avoid; }
+    table, pre, figure { break-inside: avoid; }
+    a { color: inherit; text-decoration: none; }
+  }
+  h1, h2, h3, h4 { font-family: Georgia, serif; color: var(--accent); line-height: 1.25; }
+  h2 { font-size: 1.45rem; margin: 2.2rem 0 0.9rem; padding-bottom: 0.3rem; border-bottom: 2px solid var(--accent); }
+  h3 { font-size: 1.12rem; margin: 1.5rem 0 0.5rem; }
+  h4 { font-size: 1rem; margin: 1.1rem 0 0.35rem; color: var(--ink); }
+  p { margin: 0.55rem 0; text-align: justify; hyphens: auto; }
+  ul, ol { margin: 0.55rem 0 0.55rem 1.4rem; }
+  li { margin: 0.22rem 0; }
+  table { border-collapse: collapse; width: 100%; margin: 0.8rem 0; font-size: 0.86rem; font-family: "Segoe UI", Arial, sans-serif; }
+  th, td { border: 1px solid var(--line); padding: 0.32rem 0.55rem; text-align: left; vertical-align: top; }
+  th { background: var(--accent-light); color: var(--accent); font-weight: 600; }
+  code { font-family: Consolas, "Courier New", monospace; font-size: 0.84em; background: var(--code-bg); padding: 0.06em 0.3em; border-radius: 3px; }
+  pre { background: var(--code-bg); border: 1px solid var(--line); border-left: 3px solid var(--accent); padding: 0.7rem 0.9rem; overflow-x: auto; margin: 0.8rem 0; }
+  pre code { background: none; padding: 0; font-size: 0.8rem; line-height: 1.45; }
+  figure { margin: 1.1rem 0; text-align: center; }
+  figcaption { font-size: 0.82rem; color: var(--muted); margin-top: 0.4rem; font-family: "Segoe UI", Arial, sans-serif; }
+  .note { background: var(--accent-light); border-left: 3px solid var(--accent); padding: 0.6rem 0.9rem; margin: 0.9rem 0; font-size: 0.92rem; }
+  /* Deckblatt */
+  .cover { display: flex; flex-direction: column; min-height: 24cm; text-align: center; }
+  .cover .uni { font-family: "Segoe UI", Arial, sans-serif; font-size: 0.95rem; color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; }
+  .cover .modul { margin-top: 0.4rem; font-size: 0.95rem; color: var(--muted); }
+  .cover h1 { font-size: 2.3rem; margin: 4.5rem 0 0.6rem; color: var(--accent); }
+  .cover .subtitle { font-size: 1.15rem; color: var(--ink); font-style: italic; }
+  .cover .berichtart { margin-top: 3.2rem; font-family: "Segoe UI", Arial, sans-serif; font-size: 1.05rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink); }
+  .cover .meta { margin-top: auto; padding-top: 3rem; }
+  .cover .meta table { width: auto; margin: 0 auto; font-size: 0.95rem; }
+  .cover .meta td { border: none; padding: 0.18rem 0.9rem; text-align: left; }
+  .cover .meta td:first-child { color: var(--muted); }
+  /* Inhaltsverzeichnis */
+  .toc { font-family: "Segoe UI", Arial, sans-serif; font-size: 0.95rem; }
+  .toc ol { list-style: none; margin-left: 0; counter-reset: toc; }
+  .toc > ol > li { counter-increment: toc; margin: 0.4rem 0; }
+  .toc > ol > li::before { content: counter(toc) "  "; color: var(--accent); font-weight: 600; display: inline-block; width: 1.6rem; }
+  .toc a { color: inherit; text-decoration: none; }
+  /* SVG-Diagramme */
+  svg text { font-family: "Segoe UI", Arial, sans-serif; }
+</style>
+</head>
+<body>
+<div class="sheet">
+
+<!-- ============ DECKBLATT ============ -->
+<section class="cover">
+  <div class="uni">Hochschule Hannover · Fakultät II</div>
+  <div class="modul">Modul: Software-Projekt (IIM-211-01) · Sommersemester 2026</div>
+  <h1>TÜV Prüfstelle Pro</h1>
+  <div class="subtitle">Terminplanung, Fahrzeugverwaltung und Mängelerfassung<br>für Kfz-Prüfstellen — On-Premise mit MariaDB</div>
+  <div class="berichtart">Projektbericht</div>
+  <div class="meta">
+    <table>
+      <tr><td>Bearbeiter:</td><td>Marwan Saleh, Oussama Hlayhel</td></tr>
+      <tr><td>Betreuung:</td><td>Frau Fuchs</td></tr>
+      <tr><td>Abgabegespräch:</td><td>15. Juli 2026</td></tr>
+      <tr><td>Stand des Berichts:</td><td>23. Juli 2026</td></tr>
+      <tr><td>Repository:</td><td>github.com/maroxd3/tuv-workflow-web</td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- ============ INHALT ============ -->
+<section class="pb toc">
+  <h2>Inhaltsverzeichnis</h2>
+  <ol>
+    <li><a href="#einleitung">Einleitung und Zielsetzung</a></li>
+    <li><a href="#anforderungen">Anforderungen</a></li>
+    <li><a href="#verlauf">Projektverlauf und Vorgehen</a></li>
+    <li><a href="#datenmodell">Datenmodell: konzeptuell, logisch, physisch</a></li>
+    <li><a href="#architektur">Systemarchitektur</a></li>
+    <li><a href="#wf01">Workflow-Regel WF-01: Durchsetzung in drei Schichten</a></li>
+    <li><a href="#migrationen">Schema-Evolution und Betrieb</a></li>
+    <li><a href="#sicherheit">Authentifizierung, Rollen und API-Härtung</a></li>
+    <li><a href="#qs">Qualitätssicherung und Tests</a></li>
+    <li><a href="#ki">Einsatz von KI-Werkzeugen</a></li>
+    <li><a href="#fazit">Ergebnis, Grenzen und Ausblick</a></li>
+    <li><a href="#quellen">Quellen</a></li>
+  </ol>
+  <p style="margin-top:1rem; font-size:0.85rem; color:var(--muted);">Anhang A: Übersicht der Architekturentscheidungen (ADR)</p>
+</section>
+
+<!-- ============ 1 EINLEITUNG ============ -->
+<section class="pb" id="einleitung">
+  <h2>1&ensp;Einleitung und Zielsetzung</h2>
+  <p>Kfz-Prüfstellen organisieren ihren Tagesablauf um einen wiederkehrenden
+  Kernprozess: Ein Halter bringt ein Fahrzeug zu einem Termin, ein Prüfer führt
+  die Untersuchung durch, festgestellte Mängel werden dokumentiert und das
+  Ergebnis entscheidet über Plakette oder Nachprüfung. In der Praxis wird dieser
+  Prozess häufig mit Papierlisten, Whiteboards oder generischen Kalendern
+  verwaltet — mit den bekannten Folgen: Doppelbuchungen, verlorene
+  Mängelhistorien und fehlende Auswertbarkeit.</p>
+  <p><strong>TÜV Prüfstelle Pro</strong> ist eine Webanwendung, die diesen
+  Prozess digital abbildet: Terminplanung, Fahrzeug- und Halterverwaltung,
+  Mängelerfassung nach den Kategorien der HU-Richtlinie, Statistik und
+  druckbare Prüfberichte. Fachlicher Kern ist die Workflow-Regel
+  <strong>WF-01</strong>: Ein Termin mit nicht behobenem erheblichen (EM) oder
+  gefährlichen Mangel (GfM) darf nicht den Status <em>Bestanden</em> erhalten
+  (§ 29 StVZO). Diese Regel wird nicht nur in der Oberfläche, sondern bis in
+  die Datenbank hinein erzwungen (Kapitel 6).</p>
+  <p>Als Produktmodell wurde bewusst <strong>On-Premise pro Prüfstelle</strong>
+  gewählt: Jede Prüfstelle betreibt einen eigenen Server-PC mit MariaDB und
+  API im lokalen Netzwerk. Kundendaten verlassen die Werkstatt nicht — ein
+  Datenschutz-Argument, das zugleich die Architektur prägt (kein
+  Mandanten-Modell, keine Cloud-Abhängigkeit, Backup in Kundenhand).</p>
+  <p>Der vorliegende Bericht dokumentiert Anforderungen, Projektverlauf,
+  Datenmodell, Architektur, Sicherheitskonzept und Qualitätssicherung des
+  Systems zum Stand der Abgabe. Der Schwerpunkt liegt auf dem
+  Datenbankentwurf, da dieser das methodische Zentrum des Projekts bildet.</p>
+</section>
+
+<!-- ============ 2 ANFORDERUNGEN ============ -->
+<section id="anforderungen">
+  <h2>2&ensp;Anforderungen</h2>
+  <p>Die Anforderungen wurden im Pflichtenheft (<code>docs/pflichtenheft.md</code>)
+  gepflegt und über den Projektverlauf fortgeschrieben. Die folgende Tabelle
+  zeigt die funktionalen Anforderungen mit Akzeptanzkriterien:</p>
+  <table>
+    <tr><th>ID</th><th>Anforderung</th><th>Akzeptanzkriterium</th></tr>
+    <tr><td>F-01</td><td>Halter verwalten</td><td>Halter können angelegt, bearbeitet, gelöscht und gelistet werden</td></tr>
+    <tr><td>F-02</td><td>Fahrzeuge verwalten</td><td>Fahrzeuge können mit Halterbezug gepflegt werden</td></tr>
+    <tr><td>F-03</td><td>Termine planen</td><td>Termine können Fahrzeugen zugeordnet und nach Datum angezeigt werden</td></tr>
+    <tr><td>F-04</td><td>Status pflegen</td><td>Statuswechsel sind über UI und API möglich</td></tr>
+    <tr><td>F-05</td><td>WF-01 durchsetzen</td><td><em>Bestanden</em> wird bei nicht behobenem EM/GfM verhindert</td></tr>
+    <tr><td>F-06</td><td>Mängel erfassen</td><td>Mängel können mit Kategorie und Beschreibung gespeichert werden</td></tr>
+    <tr><td>F-07</td><td>Statistik anzeigen</td><td>Kennzahlen und Diagramme basieren auf MariaDB-Daten</td></tr>
+    <tr><td>F-08</td><td>Berichte erzeugen</td><td>Prüfberichte können angezeigt und gedruckt werden (A4)</td></tr>
+    <tr><td>F-09</td><td>Demo-Daten laden</td><td><code>/api/admin/demo</code> erzeugt reproduzierbare Beispieldaten</td></tr>
+    <tr><td>F-10</td><td>Daten zurücksetzen</td><td><code>/api/admin/reset</code> entfernt Bewegungsdaten</td></tr>
+    <tr><td>F-11</td><td>Login und Rollen</td><td>Token-Login; Schreiben/Status/Löschen ist rollenabhängig serverseitig gesperrt</td></tr>
+  </table>
+  <p>Aus den nicht-funktionalen Anforderungen sind vor allem prägend:</p>
+  <table>
+    <tr><th>ID</th><th>Anforderung</th><th>Ziel</th></tr>
+    <tr><td>NF-02</td><td>Datenkonsistenz</td><td>MariaDB erzwingt Fremdschlüssel, UNIQUE- und CHECK-Constraints</td></tr>
+    <tr><td>NF-03</td><td>Mehrclient-Fähigkeit</td><td>Mehrere Browser greifen auf denselben MariaDB-Bestand zu</td></tr>
+    <tr><td>NF-06</td><td>Datenschutz</td><td>Keine Zugangsdaten im Frontend-Bundle; Daten bleiben on-premise</td></tr>
+    <tr><td>NF-08</td><td>Testbarkeit</td><td>Build, Typecheck und Testsuite sind automatisierbar (CI)</td></tr>
+    <tr><td>NF-09</td><td>API-Härtung</td><td>Security-Header, Rate-Limits, keine SQL-Fehlertexte nach außen</td></tr>
+  </table>
+  <p>Explizit <strong>außerhalb des Scopes</strong> liegen Mandantenfähigkeit,
+  amtliche Schnittstellen (TÜV/KBA), Online-Zahlung und
+  Benutzer-Selbstverwaltung über die UI.</p>
+</section>
+
+<!-- ============ 3 PROJEKTVERLAUF ============ -->
+<section id="verlauf">
+  <h2>3&ensp;Projektverlauf und Vorgehen</h2>
+  <p>Das Projekt wurde in Sprints mit regelmäßigen Feedback-Terminen bei der
+  Betreuerin bearbeitet. Der Verlauf enthält eine bewusste und aus heutiger
+  Sicht zentrale Kurskorrektur: den Wechsel der Persistenzschicht.</p>
+  <table>
+    <tr><th>Zeitraum</th><th>Meilenstein</th></tr>
+    <tr><td>April 2026</td><td>Anforderungsanalyse, erste Sprints, Prototyp mit Firestore (NoSQL) als Persistenz</td></tr>
+    <tr><td>24.04. / 13.05.2026</td><td>Feedback-Termine: Kritik an NoSQL als Fundament für eine stark relationale Domäne, an eingebetteten Strukturen (Halter/Mängel im Dokument) und an fehlender Normalisierung</td></tr>
+    <tr><td>15.–17.05.2026</td><td>Migration auf MariaDB + Express-API; Datenmodell als Drei-Schichten-Entwurf (ER → 3NF → physisch) neu dokumentiert; On-Premise-Produktmodell festgelegt</td></tr>
+    <tr><td>Juni 2026</td><td>WF-01-Integrationstests gegen echte MariaDB, CI-Pipeline (Lint, Typecheck, Tests, Build, CodeQL)</td></tr>
+    <tr><td>Anfang Juli 2026</td><td>API-Härtung, Login/Rollen-System, versionierte Schema-Migrationen, UI-Flow-Tests, Doku-Konsistenz-Sweep, Abschlusspräsentation</td></tr>
+    <tr><td>15.07.2026</td><td>Abgabegespräch</td></tr>
+  </table>
+  <h3>3.1&ensp;Lessons Learned: Firestore → MariaDB</h3>
+  <p>Der ursprüngliche Prototyp speicherte Halter als eingebettetes Objekt im
+  Fahrzeug und Mängel als Array im Termin. Das funktionierte für die Demo,
+  verletzte aber die Normalformen und machte relationale Auswertungen
+  (Mängelstatistik, Prüfhistorie je Fahrzeug) unnötig schwer. Die Umstellung
+  auf MariaDB war daher keine kosmetische Korrektur, sondern eine
+  Grundsatzentscheidung: Die Domäne — Halter, Fahrzeuge, Termine, Mängel mit
+  klaren 1:N-Beziehungen und harten Integritätsregeln — ist ein Lehrbuchfall
+  für ein relationales System. Die Entscheidung ist in ADR-001 und ADR-008
+  dokumentiert; ein positiver Nebeneffekt ist, dass Integritätsregeln nun
+  deklarativ in der Datenbank liegen statt implizit im Anwendungscode.</p>
+  <p>Alle wesentlichen Architekturentscheidungen wurden fortlaufend als
+  <em>Architecture Decision Records</em> festgehalten (11 ADRs, Anhang A) —
+  inklusive der verworfenen Alternativen.</p>
+</section>
+
+<!-- ============ 4 DATENMODELL ============ -->
+<section class="pb" id="datenmodell">
+  <h2>4&ensp;Datenmodell: konzeptuell, logisch, physisch</h2>
+  <p>Der Datenbankentwurf folgt der klassischen Drei-Schichten-Methodik
+  (Codd 1970, Chen 1976): Ein konzeptuelles ER-Modell beschreibt die Fachwelt
+  frei von Implementierungsdetails, das logische Modell überführt es in
+  normalisierte Relationen, und das physische Modell legt die konkrete
+  MariaDB-Umsetzung fest. Diese Trennung hält Geschäftsanforderungen
+  unabhängig von der Technik diskutierbar.</p>
+
+  <h3>4.1&ensp;Konzeptuelles Modell</h3>
+  <figure>
+    <svg viewBox="0 0 700 330" style="max-width:100%; height:auto;" role="img" aria-label="ER-Übersicht">
+      <defs>
+        <style>
+          .ent { fill:#e8f1f3; stroke:#00404f; stroke-width:1.5; }
+          .dom { fill:#f5f5f2; stroke:#888; stroke-width:1.2; }
+          .lbl { font-size:13px; font-weight:600; fill:#00404f; }
+          .dlbl { font-size:12px; fill:#444; }
+          .rel { stroke:#333; stroke-width:1.2; fill:none; }
+          .card { font-size:11px; fill:#333; }
+          .rlbl { font-size:10.5px; fill:#666; font-style:italic; }
+        </style>
+      </defs>
+      <!-- Kernkette -->
+      <rect class="ent" x="10"  y="130" width="120" height="40" rx="3"/><text class="lbl" x="70"  y="155" text-anchor="middle">HALTER</text>
+      <rect class="ent" x="190" y="130" width="120" height="40" rx="3"/><text class="lbl" x="250" y="155" text-anchor="middle">FAHRZEUG</text>
+      <rect class="ent" x="370" y="130" width="120" height="40" rx="3"/><text class="lbl" x="430" y="155" text-anchor="middle">TERMIN</text>
+      <rect class="ent" x="550" y="130" width="120" height="40" rx="3"/><text class="lbl" x="610" y="155" text-anchor="middle">MANGEL</text>
+      <line class="rel" x1="130" y1="150" x2="190" y2="150"/>
+      <text class="card" x="138" y="144">1</text><text class="card" x="176" y="144">N</text>
+      <text class="rlbl" x="160" y="168" text-anchor="middle">besitzt</text>
+      <line class="rel" x1="310" y1="150" x2="370" y2="150"/>
+      <text class="card" x="318" y="144">1</text><text class="card" x="356" y="144">N</text>
+      <text class="rlbl" x="340" y="168" text-anchor="middle">wird geprüft</text>
+      <line class="rel" x1="490" y1="150" x2="550" y2="150"/>
+      <text class="card" x="498" y="144">1</text><text class="card" x="536" y="144">N</text>
+      <text class="rlbl" x="520" y="168" text-anchor="middle">weist auf</text>
+      <!-- Domänentabellen oben -->
+      <rect class="dom" x="250" y="20" width="110" height="34" rx="3"/><text class="dlbl" x="305" y="42" text-anchor="middle">PRUEFART</text>
+      <rect class="dom" x="380" y="20" width="110" height="34" rx="3"/><text class="dlbl" x="435" y="42" text-anchor="middle">STATUS</text>
+      <line class="rel" x1="305" y1="54" x2="415" y2="130"/>
+      <text class="card" x="308" y="70">1</text><text class="card" x="400" y="124">N</text>
+      <line class="rel" x1="435" y1="54" x2="432" y2="130"/>
+      <text class="card" x="440" y="70">1</text><text class="card" x="438" y="124">N</text>
+      <!-- Prüfer + Kategorie unten -->
+      <rect class="dom" x="330" y="270" width="110" height="34" rx="3"/><text class="dlbl" x="385" y="292" text-anchor="middle">PRUEFER</text>
+      <line class="rel" x1="390" y1="270" x2="425" y2="170"/>
+      <text class="card" x="380" y="258">0..1</text><text class="card" x="412" y="184">N</text>
+      <text class="rlbl" x="376" y="222">führt durch</text>
+      <rect class="dom" x="540" y="270" width="140" height="34" rx="3"/><text class="dlbl" x="610" y="292" text-anchor="middle">MANGEL_KATEGORIE</text>
+      <line class="rel" x1="610" y1="270" x2="610" y2="170"/>
+      <text class="card" x="616" y="258">1</text><text class="card" x="616" y="184">N</text>
+    </svg>
+    <figcaption>Abb. 1: ER-Übersicht der Fachdomäne (vereinfacht; vollständiges Chen-Diagramm mit Attributen in <code>docs/datenmodell.md</code>)</figcaption>
+  </figure>
+  <table>
+    <tr><th>Entität</th><th>Reale Bedeutung</th></tr>
+    <tr><td>HALTER</td><td>Eigentümer eines oder mehrerer Fahrzeuge — natürliche oder juristische Person</td></tr>
+    <tr><td>FAHRZEUG</td><td>Eindeutiges Kraftfahrzeug, identifiziert durch Kennzeichen und/oder FIN</td></tr>
+    <tr><td>TERMIN</td><td>Konkreter Prüfungstermin eines Fahrzeugs zu einem Zeitpunkt</td></tr>
+    <tr><td>MANGEL</td><td>Festgestellte Beanstandung gemäß StVZO Anlage VIII</td></tr>
+    <tr><td>PRUEFER</td><td>Prüfingenieur, der den Termin durchführt (bei Planung noch optional)</td></tr>
+    <tr><td>PRUEFART</td><td>Klassifikation der Prüfung (HU, AU, HU+AU, Nachprüfung, …)</td></tr>
+    <tr><td>STATUS</td><td>Zustand eines Termins im Workflow, inkl. Kennzeichnung von Endzuständen</td></tr>
+    <tr><td>MANGEL_KATEGORIE</td><td>Einstufung OM/GM/EM/GfM inkl. Wirkung auf das Prüfergebnis (<code>blockiert_bestanden</code>)</td></tr>
+  </table>
+  <p>Die zentralen Geschäftsregeln wurden bereits auf konzeptueller Ebene
+  festgehalten, unabhängig von ihrer späteren technischen Durchsetzung:</p>
+  <table>
+    <tr><th>ID</th><th>Regel</th><th>Quelle</th></tr>
+    <tr><td>GR-01</td><td>Jedes Fahrzeug ist über sein Kennzeichen eindeutig identifizierbar</td><td>KBA / StVZO</td></tr>
+    <tr><td>GR-02</td><td>Eine angegebene FIN ist weltweit eindeutig</td><td>ISO 3779</td></tr>
+    <tr><td>GR-03</td><td>Kein <em>Bestanden</em> bei erheblichem oder gefährlichem Mangel</td><td>§ 29 StVZO</td></tr>
+    <tr><td>GR-04</td><td>Baujahr liegt zwischen 1885 und 2100</td><td>Plausibilität</td></tr>
+    <tr><td>GR-05</td><td>Kilometerstand nichtnegativ, unter 3.000.000 km</td><td>Plausibilität</td></tr>
+    <tr><td>GR-06</td><td>Fahrzeug-Löschung entfernt Termine und Mängel kaskadierend</td><td>Domänen-Konsistenz</td></tr>
+  </table>
+
+  <h3>4.2&ensp;Logisches Modell: Normalisierung bis 3NF</h3>
+  <p>Ausgangspunkt der Normalisierung ist die naive Struktur des frühen
+  Prototyps, in der Halterdaten am Fahrzeug und Mängel als Liste am Termin
+  hingen:</p>
+  <pre><code>FAHRZEUG_KONZEPT = { kennzeichen, fin, hersteller, modell, baujahr, farbe,
+                     typ, kilometerstand, hu_faellig,
+                     halter_name, halter_telefon, halter_email, halter_anschrift }</code></pre>
+  <p><strong>1NF:</strong> Alle Attribute atomar — mehrwertige Mängel-Listen
+  werden in die eigene Relation <code>MANGEL</code> ausgelagert.
+  <strong>2NF:</strong> Keine partiellen Abhängigkeiten; alle Relationen nutzen
+  einspaltige Primärschlüssel. <strong>3NF:</strong> Keine transitiven
+  Abhängigkeiten — Halterdaten wandern aus <code>FAHRZEUG</code> in die eigene
+  Relation <code>HALTER</code>. Damit sind Update-Anomalien (Halter-Adresse an
+  mehreren Fahrzeugen ändern) und Lösch-Anomalien ausgeschlossen.</p>
+  <p>Das endgültige Relationenschema
+  (Notation: <em>RELATION(Primärschlüssel, Attribute, fk↗ZIEL)</em>, <code>?</code> = nullable):</p>
+  <pre><code>HALTER(halter_id, name, telefon, email, anschrift, erfasst_am)
+FAHRZEUG(fahrzeug_id, kennzeichen, fin?, hersteller, modell, baujahr?, farbe?,
+         typ, kilometerstand?, hu_faellig?, halter_id↗HALTER, erfasst_am)
+PRUEFART(prueft_code, bezeichnung)
+PRUEFER(pruefer_kuerzel, name, qualifikation?)
+STATUS(status_code, bezeichnung, ist_endzustand)
+TERMIN(termin_id, fahrzeug_id↗FAHRZEUG, datum, uhrzeit?, prueft_code↗PRUEFART,
+       pruefer_kuerzel?↗PRUEFER, status_code↗STATUS, notiz?, erfasst_am)
+MANGEL_KATEGORIE(kategorie_code, bezeichnung, blockiert_bestanden)
+MANGEL(mangel_id, termin_id↗TERMIN, code_stvzo?, beschreibung,
+       kategorie_code↗MANGEL_KATEGORIE, behoben, erfasst_am)
+BENUTZER(benutzer_id, kuerzel, name, rolle, passwort_hash, aktiv, erstellt_am)</code></pre>
+  <p><code>BENUTZER</code> (Login-Konten) steht bewusst ohne Fremdschlüssel
+  neben den Fachrelationen: Die Tabelle dient ausschließlich der
+  Authentifizierung an der API und gehört nicht zur Fachdomäne.</p>
+  <p>Die referentielle Integrität wurde je Beziehung einzeln entschieden und
+  begründet:</p>
+  <table>
+    <tr><th>Fremdschlüssel</th><th>ON DELETE</th><th>Begründung</th></tr>
+    <tr><td><code>FAHRZEUG.halter_id → HALTER</code></td><td>RESTRICT</td><td>Ein Halter mit Fahrzeugen darf nicht gelöscht werden</td></tr>
+    <tr><td><code>TERMIN.fahrzeug_id → FAHRZEUG</code></td><td>CASCADE</td><td>Wird ein Fahrzeug gelöscht, gehen alle Termine mit (GR-06)</td></tr>
+    <tr><td><code>TERMIN.prueft_code → PRUEFART</code></td><td>RESTRICT</td><td>Prüfarten sind Domänenkonstanten</td></tr>
+    <tr><td><code>TERMIN.pruefer_kuerzel → PRUEFER</code></td><td>SET NULL</td><td>Termine bleiben bestehen, wenn ein Prüfer ausscheidet</td></tr>
+    <tr><td><code>TERMIN.status_code → STATUS</code></td><td>RESTRICT</td><td>Statuswerte sind Domänenkonstanten</td></tr>
+    <tr><td><code>MANGEL.termin_id → TERMIN</code></td><td>CASCADE</td><td>Wird ein Termin gelöscht, gehen die Mängel mit</td></tr>
+    <tr><td><code>MANGEL.kategorie_code → MANGEL_KATEGORIE</code></td><td>RESTRICT</td><td>Kategorien sind Domänenkonstanten</td></tr>
+  </table>
+  <p>Alle <code>ON UPDATE</code>-Regeln sind CASCADE — das hat sich bei der
+  Umstellung der Mangelkategorien auf die HU-Richtlinie (Migration 2,
+  Kapitel 7) praktisch bewährt, weil umbenannte Kategorie-Codes automatisch in
+  die Mängel-Zeilen propagiert wurden.</p>
+
+  <h3>4.3&ensp;Physisches Modell: MariaDB</h3>
+  <p>Die physische Umsetzung nutzt MariaDB (InnoDB, utf8mb4). Primärschlüssel
+  der Fachtabellen sind clientseitig erzeugte UUIDs (<code>CHAR(36)</code>),
+  was optimistische UI-Updates ohne Roundtrip erlaubt; die API erzwingt das
+  UUID-Format serverseitig. Exemplarisch die Tabelle <code>fahrzeug</code> mit
+  UNIQUE- und CHECK-Constraints:</p>
+  <pre><code>CREATE TABLE fahrzeug (
+  fahrzeug_id     CHAR(36) PRIMARY KEY,
+  kennzeichen     VARCHAR(32)  NOT NULL,
+  fin             VARCHAR(32),
+  hersteller      VARCHAR(120) NOT NULL,
+  modell          VARCHAR(120) NOT NULL,
+  baujahr         INT,
+  farbe           VARCHAR(80),
+  typ             VARCHAR(80)  NOT NULL,
+  kilometerstand  INT,
+  hu_faellig      DATE,
+  halter_id       CHAR(36) NOT NULL,
+  erfasst_am      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY fahrzeug_kennzeichen_unique (kennzeichen),
+  UNIQUE KEY fahrzeug_fin_unique (fin),          -- mehrere NULL erlaubt
+  KEY fahrzeug_hu_idx (hu_faellig),
+  KEY fahrzeug_halter_idx (halter_id),
+  CONSTRAINT fahrzeug_halter_fk FOREIGN KEY (halter_id)
+    REFERENCES halter(halter_id) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT fahrzeug_baujahr_check
+    CHECK (baujahr IS NULL OR (baujahr BETWEEN 1885 AND 2100)),
+  CONSTRAINT fahrzeug_km_check
+    CHECK (kilometerstand IS NULL OR (kilometerstand BETWEEN 0 AND 3000000))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;</code></pre>
+  <p>Die Indizes sind aus den tatsächlichen Zugriffsmustern der Anwendung
+  abgeleitet, nicht pauschal gesetzt:</p>
+  <table>
+    <tr><th>Index</th><th>Tabelle</th><th>Zugriffsmuster</th></tr>
+    <tr><td><code>termin_datum_idx (datum, uhrzeit)</code></td><td>termin</td><td>Tagesplan-Ansicht</td></tr>
+    <tr><td><code>termin_fahrzeug_idx (fahrzeug_id, datum)</code></td><td>termin</td><td>Prüfhistorie eines Fahrzeugs</td></tr>
+    <tr><td><code>fahrzeug_hu_idx (hu_faellig)</code></td><td>fahrzeug</td><td>HU-Fälligkeitsauswertung</td></tr>
+    <tr><td><code>fahrzeug_halter_idx (halter_id)</code></td><td>fahrzeug</td><td>Fahrzeuge eines Halters</td></tr>
+    <tr><td><code>mangel_termin_idx / mangel_kategorie_idx</code></td><td>mangel</td><td>Mängel je Termin; Statistik je Kategorie</td></tr>
+    <tr><td><code>halter_name_idx (name)</code></td><td>halter</td><td>Halter-Suche und Sortierung</td></tr>
+  </table>
+  <p>Stammdaten (Status-Workflow, Prüfarten, Mangelkategorien nach HU-Richtlinie
+  mit <code>blockiert_bestanden</code>-Flag für EM/GfM) werden beim API-Start
+  idempotent per <code>INSERT IGNORE</code> geseedet. Ein zusätzlicher
+  UNIQUE-Constraint <code>(fahrzeug_id, datum, uhrzeit)</code> auf
+  <code>termin</code> verhindert Doppelbuchungen desselben Fahrzeugs zum
+  selben Zeitpunkt.</p>
+</section>
+
+<!-- ============ 5 ARCHITEKTUR ============ -->
+<section class="pb" id="architektur">
+  <h2>5&ensp;Systemarchitektur</h2>
+  <p>Die Anwendung trennt Präsentation, API und Persistenz strikt. Der Browser
+  enthält keine Datenbank-Engine und keine Zugangsdaten; sämtlicher
+  Datenzugriff läuft über eine Express-API:</p>
+  <figure>
+    <svg viewBox="0 0 700 120" style="max-width:100%; height:auto;" role="img" aria-label="Architektur">
+      <defs><marker id="arr" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#333"/></marker></defs>
+      <rect x="10"  y="35" width="140" height="50" rx="4" fill="#e8f1f3" stroke="#00404f" stroke-width="1.5"/>
+      <text x="80" y="56" text-anchor="middle" font-size="12.5" font-weight="600" fill="#00404f">React/Vite-SPA</text>
+      <text x="80" y="72" text-anchor="middle" font-size="10.5" fill="#555">Views · useDb · apiClient</text>
+      <rect x="230" y="35" width="150" height="50" rx="4" fill="#e8f1f3" stroke="#00404f" stroke-width="1.5"/>
+      <text x="305" y="56" text-anchor="middle" font-size="12.5" font-weight="600" fill="#00404f">Express-API</text>
+      <text x="305" y="72" text-anchor="middle" font-size="10.5" fill="#555">Auth · Validierung · WF-01</text>
+      <rect x="460" y="35" width="150" height="50" rx="4" fill="#e8f1f3" stroke="#00404f" stroke-width="1.5"/>
+      <text x="535" y="56" text-anchor="middle" font-size="12.5" font-weight="600" fill="#00404f">MariaDB</text>
+      <text x="535" y="72" text-anchor="middle" font-size="10.5" fill="#555">3NF · FKs · CHECKs · Trigger</text>
+      <line x1="150" y1="60" x2="228" y2="60" stroke="#333" stroke-width="1.3" marker-end="url(#arr)"/>
+      <text x="189" y="52" text-anchor="middle" font-size="10">HTTP/JSON</text>
+      <text x="189" y="78" text-anchor="middle" font-size="10">Bearer-Token</text>
+      <line x1="380" y1="60" x2="458" y2="60" stroke="#333" stroke-width="1.3" marker-end="url(#arr)"/>
+      <text x="419" y="52" text-anchor="middle" font-size="10">SQL (Pool,</text>
+      <text x="419" y="78" text-anchor="middle" font-size="10">parametrisiert)</text>
+    </svg>
+    <figcaption>Abb. 2: Grundarchitektur — die Views kennen weder SQL noch Datenbankdetails</figcaption>
+  </figure>
+  <table>
+    <tr><th>Schicht</th><th>Ort</th><th>Verantwortung</th></tr>
+    <tr><td>Präsentation</td><td><code>src/views</code>, <code>src/features</code>, <code>src/components</code></td><td>UI, Formulare, Tabellen, Charts, Bericht-Druck</td></tr>
+    <tr><td>Auth (Frontend)</td><td><code>src/auth/AuthContext.tsx</code>, <code>LoginView</code></td><td>Login-Flow, Token-Haltung, <code>useRechte()</code> für UI-Gating</td></tr>
+    <tr><td>State/API-Client</td><td><code>src/hooks/useDb.ts</code>, <code>src/db/apiClient.ts</code></td><td>React-State, optimistische Updates mit Rollback, HTTP-Aufrufe, 5-s-Polling-Sync</td></tr>
+    <tr><td>Backend-API</td><td><code>server/index.js</code>, <code>server/validate.js</code></td><td>REST-Endpunkte, serverseitige Validierung, Feld-Mapping, Workflow-Regeln</td></tr>
+    <tr><td>Auth (Backend)</td><td><code>server/auth.js</code></td><td>scrypt-Hashes, HMAC-Token, Rollen-Matrix</td></tr>
+    <tr><td>Datenbank</td><td><code>server/db.js</code>, <code>server/migrations.js</code></td><td>Versionierte Migrationen, Constraints, Seeds, WF-01-Trigger</td></tr>
+  </table>
+  <h3>5.1&ensp;REST-Schnittstelle</h3>
+  <table>
+    <tr><th>Methode</th><th>Pfad</th><th>Zweck</th></tr>
+    <tr><td>GET</td><td><code>/api/health</code></td><td>Verfügbarkeit inkl. echtem DB-Ping (503 bei DB-Ausfall)</td></tr>
+    <tr><td>POST</td><td><code>/api/auth/login</code></td><td>Login (Kürzel + Passwort → signiertes Token)</td></tr>
+    <tr><td>GET/POST/PATCH/DELETE</td><td><code>/api/halter</code>, <code>/api/fahrzeuge</code>, <code>/api/termine</code></td><td>CRUD der Fachentitäten</td></tr>
+    <tr><td>PATCH</td><td><code>/api/termine/:id/status</code></td><td>Statuswechsel mit WF-01-Prüfung</td></tr>
+    <tr><td>GET / POST / DELETE</td><td><code>/api/termine/:id/maengel</code>, <code>/api/maengel</code></td><td>Mängel eines Termins verwalten</td></tr>
+    <tr><td>POST</td><td><code>/api/admin/reset</code>, <code>/api/admin/demo</code></td><td>Bewegungsdaten löschen / Demo-Daten laden (chef + <code>X-Admin-Token</code>)</td></tr>
+  </table>
+  <p>Fehler werden fachlich gemappt statt durchgereicht: MariaDB-Duplikate
+  (1062) werden zu HTTP 409, Fremdschlüssel-Verletzungen (1452) zu 400,
+  RESTRICT-Konflikte (1451) zu 409, CHECK-Verletzungen zu 400; unbekannte IDs
+  bei PATCH/DELETE liefern 404. Der generische 500-Fall gibt keine
+  SQL-Details nach außen.</p>
+  <h3>5.2&ensp;Deployment: On-Premise pro Prüfstelle</h3>
+  <p>Der Zielbetrieb ist ein Server-PC pro Prüfstelle mit
+  <code>docker compose up</code> (MariaDB + API); Empfangs-, Prüfer- und
+  Chef-Geräte verbinden sich über das LAN. Der MariaDB-Port ist im
+  Docker-Deployment nur an 127.0.0.1 gebunden — von außen ist ausschließlich
+  die API erreichbar. Ein Backup-Konzept in Stufen (mysqldump lokal,
+  zweite Platte, Offsite) ist in <code>docs/backup.md</code> beschrieben und
+  in Stufe 1 umgesetzt.</p>
+</section>
+
+<!-- ============ 6 WF-01 ============ -->
+<section id="wf01">
+  <h2>6&ensp;Workflow-Regel WF-01: Durchsetzung in drei Schichten</h2>
+  <p>WF-01 („kein <em>Bestanden</em> bei nicht behobenem EM/GfM", § 29 StVZO)
+  ist relationsübergreifend — sie hängt von <code>termin</code>,
+  <code>mangel</code> und <code>mangel_kategorie</code> gleichzeitig ab und
+  ist daher nicht als einfacher CHECK-Constraint ausdrückbar. Sie wird nach
+  dem Prinzip <em>Defense in Depth</em> in drei Schichten erzwungen (ADR-003):</p>
+  <ol>
+    <li><strong>UI-Guard:</strong> Die Status-Controls verhindern die Auswahl
+    von <em>Bestanden</em>, sobald ein blockierender Mangel bekannt ist
+    (zentral in <code>istBlockierenderMangel</code>).</li>
+    <li><strong>API-Guard:</strong> <code>PATCH /api/termine/:id/status</code>
+    prüft per JOIN gegen die Datenbank:
+    <pre><code>SELECT COUNT(*) AS count
+FROM mangel m
+JOIN mangel_kategorie mk ON mk.kategorie_code = m.kategorie_code
+WHERE m.termin_id = ?
+  AND mk.blockiert_bestanden = TRUE
+  AND m.behoben = FALSE;</code></pre></li>
+    <li><strong>DB-Trigger:</strong> <code>trg_termin_wf01_update</code>
+    (<code>BEFORE UPDATE ON termin</code>) wirft
+    <code>SIGNAL SQLSTATE '45000'</code>, falls jemand die ersten beiden
+    Schichten umgeht — etwa per direktem SQL-Client. Der zentrale
+    Error-Handler der API mappt SQLSTATE 45000 auf HTTP 422.</li>
+  </ol>
+  <p>Die Regel ist damit auch gegen Fehler in künftigen API-Versionen und gegen
+  direkte Datenbankzugriffe abgesichert — die Datenbank ist die letzte
+  Verteidigungslinie, nicht die Anwendung. Zusätzlich gilt die Umkehrung: Wird
+  ein blockierender Mangel zu einem bereits bestandenen Termin nacherfasst,
+  setzt die API den Termin automatisch auf <em>Nicht bestanden</em> zurück.</p>
+  <p>Das erwartete Verhalten ist als Entscheidungstabelle spezifiziert und
+  durch Integrationstests über alle drei Schichten abgedeckt — inklusive des
+  SQL-Bypass-Falls direkt gegen die Datenbank:</p>
+  <table>
+    <tr><th>Mängel vorhanden</th><th>Kategorie</th><th>Zielstatus</th><th>Erwartung</th></tr>
+    <tr><td>nein</td><td>—</td><td>Bestanden</td><td>erlaubt</td></tr>
+    <tr><td>ja</td><td>OM/GM</td><td>Bestanden</td><td>erlaubt</td></tr>
+    <tr><td>ja</td><td>EM/GfM, nicht behoben</td><td>Bestanden</td><td><strong>blockiert</strong> (UI, API 422, Trigger)</td></tr>
+    <tr><td>ja</td><td>EM/GfM, behoben</td><td>Bestanden</td><td>erlaubt</td></tr>
+    <tr><td>ja</td><td>EM/GfM</td><td>Nicht bestanden</td><td>erlaubt</td></tr>
+  </table>
+</section>
+
+<!-- ============ 7 MIGRATIONEN ============ -->
+<section id="migrationen">
+  <h2>7&ensp;Schema-Evolution und Betrieb</h2>
+  <p>Da jede Prüfstelle ihre eigene Datenbank betreibt, muss ein
+  Software-Update das Schema bestehender Installationen sicher
+  weiterentwickeln können. Dafür wurde ein schlankes, versioniertes
+  Migrations-Framework implementiert (<code>server/migrations.js</code>,
+  ADR-011):</p>
+  <ul>
+    <li>Jede Migration läuft <strong>genau einmal pro Datenbank</strong> und
+    wird in der Tabelle <code>schema_migration</code> (<code>version</code>,
+    <code>name</code>, <code>applied_at</code>) protokolliert.</li>
+    <li>Das Migrations-Array ist <strong>append-only</strong>; bestehende
+    Einträge werden nie verändert. Aktuell: 1 <em>initial-schema</em>,
+    2 <em>hu-richtlinie-kategorien</em>, 3 <em>benutzer-tabelle</em>.</li>
+    <li><code>GET_LOCK</code> serialisiert konkurrierende Prozess-Starts, damit
+    zwei gleichzeitig startende API-Instanzen nicht dieselbe Migration doppelt
+    anwenden.</li>
+    <li>Einen Down-Pfad gibt es bewusst nicht — Rollback bedeutet
+    Restore aus dem Backup (<code>docs/backup.md</code>). Das hält die
+    Migrationen einfach und ehrlich gegenüber dem, was in der Praxis wirklich
+    getestet wird.</li>
+  </ul>
+  <p>Stammdaten-Seeds und der WF-01-Trigger sind dagegen
+  <em>Desired-State</em>: Sie werden bei jedem Boot idempotent angewendet
+  (<code>INSERT IGNORE</code> / <code>CREATE OR REPLACE TRIGGER</code>).
+  Migration 2 hat den Adoption-Pfad real bewiesen: Die Umstellung der
+  Mangelkategorien auf die HU-Richtlinie lief per <code>ON UPDATE
+  CASCADE</code> über eine Bestands-Datenbank mit vorhandenen Bewegungsdaten,
+  ohne Datenverlust.</p>
+</section>
+
+<!-- ============ 8 SICHERHEIT ============ -->
+<section class="pb" id="sicherheit">
+  <h2>8&ensp;Authentifizierung, Rollen und API-Härtung</h2>
+  <h3>8.1&ensp;Login und Rollen</h3>
+  <p>Die API kennt drei Rollen — <code>empfang</code>, <code>pruefer</code>,
+  <code>chef</code> — die serverseitig pro Endpunkt durchgesetzt werden
+  (UI-Ausblendungen sind nur Komfort, nie Sicherheitsgrenze):</p>
+  <table>
+    <tr><th>Aktion</th><th>empfang</th><th>pruefer</th><th>chef</th></tr>
+    <tr><td>Lesen (alle GET-Endpunkte)</td><td>✔</td><td>✔</td><td>✔</td></tr>
+    <tr><td>Halter/Fahrzeuge/Termine anlegen und ändern</td><td>✔</td><td>✔</td><td>✔</td></tr>
+    <tr><td>Status setzen (WF-01-Pfad)</td><td>—</td><td>✔</td><td>✔</td></tr>
+    <tr><td>Mängel anlegen/löschen</td><td>—</td><td>✔</td><td>✔</td></tr>
+    <tr><td>Halter/Fahrzeuge/Termine löschen</td><td>—</td><td>—</td><td>✔</td></tr>
+    <tr><td><code>/api/admin/*</code> (zusätzlich <code>X-Admin-Token</code>)</td><td>—</td><td>—</td><td>✔</td></tr>
+  </table>
+  <p>Passwörter werden mit <strong>scrypt</strong> gehasht, Tokens sind
+  <strong>HMAC-SHA256</strong>-signiert und 12 Stunden gültig — beides mit
+  <code>node:crypto</code> ohne Zusatz-Dependencies. Die Rollen sind auch auf
+  Datenbankebene abgesichert (<code>CHECK (rolle IN ('empfang','pruefer','chef'))</code>).
+  In Produktion ist die Authentifizierung per Default aktiv; in
+  Entwicklung/CI per Default aus (<code>AUTH_ENABLED</code> überschreibt in
+  beide Richtungen).</p>
+  <h3>8.2&ensp;Härtungsmaßnahmen</h3>
+  <ul>
+    <li>Durchgängig <strong>parametrisierte Queries</strong>; Eingaben werden
+    zusätzlich serverseitig validiert (<code>server/validate.js</code>),
+    Client-IDs müssen UUID-Format haben.</li>
+    <li><strong>helmet</strong>-Security-Header mit CSP ohne Inline-Scripts
+    (der Bericht-Druck wird deshalb vom Opener getriggert statt per
+    Inline-Script).</li>
+    <li><strong>Rate-Limits</strong> in Produktion: 600/min auf
+    <code>/api</code>, 30/15 min auf <code>/api/admin</code>, 10/15 min auf
+    <code>/api/auth/login</code> (Brute-Force-Schutz).</li>
+    <li><strong>CORS</strong> auf localhost und private RFC-1918-Adressen
+    beschränkt (erweiterbar per <code>ALLOWED_ORIGINS</code>).</li>
+    <li>Admin-Endpunkte doppelt geschützt (chef-Rolle <em>und</em>
+    <code>X-Admin-Token</code>); der Token-Vergleich ist timing-sicher; ohne
+    gesetzten <code>ADMIN_TOKEN</code> verweigert der Server in Produktion den
+    Start (Fail-fast statt still-offen).</li>
+    <li>MariaDB-Zugangsdaten liegen ausschließlich in der <code>.env</code>
+    auf dem Server; das Frontend-Bundle enthält keine Credentials; der
+    Datenbank-Port ist nur lokal gebunden.</li>
+  </ul>
+  <p>Bewusst offen (dokumentierte Restpunkte für den Produktivbetrieb):
+  HTTPS/TLS im LAN, Passwort-Self-Service und rollenbasierte
+  Datenbank-Benutzerrechte.</p>
+</section>
+
+<!-- ============ 9 QS ============ -->
+<section id="qs">
+  <h2>9&ensp;Qualitätssicherung und Tests</h2>
+  <p>Die Testsuite umfasst zum Berichtsstand <strong>231 automatisierte
+  Tests</strong>, verteilt über eine klassische Testpyramide:</p>
+  <table>
+    <tr><th>Ebene</th><th>Umfang</th><th>Werkzeug / Ort</th></tr>
+    <tr><td>Unit</td><td>Validatoren (Frontend und <code>server/validate.js</code>, 38 Tests), Datums- und Hilfsfunktionen</td><td>Vitest</td></tr>
+    <tr><td>Auth</td><td>Passwort-Hashing, Token-Signatur/-Ablauf, Rollen-Matrix (17 Tests)</td><td>Vitest, <code>server/tests/auth.test.js</code></td></tr>
+    <tr><td>Component / Hook</td><td>Modale, Controls, <code>useDb</code> inkl. optimistischem Rollback</td><td>React Testing Library</td></tr>
+    <tr><td>UI-Flow</td><td>12 Flows: Login, Rollen-Gating, Fahrzeug-/Termin-Anlage, WF-01 durch die UI</td><td>React Testing Library, <code>src/tests/flows/</code></td></tr>
+    <tr><td>API-Integration</td><td>WF-01 über alle drei Schichten gegen eine <strong>echte MariaDB</strong>, inkl. SQL-Bypass-Test des Triggers und Boot-Guard (9 Tests)</td><td>Vitest, <code>server/tests/wf01.test.js</code></td></tr>
+  </table>
+  <p>Als Testentwurfsverfahren kamen Äquivalenzklassenbildung (z.&nbsp;B.
+  Kennzeichen-Formate), Grenzwertanalyse (Baujahr 1885/2100, Kilometerstand
+  0/3.000.000), die Entscheidungstabelle zu WF-01 (Kapitel 6) und
+  zustandsbasierte Tests des Termin-Workflows zum Einsatz.</p>
+  <p>Die CI (GitHub Actions) fährt bei jedem Push eine echte MariaDB als
+  Service hoch und führt Lint, Typecheck, die komplette Testsuite und den
+  Production-Build aus; zusätzlich läuft eine statische
+  CodeQL-Sicherheitsanalyse. Die Integrationstests laufen damit nicht gegen
+  Mocks, sondern gegen dieselbe Datenbank-Engine wie in Produktion.</p>
+  <p>Nicht automatisiert und als Restrisiko dokumentiert: CRUD-Integrationstests
+  der übrigen Endpunkte gegen eine isolierte Testdatenbank, echte
+  Mehrschreiber-Konflikte (der 5-Sekunden-Polling-Sync ist umgesetzt,
+  Race-Szenarien sind manuell getestet), Lasttests sowie ein Restore-Test
+  gegen ein echtes Backup.</p>
+</section>
+
+<!-- ============ 10 KI ============ -->
+<section id="ki">
+  <h2>10&ensp;Einsatz von KI-Werkzeugen</h2>
+  <p>Im Projekt wurden KI-Werkzeuge (Claude, ChatGPT, GitHub Copilot) als
+  Arbeitsmittel eingesetzt — für Code-Generierung nach Vorgabe, Refactoring,
+  Dokumentations-Entwürfe und als Diskussionspartner bei
+  Architekturalternativen. Der Einsatz ist vollständig offengelegt:
+  <code>docs/ki-nutzung.md</code> dokumentiert je Einsatzbereich das typische
+  Prompt-Muster, den Validierungs-Schritt und die Abgrenzung zur
+  Eigenleistung; <code>docs/ki_nutzungserklaerung.md</code> enthält die
+  formale Erklärung.</p>
+  <p>Das Arbeitsprinzip war durchgängig: <strong>Spezifikation und
+  Entscheidung beim Team, Ausarbeitung ggf. mit KI, danach Validierung gegen
+  laufendes System und Tests.</strong> Fachliche Entscheidungen — das
+  ER-Modell, die Kardinalitäten, CASCADE-/RESTRICT-Abwägungen, die
+  WF-01-Semantik nach HU-Richtlinie, das On-Premise-Produktmodell — stammen
+  aus der eigenen Domänenanalyse. KI-generierter Code wurde grundsätzlich
+  gelesen, gegen das dokumentierte Datenmodell abgeglichen, im Browser bzw.
+  gegen die laufende Datenbank getestet und mit Tests abgesichert, bevor er
+  übernommen wurde.</p>
+</section>
+
+<!-- ============ 11 FAZIT ============ -->
+<section id="fazit">
+  <h2>11&ensp;Ergebnis, Grenzen und Ausblick</h2>
+  <p>Das Projekt hat alle im Pflichtenheft definierten funktionalen
+  Anforderungen (F-01 bis F-11) umgesetzt und erfüllt die Abnahmekriterien:
+  Build und Typecheck laufen fehlerfrei, die API startet nur mit erreichbarer
+  Datenbank, Demo-Daten durchlaufen alle Ansichten, und ein Termin mit nicht
+  behobenem EM/GfM kann auf keinem Weg — UI, API oder direktes SQL — als
+  <em>Bestanden</em> gespeichert werden.</p>
+  <p>Methodisch tragfähig erwiesen haben sich vor allem drei Entscheidungen:
+  der Drei-Schichten-Datenbankentwurf mit konsequenter 3NF (Kapitel 4), die
+  Durchsetzung der Kernregel bis in die Datenbank hinein (Kapitel 6) und die
+  versionierten Migrationen, die den Update-Pfad für Bestandsinstallationen
+  bereits real bewiesen haben (Kapitel 7). Der Umweg über den
+  Firestore-Prototyp war lehrreich: Er hat konkret gezeigt, welche Anomalien
+  ein nicht normalisiertes Modell erzeugt — und warum die Wahl des
+  Datenbankparadigmas eine Architekturentscheidung ist, keine
+  Geschmacksfrage.</p>
+  <p>Für einen echten Produktivbetrieb beim Kunden stehen die in Kapitel 8
+  und 9 benannten Punkte an: TLS im LAN, Passwort-Self-Service,
+  CRUD-Integrationstests gegen eine isolierte Testdatenbank und ein geprobter
+  Restore aus dem Backup. Der Funktionsumfang selbst wurde gegen Ende bewusst
+  eingefroren, um Stabilität und Dokumentationsqualität vor Feature-Breite zu
+  stellen.</p>
+</section>
+
+<!-- ============ 12 QUELLEN ============ -->
+<section id="quellen">
+  <h2>12&ensp;Quellen</h2>
+  <ul>
+    <li>E. F. Codd: <em>A Relational Model of Data for Large Shared Data Banks</em>, 1970.</li>
+    <li>P. Chen: <em>The Entity-Relationship Model — Toward a Unified View of Data</em>, 1976.</li>
+    <li>A. Kemper, A. Eickler: <em>Datenbanksysteme — Eine Einführung</em>.</li>
+    <li>MariaDB Documentation — mariadb.com/kb/en/documentation/ (inkl. Node.js-Connector).</li>
+    <li>React (react.dev), Vite (vite.dev), Express (expressjs.com), TypeScript Handbook (typescriptlang.org/docs).</li>
+    <li>Vitest (vitest.dev), Testing Library (testing-library.com), ESLint (eslint.org).</li>
+    <li>M. Fowler: <em>Patterns of Enterprise Application Architecture</em>; E. Evans: <em>Domain-Driven Design</em>; Scrum Guide (scrumguides.org).</li>
+    <li>Straßenverkehrs-Zulassungs-Ordnung (StVZO), insbesondere § 29 und Anlage VIII; HU-Richtlinie zur Mängeleinstufung.</li>
+  </ul>
+</section>
+
+<!-- ============ ANHANG ============ -->
+<section class="pb">
+  <h2>Anhang A&ensp;Übersicht der Architekturentscheidungen (ADR)</h2>
+  <p>Alle Entscheidungen liegen mit Kontext, Alternativen und Konsequenzen in
+  <code>docs/decisions/</code>:</p>
+  <table>
+    <tr><th>ADR</th><th>Entscheidung</th></tr>
+    <tr><td>001</td><td>MariaDB als zentrale Persistenz (statt Firestore/PGlite)</td></tr>
+    <tr><td>002</td><td>Normalisierung des Schemas bis zur 3. Normalform</td></tr>
+    <tr><td>003</td><td>WF-01-Enforcement in drei Schichten (UI, API, DB-Trigger)</td></tr>
+    <tr><td>004</td><td>Express-API mit dem <code>mariadb</code>-Node.js-Driver</td></tr>
+    <tr><td>005</td><td>Graduelle TypeScript-Einführung (neue Module in TS)</td></tr>
+    <tr><td>006</td><td>Firebase-Hosting nur als statische Marketing-Landing</td></tr>
+    <tr><td>007</td><td>API-Client-Pattern: Views ohne direkten Datenbankzugriff</td></tr>
+    <tr><td>008</td><td>Keine eingebetteten Arrays — Mängel als eigene Relation</td></tr>
+    <tr><td>009</td><td>Monolithischer Server statt Microservice-Split</td></tr>
+    <tr><td>010</td><td>Hardening-Roadmap (Security-Header, Rate-Limits, Fail-fast)</td></tr>
+    <tr><td>011</td><td>Versionierte, append-only Schema-Migrationen</td></tr>
+  </table>
+  <p style="margin-top:1.6rem; font-size:0.85rem; color:var(--muted);">
+  Weiterführende Projektdokumente im Repository: Pflichtenheft
+  (<code>docs/pflichtenheft.md</code>), vollständiges Datenmodell
+  (<code>docs/datenmodell.md</code>), Design-Dokumentation
+  (<code>docs/design.md</code>), Testkonzept (<code>docs/testkonzept.md</code>),
+  Backup-Konzept (<code>docs/backup.md</code>), KI-Nutzung
+  (<code>docs/ki-nutzung.md</code>), Architecture Map
+  (<code>docs/architecture-map.html</code>).</p>
+</section>
+
+</div>
+</body>
+</html>
