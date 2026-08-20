@@ -374,9 +374,9 @@ produktnahem Anspruch — dieser Unterschied wird sonst nachgefragt.
         </p>
       </div>
       <div class="callout" style="margin-top:16px; font-size:14px">
-        Diese eine Regel entscheidet über die Verkehrssicherheit eines Fahrzeugs.
-        Sie ist der Grund, warum wir uns die Architektur so genau angesehen haben —
-        und der rote Faden dieser Präsentation.
+        Diese Regel hat unmittelbare Auswirkung auf das Prüfergebnis und darf deshalb
+        <strong>nicht allein von der Benutzeroberfläche abhängen</strong>.
+        Sie ist der rote Faden dieser Präsentation.
       </div>
     </div>
   </div>
@@ -397,8 +397,10 @@ Dazu kommt: der Vorgang wandert über drei Arbeitsplätze — Empfang legt Termi
 und Stammdaten an, der Prüfer erfasst Mängel und setzt das Ergebnis, der Chef
 wertet aus und verwaltet.
 Und eine Regel ist wichtiger als alle anderen: WF-01. Ein Fahrzeug mit einem
-unbehobenen erheblichen oder gefährlichen Mangel darf nicht bestehen. Um diese
-Regel dreht sich der Rest der Präsentation."
+unbehobenen erheblichen oder gefährlichen Mangel darf nicht auf 'Bestanden'
+gesetzt werden. Diese Regel wirkt direkt auf das Prüfergebnis — und genau
+deshalb darf sie nicht allein in der Oberfläche liegen. Um sie dreht sich der
+Rest der Präsentation."
 
 MÖGLICHE FRAGEN:
 Q: Woher kommt die Mangel-Klassifizierung OM/GM/EM/GfM?
@@ -413,6 +415,9 @@ A: Der Fahrzeughalter — er erscheint physisch und bekommt den Bericht, hat
    aber keinen Systemzugang.
 
 VORSICHT:
+Nicht sagen "diese Regel entscheidet über die Verkehrssicherheit". Das ist zu
+weit gegriffen — die Software entscheidet über das dokumentierte Prüfergebnis,
+nicht über den technischen Zustand des Fahrzeugs.
 Keine Marktbehauptungen aufstellen ("Prüfstellen arbeiten heute mit Excel").
 Wir haben dazu keine Erhebung. Wenn gefragt wird, warum das Problem relevant
 ist: als Studienprojekt an einem realistischen, regelbehafteten Ablauf
@@ -631,8 +636,9 @@ CHECK und FK decken Struktur und Wertebereiche ab — die Plausibilität etwa
       <div class="layer" style="border-top:2px solid var(--green)">
         <div class="layer-tag" style="color:var(--green)">Ebene 2 · Express</div>
         <div class="layer-head">API-Guard</div>
-        <p>Der Status-Endpunkt zählt per SQL-JOIN die blockierenden, nicht behobenen Mängel und
-        antwortet mit <span class="mono" style="font-size:11.5px">{ ok:false, reason }</span>.
+        <p><strong>Genau eine Route</strong> darf den Status ändern. Sie zählt per SQL-JOIN die
+        blockierenden, nicht behobenen Mängel und antwortet mit
+        <span class="mono" style="font-size:11.5px">{ ok:false, reason }</span>.
         <strong>Zweck: die verbindliche Anwendungsregel</strong> mit verständlicher Begründung.</p>
       </div>
       <div class="layer-arrow">│&nbsp; umgehbar: SQL-Client direkt an der Datenbank &nbsp;▼</div>
@@ -655,6 +661,8 @@ CHECK und FK decken Struktur und Wertebereiche ab — die Plausibilität etwa
           <li><strong>API</strong> — verbindlich, aber umgehbar, wenn jemand direkt an der DB sitzt</li>
           <li><strong>Trigger</strong> — greift auch dann, aber ohne fachliche Fehlermeldung</li>
         </ul>
+        <p style="margin-top:9px">Der Trigger deckt zusätzlich die Lücke zwischen Prüfung und
+        <span class="mono" style="font-size:11px">UPDATE</span> ab.</p>
       </div>
 
       <div class="callout green" style="margin-top:16px">
@@ -666,7 +674,6 @@ CHECK und FK decken Struktur und Wertebereiche ab — die Plausibilität etwa
         <strong>Was wir bewusst <em>nicht</em> behaupten:</strong> dass die Datenbank allein jeden
         denkbaren Weg in einen inkonsistenten Zustand abdeckt. Den umgekehrten Fall —
         neuer Mangel an einem bereits bestandenen Termin — löst die API.
-        <span style="color:var(--t3)">Das ist die nächste Folie.</span>
       </div>
     </div>
   </div>
@@ -723,6 +730,18 @@ Q: Wo genau ist die Regel definiert?
 A: Datengetrieben: in mangel_kategorie steht das Flag blockiert_bestanden.
    UI, API und Trigger lesen dasselbe Flag; EM und GfM sind nicht hart
    verdrahtet.
+Q: Gibt es andere API-Wege, den Status zu ändern?
+A: Nein — nur PATCH /api/termine/:id/status. Der allgemeine Termin-PATCH
+   nimmt statusCode gar nicht mehr an (HTTP 400), und POST /api/termine legt
+   jeden Termin als 'Geplant' an. Das war bis vor kurzem anders: beide Routen
+   schrieben den Status mit und verlangten dafür nur Schreibrecht — damit
+   konnte Empfang ein Prüfergebnis setzen. Zwei Regressionstests halten das
+   jetzt geschlossen.
+Q: Wenn die API den Blocker schon prüft — wozu dann noch der Trigger?
+A: Zwei Gründe. Erstens Schreibzugriffe außerhalb der Anwendung: SQL-Client,
+   Adminer, ein Restore-Skript. Zweitens sind Prüfung und UPDATE im
+   Status-Endpunkt zwei Anweisungen; wird dazwischen ein blockierender Mangel
+   angelegt, fängt der Trigger den UPDATE ab.
 
 VORSICHT — ZWEI FORMULIERUNGEN GENAU EINHALTEN:
 1) Sagen: "Der Trigger schützt den Wechsel auf Bestanden."
@@ -904,9 +923,11 @@ Stellen mit mehreren Schreibschritten im Server.
         <p>Zusätzlich: löschen und administrative Aktionen.</p>
       </div>
 
-      <div class="callout amber" style="margin-top:14px">
-        <strong>Stand ehrlich:</strong> Das Rollenmodell ist umgesetzt und wird serverseitig geprüft.
-        Eine Route ist aber noch nicht so eng wie das Modell — dazu mehr im Anhang B1.
+      <div class="callout green" style="margin-top:13px; font-size:12.5px">
+        <strong>Durchgesetzt wird serverseitig:</strong> Jede Route verlangt ein Recht aus der
+        Matrix. Der Status ist nur über <em>eine</em> Route änderbar — die einzige mit
+        <span class="mono" style="font-size:11.5px">statusSetzen</span>. Die UI blendet zusätzlich
+        aus: Komfort, keine Durchsetzung.
       </div>
     </div>
   </div>
@@ -931,10 +952,12 @@ signieren mit HMAC-SHA256, der Algorithmus ist fest verdrahtet, es gibt kein
 Header-Segment — damit ist zum Beispiel ein alg=none-Downgrade strukturell
 ausgeschlossen. Dafür ist es eben auch kein Standard, den andere Systeme
 lesen könnten.
-Drei Rollen: Empfang, Prüfer, Chef.
-Und dazu gleich ehrlich: Das Rollenmodell ist implementiert und wird
-serverseitig geprüft — aber eine Route ist noch nicht so eng wie das Modell.
-Ich habe das im Anhang aufgeschlüsselt und kann es zeigen."
+Drei Rollen: Empfang, Prüfer, Chef. Empfang legt Termine und Stammdaten an,
+Prüfer erfasst zusätzlich Mängel und setzt das Ergebnis, Chef darf zusätzlich
+löschen und administrieren.
+Wichtig ist, wo das durchgesetzt wird: an jeder Route, über eine Middleware,
+die ein Recht aus der Matrix verlangt. Speziell beim Status haben wir
+nachgezogen — dazu erzähle ich gern mehr, wenn Sie fragen."
 
 MÖGLICHE FRAGEN:
 Q: Warum kein fertiges JWT / kein bcrypt?
@@ -955,11 +978,19 @@ A: Über das LAN heute per HTTP, ja — das ist die offene TLS-Frage von Folie 9
    In der Datenbank steht es nur als scrypt-Hash.
 
 VORSICHT:
-1) NICHT sagen: "Empfang kann den Status über keinen Weg ändern."
-   Der generische PATCH /api/termine/:id lässt statusCode heute mit reinem
-   Schreibrecht durch. Der Weg auf Bestanden bleibt bei offenem EM/GfM durch
-   den Trigger blockiert — aber andere Statuswechsel wären möglich.
+1) Präzise bleiben: Durchgesetzt wird die Rolle pro Route in der Middleware.
+   Sagen: "Status ist nur über eine Route änderbar, und die verlangt das
+   Status-Recht." NICHT pauschal behaupten, jede denkbare Aktion sei
+   rollengeprüft — die Aussage gilt für die Routen, nicht für direkten
+   Datenbankzugriff. Wer an der API vorbei in die DB schreibt, umgeht das
+   Rollenmodell komplett; dagegen hilft nur der Trigger (Folie 5) und die
+   Tatsache, dass der DB-Port nur auf localhost hört (Folie 9).
 2) Nicht "JWT" sagen. "JWT-artig, aber kein Standard-JWT".
+3) Wenn nach der Historie gefragt wird: offen zugeben, dass der allgemeine
+   Termin-PATCH den Status früher mit reinem Schreibrecht mitgeschrieben hat.
+   Das war eine echte Lücke, sie ist geschlossen, und es gibt jetzt
+   Regressionstests dafür (Anhang B1). Das ist eine gute Antwort — kein
+   Eingeständnis, das man verstecken müsste.
 -->
 
 <!-- ═════════════ 08  TESTS ═════════════ -->
@@ -1008,9 +1039,9 @@ VORSICHT:
 
       <div class="callout" style="margin-top:16px; font-size:12.5px">
         <strong>Projektstand:</strong> Die Testsuite umfasst laut Dokumentation
-        <strong>231 Tests</strong> (Stand 05.07.2026), davon 12 UI-Flow-Tests und
-        7 WF-01-Integrationstests. In der GitHub-Actions-CI laufen die
-        Integrationstests gegen einen echten MariaDB-Service; der SQL-Bypass-Test
+        <strong>251 Tests</strong> (Stand 20.08.2026), davon 13 UI-Flow-Tests und
+        13 Integrationstests gegen eine echte MariaDB. In der GitHub-Actions-CI laufen
+        die Integrationstests gegen einen echten MariaDB-Service; der SQL-Bypass-Test
         braucht den lokalen Docker-Stack.
       </div>
       <div class="callout amber" style="margin-top:10px; font-size:12.5px">
@@ -1043,16 +1074,16 @@ direktes SQL-UPDATE gegen die Datenbank — an UI und API komplett vorbei — un
 setzt den Status auf Bestanden, obwohl ein offener erheblicher Mangel da ist.
 Die Datenbank lehnt mit Fehler 1644 ab, der Status bleibt stehen. Damit ist
 gezeigt, dass die dritte Ebene wirklich greift und nicht nur behauptet ist.
-Dokumentierter Stand sind 231 Tests. Offen sind CRUD-Integrationstests für die
+Dokumentierter Stand sind 251 Tests. Offen sind CRUD-Integrationstests für die
 restlichen Endpunkte und echte Browser-E2E-Tests."
 
 MÖGLICHE FRAGEN:
-Q: Sind die 231 Tests aktuell grün?
-A: Der dokumentierte Stand vom 05.07.2026 sagt ja. Bei einem Lauf ohne
-   laufenden Docker-Stack werden die 7 WF-01-Integrationstests automatisch
-   übersprungen — dann sind es 224 grüne Tests. In der CI laufen 6 davon
-   gegen eine echte Service-Datenbank mit; nur der SQL-Bypass-Test wird dort
-   ausgelassen, weil er einen Container per docker exec anspricht.
+Q: Sind die 251 Tests aktuell grün?
+A: Bei einem Lauf ohne laufenden Docker-Stack werden die 13 Integrationstests
+   automatisch übersprungen — dann sind es 238 grüne Tests, und genau so
+   wurde zuletzt lokal ausgeführt. In der CI laufen 12 der 13 gegen eine
+   echte Service-Datenbank mit; nur der SQL-Bypass-Test wird dort ausgelassen,
+   weil er einen Container per docker exec anspricht.
 Q: Welche Testentwurfsverfahren nutzen Sie?
 A: Äquivalenzklassen und Grenzwertanalyse bei den Validatoren, Entscheidungs-
    tabellen für die Statuswechsel-Regeln, plus gezielte Sicherheitsfälle
@@ -1165,10 +1196,15 @@ Ergebnis davon, dass wir die eigenen Schwachstellen ernst genommen haben."
 
 MÖGLICHE FRAGEN:
 Q: Warum On-Premise und nicht Cloud?
-A: Die Daten sind personenbezogen (Halter, Kennzeichen, FIN). On-Premise heißt
-   kein Auftragsverarbeiter, kein AVV. Der Preis ist, dass die Werkstatt
-   Backups und Updates selbst verantwortet. Wir hatten anfangs Firebase
-   Hosting geplant — das ist in ADR-006 als 'superseded' dokumentiert.
+A: Die Daten sind personenbezogen (Halter, Kennzeichen, FIN). Beim rein
+   lokalen Betrieb gibt es für die operative Datenbank keinen
+   Cloud-Datenbankanbieter als Auftragsverarbeiter. Sobald aber zum Beispiel
+   externer Support oder ein Offsite-Backup personenbezogene Daten
+   verarbeitet, muss die datenschutzrechtliche Rollenverteilung erneut
+   geprüft werden. Der Preis der Entscheidung ist außerdem, dass die
+   Prüfstelle Backups und Updates selbst verantwortet. Wir hatten anfangs
+   Firebase Hosting geplant — das ist in ADR-006 als 'superseded'
+   dokumentiert.
 Q: Warum kein HTTPS?
 A: Für den LAN-Betrieb war es nicht die erste Priorität, und ein Zertifikat
    für interne Hostnamen bringt eigenen Aufwand mit. Sobald der Zugriff eine
@@ -1185,6 +1221,9 @@ VORSICHT:
 1) NICHT sagen "Kundendaten verlassen die Werkstatt nie" — die Backup-Doku
    beschreibt ein künftiges verschlüsseltes Offsite-Backup. Sagen: "Die
    operativen Primärdaten werden lokal in der Prüfstelle betrieben."
+   Beim Datenschutz nicht pauschal "kein Auftragsverarbeiter, kein AVV nötig"
+   sagen — das gilt für die lokale Datenbank, nicht automatisch für externen
+   Support oder ein späteres Offsite-Backup.
 2) NICHT sagen, TLS/HTTPS sei umgesetzt.
 3) Den Entwicklungsverlauf nicht glätten. Wenn gefragt wird, was der größte
    Fehler war: Die Regeln lagen zu lange nur im Frontend — genau das ist die
@@ -1202,7 +1241,8 @@ VORSICHT:
       <h3 style="color:var(--green)">Heute umgesetzt</h3>
       <ul class="bullets green">
         <li>Relationaler zentraler Datenbestand in MariaDB</li>
-        <li>Rollenmodell mit Login (Empfang · Prüfer · Chef)</li>
+        <li>Rollenmodell mit Login (Empfang · Prüfer · Chef),
+            serverseitig pro Route durchgesetzt</li>
         <li>Zentrale Workflow-Regel WF-01 auf drei Ebenen</li>
         <li>Ausgewählte Schreibvorgänge transaktional</li>
         <li>Automatisierte Tests, in CI gegen echte MariaDB</li>
@@ -1210,16 +1250,20 @@ VORSICHT:
       </ul>
     </div>
     <div>
-      <h3 style="color:var(--amber)">Nächste Ausbaustufen</h3>
-      <ul class="bullets amber">
-        <li>TLS / HTTPS für den LAN-Zugriff</li>
-        <li>Rechteprüfung auf allen Routen vereinheitlichen</li>
-        <li>Audit-Log: wer hat wann was geändert</li>
-        <li>Backup-Automatisierung und Restore-Test</li>
-        <li>Passwort-Self-Service</li>
-        <li>Konfliktbehandlung bei gleichzeitigem Bearbeiten</li>
-        <li>CRUD- und Browser-E2E-Integrationstests</li>
-      </ul>
+      <h3 style="color:var(--amber)">Roadmap</h3>
+      <div class="card tone-amber pad-sm">
+        <h4>Sicherheit &amp; Nachvollziehbarkeit</h4>
+        <p>TLS / HTTPS im LAN &nbsp;·&nbsp; Audit-Log: wer hat wann was geändert</p>
+      </div>
+      <div class="card tone-blue pad-sm" style="margin-top:10px">
+        <h4>Betrieb</h4>
+        <p>Backup-Automatisierung &nbsp;·&nbsp; regelmäßiger Restore-Test</p>
+      </div>
+      <div class="card tone-purple pad-sm" style="margin-top:10px">
+        <h4>Weiterentwicklung</h4>
+        <p>Konflikterkennung bei gleichzeitigem Bearbeiten &nbsp;·&nbsp;
+        Browser-E2E- und CRUD-Integrationstests</p>
+      </div>
     </div>
   </div>
 
@@ -1244,13 +1288,13 @@ SPRECHERNOTIZEN — FOLIE 10 (Fazit) · ca. 60 Sekunden
 
 WAS ICH SAGE:
 "Zusammengefasst: Heute steht ein relationaler zentraler Datenbestand, ein
-Rollenmodell mit Login, die zentrale Workflow-Regel auf drei Ebenen,
-ausgewählte transaktionale Schreibvorgänge, automatisierte Tests und ein
-On-Premise-Deployment.
-Offen — und das benennen wir bewusst — sind TLS, ein vereinheitlichter
-Rechte-Check auf allen Routen, ein Audit-Log, die Backup-Automatisierung,
-Passwort-Self-Service, Konfliktbehandlung beim gleichzeitigen Bearbeiten und
-weitere Integrationstests.
+Rollenmodell mit Login, das serverseitig pro Route durchgesetzt wird, die
+zentrale Workflow-Regel auf drei Ebenen, ausgewählte transaktionale
+Schreibvorgänge, automatisierte Tests und ein On-Premise-Deployment.
+Die Roadmap fällt in drei Bereiche: Sicherheit und Nachvollziehbarkeit — also
+TLS und ein Audit-Log. Betrieb — Backup-Automatisierung und ein regelmäßiger
+Restore-Test. Und Weiterentwicklung — Konflikterkennung beim gleichzeitigen
+Bearbeiten sowie echte Browser-Tests.
 Der Satz, den ich aus diesem Projekt mitnehme, steht unten:
 Kritische Regeln sollten nicht davon abhängen, dass ein Button deaktiviert
 bleibt.
@@ -1259,9 +1303,11 @@ beantworten."
 
 MÖGLICHE FRAGEN:
 Q: Was würden Sie als Erstes nachziehen?
-A: TLS und den vereinheitlichten Rechte-Check auf allen Routen. Beides ist
-   klein im Aufwand und schließt reale Lücken. Danach das Audit-Log, weil
-   req.benutzer schon in jedem Request vorhanden ist.
+A: TLS. Danach das Audit-Log, weil req.benutzer schon in jedem Request
+   vorhanden ist — das ist wenig Aufwand für viel Nachvollziehbarkeit.
+Q: Und was ist mit Passwort-Self-Service?
+A: Steht auch an, ist aber kleiner priorisiert: Passwörter ändert heute die
+   Chef-Rolle direkt in der Datenbank. Details im Anhang B4.
 Q: Ist das Projekt produktionsreif?
 A: Nein, und das behaupten wir nicht. Es ist ein Studienprojekt mit
    produktnaher Architektur. Für einen echten Betrieb fehlen mindestens TLS,
@@ -1272,9 +1318,10 @@ A: Dass die Frage "wo wird eine Regel durchgesetzt" wichtiger ist als die
    ist eine Empfehlung.
 
 VORSICHT:
-Die Liste "Nächste Ausbaustufen" nicht kleinreden und nicht als "wäre nice"
-abtun. Sie ist der Grund, warum die Aussagen auf den anderen Folien
-belastbar sind.
+Die Roadmap nicht kleinreden und nicht als "wäre nice" abtun. Sie ist der
+Grund, warum die Aussagen auf den anderen Folien belastbar sind. Wenn gefragt
+wird, ob wir Punkte weggelassen haben: nein — Passwort-Self-Service steht in
+Anhang B4, die Testlücken in B7.
 -->
 
 <!-- ══════════════════════════════════════════════════════════════════
@@ -1286,7 +1333,7 @@ belastbar sind.
 <!-- ═════════════ B1  ROLLENMATRIX ═════════════ -->
 <div class="slide appendix">
   <div class="eyebrow">Anhang B1 · Zugriffskontrolle</div>
-  <h2>Rollenmatrix — Modell und tatsächlicher Stand</h2>
+  <h2>Rollenmatrix — und wo sie durchgesetzt wird</h2>
   <div class="lede">Die Rechte-Matrix liegt in <span class="mono">server/auth.js</span> und wird von der Middleware <span class="mono">requireAuth(recht)</span> pro Route erzwungen. Die UI blendet zusätzlich aus, was die Rolle nicht darf — durchgesetzt wird serverseitig.</div>
 
   <table style="font-size:12px">
@@ -1296,29 +1343,29 @@ belastbar sind.
     <tr><td>Status setzen über <span class="mono">PATCH /api/termine/:id/status</span></td><td class="no">✗</td><td class="ok">✓</td><td class="ok">✓</td><td class="mono">status</td></tr>
     <tr><td>Mängel anlegen und entfernen</td><td class="no">✗</td><td class="ok">✓</td><td class="ok">✓</td><td class="mono">status</td></tr>
     <tr><td>Löschen von Halter / Fahrzeug / Termin · <span class="mono">/api/admin/*</span></td><td class="no">✗</td><td class="no">✗</td><td class="ok">✓</td><td class="mono">loeschen</td></tr>
-    <tr style="background:rgba(251,191,36,0.06)">
+    <tr style="background:rgba(52,211,153,0.06)">
       <td><strong>Status über den generischen <span class="mono">PATCH /api/termine/:id</span></strong></td>
-      <td class="warn">(✓)</td><td class="ok">✓</td><td class="ok">✓</td>
-      <td class="mono" style="color:var(--amber)">schreiben</td>
+      <td class="no">✗</td><td class="no">✗</td><td class="no">✗</td>
+      <td class="mono" style="color:var(--green)">gar nicht — HTTP 400</td>
     </tr>
   </table>
 
   <div class="grid-2" style="margin-top:18px; gap:20px">
     <div class="callout amber">
-      <strong>Bekannte Abweichung (Stand des Repos):</strong> Der generische
-      <span class="mono">PATCH /api/termine/:id</span> nimmt <span class="mono">statusCode</span>
-      entgegen und verlangt dafür nur das allgemeine Schreibrecht.
-      Ebenso akzeptiert <span class="mono">POST /api/termine</span> einen mitgelieferten
-      <span class="mono">statusCode</span>. Die Rolle <em>empfang</em> könnte über diesen Weg also
-      Statuswerte setzen — die <strong>Beförderung auf „Bestanden“</strong> bleibt bei offenem
-      EM/GfM trotzdem blockiert, weil dort der DB-Trigger greift (HTTP 422).
+      <strong>Was hier vorher offen war:</strong> Der generische
+      <span class="mono">PATCH /api/termine/:id</span> nahm <span class="mono">statusCode</span> entgegen
+      und verlangte dafür nur das allgemeine Schreibrecht; <span class="mono">POST /api/termine</span>
+      übernahm einen mitgelieferten <span class="mono">statusCode</span>. Die Rolle <em>empfang</em>
+      konnte so ein Prüfergebnis setzen, obwohl die Matrix das ausschließt —
+      die Rechte waren an dieser Stelle nur auf dem Papier durchgesetzt.
     </div>
     <div class="callout green">
-      <strong>Saubere Korrektur:</strong> <span class="mono">statusCode</span> aus dem generischen
-      PATCH-Mapping entfernen (bzw. <span class="mono">requireAuth("status")</span> verlangen, wenn das
-      Feld gesetzt ist) und beim POST auf <span class="mono">Geplant</span> erzwingen.
-      Wir weisen die Lücke bewusst aus, statt eine Durchsetzung zu behaupten,
-      die der Code aktuell nicht leistet.
+      <strong>Korrigiert:</strong> <span class="mono">statusCode</span> ist aus dem PATCH-Mapping
+      entfernt und wird mit <span class="mono">400</span> abgelehnt statt still ignoriert;
+      <span class="mono">POST /api/termine</span> legt jeden Termin als
+      <span class="mono">Geplant</span> an. Damit bleibt genau <strong>eine</strong> Route für
+      Statusänderungen — die einzige mit <span class="mono">requireAuth("status")</span>
+      und WF-01-Guard. Abgesichert durch 13 Unit- und 7 Integrationstests (ADR-003, Nachtrag).
     </div>
   </div>
 
@@ -1328,6 +1375,9 @@ belastbar sind.
     Ohne gültigen Token antwortet der Server <span class="mono">401</span>,
     bei unzureichender Rolle <span class="mono">403</span>.
     Admin-Endpunkte verlangen zusätzlich den <span class="mono">X-Admin-Token</span>-Header.
+    <strong>Grenze:</strong> Das Rollenmodell wirkt an der API. Wer direkt in die Datenbank
+    schreibt, umgeht es — dagegen wirken der WF-01-Trigger und die Bindung des
+    DB-Ports an <span class="mono">127.0.0.1</span>.
   </div>
 
   <div class="brand"><span class="dot">●</span> TÜV PRÜFSTELLE PRO</div>
@@ -1505,7 +1555,8 @@ belastbar sind.
     <div class="card tone-purple pad-sm">
       <h4>Fehler-Semantik ohne SQL-Leak</h4>
       <p>Zentrales Mapping: Duplikat → <strong>409</strong> · fehlende Referenz → <strong>400</strong> ·
-      CHECK-Verstoß → <strong>400</strong> · Trigger-SIGNAL → <strong>422</strong>.
+      CHECK-Verstoß → <strong>400</strong> · Trigger-SIGNAL → <strong>422</strong> (Sicherheitsnetz;
+      im Normalbetrieb greift vorher der API-Guard).
       500er geben keine <span class="mono">err.message</span> an den Client — SQL-Texte
       verraten Schemadetails.</p>
     </div>
@@ -1527,8 +1578,7 @@ belastbar sind.
     per <span class="mono">SELECT 1</span> — sonst meldet der Endpunkt „ok“, während MariaDB längst weg ist.
   </div>
   <div class="callout amber" style="margin-top:10px">
-    <strong>Nicht umgesetzt:</strong> TLS/HTTPS · Audit-Log · Rechte-Vereinheitlichung auf dem
-    generischen Termin-PATCH (siehe B1).
+    <strong>Nicht umgesetzt:</strong> TLS/HTTPS · Audit-Log · Token-Widerruf.
   </div>
   <div class="brand"><span class="dot">●</span> TÜV PRÜFSTELLE PRO</div>
   <div class="slide-num">B5</div>
@@ -1588,21 +1638,22 @@ belastbar sind.
 <!-- ═════════════ B7  TESTMATRIX ═════════════ -->
 <div class="slide appendix">
   <div class="eyebrow">Anhang B7 · Tests</div>
-  <h2>Testmatrix — 18 Dateien, dokumentierter Stand 231 Tests</h2>
-  <div class="lede">Zählung laut <span class="mono">docs/test-coverage.md</span> (Stand 05.07.2026). Ohne laufende MariaDB überspringt Vitest die 7 WF-01-Integrationstests automatisch.</div>
+  <h2>Testmatrix — 19 Dateien, dokumentierter Stand 251 Tests</h2>
+  <div class="lede">Zählung laut <span class="mono">docs/test-coverage.md</span> (Stand 20.08.2026). Ohne laufende MariaDB überspringt Vitest die 13 Integrationstests automatisch — ein lokaler Lauf ohne Stack meldet dann 238 grün.</div>
   <div class="grid-2">
     <div>
       <table style="font-size:11.5px">
         <tr><th>Bereich</th><th style="text-align:right">Tests</th></tr>
-        <tr><td>Frontend gesamt (<span class="mono">src/tests/</span>)</td><td style="text-align:right"><strong>167</strong></td></tr>
+        <tr><td>Frontend gesamt (<span class="mono">src/tests/</span>)</td><td style="text-align:right"><strong>168</strong></td></tr>
         <tr><td class="muted" style="padding-left:22px">davon Validatoren / Utils</td><td class="muted" style="text-align:right">106</td></tr>
         <tr><td class="muted" style="padding-left:22px">davon Komponenten &amp; Hooks</td><td class="muted" style="text-align:right">49</td></tr>
-        <tr><td class="muted" style="padding-left:22px">davon UI-Flows</td><td class="muted" style="text-align:right">12</td></tr>
-        <tr><td>Server-Validierung (<span class="mono">validate.test.js</span>)</td><td style="text-align:right"><strong>38</strong></td></tr>
+        <tr><td class="muted" style="padding-left:22px">davon UI-Flows</td><td class="muted" style="text-align:right">13</td></tr>
+        <tr><td>Server-Validierung + Middleware (<span class="mono">validate.test.js</span>)</td><td style="text-align:right"><strong>51</strong></td></tr>
         <tr><td>Auth-Bausteine (<span class="mono">auth.test.js</span>)</td><td style="text-align:right"><strong>17</strong></td></tr>
-        <tr><td>WF-01-Integration gegen echte MariaDB</td><td style="text-align:right"><strong>7</strong></td></tr>
+        <tr><td>WF-01-Integration gegen echte MariaDB</td><td style="text-align:right"><strong>6</strong></td></tr>
+        <tr><td>Termin-Routen-Regression gegen echte MariaDB</td><td style="text-align:right"><strong>7</strong></td></tr>
         <tr><td>Boot-Guards (echter Prozess-Spawn)</td><td style="text-align:right"><strong>2</strong></td></tr>
-        <tr><td><strong>Gesamt</strong></td><td style="text-align:right"><strong>231</strong></td></tr>
+        <tr><td><strong>Gesamt</strong></td><td style="text-align:right"><strong>251</strong></td></tr>
       </table>
       <div class="callout" style="margin-top:12px">
         <strong>Testentwurfsverfahren:</strong> Äquivalenzklassen und Grenzwertanalyse bei den
@@ -1612,15 +1663,17 @@ belastbar sind.
       </div>
     </div>
     <div>
-      <h3>Die 7 WF-01-Integrationstests</h3>
+      <h3>Die 13 Integrationstests gegen echte MariaDB</h3>
       <table style="font-size:11.5px">
         <tr><th>Test</th><th>Zeigt</th></tr>
         <tr><td>Direktes SQL-UPDATE per <span class="mono">docker exec</span></td><td>Trigger lehnt ab — Umgehung an UI und API vorbei scheitert</td></tr>
-        <tr><td>Generischer <span class="mono">PATCH /api/termine/:id</span></td><td>HTTP 422 aus dem Trigger-Mapping</td></tr>
-        <tr><td>Status-Endpunkt</td><td>sauberes <span class="mono">ok:false</span> mit Begründung</td></tr>
+        <tr><td>Status-Endpunkt bei offenem EM</td><td>sauberes <span class="mono">ok:false</span> mit Begründung</td></tr>
         <tr><td>Happy Path ohne blockierenden Mangel</td><td>„Bestanden“ funktioniert normal</td></tr>
         <tr><td><span class="mono">behoben = TRUE</span>-Semantik</td><td>behobene Mängel blockieren nicht mehr</td></tr>
         <tr><td>Auto-Rückstufung (2 Fälle)</td><td>unbehoben → Rückstufung; behoben → bleibt „Bestanden“</td></tr>
+        <tr style="background:rgba(52,211,153,0.06)"><td>Generischer <span class="mono">PATCH</span> mit <span class="mono">statusCode</span> (2)</td><td>HTTP 400, Status unverändert — auch bei „Geplant“</td></tr>
+        <tr style="background:rgba(52,211,153,0.06)"><td><span class="mono">POST /api/termine</span> (3)</td><td>legt immer „Geplant“ an, lehnt anderen Status ab</td></tr>
+        <tr style="background:rgba(52,211,153,0.06)"><td>PATCH ohne Status · Status-Endpunkt (2)</td><td>normale Änderungen funktionieren weiter</td></tr>
       </table>
       <div class="callout amber" style="margin-top:12px">
         <strong>Grenzen, die wir ausweisen:</strong> Die 12 UI-Flow-Tests laufen in jsdom gegen
@@ -1668,6 +1721,13 @@ belastbar sind.
         Container namens <span class="mono">tuv-mariadb</span> an — den gibt es in der CI nicht.
         Er wird dort über <span class="mono">TUV_SKIP_SQL_BYPASS=1</span> ausgelassen; die
         übrigen sechs laufen vollwertig.</p>
+      </div>
+      <div class="card tone-green pad-sm" style="margin-top:8px">
+        <h4>Zwei Vitest-Projekte</h4>
+        <p><span class="mono">frontend</span> (jsdom) läuft parallel;
+        <span class="mono">server</span> (node) läuft mit
+        <span class="mono">fileParallelism: false</span> — beide Integrationsdateien reseeden
+        dieselbe Datenbank und würden sich sonst die Testdaten löschen.</p>
       </div>
       <div class="card tone-purple pad-sm" style="margin-top:8px">
         <h4>CodeQL</h4>
@@ -1838,6 +1898,7 @@ belastbar sind.
     <tr><td><strong>Persistenz</strong></td><td>Firestore (NoSQL, Cloud), Mängel eingebettet</td><td>MariaDB in 3NF: Halter und Mangel als eigene Tabellen mit Fremdschlüsseln</td></tr>
     <tr><td><strong>„Bestanden“ trotz Mangel</strong></td><td>nur im Frontend verhindert</td><td>drei Ebenen bis in die Datenbank (Trigger, SIGNAL 45000) plus Integrationstest mit SQL-Bypass</td></tr>
     <tr><td><strong>Zugriffskontrolle</strong></td><td>keine — jeder konnte alles</td><td>Login und drei Rollen, serverseitig geprüft (401 / 403)</td></tr>
+    <tr><td><strong>Statusänderung</strong></td><td>zwei allgemeine Routen schrieben <span class="mono">status_code</span> mit reinem Schreibrecht mit</td><td>genau eine Route mit <span class="mono">statusSetzen</span>-Recht; die anderen lehnen <span class="mono">statusCode</span> mit 400 ab (Regressionstests)</td></tr>
     <tr><td><strong>Eingabeprüfung</strong></td><td>nur im Frontend; umgangene Eingaben ergaben 500er mit SQL-Text</td><td>Validatoren pro Endpunkt, 400 mit Feldliste; DB-Fehler auf 409/400/422 gemappt</td></tr>
     <tr><td><strong>Schemaänderungen</strong></td><td><span class="mono">CREATE TABLE IF NOT EXISTS</span> bei jedem Start</td><td>versionierte Migrationen mit Buchführung in <span class="mono">schema_migration</span></td></tr>
     <tr><td><strong>Mangel-Kategorien</strong></td><td>fünf Werte, nicht nach HU-Richtlinie — EM blockierte fälschlich nicht</td><td>OM / GM / EM / GfM per Migration 2; EM blockiert korrekt</td></tr>
