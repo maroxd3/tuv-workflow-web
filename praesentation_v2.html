@@ -1720,7 +1720,8 @@ Anhang B4, die Testlücken in B7.
         <p>Der SQL-Bypass-Test spricht per <span class="mono">docker exec</span> einen
         Container namens <span class="mono">tuv-mariadb</span> an — den gibt es in der CI nicht.
         Er wird dort über <span class="mono">TUV_SKIP_SQL_BYPASS=1</span> ausgelassen; die
-        übrigen sechs laufen vollwertig.</p>
+        übrigen <strong>12 der 13</strong> Integrationstests laufen vollwertig gegen die
+        Service-Datenbank.</p>
       </div>
       <div class="card tone-green pad-sm" style="margin-top:8px">
         <h4>Zwei Vitest-Projekte</h4>
