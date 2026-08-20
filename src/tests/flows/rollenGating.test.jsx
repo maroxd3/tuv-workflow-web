@@ -28,8 +28,8 @@ beforeEach(() => {
 });
 
 /** Rendert die App eingeloggt und wartet, bis die Termin-Zeile sichtbar ist. */
-async function renderTagesplanAls(benutzer) {
-  primeApi(apiMock, { benutzer, termine: [terminFixture()] }); // Status "Geplant" → Advance-Button möglich
+async function renderTagesplanAls(benutzer, opts = {}) {
+  primeApi(apiMock, { benutzer, termine: [terminFixture()], ...opts }); // Status "Geplant" → Advance-Button möglich
   renderApp();
   await screen.findByText("H-AB 1234", {}, { timeout: 10_000 });
 }
@@ -55,5 +55,22 @@ describe("Flow: Rollen-Gating in Tagesplan + Sidebar", () => {
     expect(screen.getByRole("button", { name: "Starten" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Löschen" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Alle Daten löschen/ })).toBeInTheDocument();
+  }, 15000);
+
+  // Regression: /api/admin/* verlangt zusaetzlich den X-Admin-Token-Header,
+  // den das Frontend bewusst nicht kennt. Meldet der Server, dass die
+  // Aktionen nicht verfuegbar sind (ADMIN_TOKEN gesetzt = Produktion),
+  // darf die Sidebar sie auch dem Chef nicht anbieten — sonst produziert
+  // ein Klick einen 401 und der 401-Handler loggt den Benutzer aus.
+  it("chef, aber Server ohne Demo-Werkzeuge: keine Admin-Aktionen sichtbar", async () => {
+    await renderTagesplanAls(BENUTZER.chef, { adminAktionenVerfuegbar: false });
+
+    // Rollen-abhaengige Aktionen bleiben unberuehrt ...
+    expect(screen.getByRole("button", { name: "Starten" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Löschen" })).toBeInTheDocument();
+    // ... nur die Admin-Endpunkte verschwinden.
+    expect(screen.queryByRole("button", { name: /Alle Daten löschen/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Beispieldaten laden/ })).not.toBeInTheDocument();
+    expect(screen.queryByText(/Demo-Werkzeuge/)).not.toBeInTheDocument();
   }, 15000);
 });

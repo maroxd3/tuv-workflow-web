@@ -166,6 +166,18 @@ function requireAdminToken(req, res, next) {
   next();
 }
 
+// Duerfen die /api/admin/*-Aktionen aus dem Browser heraus benutzt werden?
+// Sie verlangen neben der chef-Rolle den X-Admin-Token-Header. Den kennt
+// das Frontend bewusst NICHT — ein Secret, das im Browser liegt, ist keins
+// mehr. Ist ADMIN_TOKEN gesetzt (in Produktion erzwingt der Boot-Guard das),
+// wuerde ein Klick auf "Demo-Daten laden"/"Alle Daten loeschen" also in
+// einem 401 enden und den Benutzer sogar ausloggen (401-Handler im
+// API-Client). Deshalb meldet der Server dem Frontend hier ehrlich, ob die
+// Aktionen verfuegbar sind; die UI blendet sie sonst aus.
+// Fachlich sind Reset und Demo-Seed ohnehin Entwicklungs- und
+// Demo-Werkzeuge, kein Teil des Pruefstellen-Betriebs.
+const ADMIN_AKTIONEN_VERFUEGBAR = !ADMIN_TOKEN;
+
 // ── Benutzer-Auth-Middleware ──────────────────────────────────────────
 // Bei AUTH_ENABLED=false (dev/CI-Default) laeuft jeder Request als
 // Dev-Chef durch — die Integrationstests (wf01.test.js) und lokale
@@ -348,7 +360,11 @@ app.post("/api/auth/login", asyncRoute(async (req, res) => {
     rolle: row.rolle,
     exp: Date.now() + TOKEN_GUELTIGKEIT_MS,
   }, TOKEN_SECRET);
-  res.json({ token, benutzer: { kuerzel: row.kuerzel, name: row.name, rolle: row.rolle } });
+  res.json({
+    token,
+    benutzer: { kuerzel: row.kuerzel, name: row.name, rolle: row.rolle },
+    adminAktionenVerfuegbar: ADMIN_AKTIONEN_VERFUEGBAR,
+  });
 }));
 
 // Wer bin ich? Das Frontend fragt beim Start, ob Auth verlangt wird und
@@ -356,7 +372,11 @@ app.post("/api/auth/login", asyncRoute(async (req, res) => {
 // durchgesetzt werden die Rechte serverseitig von requireAuth).
 app.get("/api/auth/me", (req, res) => {
   if (!AUTH_ENABLED) {
-    return res.json({ authRequired: false, benutzer: DEV_BENUTZER });
+    return res.json({
+      authRequired: false,
+      benutzer: DEV_BENUTZER,
+      adminAktionenVerfuegbar: ADMIN_AKTIONEN_VERFUEGBAR,
+    });
   }
   const payload = verifyToken(bearerToken(req), TOKEN_SECRET);
   if (!payload) {
@@ -365,6 +385,7 @@ app.get("/api/auth/me", (req, res) => {
   res.json({
     authRequired: true,
     benutzer: { kuerzel: payload.kuerzel, name: payload.name, rolle: payload.rolle },
+    adminAktionenVerfuegbar: ADMIN_AKTIONEN_VERFUEGBAR,
   });
 });
 

@@ -96,11 +96,24 @@ const MANGEL_KATEGORIE_SEED = [
   ["GfM", "Gefährlicher Mangel",  true],
 ];
 
-// WF-01 als 3. Defense-Layer: blockiert in MariaDB selbst, dass ein Termin
-// auf 'Bestanden' gesetzt wird, solange er einen Hauptmangel (HM) oder
-// gefaehrlichen Mangel (GM) hat. Der UI-Guard und der API-Guard koennen
-// umgangen werden (direkter SQL-Zugriff, generischer PATCH-Endpoint) — der
-// Trigger nicht. Idempotent dank CREATE OR REPLACE.
+// WF-01 als 3. Defense-Layer: blockiert in MariaDB selbst den WECHSEL eines
+// Termins auf 'Bestanden', solange ein nicht behobener blockierender Mangel
+// existiert — nach HU-Richtlinie EM (Erheblicher Mangel) oder GfM
+// (Gefaehrlicher Mangel). Welche Kategorien blockieren, steht bewusst NICHT
+// hier, sondern als Flag blockiert_bestanden in mangel_kategorie; der
+// Trigger liest es (siehe MANGEL_KATEGORIE_SEED oben).
+//
+// Zweck: UI- und API-Guard schuetzen nur die Wege durch die Anwendung. Wer
+// direkt per SQL-Client, Adminer oder Restore-Skript schreibt, geht an
+// beiden vorbei — am Trigger nicht. Zusaetzlich deckt er die Luecke zwischen
+// Blocker-Pruefung und UPDATE im Status-Endpunkt ab (nebenlaeufig
+// eingefuegter Mangel).
+//
+// Grenze, die wir bewusst benennen: der Trigger haengt an BEFORE UPDATE ON
+// termin. Wird per direktem SQL ein blockierender Mangel zu einem bereits
+// bestandenen Termin eingefuegt, greift er nicht — diesen Fall behandelt
+// POST /api/maengel transaktional (Mangel-INSERT + Rueckstufung).
+// Idempotent dank CREATE OR REPLACE.
 async function migrateTriggers() {
   const conn = await db().getConnection();
   try {

@@ -24,6 +24,17 @@ export interface AuthState {
   benutzer: Benutzer | null;
   /** false = Server laeuft ohne Auth (Dev-Modus) — kein Logout anbieten. */
   authRequired: boolean;
+  /**
+   * Meldet der Server, ob /api/admin/* (Reset, Demo-Daten) aus dem Browser
+   * heraus nutzbar sind. Sie verlangen zusaetzlich den X-Admin-Token-Header,
+   * den das Frontend absichtlich nicht kennt. Ist der Server mit
+   * ADMIN_TOKEN konfiguriert (Produktion), waere ein Klick ein 401 — und
+   * wuerde ueber den 401-Handler sogar den Logout ausloesen. Die UI blendet
+   * die Aktionen dann aus.
+   *
+   * Fail-closed: fehlt das Feld (aelterer Server), gilt false.
+   */
+  adminAktionenVerfuegbar: boolean;
 }
 
 export interface AuthContextValue extends AuthState {
@@ -39,17 +50,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     status: "laden",
     benutzer: null,
     authRequired: true,
+    adminAktionenVerfuegbar: false,
   });
 
   const logout = useCallback(() => {
     api.setAuthToken(null);
-    setState({ status: "anmeldung", benutzer: null, authRequired: true });
+    setState({
+      status: "anmeldung",
+      benutzer: null,
+      authRequired: true,
+      adminAktionenVerfuegbar: false,
+    });
   }, []);
 
   const login = useCallback(async (kuerzel: string, passwort: string) => {
     const r = await api.authLogin(kuerzel, passwort);
     api.setAuthToken(r.token);
-    setState({ status: "eingeloggt", benutzer: r.benutzer, authRequired: true });
+    setState({
+      status: "eingeloggt",
+      benutzer: r.benutzer,
+      authRequired: true,
+      adminAktionenVerfuegbar: r.adminAktionenVerfuegbar === true,
+    });
   }, []);
 
   // 401 auf einer fachlichen Route (Token abgelaufen waehrend der Arbeit)
@@ -66,13 +88,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const r = await api.authMe();
         if (cancelled) return;
-        setState({ status: "eingeloggt", benutzer: r.benutzer, authRequired: r.authRequired });
+        setState({
+          status: "eingeloggt",
+          benutzer: r.benutzer,
+          authRequired: r.authRequired,
+          adminAktionenVerfuegbar: r.adminAktionenVerfuegbar === true,
+        });
       } catch {
         // 401 (kein/abgelaufener Token) oder API nicht erreichbar →
         // Login anzeigen; ein evtl. gespeicherter, toter Token fliegt raus.
         if (cancelled) return;
         api.setAuthToken(null);
-        setState({ status: "anmeldung", benutzer: null, authRequired: true });
+        setState({
+          status: "anmeldung",
+          benutzer: null,
+          authRequired: true,
+          adminAktionenVerfuegbar: false,
+        });
       }
     })();
     return () => {

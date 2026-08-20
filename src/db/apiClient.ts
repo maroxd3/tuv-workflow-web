@@ -26,14 +26,20 @@ export interface Benutzer {
   rolle: Rolle;
 }
 
+/** Serverseitig gemeldete Faehigkeit: sind /api/admin/* aus dem Browser
+ *  heraus nutzbar? Sie verlangen zusaetzlich den X-Admin-Token-Header, den
+ *  das Frontend bewusst nicht kennt — bei gesetztem ADMIN_TOKEN (Produktion)
+ *  ist das Feld deshalb false und die UI blendet die Aktionen aus. */
 export interface AuthMeAntwort {
   authRequired: boolean;
   benutzer: Benutzer;
+  adminAktionenVerfuegbar?: boolean;
 }
 
 export interface LoginAntwort {
   token: string;
   benutzer: Benutzer;
+  adminAktionenVerfuegbar?: boolean;
 }
 
 /** Fehler mit HTTP-Status — z. B. um 401 (Login falsch) von Netzwerk-

@@ -6,21 +6,21 @@ gegen einen Produktivstand laufen lassen)
 
 ## 1. Ergebnis der aktuellen Testausfuehrung
 
-Die Suite umfasst **251 Tests**:
+Die Suite umfasst **254 Tests**:
 
 | Bereich | Tests |
 |---|---:|
-| Frontend (`src/tests/`, davon 13 UI-Flow-Tests in `src/tests/flows/`) | 168 |
+| Frontend (`src/tests/`, davon 14 UI-Flow-Tests in `src/tests/flows/`) | 171 |
 | Server-Validierung + Middleware (`server/tests/validate.test.js`) | 51 |
 | Auth-Bausteine (`server/tests/auth.test.js`) | 17 |
 | WF-01-Integration gegen echte MariaDB (`server/tests/wf01.test.js`) | 6 |
 | Termin-Routen-Regression gegen echte MariaDB (`server/tests/termin-status-routen.test.js`) | 7 |
 | Boot-Guard (`server/tests/admin-token-boot.test.js`) | 2 |
-| **Gesamt** | **251** |
+| **Gesamt** | **254** |
 
 Ohne laufende MariaDB überspringt Vitest die 13 Integrationstests
 automatisch (Health-Pre-Flight): ein lokaler Lauf ohne Stack meldet dann
-**238 grün, 15 übersprungen** (13 Integrationstests + 2 Platzhalter in den
+**241 grün, 15 übersprungen** (13 Integrationstests + 2 Platzhalter in den
 Skip-Zweigen).
 
 Die Integrationstests laufen in der GitHub-Actions-CI gegen einen echten

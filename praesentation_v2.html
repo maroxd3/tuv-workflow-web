@@ -1039,7 +1039,7 @@ VORSICHT:
 
       <div class="callout" style="margin-top:16px; font-size:12.5px">
         <strong>Projektstand:</strong> Die Testsuite umfasst laut Dokumentation
-        <strong>251 Tests</strong> (Stand 20.08.2026), davon 13 UI-Flow-Tests und
+        <strong>254 Tests</strong> (Stand 20.08.2026), davon 14 UI-Flow-Tests und
         13 Integrationstests gegen eine echte MariaDB. In der GitHub-Actions-CI laufen
         die Integrationstests gegen einen echten MariaDB-Service; der SQL-Bypass-Test
         braucht den lokalen Docker-Stack.
@@ -1074,13 +1074,13 @@ direktes SQL-UPDATE gegen die Datenbank — an UI und API komplett vorbei — un
 setzt den Status auf Bestanden, obwohl ein offener erheblicher Mangel da ist.
 Die Datenbank lehnt mit Fehler 1644 ab, der Status bleibt stehen. Damit ist
 gezeigt, dass die dritte Ebene wirklich greift und nicht nur behauptet ist.
-Dokumentierter Stand sind 251 Tests. Offen sind CRUD-Integrationstests für die
+Dokumentierter Stand sind 254 Tests. Offen sind CRUD-Integrationstests für die
 restlichen Endpunkte und echte Browser-E2E-Tests."
 
 MÖGLICHE FRAGEN:
-Q: Sind die 251 Tests aktuell grün?
+Q: Sind die 254 Tests aktuell grün?
 A: Bei einem Lauf ohne laufenden Docker-Stack werden die 13 Integrationstests
-   automatisch übersprungen — dann sind es 238 grüne Tests, und genau so
+   automatisch übersprungen — dann sind es 241 grüne Tests, und genau so
    wurde zuletzt lokal ausgeführt. In der CI laufen 12 der 13 gegen eine
    echte Service-Datenbank mit; nur der SQL-Bypass-Test wird dort ausgelassen,
    weil er einen Container per docker exec anspricht.
@@ -1569,7 +1569,9 @@ Anhang B4, die Testlücken in B7.
     <div class="card tone-blue pad-sm">
       <h4>Kleine Angriffsfläche</h4>
       <p>DB-Port nur <span class="mono">127.0.0.1</span> · Adminer nur über ein Compose-Profil ·
-      Admin-Endpunkte doppelt geschützt (Chef-Rolle <em>und</em> X-Admin-Token) ·
+      Admin-Endpunkte doppelt geschützt (Chef-Rolle <em>und</em> X-Admin-Token — den das
+      Frontend bewusst <strong>nicht</strong> kennt, deshalb blendet die UI Reset und Demo-Seed
+      in Produktion aus) ·
       <span class="mono">express.json</span> auf 1 MB begrenzt · durchgängig parametrisierte Queries.</p>
     </div>
   </div>
@@ -1638,22 +1640,22 @@ Anhang B4, die Testlücken in B7.
 <!-- ═════════════ B7  TESTMATRIX ═════════════ -->
 <div class="slide appendix">
   <div class="eyebrow">Anhang B7 · Tests</div>
-  <h2>Testmatrix — 19 Dateien, dokumentierter Stand 251 Tests</h2>
-  <div class="lede">Zählung laut <span class="mono">docs/test-coverage.md</span> (Stand 20.08.2026). Ohne laufende MariaDB überspringt Vitest die 13 Integrationstests automatisch — ein lokaler Lauf ohne Stack meldet dann 238 grün.</div>
+  <h2>Testmatrix — 19 Dateien, dokumentierter Stand 254 Tests</h2>
+  <div class="lede">Zählung laut <span class="mono">docs/test-coverage.md</span> (Stand 20.08.2026). Ohne laufende MariaDB überspringt Vitest die 13 Integrationstests automatisch — ein lokaler Lauf ohne Stack meldet dann 241 grün.</div>
   <div class="grid-2">
     <div>
       <table style="font-size:11.5px">
         <tr><th>Bereich</th><th style="text-align:right">Tests</th></tr>
-        <tr><td>Frontend gesamt (<span class="mono">src/tests/</span>)</td><td style="text-align:right"><strong>168</strong></td></tr>
+        <tr><td>Frontend gesamt (<span class="mono">src/tests/</span>)</td><td style="text-align:right"><strong>171</strong></td></tr>
         <tr><td class="muted" style="padding-left:22px">davon Validatoren / Utils</td><td class="muted" style="text-align:right">106</td></tr>
-        <tr><td class="muted" style="padding-left:22px">davon Komponenten &amp; Hooks</td><td class="muted" style="text-align:right">49</td></tr>
-        <tr><td class="muted" style="padding-left:22px">davon UI-Flows</td><td class="muted" style="text-align:right">13</td></tr>
+        <tr><td class="muted" style="padding-left:22px">davon Komponenten &amp; Hooks</td><td class="muted" style="text-align:right">51</td></tr>
+        <tr><td class="muted" style="padding-left:22px">davon UI-Flows</td><td class="muted" style="text-align:right">14</td></tr>
         <tr><td>Server-Validierung + Middleware (<span class="mono">validate.test.js</span>)</td><td style="text-align:right"><strong>51</strong></td></tr>
         <tr><td>Auth-Bausteine (<span class="mono">auth.test.js</span>)</td><td style="text-align:right"><strong>17</strong></td></tr>
         <tr><td>WF-01-Integration gegen echte MariaDB</td><td style="text-align:right"><strong>6</strong></td></tr>
         <tr><td>Termin-Routen-Regression gegen echte MariaDB</td><td style="text-align:right"><strong>7</strong></td></tr>
         <tr><td>Boot-Guards (echter Prozess-Spawn)</td><td style="text-align:right"><strong>2</strong></td></tr>
-        <tr><td><strong>Gesamt</strong></td><td style="text-align:right"><strong>251</strong></td></tr>
+        <tr><td><strong>Gesamt</strong></td><td style="text-align:right"><strong>254</strong></td></tr>
       </table>
       <div class="callout" style="margin-top:12px">
         <strong>Testentwurfsverfahren:</strong> Äquivalenzklassen und Grenzwertanalyse bei den
@@ -1943,6 +1945,13 @@ Anhang B4, die Testlücken in B7.
         <strong>Optional, wenn Zeit bleibt:</strong> in einem zweiten Fenster als
         <em>Empfang</em> anmelden und zeigen, dass die Ergebnis-Schaltflächen dort
         gar nicht erscheinen.
+      </div>
+      <div class="callout red" style="margin-top:10px">
+        <strong>Vorher vorbereiten:</strong> Läuft der Server mit
+        <span class="mono">ADMIN_TOKEN</span> (Produktionsmodus, nötig für den Login),
+        blendet die Sidebar „Beispieldaten laden“ aus — die Admin-Endpunkte verlangen
+        einen Header, den der Browser bewusst nicht kennt. Demo-Daten also
+        <strong>vor</strong> der Präsentation einspielen, nicht live.
       </div>
     </div>
     <div>

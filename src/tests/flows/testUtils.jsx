@@ -84,9 +84,19 @@ export function mangelEmFixture(overrides = {}) {
  *    feuern, schreibt er keinen veralteten Stand zurueck — Tests, die
  *    Writes simulieren, mutieren einfach dasselbe Array.
  */
-export function primeApi(apiMock, { benutzer = null, halter = [HALTER_1], fahrzeuge = [FZ_1], termine = [] } = {}) {
+export function primeApi(apiMock, {
+  benutzer = null,
+  halter = [HALTER_1],
+  fahrzeuge = [FZ_1],
+  termine = [],
+  // Default true = Server ohne ADMIN_TOKEN (Dev/Demo), damit die
+  // bestehenden Rollen-Tests weiter das Rollen-Gating pruefen und nicht
+  // versehentlich die Server-Faehigkeit. Auf false setzen, um einen
+  // Produktions-Server zu simulieren (Admin-Aktionen ausgeblendet).
+  adminAktionenVerfuegbar = true,
+} = {}) {
   if (benutzer) {
-    apiMock.authMe.mockResolvedValue({ authRequired: true, benutzer });
+    apiMock.authMe.mockResolvedValue({ authRequired: true, benutzer, adminAktionenVerfuegbar });
   } else {
     apiMock.authMe.mockRejectedValue(new Error("Anmeldung erforderlich"));
   }

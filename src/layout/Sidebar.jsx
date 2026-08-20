@@ -6,7 +6,7 @@ import { STATUS } from "../constants/status";
 import { NAV } from "../constants/nav";
 import { isoDate, fmtDate, toIsoDateStr } from "../utils/date";
 import { ConfirmModal } from "../components/modal/ConfirmModal";
-import { useRechte } from "../auth/AuthContext";
+import { useAuth, useRechte } from "../auth/AuthContext";
 import { FahrzeugShape, TerminShape } from "../types/propTypes";
 
 /* Wiederkehrendes Muster: Abschnitts-Überschrift in der Sidebar */
@@ -19,6 +19,14 @@ export function Sidebar({ view, setView, fahrzeuge, termine, resetAllData, loadD
   const [now] = useState(() => Date.now());
   const [confirmReset, setConfirmReset] = useState(false); // ersetzt window.confirm
   const { darfAdmin } = useRechte(); // Reset + Demo-Daten: nur Rolle chef
+  // ... und nur, wenn der Server die Admin-Aktionen ueberhaupt anbietet.
+  // Sie verlangen zusaetzlich den X-Admin-Token-Header, den das Frontend
+  // bewusst nicht kennt (Secret im Browser waere keins). Bei gesetztem
+  // ADMIN_TOKEN — also in Produktion — endete ein Klick in einem 401 und
+  // wuerde den Benutzer ausloggen. Reset und Demo-Seed sind ohnehin
+  // Entwicklungs-/Demo-Werkzeuge, kein Teil des Pruefstellen-Betriebs.
+  const { adminAktionenVerfuegbar } = useAuth();
+  const zeigeDemoWerkzeuge = darfAdmin && adminAktionenVerfuegbar;
   const huWarn = fahrzeuge.filter(f => f.huFaellig && new Date(f.huFaellig) < new Date(now + 30 * 86400000) && new Date(f.huFaellig) >= new Date(now)).length;
   const huUeberr = fahrzeuge.filter(f => f.huFaellig && new Date(f.huFaellig) < new Date(now)).length;
 
@@ -117,9 +125,16 @@ export function Sidebar({ view, setView, fahrzeuge, termine, resetAllData, loadD
             </div>
           ))}
         </div>
-        {/* Admin-Aktionen (Reset/Demo-Daten): nur fuer Rolle chef —
-            serverseitig erzwingt /api/admin/* das ohnehin. */}
-        {darfAdmin && (
+        {/* Demo-Werkzeuge (Reset/Demo-Daten): Rolle chef UND ein Server
+            ohne ADMIN_TOKEN. Serverseitig erzwingt /api/admin/* beides
+            ohnehin — hier geht es darum, keine Schaltflaeche anzubieten,
+            die zwangslaeufig scheitert. */}
+        {zeigeDemoWerkzeuge && (
+          <div className="mb-1.5 text-center text-[9px] uppercase tracking-[0.12em] text-sb-t3">
+            Demo-Werkzeuge · nur Entwicklung
+          </div>
+        )}
+        {zeigeDemoWerkzeuge && (
           fahrzeuge.length === 0 && termine.length === 0 ? (
             <button
               onClick={() => {

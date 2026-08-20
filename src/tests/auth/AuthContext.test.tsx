@@ -65,6 +65,30 @@ describe("AuthContext — Mount (/api/auth/me)", () => {
     expect(apiMock.setAuthToken).toHaveBeenCalledWith(null);
   });
 
+  // adminAktionenVerfuegbar ist fail-closed: /api/admin/* verlangt den
+  // X-Admin-Token-Header, den das Frontend bewusst nicht kennt. Meldet der
+  // Server das Feld nicht oder meldet er false, muss die UI die Aktionen
+  // ausblenden, statt einen sicheren 401 zu produzieren.
+  it("adminAktionenVerfuegbar: fehlt das Feld, gilt false (fail-closed)", async () => {
+    apiMock.authMe.mockResolvedValue({ authRequired: true, benutzer: CHEF });
+
+    const { result } = renderHook(() => useAuth(), { wrapper });
+    await waitFor(() => expect(result.current.status).toBe("eingeloggt"));
+    expect(result.current.adminAktionenVerfuegbar).toBe(false);
+  });
+
+  it("adminAktionenVerfuegbar: true wird uebernommen", async () => {
+    apiMock.authMe.mockResolvedValue({
+      authRequired: false,
+      benutzer: CHEF,
+      adminAktionenVerfuegbar: true,
+    });
+
+    const { result } = renderHook(() => useAuth(), { wrapper });
+    await waitFor(() => expect(result.current.status).toBe("eingeloggt"));
+    expect(result.current.adminAktionenVerfuegbar).toBe(true);
+  });
+
   it("me mit gueltigem Token → eingeloggt mit authRequired:true", async () => {
     apiMock.authMe.mockResolvedValue({ authRequired: true, benutzer: PRUEFER });
 
