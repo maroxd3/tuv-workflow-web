@@ -131,6 +131,43 @@ export function validateTermin(body, { partial = false } = {}) {
   return errs;
 }
 
+// ── Termin-Endpunkte: statusCode ist hier kein normales Feld ──────────
+// Der Status eines Termins wird ausschliesslich ueber
+// PATCH /api/termine/:id/status gesetzt. Nur dort greift
+// requireAuth("status") (Rolle pruefer/chef) und nur dort sitzt der
+// WF-01-Guard mit fachlicher Begruendung.
+//
+// Wuerden POST/PATCH /api/termine statusCode mitschreiben, koennte die
+// Rolle empfang mit reinem Schreibrecht Pruefergebnisse aendern — die
+// Rechte-Matrix in auth.js waere dann nur auf dem Papier durchgesetzt.
+// Deshalb wird ein mitgeschicktes Feld ABGELEHNT statt still ignoriert:
+// ein Client soll nicht glauben, der Status sei uebernommen worden.
+const STATUS_ROUTE_HINWEIS =
+  "Status wird ausschliesslich über PATCH /api/termine/:id/status gesetzt (Recht: statusSetzen)";
+
+// Ersetzt eine evtl. schon vorhandene statusCode-Meldung, damit pro Feld
+// genau eine Fehlermeldung zurueckkommt.
+function mitStatusFehler(errs, message) {
+  return [...errs.filter((e) => e.field !== "statusCode"), { field: "statusCode", message }];
+}
+
+// POST /api/termine — neue Termine starten immer als 'Geplant'.
+// Ein mitgeschicktes statusCode: 'Geplant' ist ein No-op und bleibt
+// erlaubt (das Frontend sendet das Feld mit); jeder andere Wert ist ein
+// Fehler.
+export function validateTerminAnlage(body, opts = {}) {
+  const errs = validateTermin(body, opts);
+  if (body.statusCode == null || body.statusCode === "Geplant") return errs;
+  return mitStatusFehler(errs, `Neue Termine starten immer als 'Geplant'. ${STATUS_ROUTE_HINWEIS}`);
+}
+
+// PATCH /api/termine/:id — statusCode ist hier ueberhaupt kein Feld.
+export function validateTerminAenderung(body, opts = {}) {
+  const errs = validateTermin(body, opts);
+  if (body.statusCode === undefined) return errs;
+  return mitStatusFehler(errs, STATUS_ROUTE_HINWEIS);
+}
+
 export function validateStatusUpdate(body) {
   const errs = [];
   if (!isNonEmpty(body.statusCode)) {

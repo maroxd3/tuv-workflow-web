@@ -61,7 +61,7 @@ Sel.propTypes = {
   title: PropTypes.string,
 };
 
-export function Fld({ label, error, children, span = 1 }) {
+export function Fld({ label, error, hint, children, span = 1 }) {
   const autoId = useId();
   // A11y: <label> per htmlFor mit dem Eingabe-Element verknuepfen.
   // Das ERSTE Element-Kind (Inp/Sel/textarea) bekommt die generierte id —
@@ -77,6 +77,9 @@ export function Fld({ label, error, children, span = 1 }) {
     <div className={`flex flex-col gap-[5px] ${span === 2 ? "col-span-full" : ""}`}>
       <label htmlFor={controlId || undefined} className="text-[10px] font-bold text-t3 tracking-[0.1em] uppercase">{label}</label>
       {kids}
+      {/* hint: neutraler Erklaertext (z. B. warum ein Feld gesperrt ist).
+          Wird von error verdraengt — ein Fehler ist die wichtigere Meldung. */}
+      {!error && hint && <span className="text-[10px] text-t4">{hint}</span>}
       {error && <span className="flex items-center gap-[3px] text-[10px] text-red-l"><AlertCircle size={10} />{error}</span>}
     </div>
   );
@@ -85,6 +88,7 @@ export function Fld({ label, error, children, span = 1 }) {
 Fld.propTypes = {
   label: PropTypes.string.isRequired,
   error: PropTypes.string,
+  hint: PropTypes.string,
   children: PropTypes.node,
   span: PropTypes.oneOf([1, 2]),
 };

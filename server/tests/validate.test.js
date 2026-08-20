@@ -20,8 +20,11 @@ import {
   validateHalter,
   validateFahrzeug,
   validateTermin,
+  validateTerminAnlage,
+  validateTerminAenderung,
   validateStatusUpdate,
   validateMangel,
+  check,
 } from "../validate.js";
 
 // Gültige UUIDs (Format von crypto.randomUUID)
@@ -252,6 +255,83 @@ describe("validateTermin", () => {
   });
 });
 
+// ── validateTerminAnlage / validateTerminAenderung ────────────────────
+//
+// Regressionstests zur Rechte-Haertung: der Status eines Termins darf NUR
+// ueber PATCH /api/termine/:id/status (requireAuth("status")) gesetzt
+// werden. Frueher schrieben POST /api/termine und PATCH /api/termine/:id
+// status_code mit — damit konnte die Rolle empfang mit reinem
+// Schreibrecht ein Pruefergebnis setzen.
+
+describe("validateTerminAnlage (POST /api/termine)", () => {
+  const basis = {
+    fahrzeugId: UUID,
+    datum: "2026-07-10",
+    prueftCode: "HU",
+  };
+
+  it("akzeptiert einen Termin ohne statusCode", () => {
+    expect(validateTerminAnlage(basis)).toEqual([]);
+  });
+
+  it("akzeptiert statusCode 'Geplant' als No-op (das Frontend sendet das Feld mit)", () => {
+    expect(validateTerminAnlage({ ...basis, statusCode: "Geplant" })).toEqual([]);
+  });
+
+  it("lehnt jeden anderen Status bei der Anlage ab — auch gültige Werte", () => {
+    for (const status of ["Bestanden", "In Prüfung", "Nicht bestanden", "Abgebrochen"]) {
+      const errs = validateTerminAnlage({ ...basis, statusCode: status });
+      expect(fields(errs)).toEqual(["statusCode"]);
+      expect(errs[0].message).toMatch(/Geplant/);
+      expect(errs[0].message).toMatch(/status/);
+    }
+  });
+
+  it("meldet pro Feld genau einen Fehler (kein doppelter statusCode-Eintrag)", () => {
+    const errs = validateTerminAnlage({ ...basis, statusCode: "Fertig" });
+    expect(fields(errs)).toEqual(["statusCode"]);
+  });
+
+  it("prüft die übrigen Termin-Regeln unverändert weiter", () => {
+    expect(fields(validateTerminAnlage({}))).toEqual(
+      expect.arrayContaining(["fahrzeugId", "datum", "prueftCode"]),
+    );
+    expect(fields(validateTerminAnlage({ ...basis, prueftCode: "TÜVX" }))).toContain("prueftCode");
+  });
+});
+
+describe("validateTerminAenderung (PATCH /api/termine/:id)", () => {
+  const basis = {
+    fahrzeugId: UUID,
+    datum: "2026-07-10",
+    prueftCode: "HU",
+  };
+
+  it("akzeptiert eine Änderung ohne statusCode", () => {
+    expect(validateTerminAenderung(basis)).toEqual([]);
+    expect(validateTerminAenderung({ notiz: "geändert" }, { partial: true })).toEqual([]);
+  });
+
+  it("lehnt statusCode grundsätzlich ab — auch 'Geplant'", () => {
+    for (const status of ["Geplant", "Bestanden", "In Prüfung"]) {
+      const errs = validateTerminAenderung({ statusCode: status }, { partial: true });
+      expect(fields(errs)).toEqual(["statusCode"]);
+      expect(errs[0].message).toMatch(/PATCH \/api\/termine\/:id\/status/);
+    }
+  });
+
+  it("lehnt auch einen ungültigen Status mit dem Routen-Hinweis ab (eine Meldung)", () => {
+    const errs = validateTerminAenderung({ statusCode: "Fertig" }, { partial: true });
+    expect(fields(errs)).toEqual(["statusCode"]);
+    expect(errs[0].message).toMatch(/statusSetzen/);
+  });
+
+  it("prüft die übrigen Termin-Regeln unverändert weiter", () => {
+    expect(fields(validateTerminAenderung({ datum: "kaputt" }, { partial: true }))).toContain("datum");
+    expect(fields(validateTerminAenderung({ prueferKuerzel: "XX" }, { partial: true }))).toContain("prueferKuerzel");
+  });
+});
+
 // ── validateStatusUpdate ──────────────────────────────────────────────
 
 describe("validateStatusUpdate", () => {
@@ -323,5 +403,74 @@ describe("validateMangel", () => {
     const errs2 = validateMangel({ ...basis, terminId: "abc" });
     expect(fields(errs2)).toEqual(["terminId"]);
     expect(errs2[0].message).toMatch(/UUID/);
+  });
+});
+
+// ── check(): Middleware-Verdrahtung ───────────────────────────────────
+//
+// Die Integrationstests (server/tests/termin-status-routen.test.js)
+// brauchen eine laufende MariaDB. Diese Tests pruefen ohne Datenbank, dass
+// die Middleware aus einer Fehlerliste tatsaechlich HTTP 400 mit
+// { ok:false, errors:[...] } macht — und dass sie den partial-Modus an
+// PATCH weiterreicht.
+
+describe("check() als Express-Middleware", () => {
+  // Minimale Attrappen: nur das, was check() anfasst.
+  function fakeRes() {
+    const res = { code: null, body: null };
+    res.status = (c) => { res.code = c; return res; };
+    res.json = (b) => { res.body = b; return res; };
+    return res;
+  }
+
+  it("laesst gueltige Eingaben durch (next(), keine Antwort)", () => {
+    const res = fakeRes();
+    let weiter = false;
+    check(validateTerminAnlage)(
+      { method: "POST", body: { fahrzeugId: UUID, datum: "2026-07-10", prueftCode: "HU" } },
+      res,
+      () => { weiter = true; },
+    );
+    expect(weiter).toBe(true);
+    expect(res.code).toBeNull();
+  });
+
+  it("antwortet auf statusCode im POST mit 400 und Feldliste", () => {
+    const res = fakeRes();
+    let weiter = false;
+    check(validateTerminAnlage)(
+      { method: "POST", body: { fahrzeugId: UUID, datum: "2026-07-10", prueftCode: "HU", statusCode: "Bestanden" } },
+      res,
+      () => { weiter = true; },
+    );
+    expect(weiter).toBe(false);
+    expect(res.code).toBe(400);
+    expect(res.body.ok).toBe(false);
+    expect(res.body.errors.map((e) => e.field)).toEqual(["statusCode"]);
+  });
+
+  it("antwortet auf statusCode im PATCH mit 400 (partial-Modus aktiv)", () => {
+    const res = fakeRes();
+    let weiter = false;
+    check(validateTerminAenderung)(
+      { method: "PATCH", body: { statusCode: "Bestanden" } },
+      res,
+      () => { weiter = true; },
+    );
+    expect(weiter).toBe(false);
+    expect(res.code).toBe(400);
+    expect(res.body.errors[0].message).toMatch(/\/api\/termine\/:id\/status/);
+  });
+
+  it("laesst eine PATCH-Aenderung ohne statusCode durch", () => {
+    const res = fakeRes();
+    let weiter = false;
+    check(validateTerminAenderung)(
+      { method: "PATCH", body: { notiz: "geändert" } },
+      res,
+      () => { weiter = true; },
+    );
+    expect(weiter).toBe(true);
+    expect(res.code).toBeNull();
   });
 });

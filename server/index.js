@@ -11,7 +11,8 @@ import {
   check,
   validateHalter,
   validateFahrzeug,
-  validateTermin,
+  validateTerminAnlage,
+  validateTerminAenderung,
   validateStatusUpdate,
   validateMangel,
 } from "./validate.js";
@@ -514,12 +515,16 @@ app.get("/api/termine", requireAuth("lesen"), asyncRoute(async (req, res) => {
   res.json(termine);
 }));
 
-app.post("/api/termine", requireAuth("schreiben"), check(validateTermin), asyncRoute(async (req, res) => {
+// Ein neuer Termin startet IMMER als 'Geplant'. Der Status ist kein
+// Anlage-Feld: waere er es, koennte die Rolle empfang (nur "schreiben")
+// ueber einen selbst gesetzten statusCode ein Pruefergebnis erzeugen.
+// validateTerminAnlage lehnt jeden anderen mitgeschickten Wert ab.
+app.post("/api/termine", requireAuth("schreiben"), check(validateTerminAnlage), asyncRoute(async (req, res) => {
   const id = req.body.terminId || randomUUID();
   await db().query(
     `INSERT INTO termin
      (termin_id, fahrzeug_id, datum, uhrzeit, prueft_code, pruefer_kuerzel, status_code, notiz)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+     VALUES (?, ?, ?, ?, ?, ?, 'Geplant', ?)`,
     [
       id,
       req.body.fahrzeugId,
@@ -527,21 +532,24 @@ app.post("/api/termine", requireAuth("schreiben"), check(validateTermin), asyncR
       req.body.uhrzeit ?? null,
       req.body.prueftCode,
       req.body.prueferKuerzel ?? null,
-      req.body.statusCode ?? "Geplant",
       req.body.notiz ?? null,
     ],
   );
   res.status(201).json(toTermin(await one("SELECT * FROM termin WHERE termin_id = ?", [id])));
 }));
 
-app.patch("/api/termine/:id", requireAuth("schreiben"), check(validateTermin), asyncRoute(async (req, res) => {
+// statusCode fehlt hier bewusst im Mapping (und wird von
+// validateTerminAenderung mit 400 abgelehnt): der einzige Weg zu einer
+// Status-Aenderung ist PATCH /api/termine/:id/status mit
+// requireAuth("status") + WF-01-Guard. Frueher konnte diese Route den
+// Status mitschreiben — damit war die Rechte-Matrix umgehbar.
+app.patch("/api/termine/:id", requireAuth("schreiben"), check(validateTerminAenderung), asyncRoute(async (req, res) => {
   const map = {
     fahrzeugId: "fahrzeug_id",
     datum: "datum",
     uhrzeit: "uhrzeit",
     prueftCode: "prueft_code",
     prueferKuerzel: "pruefer_kuerzel",
-    statusCode: "status_code",
     notiz: "notiz",
   };
   const entries = Object.entries(map)

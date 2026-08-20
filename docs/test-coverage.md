@@ -1,26 +1,37 @@
 # Test Coverage
 
-Stand: 2026-07-05  
+Stand: 2026-08-20  
 Ausgeführt mit: `npm test` (Achtung: reseedet die konfigurierte DB — nie
 gegen einen Produktivstand laufen lassen)
 
 ## 1. Ergebnis der aktuellen Testausfuehrung
 
-Die Suite umfasst **231 Tests**:
+Die Suite umfasst **251 Tests**:
 
 | Bereich | Tests |
 |---|---:|
-| Frontend (`src/tests/`, davon 12 UI-Flow-Tests in `src/tests/flows/`) | 167 |
-| Server-Validierung (`server/tests/validate.test.js`) | 38 |
+| Frontend (`src/tests/`, davon 13 UI-Flow-Tests in `src/tests/flows/`) | 168 |
+| Server-Validierung + Middleware (`server/tests/validate.test.js`) | 51 |
 | Auth-Bausteine (`server/tests/auth.test.js`) | 17 |
-| WF-01-Integration gegen echte MariaDB (`server/tests/wf01.test.js`) | 7 |
+| WF-01-Integration gegen echte MariaDB (`server/tests/wf01.test.js`) | 6 |
+| Termin-Routen-Regression gegen echte MariaDB (`server/tests/termin-status-routen.test.js`) | 7 |
 | Boot-Guard (`server/tests/admin-token-boot.test.js`) | 2 |
-| **Gesamt** | **231** |
+| **Gesamt** | **251** |
 
-Die WF-01-Integrationstests laufen in der GitHub-Actions-CI gegen einen
-echten MariaDB-Service; der SQL-Bypass-Test (Layer 3) benötigt lokal den
+Ohne laufende MariaDB überspringt Vitest die 13 Integrationstests
+automatisch (Health-Pre-Flight): ein lokaler Lauf ohne Stack meldet dann
+**238 grün, 15 übersprungen** (13 Integrationstests + 2 Platzhalter in den
+Skip-Zweigen).
+
+Die Integrationstests laufen in der GitHub-Actions-CI gegen einen echten
+MariaDB-Service; der SQL-Bypass-Test (Ebene 3) benötigt lokal den
 Docker-Stack und ist in CI via `TUV_SKIP_SQL_BYPASS=1` ausgenommen.
 Zusätzlich läuft CodeQL als statische Analyse.
+
+Beide Integrationsdateien reseeden dieselbe Datenbank. Die Vitest-Konfiguration
+(`vite.config.js`) trennt deshalb zwei Projekte: `frontend` (jsdom, Dateien
+parallel) und `server` (node, `fileParallelism: false` — Dateien laufen
+nacheinander, damit sie sich die Testdaten nicht gegenseitig löschen).
 
 Die früher hier dokumentierten V8-Coverage-Prozentwerte stammen vom Stand
 2026-05-19 und sind nach dem Umbau (Auth, Migrationen, UI-Flows) nicht mehr
@@ -40,11 +51,12 @@ die aktuellen Zahlen.
 | `src/tests/hooks/useToasts.test.js` | Toast-Hook |
 | `src/tests/hooks/useDb.test.ts` | State-Hook: Laden, optimistische Updates, Fehlerpfade, Halter-Dedupe |
 | `src/tests/auth/AuthContext.test.tsx` | Login/Logout-Zustände, Token-Handling, `useRechte()` |
-| `src/tests/flows/*.test.jsx` | UI-Flows mit gemockter API: Login, Fahrzeug-Anlage, Termin-Anlage, WF-01-Status, Rollen-Gating |
+| `src/tests/flows/*.test.jsx` | UI-Flows mit gemockter API: Login, Fahrzeug-Anlage, Termin-Anlage (inkl. gesperrtem Status-Feld), WF-01-Status, Rollen-Gating |
 | `server/tests/validate.test.js` | Serverseitige Eingabe-Validierung inkl. UUID-Format für Client-IDs |
 | `server/tests/auth.test.js` | scrypt-Hashing, HMAC-Token (Signatur/Ablauf), Rollen-Matrix |
 | `server/tests/admin-token-boot.test.js` | Boot-Verweigerung ohne `ADMIN_TOKEN` in Produktion |
 | `server/tests/wf01.test.js` | Express-API + MariaDB-Trigger: WF-01 blockiert `Bestanden` bei EM/GfM auf DB-Ebene |
+| `server/tests/termin-status-routen.test.js` | Rechte-Härtung: Status ist nur über `PATCH /api/termine/:id/status` änderbar; `POST /api/termine` legt immer `Geplant` an |
 
 ## 3. Was wird gut abgedeckt?
 
@@ -117,8 +129,8 @@ npm run lint
 ## 7. Was fehlt noch?
 
 - CRUD-Integrationstests für die übrigen Express-Endpunkte (`/api/halter`,
-  `/api/fahrzeuge`, `/api/termine`, `/api/maengel`) gegen eine echte
-  Testdatenbank — automatisiert ist bislang nur der WF-01-Pfad
+  `/api/fahrzeuge`, `/api/maengel`) gegen eine echte Testdatenbank —
+  automatisiert sind bislang der WF-01-Pfad und die Termin-Status-Routen
 - Passwort-Self-Service existiert nicht (Passwort-Änderung nur manuell in der
   DB) und ist entsprechend ungetestet
 - Fehlerpfad-Tests für MariaDB-Fehler auf API-Ebene: UNIQUE, FK, CHECK

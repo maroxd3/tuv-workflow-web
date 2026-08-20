@@ -12,9 +12,37 @@ export default defineConfig({
     },
   },
   test: {
-    environment: 'jsdom',
     globals: true,
-    setupFiles: './src/tests/setup.js',
+    // Zwei Test-Projekte statt einer Sammelkonfiguration:
+    //
+    // frontend — jsdom, Dateien laufen parallel (reine Unit-/Flow-Tests
+    //            gegen einen gemockten API-Client, kein geteilter Zustand).
+    // server   — node, Dateien laufen NACHEINANDER (fileParallelism: false).
+    //            Die Integrationstests reseeden in beforeEach dieselbe
+    //            MariaDB; parallel laufende Dateien wuerden sich gegenseitig
+    //            die Testdaten unter den Fuessen wegloeschen.
+    projects: [
+      {
+        extends: true,
+        test: {
+          name: 'frontend',
+          include: ['src/**/*.test.{js,jsx,ts,tsx}'],
+          environment: 'jsdom',
+          globals: true,
+          setupFiles: './src/tests/setup.js',
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: 'server',
+          include: ['server/**/*.test.js'],
+          environment: 'node',
+          globals: true,
+          fileParallelism: false,
+        },
+      },
+    ],
     coverage: {
       provider: 'v8',
       include: ['src/**/*.{js,jsx,ts,tsx}', 'server/**/*.js'],

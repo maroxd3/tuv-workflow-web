@@ -109,3 +109,40 @@ sie lebt jetzt als **Migration 2 (`hu-richtlinie-kategorien`) in
 in `schema_migration`, siehe ADR-011). Der WF-01-Trigger bleibt bewusst
 außerhalb der Migrationen: `migrateTriggers()` in `server/db.js` deklariert
 ihn weiterhin bei jedem Server-Start idempotent per `CREATE OR REPLACE`.
+
+## Nachtrag 2026-08-20 — Status nur noch über den Status-Endpunkt
+
+Der oben unter „Begründung" beschriebene Zustand („der generische
+`PATCH /api/termine/:id` setzte zuvor `status_code` ohne WF-01-Check — wird
+jetzt vom Trigger abgefangen und vom Error-Handler in 422 übersetzt") war
+zwar für WF-01 ausreichend, aber **nicht** für die Rechte-Matrix: die Route
+verlangt nur `requireAuth("schreiben")`. Die Rolle `empfang` konnte darüber
+also Statuswerte setzen, obwohl `ROLLEN_RECHTE` in `server/auth.js`
+`statusSetzen: false` für sie vorsieht. Dasselbe galt für einen
+mitgelieferten `statusCode` bei `POST /api/termine`.
+
+Geändert:
+
+- `PATCH /api/termine/:id` führt `status_code` nicht mehr im Spalten-Mapping
+  und lehnt ein mitgeschicktes `statusCode` mit **HTTP 400** ab
+  (`validateTerminAenderung` in `server/validate.js`).
+- `POST /api/termine` legt jeden Termin mit `status_code = 'Geplant'` an.
+  Ein mitgeschicktes `statusCode: 'Geplant'` bleibt als No-op erlaubt (das
+  Frontend sendet das Feld mit), jeder andere Wert wird abgelehnt
+  (`validateTerminAnlage`).
+- Der einzige Weg zu einer Status-Änderung ist damit
+  `PATCH /api/termine/:id/status` — die einzige Route mit
+  `requireAuth("status")` **und** dem WF-01-Blocker-Check.
+- Abgelehnt wird bewusst mit 400 statt still ignoriert: ein Client soll
+  nicht glauben, der Status sei übernommen worden. Die Regel ist
+  rollen-unabhängig, damit „Status ändert man an genau einer Stelle" auch
+  für `pruefer` und `chef` gilt.
+
+Konsequenz für den Trigger: `PATCH /api/termine/:id` erreicht ihn nicht mehr,
+der frühere Integrationstest „generischer PATCH liefert 422" ist entfallen
+(ersetzt durch `server/tests/termin-status-routen.test.js`). Der Trigger
+bleibt trotzdem die dritte Schicht — er schützt gegen direkten SQL-Zugriff
+(Adminer, `mariadb`-Client, Restore-Skripte) und gegen die Lücke zwischen
+Blocker-Check und `UPDATE` im Status-Endpunkt, wenn parallel ein
+blockierender Mangel angelegt wird. Das Mapping SQLSTATE 45000 → 422 im
+Error-Handler bleibt als Sicherheitsnetz erhalten.

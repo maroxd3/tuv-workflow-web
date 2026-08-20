@@ -85,4 +85,23 @@ describe("Flow: Termin anlegen", () => {
     expect(screen.getByText("H-AB 1234")).toBeInTheDocument();
     expect(toast.success).toHaveBeenCalledWith("Termin angelegt");
   }, 15000);
+
+  // Regression zur Rechte-Haertung: POST /api/termine legt jeden Termin als
+  // "Geplant" an und lehnt einen abweichenden statusCode mit 400 ab. Die UI
+  // darf deshalb beim Anlegen keine Status-Auswahl anbieten — sonst baut der
+  // Nutzer eine Auswahl, die der Server anschliessend verweigert.
+  it("Status-Feld ist beim Anlegen gesperrt und steht auf 'Geplant'", async () => {
+    primeApi(apiMock, { benutzer: BENUTZER.chef, termine: [] });
+    const user = userEvent.setup();
+    renderApp();
+
+    await screen.findByText(/Tagesplan — 0 Termine/, {}, { timeout: 10_000 });
+    await user.click(screen.getByRole("button", { name: "Termin anlegen" }));
+    const dialog = await screen.findByRole("dialog", { name: "Prüftermin anlegen" });
+
+    // Chef duerfte Status grundsaetzlich setzen — beim ANLEGEN trotzdem nicht.
+    const statusFeld = within(dialog).getByLabelText("Status");
+    expect(statusFeld).toBeDisabled();
+    expect(statusFeld).toHaveValue("Geplant");
+  }, 15000);
 });

@@ -26,19 +26,27 @@ export function TerminModal({ fahrzeuge, halter = [], termine = [], initial = {}
   const { darfStatusSetzen } = useRechte();
   // initial kann ein DB-Termin sein: datum/uhrzeit ggf. als Date bzw.
   // "HH:MM:SS" → fuer die Inputs auf "yyyy-mm-dd"/"HH:MM" normalisieren.
+  // Neue Termine starten serverseitig immer als "Geplant"
+  // (POST /api/termine ignoriert bzw. verweigert einen anderen Status).
+  // Das Formular bildet das ab, statt eine Auswahl anzubieten, die der
+  // Server anschliessend ablehnen wuerde.
+  const isEdit = !!initial.terminId;
   const [form, setForm] = useState(() => ({
     fahrzeugId: initial.fahrzeugId ?? (fahrzeuge[0]?.fahrzeugId || ""),
     datum: initial.datum ? toIsoDateStr(initial.datum) : isoDate(),
     uhrzeit: toTimeStr(initial.uhrzeit) ?? "08:00",
     prueftCode: initial.prueftCode ?? "HU",
     prueferKuerzel: initial.prueferKuerzel ?? PRUEFER[0].id,
-    statusCode: initial.statusCode ?? STATUS.GEPLANT,
+    statusCode: isEdit ? (initial.statusCode ?? STATUS.GEPLANT) : STATUS.GEPLANT,
     notiz: initial.notiz ?? "",
   }));
   const [err, setErr] = useState({});
   const [dupWarn, setDupWarn] = useState(null); // Duplikat-Rueckfrage (ersetzt window.confirm)
   const f = k => e => setForm(p => ({ ...p, [k]: e.target.value }));
-  const isEdit = !!initial.terminId;
+  // Status ist nur beim Bearbeiten aenderbar — und auch dann nur fuer
+  // Pruefer/Chef. TagesplanView leitet die Aenderung ueber den
+  // Status-Endpunkt, nicht ueber den allgemeinen Termin-PATCH.
+  const statusEditierbar = isEdit && darfStatusSetzen;
   const selFz = fahrzeuge.find(fz => fz.fahrzeugId === form.fahrzeugId);
   const selArt = PRUEFUNG_ARTEN.find(a => a.id === form.prueftCode);
   const selP = PRUEFER.find(p => p.id === form.prueferKuerzel);
@@ -119,10 +127,12 @@ export function TerminModal({ fahrzeuge, halter = [], termine = [], initial = {}
               {PRUEFER.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
             </Sel>
           </Fld>
-          <Fld label="Status" error={bestanden_gesperrt && form.statusCode === STATUS.BESTANDEN ? "Bestanden nicht möglich — Hauptmangel vorhanden" : undefined}>
+          <Fld label="Status"
+            hint={!isEdit ? "Neue Termine starten immer als „Geplant\u201c" : undefined}
+            error={bestanden_gesperrt && form.statusCode === STATUS.BESTANDEN ? "Bestanden nicht möglich — Hauptmangel vorhanden" : undefined}>
             <Sel value={form.statusCode} onChange={f("statusCode")}
-              disabled={!darfStatusSetzen}
-              title={!darfStatusSetzen ? "Nur für Prüfer" : undefined}>
+              disabled={!statusEditierbar}
+              title={!isEdit ? "Neue Termine starten immer als „Geplant\u201c" : (!darfStatusSetzen ? "Nur für Prüfer" : undefined)}>
               {Object.values(STATUS).map(s => {
                 const disabled = s === STATUS.BESTANDEN && bestanden_gesperrt;
                 return <option key={s} disabled={disabled}>{s}{disabled ? " (gesperrt: Hauptmangel)" : ""}</option>;

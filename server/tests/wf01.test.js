@@ -118,25 +118,20 @@ describe.skipIf(!stackUp)("WF-01 Defense-in-Depth", () => {
     expect(after.statusCode).toBe(termin.statusCode);
   });
 
-  it("Layer 2 (DB-Trigger via API): generischer PATCH liefert HTTP 422", async () => {
-    const { termin } = await findTerminWithUnbehobenBlocker();
+  // Frueher stand hier ein Test "generischer PATCH liefert HTTP 422": der
+  // Endpunkt PATCH /api/termine/:id schrieb status_code mit, lief in den
+  // Trigger und der Error-Handler uebersetzte SQLSTATE 45000 in 422.
+  //
+  // Diese Route nimmt statusCode inzwischen gar nicht mehr an (sie
+  // verlangte nur "schreiben" — die Rolle empfang konnte darueber ein
+  // Pruefergebnis setzen). Der Fall wird jetzt vor der Datenbank mit
+  // HTTP 400 abgelehnt und in server/tests/termin-status-routen.test.js
+  // geprueft. Der 45000-auf-422-Mapper in server/index.js bleibt als
+  // Sicherheitsnetz bestehen — er greift z. B., wenn zwischen dem
+  // Blocker-Check des Status-Endpunkts und dem UPDATE ein blockierender
+  // Mangel angelegt wird.
 
-    const res = await fetch(`${API}/api/termine/${termin.terminId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ statusCode: "Bestanden" }),
-    });
-
-    expect(res.status).toBe(422);
-    const body = await res.json();
-    expect(body.ok).toBe(false);
-    expect(body.reason).toMatch(/WF-01/);
-
-    const after = (await listTermine()).find((t) => t.terminId === termin.terminId);
-    expect(after.statusCode).toBe(termin.statusCode);
-  });
-
-  it("Layer 1 (API-Guard): Status-Endpoint antwortet sauber mit ok:false", async () => {
+  it("Layer 2 (API-Guard): Status-Endpoint antwortet sauber mit ok:false", async () => {
     const { termin } = await findTerminWithUnbehobenBlocker();
 
     const res = await fetch(`${API}/api/termine/${termin.terminId}/status`, {
